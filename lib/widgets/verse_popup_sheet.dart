@@ -191,6 +191,7 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
     if (verses.isEmpty) return;
     // _refLabel already pulls the locale-aware book name; no need to
     // recompute it separately.
+    final strip = context.read<AppSettings>().copyStripParentheticals;
     final buf = StringBuffer();
     buf.writeln('${_refLabel(locale)}\n');
     for (final v in verses) {
@@ -199,7 +200,7 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
       // typesetting instruction as scripture, so the line is dropped —
       // the same rule `copyVerseText` applies in the reader.
       if (v.absence != null) continue;
-      buf.writeln('${v.verse}. ${sanitizeVerseText(v.text)}');
+      buf.writeln('${v.verse}. ${sanitizeVerseText(v.text, stripParentheticals: strip)}');
     }
     final scheme = Theme.of(context).colorScheme;
     final ok = await ClipboardHelper.copyText(buf.toString().trim());

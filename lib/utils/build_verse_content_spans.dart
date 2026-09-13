@@ -68,7 +68,7 @@ List<InlineSpan> buildVerseContentSpans({
           return;
         }
         final toCopy =
-            '${verse.verseLabel} ${sanitizeVerseText(verse.scriptureText)}';
+            '${verse.verseLabel} ${sanitizeVerseText(verse.scriptureText, stripParentheticals: settings.copyStripParentheticals)}';
         final ok = await ClipboardHelper.copyText(toCopy);
         if (!context.mounted) return;
         final msg = ok

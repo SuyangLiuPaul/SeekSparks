@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/projection_setup.dart';
 import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
 import 'package:seeksparks/utils/cross_version_search.dart'
     show CrossVersionSearchMode, crossVersionModeFromName;
@@ -78,6 +79,9 @@ const _kFontSize = 'fontSize';
 const _kLineSpacing = 'lineSpacing';
 const _kPrimaryColor = 'primaryColor';
 const _kCopyFormat = 'copyFormat';
+// 2026-09-13: whether copy leaves out the CUV's full-width-parenthesis
+// translators' notes. See `stripParentheticalNotes` in text_patterns.dart.
+const _kCopyStripNotes = 'copyStripParentheticals';
 const _kLocale = 'locale';
 const _kThemeMode = 'themeMode';
 const _kParagraphMode = 'paragraphMode';
@@ -201,6 +205,64 @@ const String _kChronologyViewDefault = 'wheel';
 // other row in the list.
 const _kInterlinearVersion = 'interlinearVersion';
 
+// 2026-09-09: 投影 — the operator's setup. Reported as 「projector
+// setting怎么没做好 背景也不能set或者preset两个经文也不能调整这个功能要
+// 完整」, and the first of those three complaints is this block: every
+// field on `_ProjectionPageState` was a plain State field, so an
+// operator who set the type size, turned the second edition on and
+// picked a ground lost all of it the moment they left the page. Someone
+// who drives this weekly from the back of a hall was re-doing the setup
+// every Sunday.
+//
+// FIVE NEW KEYS, and not one existing key reused. `projectionSecondVersion`
+// in particular is NOT `kSecondaryVersionKey` ('secondary_version'):
+// the projection used to read Split View's saved preference directly,
+// which meant changing the reader's second column silently changed what
+// a church was projecting, and there was no way to see that from either
+// surface. The projection now owns its own answer — seeded from Split
+// View's once, so nothing changes for an operator who already had it
+// working, and independent from then on. See `projection_page.dart`.
+//
+// WHAT IS DELIBERATELY NOT HERE: `blank`. An operator who blacked the
+// wall out and closed the page does not want to reopen onto a black
+// wall — the room stopped looking at the wall the moment it went dark,
+// so a stale blank is a setting nobody can see is set, and the fix for
+// it (press B) is invisible too. Blanking is a shutter, not a
+// preference, and it stays a State field on the page.
+const _kProjectionTypeStep = 'projectionTypeStep';
+const _kProjectionSecondOn = 'projectionSecondOn';
+const _kProjectionSecondVersion = 'projectionSecondVersion';
+const _kProjectionGround = 'projectionGround';
+// One key for the whole list, as JSON — the shape `_kNotificationCategories`
+// already uses. A key per preset would put an unbounded number of keys
+// in SharedPreferences and give nothing back: the list is always read
+// and written whole.
+const _kProjectionPresets = 'projectionPresets';
+// 2026-09-13: which edition sits beside the passage, BY THE PASSAGE'S
+// LANGUAGE. 「如果中文 要有翻译的话 英文翻译用哪个版本 英文那个中文译本」
+// — a Chinese reading gets an English companion, an English reading a
+// Chinese one, and the operator sets each once. Stored as one JSON map
+// {language family → edition code}; `projectionSecondVersion` above
+// stays as the last edition actually chosen, and the fallback.
+const _kProjectionCompanions = 'projectionCompanions';
+
+/// Tolerant of anything but a JSON object of strings: a corrupt or
+/// foreign blob yields no pairings rather than a crash at startup.
+Map<String, String> decodeProjectionCompanions(String? raw) {
+  if (raw == null || raw.isEmpty) return const {};
+  try {
+    final v = jsonDecode(raw);
+    if (v is! Map) return const {};
+    return {
+      for (final e in v.entries)
+        if (e.key is String && e.value is String)
+          e.key as String: e.value as String,
+    };
+  } catch (_) {
+    return const {};
+  }
+}
+
 class AppSettings extends ChangeNotifier {
   /// User's selected font key — what gets persisted in
   /// SharedPreferences (e.g. `'EB Garamond'`). Drives the dropdown
@@ -232,6 +294,7 @@ class AppSettings extends ChangeNotifier {
   // fallback in `loadSettings()`; only fresh installs (or
   // `resetAllSettings()`) get the new default.
   String _copyFormat = 'devotional';
+  bool _copyStripNotes = false;
   String _locale = 'zh-Hans';
   ThemeMode _themeMode = ThemeMode.system;
   bool _paragraphMode = true;
@@ -278,6 +341,13 @@ class AppSettings extends ChangeNotifier {
   String _chronologyView = _kChronologyViewDefault;
   // 2026-09-08: see _kInterlinearVersion comment.
   String _interlinearVersion = '';
+  // 2026-09-09: see the 投影 block above the class.
+  int _projectionTypeStep = kProjectionTypeDefaultStep;
+  bool _projectionSecondOn = false;
+  String _projectionSecondVersion = '';
+  final Map<String, String> _projectionCompanions = <String, String>{};
+  ProjectionGround _projectionGround = kProjectionGroundDefault;
+  List<ProjectionPreset> _projectionPresets = const <ProjectionPreset>[];
 
   /// Render section / paragraph headings (e.g. "The Sermon on the
   /// Mount" / "登山宝训") above the matched verse in the reading
@@ -310,6 +380,11 @@ class AppSettings extends ChangeNotifier {
   double get lineSpacing => _lineSpacing;
   Color get primaryColor => _primaryColor;
   String get copyFormat => _copyFormat;
+
+  /// Whether copied text drops the edition's `（…）` translators' notes.
+  /// Off by default: every copy ever made kept them, and a default that
+  /// silently changed the clipboard would be a report, not a feature.
+  bool get copyStripParentheticals => _copyStripNotes;
   String get locale => _locale;
   ThemeMode get themeMode => _themeMode;
   bool get paragraphMode => _paragraphMode;
@@ -444,6 +519,138 @@ class AppSettings extends ChangeNotifier {
     await prefs.setString(_kInterlinearVersion, version);
   }
 
+  // ── 投影, 2026-09-09 ────────────────────────────────────────────────
+  //
+  // Five settings, one setter each, all in the shape every setter above
+  // uses: early-return when nothing moved, notify, then write. The
+  // early return is not a micro-optimisation here — `notifyListeners`
+  // arms the 600 ms user-prefs blob write, so a setter that fired on a
+  // no-op would churn the blob every time the operator pressed a key
+  // that happened to land on a value it already had.
+
+  /// Which rung of [kProjectionTypeSteps] the wall is set to.
+  int get projectionTypeStep => _projectionTypeStep;
+
+  Future<void> setProjectionTypeStep(int step) async {
+    // Clamped in the SETTER, not just at the ladder's two keys, because
+    // a preset off disk and an imported settings blob both reach this
+    // and neither is bounded by the ladder this build ships.
+    final clamped = step.clamp(0, kProjectionTypeSteps.length - 1);
+    if (_projectionTypeStep == clamped) return;
+    _projectionTypeStep = clamped;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kProjectionTypeStep, clamped);
+  }
+
+  /// Whether the wall carries a second edition under the first.
+  bool get projectionSecondOn => _projectionSecondOn;
+
+  Future<void> setProjectionSecondOn(bool on) async {
+    if (_projectionSecondOn == on) return;
+    _projectionSecondOn = on;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kProjectionSecondOn, on);
+  }
+
+  /// WHICH second edition, or `''` when the operator has never picked.
+  ///
+  /// `''` is a real state and the one that makes this compatible with
+  /// what shipped: the projection page seeds it from Split View's
+  /// `secondary_version` the first time it needs a second edition, and
+  /// reads only this key afterwards. Not clamped against the catalog
+  /// here — the legal set is computed from the assets, so the clamp
+  /// lives where it is read (`resolveSecondaryVersion`), which also
+  /// means an edition that leaves the build after an operator picked it
+  /// degrades to a loadable one instead of blanking the wall.
+  /// The companion edition for a passage in [language] (`zh-Hans`,
+  /// `zh-Hant`, `en`, …), or null when the operator has not set one for
+  /// that language. The projection page resolves through this first and
+  /// falls back to [projectionSecondVersion].
+  String? projectionCompanionFor(String language) =>
+      _projectionCompanions[language];
+
+  Map<String, String> get projectionCompanions =>
+      Map.unmodifiable(_projectionCompanions);
+
+  Future<void> setProjectionCompanion(String language, String code) async {
+    if (_projectionCompanions[language] == code) return;
+    _projectionCompanions[language] = code;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        _kProjectionCompanions, jsonEncode(_projectionCompanions));
+  }
+
+  String get projectionSecondVersion => _projectionSecondVersion;
+
+  Future<void> setProjectionSecondVersion(String version) async {
+    if (_projectionSecondVersion == version) return;
+    _projectionSecondVersion = version;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kProjectionSecondVersion, version);
+  }
+
+  /// The dark ground the passage sits on. See `projection_setup.dart`
+  /// for why every option is dark.
+  ProjectionGround get projectionGround => _projectionGround;
+
+  Future<void> setProjectionGround(ProjectionGround ground) async {
+    if (_projectionGround == ground) return;
+    _projectionGround = ground;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    // The NAME, not the index — see `ProjectionGround`.
+    await prefs.setString(_kProjectionGround, ground.name);
+  }
+
+  /// The operator's named setups, oldest first.
+  List<ProjectionPreset> get projectionPresets => _projectionPresets;
+
+  Future<void> setProjectionPresets(List<ProjectionPreset> presets) async {
+    final next = List<ProjectionPreset>.unmodifiable(presets);
+    if (_samePresets(_projectionPresets, next)) return;
+    _projectionPresets = next;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kProjectionPresets, encodeProjectionPresets(next));
+  }
+
+  static bool _samePresets(List<ProjectionPreset> a, List<ProjectionPreset> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  /// The four settings above as the one value a preset stores.
+  ///
+  /// A value object rather than four reads at the call site, for the
+  /// reason [ketivQereSearchScope] gives one screen along: a caller that
+  /// remembers three of them and forgets the fourth saves a preset that
+  /// silently does not restore the thing the operator changed.
+  ProjectionSetup get projectionSetup => ProjectionSetup(
+        typeStep: _projectionTypeStep,
+        secondOn: _projectionSecondOn,
+        secondVersion: _projectionSecondVersion,
+        ground: _projectionGround,
+      );
+
+  /// Recall a preset.
+  ///
+  /// The version is set BEFORE the switch that turns it on, so the
+  /// page's loader sees the edition the preset asked for rather than
+  /// loading the previous one and replacing it a frame later.
+  Future<void> applyProjectionSetup(ProjectionSetup setup) async {
+    await setProjectionTypeStep(setup.typeStep);
+    await setProjectionGround(setup.ground);
+    await setProjectionSecondVersion(setup.secondVersion);
+    await setProjectionSecondOn(setup.secondOn);
+  }
+
   /// [selection] is a catalogue key like `'EB Garamond'` (see
   /// [availableFontOptions]). We persist the key as-is and resolve
   /// it through the Google Fonts package when needed so the rest of
@@ -498,6 +705,14 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kCopyFormat, format);
+  }
+
+  Future<void> setCopyStripParentheticals(bool on) async {
+    if (_copyStripNotes == on) return;
+    _copyStripNotes = on;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kCopyStripNotes, on);
   }
 
   Future<void> setLocale(String langCode) async {
@@ -727,6 +942,7 @@ class AppSettings extends ChangeNotifier {
     _lineSpacing = kLineSpacingDefault;
     _primaryColor = AppIconService.kDefaultPrimaryColor;
     _copyFormat = 'devotional';
+    _copyStripNotes = false;
     _themeMode = ThemeMode.system;
     _paragraphMode = true;
     _readingPaperTheme = false;
@@ -748,6 +964,16 @@ class AppSettings extends ChangeNotifier {
     _showBookIntro = true;
     _autoCheckUpdates = true;
     _lastUpdateCheckMs = 0;
+    // 2026-09-09: the projection's four scalars are preferences and go
+    // back to their factory values. Its named PRESETS do not — they are
+    // something the operator built and named, which puts them on the
+    // "user content" side of the line this doc comment draws two
+    // paragraphs up, beside bookmarks and notes. `_kProjectionPresets`
+    // is therefore absent from `managedKeys` below, deliberately.
+    _projectionTypeStep = kProjectionTypeDefaultStep;
+    _projectionSecondOn = false;
+    _projectionSecondVersion = '';
+    _projectionGround = kProjectionGroundDefault;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     // Wipe every preference key we've ever written. Loop is the
@@ -759,6 +985,7 @@ class AppSettings extends ChangeNotifier {
       _kLineSpacing,
       _kPrimaryColor,
       _kCopyFormat,
+      _kCopyStripNotes,
       _kThemeMode,
       _kParagraphMode,
       _kMenuScale,
@@ -776,6 +1003,11 @@ class AppSettings extends ChangeNotifier {
       _kShowBookIntro,
       _kAutoCheckUpdates,
       _kLastUpdateCheck,
+      _kProjectionTypeStep,
+      _kProjectionSecondOn,
+      _kProjectionSecondVersion,
+      _kProjectionCompanions,
+      _kProjectionGround,
       // The dashboard was deleted when the Workbench became the app
       // (no home screen), but installs from before then still carry
       // its keys. Same treatment as 'offlineMode' above: the constants
@@ -890,6 +1122,7 @@ class AppSettings extends ChangeNotifier {
       AppIconService.updateForColor(_primaryColor);
     });
     _copyFormat = prefs.getString(_kCopyFormat) ?? 'devotional';
+    _copyStripNotes = prefs.getBool(_kCopyStripNotes) ?? false;
     // 2026-05-26 (v1.3.46): persist the detected locale on first
     // load. Previously `_locale = prefs.get ?? _detectSystemLocale()`
     // only kept the detection IN MEMORY — the prefs key stayed
@@ -984,6 +1217,27 @@ class AppSettings extends ChangeNotifier {
     // `resolveInterlinearEdition`, which is the only reader.
     _interlinearVersion = prefs.getString(_kInterlinearVersion) ?? '';
 
+    // 2026-09-09: 投影. The step is clamped to THIS build's ladder and
+    // the ground name to this build's grounds, both for the reason the
+    // font-size read two hundred lines up gives: a value from a legacy
+    // build or a hand-edited prefs file can be anything, and an index
+    // off the end of `kProjectionTypeSteps` would throw while a
+    // congregation watched.
+    _projectionTypeStep = (prefs.getInt(_kProjectionTypeStep) ??
+            kProjectionTypeDefaultStep)
+        .clamp(0, kProjectionTypeSteps.length - 1);
+    _projectionSecondOn = prefs.getBool(_kProjectionSecondOn) ?? false;
+    _projectionSecondVersion =
+        prefs.getString(_kProjectionSecondVersion) ?? '';
+    _projectionCompanions
+      ..clear()
+      ..addAll(decodeProjectionCompanions(
+          prefs.getString(_kProjectionCompanions)));
+    _projectionGround =
+        projectionGroundFromName(prefs.getString(_kProjectionGround));
+    _projectionPresets =
+        decodeProjectionPresets(prefs.getString(_kProjectionPresets));
+
     // 2026-05-25 (v1.3.41): if a userPrefs JSON blob exists, apply
     // it OVER the legacy individual-key reads above — it carries the
     // full settings snapshot and is the source of truth when
@@ -1049,6 +1303,7 @@ class AppSettings extends ChangeNotifier {
         'lineSpacing': _lineSpacing,
         'primaryColor': _primaryColor.toARGB32(),
         'copyFormat': _copyFormat,
+        'copyStripParentheticals': _copyStripNotes,
         'locale': _locale,
         'themeMode': _themeMode.name,
         'paragraphMode': _paragraphMode,
@@ -1069,6 +1324,19 @@ class AppSettings extends ChangeNotifier {
         'notesSortMode': _notesSortMode,
         'chronologyView': _chronologyView,
         'interlinearVersion': _interlinearVersion,
+        // 2026-09-09: the projection setup travels too. An operator who
+        // built "morning service" on the church laptop and then drives
+        // from their own is the ordinary case, and a setting missing
+        // from this snapshot is a setting that silently resets on the
+        // other machine. The presets ride as their own encoded string
+        // rather than as a nested list, so one serializer owns the
+        // format and the blob cannot disagree with SharedPreferences
+        // about what a preset is.
+        'projectionTypeStep': _projectionTypeStep,
+        'projectionSecondOn': _projectionSecondOn,
+        'projectionSecondVersion': _projectionSecondVersion,
+        'projectionGround': _projectionGround.name,
+        'projectionPresets': encodeProjectionPresets(_projectionPresets),
       };
 
   Future<void> _writeUserPrefsBlob() async {
@@ -1128,6 +1396,9 @@ class AppSettings extends ChangeNotifier {
         _primaryColor = Color((m['primaryColor'] as num).toInt());
       }
       if (m['copyFormat'] is String) _copyFormat = m['copyFormat'] as String;
+      if (m['copyStripParentheticals'] is bool) {
+        _copyStripNotes = m['copyStripParentheticals'] as bool;
+      }
       if (m['locale'] is String) _locale = m['locale'] as String;
       if (m['themeMode'] is String) {
         _themeMode = _parseThemeMode(m['themeMode'] as String);
@@ -1199,6 +1470,28 @@ class AppSettings extends ChangeNotifier {
       }
       if (m['interlinearVersion'] is String) {
         _interlinearVersion = m['interlinearVersion'] as String;
+      }
+      // 2026-09-09: 投影. Bounded on the way in for the same reason the
+      // three scales above it are — this is a file the reader chose off
+      // disk, which is a real system boundary.
+      if (m['projectionTypeStep'] is num) {
+        _projectionTypeStep = (m['projectionTypeStep'] as num)
+            .toInt()
+            .clamp(0, kProjectionTypeSteps.length - 1);
+      }
+      if (m['projectionSecondOn'] is bool) {
+        _projectionSecondOn = m['projectionSecondOn'] as bool;
+      }
+      if (m['projectionSecondVersion'] is String) {
+        _projectionSecondVersion = m['projectionSecondVersion'] as String;
+      }
+      if (m['projectionGround'] is String) {
+        _projectionGround =
+            projectionGroundFromName(m['projectionGround'] as String);
+      }
+      if (m['projectionPresets'] is String) {
+        _projectionPresets =
+            decodeProjectionPresets(m['projectionPresets'] as String);
       }
     } finally {
       _suppressUserPrefsWrite = false;

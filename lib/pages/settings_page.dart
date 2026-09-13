@@ -27,6 +27,11 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/update_service.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/widgets/projection_stage.dart';
+import 'package:seeksparks/pages/projection_page.dart' show kProjectionTypeSteps;
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/constants/projection_strings.dart';
+import 'package:seeksparks/constants/projection_setup.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/pages/about_page.dart';
@@ -53,7 +58,8 @@ import 'package:seeksparks/widgets/onboarding_dialog.dart';
 import 'package:seeksparks/utils/responsive.dart';
 
 String getDevotionalFormattedText(
-    List<Map<String, dynamic>> verses, String? book, int? chapter) {
+    List<Map<String, dynamic>> verses, String? book, int? chapter,
+    {bool stripParentheticals = false}) {
   if (verses.isEmpty || book == null || chapter == null) return '';
 
   List<int> verseNums = verses.map((v) => v['verse'] as int).toList()..sort();
@@ -65,7 +71,8 @@ String getDevotionalFormattedText(
   // here — they kept stripping `{phrase}` entirely. Plus v1.2.57's
   // poetry `\n` was leaking through. One helper, one truth.
   List<String> textParts = verses.map((v) {
-    return sanitizeForCopy(v['text'] as String);
+    return sanitizeForCopy(v['text'] as String,
+        stripParentheticals: stripParentheticals);
   }).toList();
 
   // Build reference string
@@ -406,6 +413,50 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                           ],
                         ),
                         SizedBox(height: 12 * s),
+                        // 2026-09-13: 「好像这里面有原文（）这个复制粘贴要不要包含应该在
+                        // setting有一个option toggle」. The CUV's translators' notes sit in
+                        // full-width parentheses inside the verse text; whether a copy keeps
+                        // them is a choice, made here beside the format it applies to. The
+                        // preview below follows it, so the reader sees the answer before
+                        // they paste.
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    uiStrings['copyStripNotes']?[settings.locale] ??
+                                        "Leave out translators' notes",
+                                    style: TextStyle(
+                                      fontFamily: settings.fontFamily,
+                                      fontFamilyFallback: kCjkFontFallback,
+                                      fontSize: settings.fontSize,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4 * s),
+                                  Text(
+                                    uiStrings['copyStripNotesHint']?[settings.locale] ??
+                                        'Notes in full-width parentheses, like （原文作…）, '
+                                            'are not copied.',
+                                    style: TextStyle(
+                                      fontFamily: settings.fontFamily,
+                                      fontFamilyFallback: kCjkFontFallback,
+                                      fontSize: settings.fontSize * 0.85,
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: settings.copyStripParentheticals,
+                              onChanged: settings.setCopyStripParentheticals,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12 * s),
                         Text(
                           currentBook != null && currentChapter != null
                               ? '$currentBook $currentChapter'
@@ -443,6 +494,8 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                                 children: [
                                   TextSpan(
                                     text: getDevotionalFormattedText(
+                                      stripParentheticals:
+                                          settings.copyStripParentheticals,
                                         verseSamples,
                                         currentBook,
                                         currentChapter),
@@ -467,7 +520,7 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                             // for poetry layout). Single helper, single
                             // truth.
                             final cleanText =
-                                sanitizeForCopy(v['text'] as String);
+                                sanitizeForCopy(v['text'] as String, stripParentheticals: settings.copyStripParentheticals);
                             final headerText = settings.copyFormat == 'withRef'
                                 ? '[$ref] '
                                 : '';
@@ -658,6 +711,19 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                       ],
                     ),
                   ),
+                ),
+                SizedBox(height: 16 * s),
+                // 2026-09-13: the projector, set up here beside Copy — 「像
+                // copy风格一样在setting里面」. What the operator decides
+                // once (size, ground, which edition keeps the passage
+                // company) lives in Settings; what changes mid-service
+                // (blank, the verse) stays on the projection page.
+                _ProjectorCard(
+                  settings: settings,
+                  mainProvider: mainProvider,
+                  s: s,
+                  previewVerse:
+                      versesInChapter.isEmpty ? null : versesInChapter.first,
                 ),
                 SizedBox(height: 16 * s),
                 KeyedSubtree(
@@ -1566,6 +1632,189 @@ class _SliderRow extends StatelessWidget {
             onChanged: onChanged,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The projector's own card. See the note at its call site.
+class _ProjectorCard extends StatelessWidget {
+  const _ProjectorCard({
+    required this.settings,
+    required this.mainProvider,
+    required this.s,
+    required this.previewVerse,
+  });
+
+  final AppSettings settings;
+  final MainProvider mainProvider;
+  final double s;
+  final Verse? previewVerse;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = settings.locale;
+    final scheme = Theme.of(context).colorScheme;
+    TextStyle label({FontWeight weight = FontWeight.w500, double scale = 1}) =>
+        TextStyle(
+          fontFamily: settings.fontFamily,
+          fontFamilyFallback: kCjkFontFallback,
+          fontSize: settings.fontSize * scale,
+          fontWeight: weight,
+        );
+    String t(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+
+    // The companion dropdowns show only what THIS build can load, and a
+    // stored code that is not in the list shows as unset rather than
+    // throwing — the same tolerance the projection page's resolver has.
+    final english = versionsForLanguage('en');
+    final chinese = [
+      ...versionsForLanguage('zh-Hans'),
+      ...versionsForLanguage('zh-Hant'),
+    ];
+    String? inList(String? code, List<BibleVersionInfo> list) =>
+        list.any((v) => v.value == code) ? code : null;
+
+    List<DropdownMenuItem<String>> items(List<BibleVersionInfo> list) => [
+          for (final v in list)
+            DropdownMenuItem(value: v.value, child: Text(v.menuLabel, style: label())),
+        ];
+
+    Widget row(String key, String fallback, Widget control) => Padding(
+          padding: EdgeInsets.only(top: 10 * s),
+          child: Row(
+            children: [
+              Expanded(child: Text(t(key, fallback), style: label())),
+              const SizedBox(width: 12),
+              control,
+            ],
+          ),
+        );
+
+    final ground = settings.projectionGround;
+
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16 * s),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t('projectorSettings', 'Projector'),
+                style: label(weight: FontWeight.w600, scale: 1.1)),
+            SizedBox(height: 6 * s),
+            Text(
+              t('projectorSettingsHint',
+                  'Select verses in the reader and tap Project.'),
+              style: label(weight: FontWeight.w400, scale: 0.85)
+                  .copyWith(color: scheme.onSurfaceVariant),
+            ),
+            row(
+              'projectorTypeSize',
+              'Type size',
+              DropdownButton<int>(
+                value: settings.projectionTypeStep,
+                onChanged: (v) {
+                  if (v != null) settings.setProjectionTypeStep(v);
+                },
+                items: [
+                  for (var i = 0; i < kProjectionTypeSteps.length; i++)
+                    DropdownMenuItem(
+                        value: i,
+                        child: Text('${kProjectionTypeSteps[i].round()} px',
+                            style: label())),
+                ],
+              ),
+            ),
+            row(
+              'projectorGround',
+              'Background',
+              DropdownButton<ProjectionGround>(
+                value: ground,
+                onChanged: (g) {
+                  if (g != null) settings.setProjectionGround(g);
+                },
+                items: [
+                  for (final g in ProjectionGround.values)
+                    DropdownMenuItem(
+                      value: g,
+                      child: Text(
+                        projectionStrings['projectionGround'
+                                    '${g.name[0].toUpperCase()}${g.name.substring(1)}']
+                                ?[locale] ??
+                            g.name,
+                        style: label(),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            row(
+              'projectorSecondOn',
+              'Show a companion edition',
+              Switch.adaptive(
+                value: settings.projectionSecondOn,
+                onChanged: settings.setProjectionSecondOn,
+              ),
+            ),
+            row(
+              'projectorCompanionForZh',
+              'Beside a Chinese passage, show',
+              DropdownButton<String>(
+                value: inList(settings.projectionCompanionFor('zh-Hans'), english),
+                hint: Text('—', style: label()),
+                onChanged: (code) {
+                  if (code == null) return;
+                  // One choice covers both Chinese scripts: the wall does
+                  // not care whether the passage was Simplified.
+                  settings.setProjectionCompanion('zh-Hans', code);
+                  settings.setProjectionCompanion('zh-Hant', code);
+                },
+                items: items(english),
+              ),
+            ),
+            row(
+              'projectorCompanionForEn',
+              'Beside an English passage, show',
+              DropdownButton<String>(
+                value: inList(settings.projectionCompanionFor('en'), chinese),
+                hint: Text('—', style: label()),
+                onChanged: (code) {
+                  if (code != null) settings.setProjectionCompanion('en', code);
+                },
+                items: items(chinese),
+              ),
+            ),
+            if (previewVerse != null) ...[
+              SizedBox(height: 12 * s),
+              Text(t('projectorPreview', 'Preview'), style: label()),
+              SizedBox(height: 8 * s),
+              // The real stage, in a 16:9 box. Its FittedBox scales the
+              // wall-sized type down to fit, so what the reader sees is
+              // the wall's proportions, not a mock of them.
+              ClipRRect(
+                borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: ProjectionStage(
+                    verses: [previewVerse!],
+                    reference:
+                        '${previewVerse!.book} ${previewVerse!.chapter}:${previewVerse!.verseLabel}',
+                    versionCode: mainProvider.currentVersion,
+                    typeSize: kProjectionTypeSteps[settings.projectionTypeStep],
+                    blank: false,
+                    locale: locale,
+                    ground: ground,
+                    secondOn: false,
+                    secondTexts: null,
+                    secondCode: null,
+                    secondLoading: false,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

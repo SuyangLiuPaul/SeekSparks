@@ -10226,4 +10226,88 @@ const uiStrings = {
     'zh-Hant': '{n} 項改動',
     'en': '{n} change',
   },
+  // 2026-09-13. Appended at the end per this file's convention. The copy
+  // toggle for the CUV's full-width-parenthesis translators' notes —
+  // filed here rather than beside `copyFormat` for the same reason every
+  // block below the first appended one is: several sessions edit this
+  // file at once.
+  'copyStripNotes': {
+    'zh-Hans': '复制时去掉括号里的译注',
+    'zh-Hant': '複製時去掉括號裡的譯註',
+    'en': "Leave out translators' notes",
+  },
+  'copyStripNotesHint': {
+    'zh-Hans': '和合本「（原文作…）」这类括号内的译注不会复制进去。',
+    'zh-Hant': '和合本「（原文作…）」這類括號內的譯註不會複製進去。',
+    'en': 'Notes in full-width parentheses, like （原文作…）, are not copied.',
+  },
+  // 2026-09-13. The book picker's division headers, ported from YsWords
+  // with the same wording. Appended at the end per this file's
+  // convention.
+  'booksUnit': {'zh-Hans': '卷', 'zh-Hant': '卷', 'en': 'books'},
+  'divLaw': {'zh-Hans': '律法书', 'zh-Hant': '律法書', 'en': 'Law'},
+  'divHistory': {'zh-Hans': '历史书', 'zh-Hant': '歷史書', 'en': 'History'},
+  'divWisdom': {
+    'zh-Hans': '诗歌智慧书',
+    'zh-Hant': '詩歌智慧書',
+    'en': 'Poetry & Wisdom',
+  },
+  'divMajorProphets': {
+    'zh-Hans': '大先知书',
+    'zh-Hant': '大先知書',
+    'en': 'Major Prophets',
+  },
+  'divMinorProphets': {
+    'zh-Hans': '小先知书',
+    'zh-Hant': '小先知書',
+    'en': 'Minor Prophets',
+  },
+  'divGospels': {'zh-Hans': '福音书', 'zh-Hant': '福音書', 'en': 'Gospels'},
+  'divActs': {
+    'zh-Hans': '教会历史',
+    'zh-Hant': '教會歷史',
+    'en': 'Church History',
+  },
+  'divPauline': {
+    'zh-Hans': '保罗书信',
+    'zh-Hant': '保羅書信',
+    'en': 'Pauline Letters',
+  },
+  'divGeneralEpistles': {
+    'zh-Hans': '普通书信',
+    'zh-Hant': '普通書信',
+    'en': 'General Letters',
+  },
+  'divRevelation': {'zh-Hans': '预言书', 'zh-Hant': '預言書', 'en': 'Prophecy'},
+  'divOther': {'zh-Hans': '其他', 'zh-Hant': '其他', 'en': 'Other'},
+  // 2026-09-13. The projector, as the owner asked for it: a button on the
+  // selection bar, and a Settings card that decides how the wall looks
+  // and which edition keeps the passage company — 「像copy风格一样在
+  // setting里面」. Appended at the end per this file's convention.
+  'projectSelection': {'zh-Hans': '投影', 'zh-Hant': '投影', 'en': 'Project'},
+  'projectorSettings': {'zh-Hans': '投影', 'zh-Hant': '投影', 'en': 'Projector'},
+  'projectorSettingsHint': {
+    'zh-Hans': '在阅读页选中一节或多节经文，点「投影」就上墙。这里决定墙上是什么样子。',
+    'zh-Hant': '在閱讀頁選取一節或多節經文，點「投影」就上牆。這裡決定牆上是什麼樣子。',
+    'en': 'Select one or more verses in the reader and tap Project. '
+        'This is what the wall will look like.',
+  },
+  'projectorTypeSize': {'zh-Hans': '字号', 'zh-Hant': '字級', 'en': 'Type size'},
+  'projectorGround': {'zh-Hans': '背景', 'zh-Hant': '背景', 'en': 'Background'},
+  'projectorSecondOn': {
+    'zh-Hans': '同时显示对照版本',
+    'zh-Hant': '同時顯示對照版本',
+    'en': 'Show a companion edition',
+  },
+  'projectorCompanionForZh': {
+    'zh-Hans': '中文经文旁边显示',
+    'zh-Hant': '中文經文旁邊顯示',
+    'en': 'Beside a Chinese passage, show',
+  },
+  'projectorCompanionForEn': {
+    'zh-Hans': '英文经文旁边显示',
+    'zh-Hant': '英文經文旁邊顯示',
+    'en': 'Beside an English passage, show',
+  },
+  'projectorPreview': {'zh-Hans': '预览', 'zh-Hant': '預覽', 'en': 'Preview'},
 };
