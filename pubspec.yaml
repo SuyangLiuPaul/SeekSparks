@@ -117,6 +117,9 @@ flutter:
     - assets/app_icon.png
     - assets/loading.png
     - assets/fonts/
+    # Served to the projector's follower window on desktop — the same
+    # file the web build publishes. See projection_broadcast_io.dart.
+    - web/stage.html
     - assets/maps/
     # 420px copies of the 55 plates above, for grids and filmstrips.
     # Regenerate after adding a plate: tools/gen_map_thumbs.sh
