@@ -561,15 +561,7 @@ class _LoadingPageState extends State<LoadingPage> {
                   // mark is full-colour (ink ground, gold sparks), so
                   // tinting it produced a solid primary-coloured square
                   // and looked like the asset had failed to load.
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(logoSize * 0.22),
-                    child: Image.asset(
-                      AppIconService.splashAssetForColor(
-                          settings.primaryColor),
-                      width: logoSize,
-                      height: logoSize,
-                    ),
-                  ),
+                  _logo(context, settings, logoSize),
                   SizedBox(height: 24 * s),
                   Column(
                     children: [
@@ -794,15 +786,7 @@ class _LoadingPageState extends State<LoadingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(logoSize * 0.22),
-              child: Image.asset(
-                AppIconService.splashAssetForColor(
-                    settings.primaryColor),
-                width: logoSize,
-                height: logoSize,
-              ),
-            ),
+            _logo(context, settings, logoSize),
             SizedBox(height: 24 * s),
             // Same single-name rule as the booting scaffold above.
             Text(
@@ -1080,4 +1064,40 @@ class _LoadingPageState extends State<LoadingPage> {
     if (!kIsWeb) return;
     clearCacheAndReload();
   }
+}
+
+/// The splash mark, sized for the slot it is drawn into and safe to
+/// fail.
+///
+/// 2026-09-13, reported against the sister app (yswords) from an iPhone
+/// SE on the web: `ImageCodecException: Failed to create image from
+/// Image.decode`, during boot. That comes from
+/// `createCkImageFromImageElement` — CanvasKit could not make a texture
+/// out of the decoded `<img>`. The splash here had the same two gaps
+/// that turned it into a crash report there:
+///
+///   * **No decode cap.** The mark is 1024×1024, which the decoder
+///     allocates as ≈4 MB whatever the file compresses to (67 KB here —
+///     the cost is pixels, not bytes), drawn into a logo slot a
+///     fraction of that. `illustration_image.dart` already caps every
+///     picture it draws; the splash — the one screen that runs on every
+///     launch, at the tightest moment for memory — did not.
+///   * **No `errorBuilder`.** Without one the image stream has no
+///     listener to swallow a failure, so it goes to
+///     `FlutterError.reportError` and arrives as a crash. A mark that
+///     will not paint is not a crash: the app name is directly
+///     underneath it and the boot carries on.
+Widget _logo(BuildContext context, AppSettings settings, double size) {
+  final px = (size * MediaQuery.of(context).devicePixelRatio).round();
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(size * 0.22),
+    child: Image.asset(
+      AppIconService.splashAssetForColor(settings.primaryColor),
+      width: size,
+      height: size,
+      cacheWidth: px,
+      cacheHeight: px,
+      errorBuilder: (_, __, ___) => SizedBox(width: size, height: size),
+    ),
+  );
 }
