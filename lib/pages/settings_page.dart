@@ -1096,18 +1096,34 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                             fontFamilyFallback: kCjkFontFallback,
                           ),
                         ),
-                        subtitle: Text(
-                          uiStrings['crossVersionSearchModeSubtitle']
-                                  ?[settings.locale] ??
-                              'Runs the same query against several editions '
-                                  'of the same language.',
-                          style: TextStyle(
-                            fontSize: settings.fontSize,
-                            fontFamily: settings.fontFamily,
-                            fontFamilyFallback: kCjkFontFallback,
-                          ),
-                        ),
-                        trailing: DropdownButton<CrossVersionSearchMode>(
+                        // The dropdown is NOT `trailing:`. A ListTile
+                        // lays its trailing widget out first, at
+                        // whatever width it asks for, and a
+                        // DropdownButton asks for its WIDEST item —
+                        // 「同語言，全部版本」 here. On a 390 px phone
+                        // that left the title about one character wide
+                        // and it wrapped down the screen a letter at a
+                        // time. Under the subtitle instead, full width
+                        // with `isExpanded`, so the title always gets
+                        // the row and the dropdown ellipsizes inside it.
+                        isThreeLine: true,
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              uiStrings['crossVersionSearchModeSubtitle']
+                                      ?[settings.locale] ??
+                                  'Runs the same query against several '
+                                      'editions of the same language.',
+                              style: TextStyle(
+                                fontSize: settings.fontSize,
+                                fontFamily: settings.fontFamily,
+                                fontFamilyFallback: kCjkFontFallback,
+                              ),
+                            ),
+                            DropdownButton<CrossVersionSearchMode>(
+                          isExpanded: true,
                           value: settings.crossVersionSearchMode,
                           underline: const SizedBox.shrink(),
                           onChanged: (m) {
@@ -1130,6 +1146,8 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                                   ),
                                 ),
                               ),
+                          ],
+                            ),
                           ],
                         ),
                       ),
@@ -1423,7 +1441,12 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                           fontFamilyFallback: kCjkFontFallback,
                         ),
                       ),
-                      trailing: DropdownButton<UpdateCheckFrequency>(
+                      // Under the title, not `trailing:` — see the
+                      // cross-version tile above for what a wide
+                      // DropdownButton in a ListTile's trailing slot
+                      // does to the title on a phone.
+                      subtitle: DropdownButton<UpdateCheckFrequency>(
+                        isExpanded: true,
                         value: settings.updateCheckFrequency,
                         underline: const SizedBox.shrink(),
                         onChanged: settings.autoCheckUpdates
