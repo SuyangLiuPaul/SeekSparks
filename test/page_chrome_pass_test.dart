@@ -190,10 +190,12 @@ const Map<String, int> _remaining = <String, int>{
   'lib/pages/word_list_page.dart': 1,
   'lib/utils/build_verse_content_spans.dart': 1,
   'lib/utils/clipboard_helper.dart': 1,
-  // Newly VISIBLE, not newly written: both draw a sheet corner with
+  // Newly VISIBLE, not newly written: it draws a sheet corner with
   // `BorderRadius.vertical(top: Radius.circular(…))`, which the old
-  // check could not see.
-  'lib/widgets/block_note_card.dart': 2,
+  // check could not see. Its former partner `block_note_card.dart` left
+  // this list on 2026-09-14 by being deleted: notes are now one
+  // numbered block per verse (`verse_notes_block.dart`), which draws no
+  // card and so has no corner to declare.
   'lib/widgets/left_accent_card.dart': 1,
   'lib/widgets/browse_window.dart': 1,
   'lib/widgets/confidence_badge.dart': 1,

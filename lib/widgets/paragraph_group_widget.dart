@@ -11,7 +11,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/build_verse_content_spans.dart';
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart' show showNoteEditor;
-import 'package:seeksparks/widgets/block_note_card.dart';
+import 'package:seeksparks/widgets/verse_notes_block.dart';
 import 'package:seeksparks/widgets/superscription_line.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -43,13 +43,12 @@ class _ParagraphGroupWidgetState extends State<ParagraphGroupWidget> {
   /// mode a group is one `RichText`, so the set is per paragraph rather
   /// than per verse; notes in different paragraphs stay open together
   /// exactly as notes in different verses do.
-  final Set<String> _openNotes = <String>{};
-
-  void _toggleNote(String note) {
-    setState(() {
-      if (!_openNotes.remove(note)) _openNotes.add(note);
-    });
-  }
+  /// Every note in the paragraph, in reading order, filled by
+  /// `buildVerseContentSpans` as it walks each verse and read by the
+  /// single [VerseNotesBlock] under the block. One block for the
+  /// paragraph and not one per verse, which is how the paragraph reads
+  /// as a paragraph.
+  final List<String> _noteSink = <String>[];
 
   List<Verse> get group => widget.group;
   int get startVerseIndex => widget.startVerseIndex;
@@ -110,7 +109,7 @@ class _ParagraphGroupWidgetState extends State<ParagraphGroupWidget> {
         // settings side instead — any AppSettings field change (locale,
         // theme, primaryColor, paragraphMode, dozens of others) rebuilt
         // every visible paragraph group. Select only the fields this
-        // builder (and buildVerseContentSpans / BlockNoteCard, which it
+        // builder (and buildVerseContentSpans / VerseNotesBlock, which it
         // calls) actually read. Same pattern already used for
         // LiquidGlassButton / _GreetingCard / _CountTile.
         context.select<AppSettings, (String, double, String, double, bool)>(
@@ -133,6 +132,9 @@ class _ParagraphGroupWidgetState extends State<ParagraphGroupWidget> {
         // whitespace fell through to the InkWell whose onTap was `null`
         // when the paragraph had >1 verse, requiring users to retry.
         final allSpans = <InlineSpan>[];
+        // Refilled on every build; state only so the block below can
+        // read what the span walk found.
+        _noteSink.clear();
 
         // First-line indent for paragraph starts (true Chinese book style).
         // Reference blocks use a deeper indent on every line via container padding.
@@ -251,8 +253,7 @@ class _ParagraphGroupWidgetState extends State<ParagraphGroupWidget> {
 
           allSpans.addAll(buildVerseContentSpans(
             verse: verse,
-            openNotes: _openNotes,
-            onNoteToggle: _toggleNote,
+            noteSink: _noteSink,
             context: context,
             settings: settings,
             locale: locale,
@@ -369,9 +370,18 @@ class _ParagraphGroupWidgetState extends State<ParagraphGroupWidget> {
                 // indented paragraph between v16 and v17. Each verse's
                 // `blockNotes` is rendered as its own subtle box BELOW
                 // the verse content, matching the upstream layout.
-                for (final verse in group)
-                  for (final note in verse.blockNotes)
-                    BlockNoteCard(note: note, settings: settings),
+                // 2026-09-14: one numbered block for the whole
+                // paragraph, the 雅偉的話 shape — inline notes in
+                // reading order, then the edition's apparatus. Was a
+                // boxed card per note, always open.
+                VerseNotesBlock(
+                  notes: [
+                    ..._noteSink,
+                    for (final verse in group) ...verse.blockNotes,
+                  ],
+                  settings: settings,
+                  locale: locale,
+                ),
               ],
             ),
           ),
