@@ -384,8 +384,12 @@ void main() {
     // 2026-09-08: the destination was `bsb` until `bsb` was hidden in
     // its turn; it is `bsb-yhwh` now, straight from the NASB's own
     // successor row rather than by chaining.
-    test('boot moves a saved NASB reader to BSB (Yahweh) and tells them',
+    test('boot moves a saved NASB reader to BSB (Yahweh), and says nothing',
         () async {
+      // 2026-09-14: the second half of this test used to be "and tells
+      // them". See the note on the launch-notice case below — a saved
+      // preference is not a request, and boot no longer reports the
+      // catalogue's bookkeeping to a reader who came here to read.
       SharedPreferences.setMockInitialValues({
         'version': 'nasb',
         'locale': 'en',
@@ -399,10 +403,7 @@ void main() {
 
       expect(mp.currentVersion, 'bsb-yhwh');
       expect(isKnownVersion(mp.currentVersion), isTrue);
-      expect(mp.retiredVersionNotice, isNotNull,
-          reason: 'a silent swap reads as the app forgetting their choice');
-      expect(mp.retiredVersionNotice!.requested, 'nasb');
-      expect(mp.retiredVersionNotice!.substituted, 'bsb-yhwh');
+      expect(mp.retiredVersionNotice, isNull);
     });
 
     // 2026-09-09. `retiredVersionNotice`'s own docstring promises "a
@@ -420,7 +421,7 @@ void main() {
     // refused. `bsb` went into `disabledVersions` on 2026-09-08, and
     // anyone whose saved preference was `bsb` has been told about it on
     // every launch since.
-    test('a retired edition is announced once, not on every launch',
+    test('a retired edition is not announced at all, on any launch',
         () async {
       // THE CONDITION THAT ACTUALLY REPRODUCES IT. Rewriting the local
       // preference is not enough and was tried first: `restoreState`
@@ -441,10 +442,18 @@ void main() {
       final first = MainProvider();
       await first.restoreState();
       expect(first.currentVersion, 'bsb-yhwh');
-      expect(first.retiredVersionNotice, isNotNull,
-          reason: 'the first launch after the retirement owes them the '
-              'truth about which Bible they are looking at');
-      expect(first.retiredVersionNotice!.requested, 'bsb');
+      // 2026-09-14: this used to expect a notice on the FIRST launch —
+      // "the first launch after the retirement owes them the truth about
+      // which Bible they are looking at". Reported twice, and the second
+      // report settled it: 「不应该有这个任何 popup 啊」, 「他们 had not
+      // asked for anything」. Once-per-code was answering the wrong half
+      // — and once per code is still EVERY launch to anyone reading in a
+      // private window, which is how it came back.
+      //
+      // The edition they are looking at is named in the status bar, in
+      // the pane title and in the version pill, on every screen, always.
+      // Nothing is hidden by not interrupting them about it.
+      expect(first.retiredVersionNotice, isNull);
 
       // The blob still says `bsb` — this device cannot make the cloud
       // forget, and that is the point.
@@ -455,8 +464,8 @@ void main() {
       await second.restoreState();
       expect(second.currentVersion, 'bsb-yhwh');
       expect(second.retiredVersionNotice, isNull,
-          reason: 'this is the nag the docstring forbids — 「为什么有提示 '
-              'BSB Y 不能提供？不应该有这个任何 popup 啊」');
+          reason: 'neither launch may speak — 「为什么有提示 BSB Y 不能'
+              '提供？不应该有这个任何 popup 啊」');
     });
 
     test('a saved LEB reader keeps the LEB, and is told nothing', () async {

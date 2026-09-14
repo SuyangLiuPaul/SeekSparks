@@ -56,6 +56,66 @@ void main() {
             'happens — which is how the word chart was lost.');
   });
 
+  /// The body of `_closePhoneOverlays`, which is what the bottom bar
+  /// clears before it moves.
+  String closeOverlays() {
+    final start = src.indexOf('void _closePhoneOverlays() {');
+    expect(start, isNot(-1),
+        reason: 'the phone bar has nothing to clear the screen with');
+    final end = src.indexOf('\n  }', start);
+    return src.substring(start, end == -1 ? src.length : end);
+  }
+
+  test('choosing a destination clears what is standing in front of the '
+      'panes', () {
+    // 2026-09-14, from an iPhone with the chart open: 「手机上按这个按道理
+    // 应该自动关闭这个画面」. The chart wins over the current tab — the
+    // test above says it must — so without this the bottom bar is a dead
+    // control while it is up: the tap moves `_phonePane` and the screen
+    // does not change.
+    expect(src, contains('_closePhoneOverlays();'),
+        reason: 'the phone tab handler does not clear the screen');
+    final tap = src.indexOf('onTap: () => setState(() {');
+    expect(tap, isNot(-1));
+    final handler = src.substring(tap, tap + 200);
+    expect(handler.indexOf('_closePhoneOverlays()'),
+        lessThan(handler.indexOf('_phonePane = pane')),
+        reason: 'clear first, then move — the other order reads the same '
+            'but invites a later edit to return between them');
+  });
+
+  test('everything that outranks the switch is something the bar can '
+      'close', () {
+    // The pairing, rather than one named field: any state that
+    // short-circuits `_buildPhonePane` ahead of the three-way switch is
+    // a screen the bottom bar cannot otherwise escape. Add a second one
+    // and this fails until it joins `_closePhoneOverlays`.
+    final body = phonePane();
+    // Comments stripped first: this method's own note names `_openChart`
+    // and `_closeChart` while explaining the history, and a rule that
+    // reads prose cannot tell a mention from a use.
+    final code = body
+        .split('\n')
+        .where((l) => !l.trimLeft().startsWith('//'))
+        .join('\n');
+    final head = code.substring(0, code.indexOf('switch (_phonePane)'));
+    final fields = <String>{
+      for (final m in RegExp(r'\b(_[a-z]\w*)\b').allMatches(head))
+        m.group(1)!,
+    }..removeWhere((f) =>
+        // The frame builders it dispatches to, the width rule, and the
+        // tab field itself — none of them are a screen to clear.
+        f.startsWith('_build') || f == '_isThreePane' || f == '_phonePane');
+    final cleared = closeOverlays();
+    final missing = <String>[
+      for (final f in fields)
+        if (!cleared.contains(f)) f,
+    ];
+    expect(missing, isEmpty,
+        reason: 'these decide what a phone shows before the tab does, and '
+            'the bottom bar cannot clear them: ${missing.join(", ")}');
+  });
+
   test('the chart is checked BEFORE the three-way switch', () {
     // Same order the wide layout uses: the chart replaces the centre
     // rather than living inside one of the three tabs. Checking it

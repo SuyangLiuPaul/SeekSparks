@@ -183,7 +183,20 @@ void main() {
       expect(isKnownVersion(mp.currentVersion), isTrue);
     });
 
-    test('the reader is told the substitution happened', () async {
+    test('the swap happens without a word, because a saved preference is '
+        'not a request', () async {
+      // 2026-09-14, and this assertion is the reverse of what it said.
+      //
+      // It read: "a silent swap reads as the app forgetting their
+      // choice". Two reports later the owner's words were 「不应该有这个
+      // 任何 popup 啊」 and 「他们 had not asked for anything」, and the
+      // second clause settles it. A preference chosen months ago is not
+      // a question being asked at boot; the catalogue changed under the
+      // reader, the app opens the successor, and reporting our own
+      // bookkeeping to them is noise on a screen they came to read on.
+      //
+      // The explicit case still speaks — see the URL path in
+      // `url_sync_service_web.dart`, where a link NAMES an edition.
       SharedPreferences.setMockInitialValues({
         'version': 'cuv-yhwd',
         'locale': 'zh-Hans',
@@ -192,10 +205,11 @@ void main() {
       final mp = MainProvider();
       await mp.restoreState();
 
-      expect(mp.retiredVersionNotice, isNotNull,
-          reason: 'a silent swap reads as the app forgetting their choice');
-      expect(mp.retiredVersionNotice!.requested, 'cuv-yhwd');
-      expect(mp.retiredVersionNotice!.substituted, 'cuvs-yhwh');
+      expect(mp.currentVersion, 'cuvs-yhwh',
+          reason: 'the substitution itself must still happen');
+      expect(mp.retiredVersionNotice, isNull,
+          reason: 'boot said something about a choice the reader cannot '
+              'change and did not just make');
     });
 
     test('a code with no successor at all still boots', () async {

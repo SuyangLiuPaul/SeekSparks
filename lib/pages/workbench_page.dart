@@ -1856,6 +1856,20 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     };
   }
 
+  /// Everything a phone can raise in front of its single pane.
+  ///
+  /// Called when the reader chooses a destination in the bottom bar: on a
+  /// phone a tab IS the way back, and a control that leaves the previous
+  /// screen in place reads as a dead button. On a wide screen none of
+  /// this applies — these surfaces have panes of their own there, and the
+  /// bar does not exist.
+  ///
+  /// Set rather than cleared through `_closeChart` so this stays a plain
+  /// field write inside the caller's own `setState`.
+  void _closePhoneOverlays() {
+    _chartStrongs = null;
+  }
+
   /// The bottom bar, and the only navigation a phone gets.
   ///
   /// It is not a `NavigationBar`: Material 3's is 80 px tall before its
@@ -1871,7 +1885,26 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       return Expanded(
         child: InkWell(
           key: ValueKey('workbench-phone-tab-${pane.name}'),
-          onTap: () => setState(() => _phonePane = pane),
+          // 2026-09-14, owner-reported from an iPhone with the
+          // distribution chart open: 「手机上按这个按道理应该自动关闭这个
+          // 画面 很多其他page也一样因为手机跟大屏幕不一样」.
+          //
+          // The chart short-circuits `_buildPhonePane` ahead of the
+          // three-way switch, exactly as the wide layout puts it ahead
+          // of the centre mode — so on a phone it outranked the bottom
+          // bar: tapping Read moved `_phonePane` and changed nothing on
+          // screen, because the chart was still winning. On a wide
+          // screen there is no conflict, since the chart has a pane of
+          // its own and the bar does not exist.
+          //
+          // So choosing a destination closes whatever is standing in
+          // front of the panes. `_closePhoneOverlays` is the one place
+          // for that, so the next full-screen thing a phone can raise
+          // joins it instead of reintroducing this.
+          onTap: () => setState(() {
+            _closePhoneOverlays();
+            _phonePane = pane;
+          }),
           child: Container(
             height: t.scaledChrome(30),
             decoration: BoxDecoration(

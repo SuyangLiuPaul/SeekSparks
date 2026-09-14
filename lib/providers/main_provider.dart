@@ -1776,14 +1776,27 @@ class MainProvider extends ChangeNotifier {
         // `disabledVersions` on 2026-09-08 and everyone whose preference
         // was `bsb` has been told so on every launch since.
         //
-        // Keyed BY CODE, not a single boolean: retiring a second edition
-        // later is news again, and deserves to be said again.
-        const toldKey = 'retired_version_told';
-        final told = prefs.getStringList(toldKey) ?? const <String>[];
-        if (!told.contains(retired)) {
-          retiredVersionNotice = (requested: retired, substituted: v);
-          await prefs.setStringList(toldKey, [...told, retired]);
-        }
+        // 2026-09-14: and now it does not speak at all on this path.
+        //
+        // Once-per-code was the wrong half of the complaint to answer.
+        // The owner's words were 「不应该有这个任何 popup 啊」 and 「他们
+        // had not asked for anything」, and that second clause is the
+        // whole argument: a SAVED PREFERENCE is not a request. The
+        // reader picked BSB once, months ago; the catalogue changed
+        // under them; the app opens the successor, which is the right
+        // thing to do and needs no announcement. A notice here reports
+        // OUR bookkeeping as if it were their problem — and once per
+        // code is still every launch to anyone reading in a private
+        // window, which is how it was reported the second time.
+        //
+        // The URL path in `url_sync_service_web.dart` still speaks, and
+        // must: a shared link or bookmark NAMES an edition, so opening a
+        // different one without saying so would be answering a question
+        // the reader actually asked with a silent substitution.
+        //
+        // `retired_version_told` is deliberately left unread rather than
+        // cleaned up: it costs nothing, and a device that already
+        // carries it needs no migration.
       }
       // 2026-05-26 (v1.3.46): one-time migration for English-locale
       // users whose saved version is the v1.3.40-era class-level

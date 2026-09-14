@@ -674,3 +674,50 @@ is the failure this whole feature exists to end.
 **There is no sync half here, and that is not an omission.** This app has
 no account and no cloud sync — `url_sync_service.dart` is about URL
 state, not a profile — so there is nothing for a manual sync to push.
+
+### The launch notice about a retired edition is gone `[FIXED 2026-09-14]`
+
+Reported twice. The first time — 「为什么有提示 BSB Y 不能提供？不应该有
+这个任何 popup 啊」 — was answered on 2026-09-09 by making it fire once per
+retired code instead of on every launch. **That answered the wrong half.**
+The owner's sentence has two clauses and the second is the argument: *they
+had not asked for anything*. A saved preference is not a request. The
+reader chose BSB once, months ago; the catalogue changed under them; the
+app opens the successor, which is right and needs no announcement.
+
+Once-per-code is also still every launch to anyone reading in a **private
+window**, which is how it came back — the second report is a screenshot of
+sword.yahwehword.com in Safari private browsing.
+
+So the boot path says nothing now. **The URL path still speaks, and must**:
+a shared link or bookmark NAMES an edition, and opening a different one
+without saying so would answer a question the reader actually asked with a
+silent substitution. Nothing is hidden either way — the edition is in the
+status bar, the pane title and the version pill on every screen.
+
+Three tests changed sides, including one whose stated reason was "a silent
+swap reads as the app forgetting their choice". That was a reasonable
+thing to believe and the owner has now said otherwise twice.
+
+### On a phone, the bottom bar could not escape the chart `[FIXED 2026-09-14]`
+
+「手机上按这个按道理应该自动关闭这个画面 很多其他page也一样因为手机跟大
+屏幕不一样」, from an iPhone with the word-distribution chart open.
+
+`_buildPhonePane` checks `_chartStrongs` **before** the three-way switch —
+deliberately, and `workbench_phone_reach_test.dart` requires it, because
+the wide layout puts the chart ahead of the centre mode in the same way.
+On a phone that made the chart outrank the only navigation there is: the
+tap moved `_phonePane` and the screen did not change, so Read looked like
+a dead control.
+
+Choosing a destination now clears what is standing in front of the panes,
+through `_closePhoneOverlays`. A wide screen is unaffected — the chart has
+a pane of its own there and this bar does not exist.
+
+The guard is the **pairing**, not the field: any state that short-circuits
+`_buildPhonePane` ahead of the switch must be something
+`_closePhoneOverlays` clears. A second such surface fails the test until it
+joins. (It strips comments before scanning — the method's own note names
+`_openChart` and `_closeChart` while explaining the history, and a rule
+that reads prose cannot tell a mention from a use.)
