@@ -139,7 +139,15 @@ void main() {
     expect(byRef['使徒行傳 15:16'], contains('大衛傾塌的帳幕'));
 
     // T3 — the footnote no longer eats verse 16's number.
-    expect(byRef['以弗所書 3:15'], endsWith('<note:參4.6、>'));
+    //
+    // 2026-09-14: and the reference it carries is whole again. This
+    // pinned `<note:參4.6、>` — a cross-reference ending in a dangling
+    // 、 — because that is what the repair left: the boundary fix put
+    // the 16 back in the verse where it belonged and the note kept the
+    // comma that had introduced it. Adopting the translator's own
+    // footnotes from the official site brought the complete
+    // `參4.6、16`, which is what he wrote.
+    expect(byRef['以弗所書 3:15'], endsWith('<note:參4.6、16>'));
     expect(byRef['以弗所書 3:16'], startsWith('我求父：'));
 
     // T4 — the Psalm 34 quotation is three verses again.

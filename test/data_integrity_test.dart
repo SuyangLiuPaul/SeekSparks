@@ -93,10 +93,16 @@ const _suspectBlocks = <List<int>>[
   [0x20000, 0x2FFFF], // CJK Extension B — 𨱔 standing in for 鐏
 ];
 
-/// The two characters from those blocks the editions genuinely print:
+/// The characters from those blocks the editions genuinely print:
 /// 和合本 sets its long dash with U+2500 and 圣经新译本 separates
 /// transliterated names with U+00B7 (本丢·彼拉多).
-const _repertoireExceptions = <int>{0x2500, 0x00B7};
+///
+/// 2026-09-14: and Ç / ç, which arrived with 梁家鏗's own geographical
+/// footnotes — 恰纳卡莱省（Çanakkale Province）at 使徒行傳 16:8, 塞尔柱镇
+/// （Selçuk）at 19:35 and 啟示錄 2:1. They are Turkish place names in a
+/// translator's note, spelt as Turkish spells them, which is the note
+/// doing its job rather than a converter leaking.
+const _repertoireExceptions = <int>{0x2500, 0x00B7, 0x00C7, 0x00E7};
 
 const _chineseVersions = <String>[
   'cuvs-yhwh',

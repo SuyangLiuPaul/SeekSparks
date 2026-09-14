@@ -261,7 +261,11 @@ void main() {
           }
         }
       }
-      expect(seen, 50, reason: 'the assertion is vacuous if 隻 disappears');
+      // 50 -> 51 on 2026-09-14: 梁家鏗's own footnotes were adopted from
+      // the official site, and one of them carries 兩隻雛鴿 (路加福音
+      // 2:24). A classifier after a numeral, which is the rule this
+      // test is about, so it lands in `det` and not in `odd`.
+      expect(seen, 51, reason: 'the assertion is vacuous if 隻 disappears');
       expect(odd, isEmpty);
     });
 
