@@ -5523,6 +5523,29 @@ class _ChapterPageState extends State<_ChapterPage>
     final isSelected = mp.selectedVerses.isNotEmpty;
     final dc = widget.deviceClass;
 
+    // 2026-09-14: the reading measure is finally applied.
+    //
+    // `ResponsiveBreakpoints.maxContentWidth` came over with the rest of
+    // the port from YsWords carrying forty lines of rationale — the
+    // ~75-character ceiling, the CJK adjustment that raised the caps
+    // because a Han glyph is about twice a Latin one, and a reader's
+    // report from a Xiaomi Pad 7 Ultra — and NOTHING in this app called
+    // it. A documented readability rule that no screen obeys is worse
+    // than no rule, because it reads as settled.
+    //
+    // Applied to the verse column only, not to the pane: this is a
+    // workspace, and capping the frame would leave the pane's own title
+    // strip and status line short of their column with workspace
+    // background beside them. YsWords caps the whole pane because there
+    // the pane IS the window. What the rationale is actually about is
+    // line length, and line length is set here.
+    //
+    // It binds on exactly one surface — the Reader centre mode at full
+    // width on a large display. In Browse and Split every column is
+    // already far under the cap, so this changes nothing there, which is
+    // the test for whether a cap is the right shape: it should be
+    // invisible until the line really is too long.
+    final double measure = ResponsiveBreakpoints.maxContentWidth(dc);
     final Widget content = Padding(
       padding: EdgeInsets.only(
         right: ResponsiveBreakpoints.readingPadding(dc),
@@ -5619,7 +5642,19 @@ class _ChapterPageState extends State<_ChapterPage>
       ),
     );
 
-    if (!settings.readingPaperTheme) return content;
+    // Centred rather than left-aligned: a column pinned left with a
+    // 400px void on its right reads as a layout that failed, not as a
+    // measure that was chosen.
+    Widget measured = measure.isFinite
+        ? Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: measure),
+              child: content,
+            ),
+          )
+        : content;
+
+    if (!settings.readingPaperTheme) return measured;
     // 2026-08 (ported from YsWords v1.3.156): wrap the verse content in a
     // paper-tinted Theme override so it flows down through VerseWidget /
     // ParagraphGroupWidget / buildVerseContentSpans — none of which take
@@ -5643,7 +5678,7 @@ class _ChapterPageState extends State<_ChapterPage>
           displayColor: wb.text,
         ),
       ),
-      child: content,
+      child: measured,
     );
   }
 }
