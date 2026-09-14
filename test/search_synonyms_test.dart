@@ -150,7 +150,17 @@ void main() {
       // occurrence: 和合本 prints 槓 at 出埃及記 25:13 and 杆 at 27:10
       // for the same poles, and 茍合 then 苟合 inside 以西結書 23:44,
       // and the table now carries both sides of each.
-      expect(kCuvSimplifiedChars.length, 1145);
+      //
+      // 1,144 later the same day, and the one that left is the point of
+      // the exercise. An earlier pass had reverted 藉 → 借 as a CLASS on
+      // the strength of 出埃及記 22:14, which is the law about BORROWING
+      // — and had thereby rewritten 「耶和華藉摩西吩咐」 151 times. All
+      // 638 positions of that pass's five pairs were re-read in the
+      // published 和合本 (four independent readings, 381 chapters): 486
+      // 對, 152 錯, and 151 of the 152 were 借 for 藉. The 152nd was the
+      // edition's single 沈 (馬太福音 14:30), and with it gone 沉 has no
+      // second Traditional form left to record. 借 → 藉 went 133 → 284.
+      expect(kCuvSimplifiedChars.length, 1144);
     });
 
     test('no Traditional character stands opposite two Simplified ones, so '

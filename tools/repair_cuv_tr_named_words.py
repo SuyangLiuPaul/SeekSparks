@@ -55,6 +55,17 @@ VERSE = [
      '我的百姓愚顽，不认识；他们是愚昧无知的我儿女',
      '我的百姓愚顽，不认识我；他们是愚昧无知的儿女',
      '耶利米書 4:22 简'),
+    # 申命記 27:15. The over-conversion repair reverted 製造 to 制造 here
+    # and nowhere else — it fires when our Simplified, the official
+    # Traditional and this file's pair list all agree, and at this one
+    # position the official's own conversion is wrong. The published
+    # 和合本 reads 「有人製造耶和華所憎惡的偶像」, and this edition writes
+    # 製造 at all 40 other places. Named rather than swept, because the
+    # 157 制/製 positions are otherwise correct as they stand.
+    ('cuvs-yhwh-tr.json', '005027015',
+     '有人制造雅偉所憎惡的偶像',
+     '有人製造雅偉所憎惡的偶像',
+     '申命記 27:15 繁'),
 ]
 
 
