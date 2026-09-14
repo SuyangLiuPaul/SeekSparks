@@ -269,6 +269,30 @@ who finds the old phrasing needs to land somewhere.
 - **Whether the Reader becomes a workbench mode** rather than a separate
   surface. `[carried forward]`
 - **Shortening the English strip lane headings** (above).
+- **Target size on the Workbench: 73 of 105 tappable nodes are under
+  24px in at least one dimension.** Measured 2026-09-14 by pumping
+  `WorkbenchPage` at 1280x900 and reading the rendered size of every
+  `GestureDetector` / `InkWell` / `IconButton` in the tree (the harness is
+  `test/workbench_keyboard_reach_test.dart`'s `pump`; the probe itself was
+  not kept — it is four lines of tree-walk and it belongs in whichever
+  iteration acts on this). The common heights are 21px and 15px: the
+  version popups in the top strip come out 41x21, the tab-strip entries
+  25x15, the pane collapse chevrons 20x20.
+  **This is not filed as a bug, because the number is the density the
+  owner asked for.** WCAG 2.5.8 wants 24x24 unless the target is inline,
+  essential, or has 24px of clear spacing around it; the Workbench brief
+  is "a dense, flat, neutral, keyboard-driven desktop tool", and the
+  2026-09-07 modernisation note says in as many words that density did
+  NOT change and "modern does not mean airy". Raising every target to
+  24px would undo that, and on a pointer-driven desktop tool 2.5.8's
+  rationale — touch, tremor — bites least.
+  What is worth a decision is the TOUCH build: the same widgets ship in
+  the Android and iPad apps, where the criterion is meant to apply, and
+  nothing in the app varies target size by input device. Three options,
+  none taken: leave it and say so; grow targets only when
+  `MediaQuery.gestureSettings`/the primary pointer is coarse; or take the
+  reader surface out of the workbench layout on a phone. `[verified
+  2026-09-14 — measured, not estimated]`
 - **Whether the reading column should be capped on a wide monitor.**
   `lib/utils/responsive.dart` carries `maxContentWidth` — 1100 on tablet,
   1400 on desktop, 1800 on a TV — with forty lines of rationale about the
