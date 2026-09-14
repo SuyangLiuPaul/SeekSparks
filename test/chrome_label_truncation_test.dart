@@ -102,8 +102,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 400));
 
-    final out = <String>[];
-    void visit(RenderObject o) {
+    // `allRenderObjects` rather than a walk from the binding's root:
+    // `renderViewElement` is deprecated, and CI analyses with infos
+    // fatal, so the walk that read best locally failed the build.
+    // A Set: `allRenderObjects` reaches the same paragraph through more
+    // than one root, so a clipped label would otherwise be named twice in
+    // the failure message.
+    final out = <String>{};
+    for (final o in tester.allRenderObjects) {
       if (o is RenderParagraph &&
           o.hasSize &&
           o.maxLines == 1 &&
@@ -114,10 +120,7 @@ void main() {
           out.add('"$text" short by ${short.toStringAsFixed(1)}px');
         }
       }
-      o.visitChildren(visit);
     }
-
-    visit(tester.binding.renderViewElement!.renderObject!);
     // Drained before the tree goes: `AppSettings` debounces its notify
     // behind a timer the widget tree outlives, and the binding's
     // pending-timer guard would otherwise fail every case here for a
@@ -125,7 +128,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 700));
-    return out;
+    return out.toList();
   }
 
   for (final page in pages.entries) {
@@ -161,20 +164,16 @@ void main() {
     ));
     await tester.pump();
 
-    final found = <String>[];
-    void visit(RenderObject o) {
-      if (o is RenderParagraph &&
-          o.hasSize &&
-          o.maxLines == 1 &&
-          o.overflow == TextOverflow.ellipsis &&
-          o.getMaxIntrinsicWidth(double.infinity) - o.size.width > 0.5) {
-        found.add(o.text.toPlainText());
-      }
-      o.visitChildren(visit);
-    }
-
-    visit(tester.binding.renderViewElement!.renderObject!);
-    expect(found, hasLength(1),
+    final found = <String>[
+      for (final o in tester.allRenderObjects)
+        if (o is RenderParagraph &&
+            o.hasSize &&
+            o.maxLines == 1 &&
+            o.overflow == TextOverflow.ellipsis &&
+            o.getMaxIntrinsicWidth(double.infinity) - o.size.width > 0.5)
+          o.text.toPlainText(),
+    ];
+    expect(found.toSet(), hasLength(1),
         reason: 'the walk above no longer finds a clipped label even when '
             'one is put in front of it');
   });
