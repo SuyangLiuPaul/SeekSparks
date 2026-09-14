@@ -136,7 +136,21 @@ void main() {
       // This is the table doing its job, not losing entries: it records
       // where the two shipped editions actually differ, and after the
       // ruling they differ in six fewer places.
-      expect(kCuvSimplifiedChars.length, 1106);
+      //
+      // 1,145 on 2026-09-14, and this is the table GAINING entries for
+      // the first time. 1,111 characters in 1,022 verses moved to the
+      // form the published 和合本 prints there
+      // (`tools/apply_cuv_tr_hehe_verdicts.py`), settling the 128
+      // classes this repo's two conversions had been left disagreeing
+      // on. 39 of those are a Traditional form this pair had never
+      // shown opposite its Simplified character before — 迹 stood
+      // opposite 跡 only and now also stands opposite 蹟, 饥 opposite
+      // 饑 and now also 飢, 系 opposite 繫 and now also 係 — so the
+      // correspondence has more to record, not less. It is per
+      // occurrence: 和合本 prints 槓 at 出埃及記 25:13 and 杆 at 27:10
+      // for the same poles, and 茍合 then 苟合 inside 以西結書 23:44,
+      // and the table now carries both sides of each.
+      expect(kCuvSimplifiedChars.length, 1145);
     });
 
     test('no Traditional character stands opposite two Simplified ones, so '
@@ -150,22 +164,43 @@ void main() {
       expect(back.values.where((v) => v.length > 1), isEmpty);
     });
 
-    test('the six Simplified characters with two Traditional forms list the '
-        'commoner one first', () {
-      // 众 → 眾 1,892 times and 衆 4. Whichever way that tie is broken
-      // decides what `simplifiedToTraditional` produces, so it is
+    test('a Simplified character with more than one Traditional form lists '
+        'the commoner one first', () {
+      // Whichever way this is ordered decides what
+      // `simplifiedToTraditional` produces for that character, so it is
       // pinned rather than left to map iteration order.
-      final firstSeen = <String, String>{};
+      final forms = <String, List<String>>{};
       for (var i = 0; i < kCuvSimplifiedChars.length; i++) {
-        firstSeen.putIfAbsent(
-            kCuvSimplifiedChars[i], () => kCuvTraditionalChars[i]);
+        forms
+            .putIfAbsent(kCuvSimplifiedChars[i], () => [])
+            .add(kCuvTraditionalChars[i]);
       }
-      expect(firstSeen['众'], '眾');
-      expect(firstSeen['么'], '麽');
-      expect(firstSeen['干'], '乾');
-      expect(firstSeen['鉴'], '鑒');
-      expect(firstSeen['签'], '簽');
-      expect(firstSeen['尝'], '嘗');
+      final many = forms.entries.where((e) => e.value.length > 1);
+      // 20 until 2026-09-14, when following the published 和合本 per
+      // occurrence gave 迹, 系 and 锈 a second form they had not had.
+      expect(many.length, 23);
+
+      // The close calls, where the majority is not obvious and a
+      // re-derivation could flip it: 锈 is 鏽 5 against 銹 4, 系 is 繫 12
+      // against 係 5, 饥 is 饑 99 against 飢 58, 鉴 is 鑒 23 against 鑑 5.
+      expect(forms['锈']!.first, '鏽');
+      expect(forms['系']!.first, '繫');
+      expect(forms['饥']!.first, '饑');
+      expect(forms['鉴']!.first, '鑒');
+      // 签 flipped on 2026-09-14: 籤 25 against 簽 2, where it had been
+      // 簽 first. The 和合本 prints 拈籤/掣籤 for the casting of lots.
+      expect(forms['签']!.first, '籤');
+      expect(forms['干']!.first, '乾');
+      expect(forms['尝']!.first, '嘗');
+      // 复 is the only one with three: 復 235, 覆 3, 複 1.
+      expect(forms['复'], ['復', '覆', '複']);
+
+      // Two that used to be in this list and are now single-form, which
+      // is the point of naming them: 众 had 眾 1,892 and 衆 4, and the
+      // four were the edition contradicting itself; 么 had 麽 1,230 and
+      // 麼 11, and no OpenCC profile produces 麽 at all.
+      expect(forms['众'], ['眾']);
+      expect(forms['么'], ['麼']);
     });
   });
 

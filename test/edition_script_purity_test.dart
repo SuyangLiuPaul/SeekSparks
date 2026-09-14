@@ -13,9 +13,12 @@
 //   040025020 馬太福音 25:20  那另外的的五來 — 的 doubled, 千 dropped, in
 //       the Traditional file: repaired.
 //   023033009 023040007 023040008 059001011 060001024  凋 (simplified) /
-//       雕 (traditional) — systematic at 83 against 5, the traditional
-//       edition's own orthography. Left alone; repairing would fabricate
-//       a house-style spelling onto the other script.
+//       雕 (traditional) — systematic at 83 against 5, and left alone
+//       for six days on the reasoning that repairing it would fabricate
+//       a house-style spelling onto the other script. Settled
+//       2026-09-14 by reading the published 和合本 at each of the five:
+//       it prints 凋殘 / 凋謝, so the house style was a conversion
+//       error and these five are gone from the list.
 //
 // See tools/repair_cuvs_yhwh_editions.py and docs/DATA-INTEGRITY.md,
 // check 50.
@@ -26,11 +29,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 
 const _leftDeliberately = <String>[
-  '023033009',
-  '023040007',
-  '023040008',
-  // 2026-09-08, a second and different reason, so the list is now two
-  // groups and not five sites of one kind. 复 is one Simplified
+  // 2026-09-08, a second and different reason, so the list was two
+  // groups and not five sites of one kind — and since 2026-09-14 it is
+  // the only reason left. 复 is one Simplified
   // character standing for three Traditional ones — 復 (again), 複
   // (compound), 覆 (turn over) — and every converter that has touched
   // this text mapped all 239 to 復. The official 和合本繁體 prints
@@ -46,8 +47,6 @@ const _leftDeliberately = <String>[
   '042001029', // 路加福音 1:29  又反覆思想這樣問安
   '042002019', // 路加福音 2:19  存在心裏，反覆思想
   '047001017', // 哥林多後書 1:17  豈是反覆不定嗎
-  '059001011',
-  '060001024',
 ];
 
 void main() {
@@ -101,7 +100,7 @@ void main() {
 
   test(
       'the traditional edition converts back to the simplified one, '
-      'except at eight named sites', () {
+      'except at three named sites', () {
     // Derive a traditional->simplified map from the corpus itself: for
     // every equal-length verse pair, vote per character position, then
     // take the majority simplified character for each traditional one.
@@ -134,13 +133,14 @@ void main() {
       ..sort();
 
     expect(disagreeing, _leftDeliberately,
-        reason: 'these eight verses are left deliberately, for two '
-            'different reasons the list above gives one by one: five '
-            'where the traditional edition writes 雕 systematically '
-            '(83 sites) against the simplified edition’s 凋, and three '
-            'where the official 和合本繁體 prints 反覆 and the majority '
-            'vote below cannot see it. Neither is a defect. A new id '
-            'appearing here IS one, and must be investigated rather '
-            'than added to this list.');
+        reason: 'these three verses are left deliberately: the '
+            'official 和合本繁體 prints 反覆 at each of them and the '
+            'majority vote below cannot see it, because 覆 stands '
+            'opposite 覆 79 times and opposite 复 three. That is the '
+            'vote being right about the common case, not a defect. The '
+            'five 雕/凋 sites that stood here until 2026-09-14 are gone '
+            'because the published 和合本 prints 凋 and the edition now '
+            'follows it. A new id appearing here IS a defect, and must '
+            'be investigated rather than added to this list.');
   });
 }
