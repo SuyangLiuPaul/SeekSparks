@@ -113,7 +113,30 @@ void main() {
       // typo gone there is no 壳/殼 correspondence left to record, which
       // is the right answer: the pair was only ever evidence of a
       // defect.
-      expect(kCuvSimplifiedChars.length, 1113);
+      // 1,112 later still: 凌 left the table the same way 壳 did, and
+      // for the same reason. The only Traditional character it ever
+      // stood opposite was 淩 — 淩辱 ×37 — and 淩 is a variant this
+      // edition has no business printing: the published 和合本繁體 reads
+      // 凌辱 (士師記 19:25), the official conversion reads 凌, and
+      // tools/repair_cuv_tr_overconversion.py puts it back. With the
+      // over-conversion gone there is no 凌/淩 correspondence left to
+      // record, which is right: the pair was only ever evidence of a
+      // defect.
+      // 1,106 the same day, and this one is a whole class rather than a
+      // single defect: the Traditional edition moved to **Hong Kong**
+      // forms on the owner's ruling (「按照香港和合本的繁体字吧」, and the
+      // publisher's own conversion README: "Hong Kong, at the church's
+      // request: 裏, 牀, 着 — not Taiwan's 裡, 床, 著").
+      //
+      // Six Simplified characters left the table because the Hong Kong
+      // form IS the Simplified character — 户, 着, 温, 兑, 悦, 卧 — so
+      // there is no longer a correspondence to record for them. 稅→税 and
+      // 蔥→葱 are the same shape and were already absent.
+      //
+      // This is the table doing its job, not losing entries: it records
+      // where the two shipped editions actually differ, and after the
+      // ruling they differ in six fewer places.
+      expect(kCuvSimplifiedChars.length, 1106);
     });
 
     test('no Traditional character stands opposite two Simplified ones, so '

@@ -19,6 +19,8 @@ List<InlineSpan> buildVerseContentSpans({
   bool superscriptVerseNum = false,
   VoidCallback? onTextTap,
   Color? spanBgColor,
+  Set<String>? openNotes,
+  void Function(String note)? onNoteToggle,
 }) {
   final isReferenceLine = verse.paragraphType == 'reference';
 
@@ -139,6 +141,8 @@ List<InlineSpan> buildVerseContentSpans({
     italic: isReferenceLine,
     onTextTap: onTextTap,
     spanBgColor: spanBgColor,
+    openNotes: openNotes,
+    onNoteToggle: onNoteToggle,
   ));
 
   return spans;
@@ -166,6 +170,8 @@ List<InlineSpan> buildAnnotatedSpans({
   double? fontSize,
   VoidCallback? onTextTap,
   Color? spanBgColor,
+  Set<String>? openNotes,
+  void Function(String note)? onNoteToggle,
 }) {
   final fs = fontSize ?? settings.fontSize;
   // 2026-05-07: drop stray spaces between a `[`/`{`/`<note:` annotation
@@ -422,10 +428,35 @@ List<InlineSpan> buildAnnotatedSpans({
             part.trim().endsWith('>') &&
             (lastPart?.trim().endsWith('}') ?? false))) {
       final note = notePattern.firstMatch(part)!.group(1)!;
+      final opensInPlace = onNoteToggle != null;
+      final isOpen = opensInPlace && (openNotes?.contains(note) ?? false);
       spans.add(WidgetSpan(
         alignment: PlaceholderAlignment.bottom,
         child: GestureDetector(
           onTap: () {
+            // 2026-09-14: opens UNDER the line, not over it.
+            //
+            // 「我觉得sword words可以学习yahwehdehua 当注释很多可以expand
+            // close这样」. That app's `note_sheet.dart` records the same
+            // move and the reason: it used to be a modal, and a modal
+            // "shows one note and covers the verse it is about; two
+            // notes could never be read against each other".
+            //
+            // What made it urgent here is the data. 梁家鏗's own
+            // apparatus arrived today — 1,132 footnotes became 2,209,
+            // and several of them are paragraphs: the note at 馬太福音
+            // 4:5 distinguishes ἱερόν from ναός over four lines and
+            // ends 「參 SNT，10-12頁」. One dialog per note, each
+            // covering the verse it explains, is the wrong shape for
+            // that.
+            //
+            // The dialog stays as the fallback for any caller that has
+            // not been given somewhere to put an open note, so a
+            // surface nobody has updated still answers a tap.
+            if (onNoteToggle != null) {
+              onNoteToggle(note);
+              return;
+            }
             showDialog(
               context: context,
               builder: (_) => AlertDialog(
@@ -476,6 +507,49 @@ List<InlineSpan> buildAnnotatedSpans({
           ),
         ),
       ));
+      if (isOpen) {
+        // The note itself, on its own line under the words it is about.
+        //
+        // A `WidgetSpan` inside the same paragraph rather than a widget
+        // under it: the marker sits mid-sentence, so this is the only
+        // place the note can open without the caller having to know
+        // where in the line it was. `\n` before it breaks the line;
+        // the left rule and the indent say which marker it belongs to.
+        //
+        // Several can be open at once, which is the whole point — a
+        // reader comparing 4:5's ἱερόν/ναός note with 21:12's needs both
+        // on screen, and that is exactly what a modal cannot do.
+        final scheme = Theme.of(context).colorScheme;
+        spans.add(const TextSpan(text: '\n'));
+        spans.add(WidgetSpan(
+          child: Container(
+            width: double.infinity,
+            margin: EdgeInsets.only(top: fs * 0.2, bottom: fs * 0.25),
+            padding: EdgeInsets.fromLTRB(fs * 0.55, fs * 0.3, fs * 0.4,
+                fs * 0.3),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: scheme.primary, width: 2),
+              ),
+              color: scheme.primary.withValues(alpha: 0.06),
+            ),
+            child: Text(
+              // Trimmed: the marker is written `<note: …>` in some
+              // editions and `<note:…>` in others, and the capture keeps
+              // whichever space the asset had. On its own line that
+              // space is a visible indent on the first line only.
+              note.trim(),
+              style: TextStyle(
+                fontSize: fs * 0.82,
+                height: settings.lineSpacing,
+                fontFamily: settings.fontFamily,
+                fontFamilyFallback: kCjkFontFallback,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ));
+      }
       lastPart = part;
       continue;
     }

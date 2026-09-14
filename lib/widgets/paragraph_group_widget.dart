@@ -18,7 +18,7 @@ import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 /// Renders a group of consecutive verses as one flowing paragraph (RichText).
 /// Used in paragraph mode. Eliminates per-verse line breaks so verses read
 /// as continuous prose, similar to printed Bibles or WeDevote (微读圣经).
-class ParagraphGroupWidget extends StatelessWidget {
+class ParagraphGroupWidget extends StatefulWidget {
   final List<Verse> group;
   final int startVerseIndex;
 
@@ -32,6 +32,28 @@ class ParagraphGroupWidget extends StatelessWidget {
     required this.startVerseIndex,
     this.isFirst = false,
   });
+
+  @override
+  State<ParagraphGroupWidget> createState() => _ParagraphGroupWidgetState();
+}
+
+class _ParagraphGroupWidgetState extends State<ParagraphGroupWidget> {
+  /// The footnotes open in this paragraph, by their own text — the same
+  /// contract as `VerseWidget`'s, and for the same reason. In paragraph
+  /// mode a group is one `RichText`, so the set is per paragraph rather
+  /// than per verse; notes in different paragraphs stay open together
+  /// exactly as notes in different verses do.
+  final Set<String> _openNotes = <String>{};
+
+  void _toggleNote(String note) {
+    setState(() {
+      if (!_openNotes.remove(note)) _openNotes.add(note);
+    });
+  }
+
+  List<Verse> get group => widget.group;
+  int get startVerseIndex => widget.startVerseIndex;
+  bool get isFirst => widget.isFirst;
 
   @override
   Widget build(BuildContext context) {
@@ -229,6 +251,8 @@ class ParagraphGroupWidget extends StatelessWidget {
 
           allSpans.addAll(buildVerseContentSpans(
             verse: verse,
+            openNotes: _openNotes,
+            onNoteToggle: _toggleNote,
             context: context,
             settings: settings,
             locale: locale,

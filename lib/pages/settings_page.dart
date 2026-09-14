@@ -18,6 +18,7 @@ import 'package:seeksparks/services/version_import_service.dart';
 import 'package:seeksparks/utils/pick_text_file.dart';
 import 'package:seeksparks/constants/fuzzy_search_strings.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/widgets/update_check_tile.dart';
 import 'package:seeksparks/constants/update_check_frequency.dart';
 import 'package:seeksparks/utils/cross_version_search.dart'
     show CrossVersionSearchMode;
@@ -1362,6 +1363,27 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                 // to ask about.
                 if (UpdateService.isSupported) ...[
                   SizedBox(height: 12 * s),
+                  // 2026-09-14: 「words sword apk setting里面要有一个检查
+                  // 更新的按键」. It was on the About page and nowhere
+                  // else, which is two screens from where a reader looks
+                  // — the sibling Words app has had it in Settings
+                  // beside the switch since the switch existed.
+                  //
+                  // Three doors now, and they are the same flow: this
+                  // button, Help ▸ Check for updates in the menu bar, and
+                  // the periodic check that raises the banner. All of
+                  // them end in `installUpdateInApp` on Android.
+                  Card(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 4 * s),
+                      child: UpdateCheckTile(
+                        locale: settings.locale,
+                        scheme: Theme.of(context).colorScheme,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8 * s),
                   Card(
                     child: Padding(
                       padding:
