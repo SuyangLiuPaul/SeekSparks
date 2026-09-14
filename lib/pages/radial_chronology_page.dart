@@ -35,6 +35,8 @@ import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/year_digest.dart' show buildYearDigest;
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
+import 'package:seeksparks/utils/wheel_text_metrics.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 /// World history on one wheel: 4200 BC at twelve o'clock, time sweeping
 /// clockwise to the present, one concentric band per people or
@@ -157,8 +159,7 @@ const double kWheelMaxScale = 40;
 //   bands .. rim    radial event labels
 //   beyond rim      century years
 const double _kHubFrac = 0.115;
-const double _kBandsFrac = 0.285;
-const double _kRimFrac = 0.445;
+
 
 /// The outermost hairline `_paintRim` draws, as an offset from the rim.
 /// Named because two things depend on it and they must not drift: the
@@ -1276,8 +1277,33 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   Future<WheelHistoryData>? _future;
   final _viewer = TransformationController();
 
-  /// Streams the reader has switched off. Empty means all on.
+  /// Streams the reader has switched off.
+  ///
+  /// 2026-09-15: this is no longer empty on arrival. 「一开始filter不要
+  /// 全部都有 这样loading很慢」 — and the geometry agrees, because a ring
+  /// has to be 24 px thick to be tappable and a phone's annulus holds
+  /// about four of those, not twenty-two. [_applyDefaultHidden] fills it
+  /// once, the first time the page knows how big it is; after that it is
+  /// the reader's.
   final Set<String> _hidden = {};
+
+  /// Whether the viewport-sized default has been applied. One-shot: a
+  /// rotation or a window resize must not silently switch the reader's
+  /// own choices back on.
+  bool _defaultsApplied = false;
+
+  /// Fill [_hidden] with everything the wheel has no room for.
+  void _applyDefaultHidden(WheelHistoryData data, double side) {
+    if (_defaultsApplied) return;
+    _defaultsApplied = true;
+    final capacity = ringCapacity(side,
+        hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side));
+    final keep = defaultVisibleStreams(
+        data.streams.map((s) => s.id), capacity).toSet();
+    for (final s in data.streams) {
+      if (!keep.contains(s.id)) _hidden.add(s.id);
+    }
+  }
   String? _selectedId;
 
   /// The viewer's current scale.
@@ -1573,11 +1599,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         child: LayoutBuilder(builder: (context, box) {
           _viewportSize = Size(box.maxWidth, box.maxHeight);
           final side = math.min(box.maxWidth, box.maxHeight);
+          // Before `_visible` reads `_hidden`, and only ever once.
+          if (!_defaultsApplied) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || _defaultsApplied) return;
+              setState(() => _applyDefaultHidden(data, side));
+            });
+          }
           _side = side;
           final hubD = side * _kHubFrac * 2;
           final rHub = side * _kHubFrac;
-          final rBands = side * _kBandsFrac;
-          final rRim = side * _kRimFrac;
+          final rBands = side * bandsFractionFor(side);
+          final rRim = side * rimFractionFor(side);
 
           final arcs = _buildArcs(data, ringOf, colors, streams.length, rHub,
               rBands, locale, t.scaledChrome(_kLabelPx));
@@ -3360,8 +3393,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
 
     final streams = _visible(data);
     final rHub = _side * _kHubFrac;
-    final rBands = _side * _kBandsFrac;
-    final rRim = _side * _kRimFrac;
+    final rBands = _side * bandsFractionFor(_side);
+    final rRim = _side * rimFractionFor(_side);
 
     // A life belongs to no band, so its sub-ring is resolved before the
     // ring lookup below — which would fail, `lifespans` being a layer id
@@ -3498,8 +3531,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     }
 
     final rHub = side * _kHubFrac;
-    final rBands = side * _kBandsFrac;
-    final rRim = side * _kRimFrac;
+    final rBands = side * bandsFractionFor(side);
+    final rRim = side * rimFractionFor(side);
 
     // An event spoke, if the tap is out in the label annulus.
     //
@@ -3748,8 +3781,8 @@ class _WorldWheelPainter extends CustomPainter {
     final side = math.min(size.width, size.height);
     final c = Offset(size.width / 2, size.height / 2);
     final rHub = side * _kHubFrac;
-    final rBands = side * _kBandsFrac;
-    final rRim = side * _kRimFrac;
+    final rBands = side * bandsFractionFor(side);
+    final rRim = side * rimFractionFor(side);
 
     _paintCenturies(canvas, c, rHub, rRim);
     _paintGrooves(canvas, c, rHub, rBands);
@@ -4169,15 +4202,16 @@ class _WorldWheelPainter extends CustomPainter {
     if (sweep <= 0 || fontSize <= 0) return;
     final style = canvasTextStyle(
         color: wb.text.withValues(alpha: 0.98 * dim), fontSize: fontSize);
+    // Measured through the cache. This loop used to build and lay out a
+    // TextPainter per character on every frame; the widths do not
+    // change between frames and the chart's vocabulary repeats heavily.
+    // See `lib/utils/wheel_text_metrics.dart`.
     final widths = <double>[];
     var total = 0.0;
     for (final ch in text.characters) {
-      final tp = TextPainter(
-          text: TextSpan(text: ch, style: style),
-          textDirection: TextDirection.ltr)
-        ..layout();
-      widths.add(tp.width);
-      total += tp.width;
+      final w = WheelTextMetrics.widthOf(ch, style);
+      widths.add(w);
+      total += w;
     }
     final angular = total / radius;
     _charsOnArc(canvas, c, radius, text, widths, style,
@@ -4192,15 +4226,16 @@ class _WorldWheelPainter extends CustomPainter {
     for (var i = 0; i < chars.length; i++) {
       final da = widths[i] / radius;
       final th = flip ? pen - da / 2 : pen + da / 2;
-      final tp = TextPainter(
-          text: TextSpan(text: chars[i], style: style),
-          textDirection: TextDirection.ltr)
-        ..layout();
+      // A cached `ui.Paragraph`, not a fresh `TextPainter`. A Paragraph
+      // is immutable once laid out and safe to draw any number of times
+      // on any canvas, which a TextPainter is not — and this runs about
+      // 8,000 times a frame across the chart's labels.
+      final g = WheelTextMetrics.glyphOf(chars[i], style);
       canvas.save();
       canvas.translate(
           c.dx + math.cos(th) * radius, c.dy + math.sin(th) * radius);
       canvas.rotate(th + (flip ? -math.pi / 2 : math.pi / 2));
-      tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
+      canvas.drawParagraph(g, Offset(-widths[i] / 2, -g.height / 2));
       canvas.restore();
       pen += flip ? -da : da;
     }

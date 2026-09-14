@@ -43,6 +43,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 const _family = 'Roboto';
 const _fallback = ['NotoSansSC-Sub'];
@@ -52,7 +53,6 @@ const _fallback = ['NotoSansSC-Sub'];
 // kMinYear, kMaxYear, and _labelScale. See that file's own comment on
 // why -4200 and not -4000.
 const double _hubFrac = 0.115;
-const double _bandsFrac = 0.285;
 const double _rimFont = 10.5;
 const int _minYear = -4200;
 const int _maxYear = 2026;
@@ -104,7 +104,7 @@ List<_Placed> _placeOld(
   String locale,
   double zoom,
 ) {
-  final rHub = side * _hubFrac, rBands = side * _bandsFrac;
+  final rHub = side * _hubFrac, rBands = side * bandsFractionFor(side);
   final n = data.streams.length;
   final ringOf = {for (var i = 0; i < n; i++) data.streams[i].id: i};
   final titleSize = _rimFont / _labelScale(zoom);
@@ -155,7 +155,7 @@ List<_Placed> _placeShipped(
   String locale,
   double zoom,
 ) {
-  final rHub = side * _hubFrac, rBands = side * _bandsFrac;
+  final rHub = side * _hubFrac, rBands = side * bandsFractionFor(side);
   final n = data.streams.length;
   final ringOf = {for (var i = 0; i < n; i++) data.streams[i].id: i};
   final titleSize = _rimFont / _labelScale(zoom);

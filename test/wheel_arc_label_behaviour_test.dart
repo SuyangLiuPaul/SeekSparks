@@ -22,6 +22,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 const _family = 'Roboto';
 const _fallback = ['NotoSansSC-Sub'];
@@ -29,7 +30,6 @@ const _fallback = ['NotoSansSC-Sub'];
 // radial_chronology_page.dart: _kHubFrac, _kBandsFrac, _kLabelPx,
 // kMinYear, kMaxYear, and _labelScale.
 const double _hubFrac = 0.115;
-const double _bandsFrac = 0.285;
 const double _rimFont = 10.5;
 // -4200 since the creation anchor was derived (`_meta.creation`, 4114
 // BC) and the axis moved to hold it. This copy went on saying -4000
@@ -120,7 +120,7 @@ Iterable<({WheelPower power, double radius, double sweep})> _arcs(
   WheelHistoryData data,
   double side,
 ) sync* {
-  final rHub = side * _hubFrac, rBands = side * _bandsFrac;
+  final rHub = side * _hubFrac, rBands = side * bandsFractionFor(side);
   final n = data.streams.length;
   final ringOf = {for (var i = 0; i < n; i++) data.streams[i].id: i};
   for (final p in data.powers) {
@@ -134,7 +134,7 @@ Iterable<({WheelPower power, double radius, double sweep})> _arcs(
 }
 
 double _maxEm(WheelHistoryData data, double side) =>
-    ringPitch(data.streams.length, side * _hubFrac, side * _bandsFrac) *
+    ringPitch(data.streams.length, side * _hubFrac, side * bandsFractionFor(side)) *
     kArcLabelPitchFraction;
 
 /// The size the page would hand `fitArcLabel` for each arc, and what it
@@ -329,7 +329,7 @@ void main() {
     test('no drawn label reaches the neighbouring stream', () async {
       for (final side in [700.0, 900.0]) {
         final pitch = ringPitch(
-            data.streams.length, side * _hubFrac, side * _bandsFrac);
+            data.streams.length, side * _hubFrac, side * bandsFractionFor(side));
         for (final locale in _locales) {
           for (final zoom in [1.0, 2.0]) {
             final arcs = _arcs(data, side).toList();

@@ -26,31 +26,60 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 /// The page's own fractions, restated because they are private to it —
 /// `wheel_lifespans_test.dart` and `wheel_arc_label_behaviour_test.dart`
 /// do the same.
 const double _hubFrac = 0.115;
-const double _bandsFrac = 0.285;
 
 void main() {
-  test('a band is thinner than a finger, which is why this matters', () {
-    for (final (side, share, ink) in [
-      (700.0, 5.41, 4.33),
-      (900.0, 6.95, 5.56),
-      (1400.0, 10.82, 8.65),
-    ]) {
+  test('at the default ring count a band clears the finger target; at all '
+      'twenty-two it does not, which is why the default exists', () {
+    // 2026-09-15. This test used to assert the DEFECT — "a band is
+    // thinner than a finger" — and noted that it was worst at the
+    // canvases most readers get. Both halves of that are now fixed and
+    // the test says so instead.
+    //
+    // What changed: the bands took 17% of the radius (hub 11.5% → 28.5%)
+    // and the event titles took the outer 55%, with all twenty-two
+    // streams crammed into the 17%. The bands are the data, so they now
+    // take 44% of a phone's radius and 30% of a desktop's, and the
+    // default ring count is derived from what fits at a readable
+    // thickness rather than being "all of them".
+    //
+    // 9.0 is this app's own finger target in logical pixels.
+    for (final side in [700.0, 900.0, 1400.0]) {
       final rHub = side * _hubFrac;
-      final rBands = side * _bandsFrac;
-      final pitch = ringPitch(22, rHub, rBands);
-      final b = ringRadii(0, 22, rHub, rBands);
-      expect(pitch, closeTo(share, 0.01), reason: '$side px');
-      expect(b.outer - b.inner, closeTo(ink, 0.01), reason: '$side px');
-      // Below the finger target at the two canvases the wheel usually
-      // gets, and only above it at 1400 — which is the shape of the
-      // problem: it is worst where most readers are. Asserting "always
-      // thinner" was my first version of this line and it is false.
-      expect(pitch < 9.0, side < 1400.0, reason: '$side px');
+      final rBands = side * bandsFractionFor(side);
+      final rings = ringCapacity(side,
+          hubFraction: _hubFrac, bandsFraction: bandsFractionFor(side));
+
+      final atDefault = ringPitch(rings, rHub, rBands);
+      expect(atDefault, greaterThan(9.0),
+          reason: '$side px: a default band is ${atDefault.toStringAsFixed(1)} '
+              'px, under the 9 px finger target — the capacity rule and '
+              'the annulus have drifted apart');
+
+      // And the other end. Note what is NOT claimed: widening the
+      // annulus alone lifts even twenty-two rings to 10.0 px at 900 and
+      // 11.8 at 1400, so on a large canvas "all streams" is no longer a
+      // tap-target problem. It is still a legibility and colour problem
+      // — a categorical palette stops being discriminable past about
+      // eight hues — and at 700 px it is a tap problem too, at 7.8 px.
+      // The default is defended by the margin below, not by a claim
+      // that everything-on is unusable everywhere.
+      final atAll = ringPitch(22, rHub, rBands);
+      if (side <= 700) {
+        expect(atAll, lessThan(9.0),
+            reason: '\$side px: twenty-two rings clear the finger target '
+                'even on the smallest canvas measured — the default '
+                'could be more generous');
+      }
+      expect(atDefault, greaterThan(atAll * 1.8),
+          reason: '\$side px: the default (\${atDefault.toStringAsFixed(1)} '
+              'px) barely improves on showing everything '
+              '(\${atAll.toStringAsFixed(1)} px)');
     }
   });
 
@@ -61,7 +90,7 @@ void main() {
     // leave gaps by design; the shares must not.
     for (final side in [700.0, 900.0, 1400.0]) {
       final rHub = side * _hubFrac;
-      final rBands = side * _bandsFrac;
+      final rBands = side * bandsFractionFor(side);
       const n = 22;
       final pitch = ringPitch(n, rHub, rBands);
       final centres = [
@@ -107,7 +136,7 @@ void main() {
     // Nearest-centre rounds them in.
     for (final side in [700.0, 900.0, 1400.0]) {
       final rHub = side * _hubFrac;
-      final rBands = side * _bandsFrac;
+      final rBands = side * bandsFractionFor(side);
       const n = 22;
       for (final r in [rHub, rBands]) {
         var best = -1;

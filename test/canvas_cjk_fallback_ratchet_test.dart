@@ -83,7 +83,15 @@ void main() {
       // cheapest lines when the four of them do not fit the hub (see
       // that method's own doc). Not a painter, but still a
       // `TextPainter(` and still Chinese, so it still needs a CJK face.
-      'lib/pages/radial_chronology_page.dart': 10,
+      // 2026-09-15: 10 → 8, and the two that left went to
+      // `wheel_text_metrics.dart` below. `_tangentialLabel` built a
+      // TextPainter per character to MEASURE a curved run and
+      // `_charsOnArc` built one more per character to DRAW it — about
+      // 16,000 layouts a frame across this chart, every frame of every
+      // pan. Both are cached now, and the cache is a canvas painter in
+      // its own right, so it is censused here like any other.
+      'lib/pages/radial_chronology_page.dart': 8,
+      'lib/utils/wheel_text_metrics.dart': 1,
       // 2026-09-04: the strip's own canvases. The page's one site is
       // `_measureText`, its own `canvasTextStyle(` call in the same
       // window as the wheel's `_measureLabel`; the painter's eleven are

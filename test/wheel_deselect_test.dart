@@ -39,12 +39,12 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 // The page's own fractions, restated because they are private to it —
 // the same thing wheel_band_target_test.dart and wheel_lifespans_test
 // already do.
 const double _hubFrac = 0.115;
-const double _bandsFrac = 0.285;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -100,7 +100,7 @@ void main() {
 
     // Select something: the middle of the annulus, halfway round the
     // sweep, which is a band whatever the corpus happens to hold there.
-    final rBand = side * (_hubFrac + _bandsFrac) / 2;
+    final rBand = side * (_hubFrac + bandsFractionFor(side)) / 2;
     await tester.tapAt(at(rBand, startRad + sweepRad / 2));
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
