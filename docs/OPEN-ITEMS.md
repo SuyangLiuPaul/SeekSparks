@@ -721,3 +721,51 @@ The guard is the **pairing**, not the field: any state that short-circuits
 joins. (It strips comments before scanning — the method's own note names
 `_openChart` and `_closeChart` while explaining the history, and a rule
 that reads prose cannot tell a mention from a use.)
+
+### Adopting the official 和合本雅偉版 — measured, built, and NOT shipped `[2026-09-14]`
+
+「繁体版也adopt yahwehdehua他们的版本 ... 因为那边才是正式的」, and 「梁也要
+更新最新版本」. The ruling is right and the tools are here
+(`tools/adopt_official_cuv.py`, and `tools/adopt_official_ljk.py` in the
+Words repo). The assets are NOT adopted, because running it in full
+proved something that changes what "adopt" has to mean.
+
+**The official Traditional is a conversion, and this repo's is a set of
+decisions.** `tools/export-app-db.py` on the official side records
+`bible_cuvt` as built by `tools/tc` — OpenCC plus scripture corrections —
+from the official Simplified. OpenCC must guess the one-to-many cases
+(干 → 乾/幹, 谷 → 谷/穀, 发 → 發/髮, 面 → 面/麵) and it guesses wrong where
+this repo has already settled it, verse by verse, with a test each:
+創世紀 41's lean cows are **乾瘦**; the official text says **幹瘦**.
+
+A wholesale adoption turned about 110 tests red in the sibling Words
+repo, and they are not stale guards:
+
+| what failed | what it protects |
+|---|---|
+| ~20 `traditional_*_glyph_test.dart` | one-to-many 简→繁 choices checked against the Hebrew |
+| `cuv_typo_corruptions_test` | name spellings — 朵多, 帖土羅 — unanimous here, inconsistent there. **Simplified too** |
+| `cuvs_yhwh_integrity_test` | six OCR corruptions, incl. 像烧碎一样, a simile missing its stubble (H7179 קַשׁ) |
+| `bundled_font_coverage_test` | 衞 敍 綵 鋭 and three more are not in the bundled subset — tofu until `build_font_subsets.py` re-runs |
+| `place_name_script_test` | the atlas's Traditional names, witnessed by the edition pair |
+
+**What the tools already do**, and what the finished pass needs:
+
+* publisher's WORDS, our 主 MARKERS re-applied — including the fix that
+  footnotes about the word 主 must not be counted, which was skipping
+  eleven verses including 申命記 6:4, the Shema;
+* our named OCR repairs re-applied after adoption, so the verse takes the
+  official wording and loses only the damage;
+* punctuation takes the official form (「」→“”, the visible half of the
+  ruling) while **Han glyphs keep ours**, because ours is a decision and
+  theirs is a conversion;
+* still to do: the same re-application for the typo-corruption set and
+  the apparatus-quoting rules, and a font-subset rebuild.
+
+**Measured, for whoever finishes it:** Simplified 355 verses behind
+(Words) / 59 (Sword); Traditional ~14,900, nearly all of it the quotation
+convention; **733 LJK footnotes** the official build carries and these
+assets do not; and nine LJK verses — 馬太福音 21:44, 路加福音 23:34a and
+哥林多後書 13:14 among them — where the two sides split the text
+differently and adopting per-verse would DELETE scripture. Those nine
+need a ruling, not a tool.
