@@ -7,8 +7,11 @@ import 'package:seeksparks/pages/about_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
+import 'package:seeksparks/models/book.dart';
+import 'package:seeksparks/models/chapter.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/widgets/workbench_chrome.dart';
 
 /// 2026-06-11 audit: responsive overflow smoke tests.
 ///
@@ -68,7 +71,24 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => MainProvider()..setVerses(seed)),
+          ChangeNotifierProvider(create: (_) => MainProvider()
+            // Book, chapter and `books` as well as the verses: the
+            // reading pane pages through CHAPTERS and needs `books` to
+            // know which page it is on, and filters the verse list by
+            // book and chapter to fill it. Seeding `verses` alone leaves
+            // it with nothing to draw. It is seeded properly here so
+            // that a future change which DOES open the workspace on the
+            // reading column gets a real one — from a cold install the
+            // Workbench opens on the search surface, which the guard at
+            // the foot of this file says plainly rather than leaving to
+            // be discovered.
+            ..currentBook = 'Genesis'
+            ..currentChapter = 1
+            ..setBooks([
+              Book(title: 'Genesis',
+                  chapters: [Chapter(title: 1, verses: seed)]),
+            ])
+            ..setVerses(seed)),
           ChangeNotifierProvider(create: (_) => AppSettings()),
         ],
         child: MaterialApp(home: page),
@@ -103,4 +123,35 @@ void main() {
       });
     }
   }
+
+  testWidgets('WorkbenchPage really builds its chrome — the width tests '
+      'above are not measuring a blank screen', (tester) async {
+    // Every assertion above is "nothing threw", which a screen that
+    // rendered nothing also satisfies. This is what says otherwise.
+    //
+    // And it asserts the CHROME, not the scripture, because that is what
+    // this harness actually exercises: from a cold install the Workbench
+    // opens on the search surface, so the reading column is not on screen
+    // at any of the four widths above. That is a real limit of these
+    // tests and it is better written down than assumed away — the
+    // sibling repo's HomePage covers a rendered reading column, this one
+    // covers the menu bar, the toolbar and the tab strip. The toolbar is
+    // where the 18px overflow at 320 was, so the coverage is not
+    // incidental.
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    addTearDown(tester.view.reset);
+
+    await pumpAt(tester, const WorkbenchPage(), const Size(1280, 800));
+
+    expect(find.byType(WorkbenchToolbar), findsOneWidget,
+        reason: 'the toolbar — the widget that overflowed at 320px — is '
+            'not in the tree, so the width tests above are not '
+            'measuring it');
+    expect(find.byType(WbToolIcon), findsWidgets,
+        reason: 'the toolbar is empty, so its width cannot overflow and '
+            'these tests would pass on a screen with no commands');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 50));
+  });
 }
