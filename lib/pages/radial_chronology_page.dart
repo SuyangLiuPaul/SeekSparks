@@ -735,6 +735,15 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hant': '通行年份 · 非經文所載',
     'en': 'conventional date, not stated in scripture',
   },
+  // 2026-09-15. Deliberately not 「通行年份」: for 黃帝, 夏朝 and 檀君
+  // there is no conventional date to be had, only a tradition, and the
+  // note beneath names the text it comes from — 《史記·五帝本紀》,
+  // 《竹書紀年》, 《三國遺事》.
+  'wheelBasisTraditional': {
+    'zh-Hans': '传说纪年 · 非信史',
+    'zh-Hant': '傳說紀年 · 非信史',
+    'en': 'traditional date, not established history',
+  },
   // ── find ────────────────────────────────────────────────────────────
   'wheelFind': {'zh-Hans': '查找', 'zh-Hant': '查找', 'en': 'Find'},
   'wheelFindHint': {
@@ -2163,7 +2172,20 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // rule is the old keep-rule read the other way round, so every
     // label that used to be drawn is still drawn, at the same angle.
     final onScreenPx = _kLabelPx * 1.35;
-    final minGap = (onScreenPx / _labelScale(_zoom)) / rBands;
+    // 2026-09-15: divided by a FIXED reference radius, not by the live
+    // `rBands`.
+    //
+    // The band annulus became responsive on this date — the data had 17%
+    // of the radius and its annotation had 55% — and dividing by it made
+    // the declutter a function of that proportion: a wider band annulus
+    // produced a SMALLER angular gap, so more spokes were attempted, so
+    // more of them carried a `+n` badge, so more titles were starved of
+    // room by it. None of that is about the bands. This gap is about
+    // whether two labels in the outer annulus collide, so it is computed
+    // against the proportion it was tuned at and stays put when the
+    // rings are re-proportioned.
+    final declutterRadius = _side * kBandsFracWide;
+    final minGap = (onScreenPx / _labelScale(_zoom)) / declutterRadius;
 
     final angles = [
       for (final e in all) angleForSpan(e.year, kMinYear, kMaxYear)

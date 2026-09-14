@@ -111,6 +111,17 @@ void main() {
     for (final e in (raw['events'] as List).cast<Map<String, dynamic>>()) {
       final basis = e['basis'] as String;
       if (basis == 'conventional') continue;
+      // 2026-09-15: `traditional` joins `conventional` in being skipped
+      // here, and for the opposite reason to the one this test guards.
+      // The rule is that a record drawn on the SCRIPTURE baseline must
+      // cite the scripture it was drawn from. A traditional record is
+      // the furthest thing from that — 黃帝 is dated by 《史記·五帝本紀》,
+      // not by a verse — and demanding a verse for it would either
+      // invent one or push the entry back to `conventional`, which is
+      // the false label this value exists to avoid. What a traditional
+      // record must carry instead is its own source, in the note, and
+      // `wheel_history_disclosure_test` is where that is asserted.
+      if (basis == 'traditional') continue;
       final refs = (e['refs'] as List?) ?? const [];
       expect(refs, isNotEmpty,
           reason: '${e['id']} claims basis "$basis" but cites no verse — it '
@@ -276,7 +287,17 @@ void main() {
   /// rather than repairing it, which is what a guard is for.
   test('every dated record says what its date rests on, and says it '
       'explicitly', () {
-    const allowed = {'scripture', 'scripture+thiele', 'conventional'};
+    const allowed = {
+      'scripture',
+      'scripture+thiele',
+      'conventional',
+      // 2026-09-15. Not history but tradition — 夏朝, 黃帝, 檀君 — wanted
+      // on the chart precisely because everyone knows them, and dated
+      // by a traditional text rather than by a general reference.
+      // Calling that `conventional` asserts that a conventional date
+      // exists, which for the Yellow Emperor it does not.
+      'traditional',
+    };
     const kinds = ['events', 'powers', 'nations'];
     final seen = <String>{};
     var checked = 0;
@@ -294,8 +315,8 @@ void main() {
     }
     // The guard on the guard: a sweep that saw one record, or one
     // vocabulary word, would pass everything above and prove nothing.
-    expect(checked, 1058,
-        reason: '745 events + 231 powers + 82 nations; if this moved, the '
+    expect(checked, 1121,
+        reason: '776 events + 263 powers + 82 nations; if this moved, the '
             'corpus grew and the count should move with it. 2026-09-02 '
             'added 74 church-history records; 2026-09-03 added 42 Roman '
             'and Greek ones, merged two duplicate pairs away, and took 15 '
@@ -328,9 +349,20 @@ void main() {
             'Song, Yuan, Ming and Qing and skipping Qin, the Three '
             'Kingdoms and the northern-southern dynasties, and the '
             'Islamic chain jumping from the Abbasids to the Ottomans '
-            'over the centuries the Mamluks held Jerusalem');
-    expect(seen, {'scripture', 'scripture+thiele', 'conventional'},
-        reason: 'all three words are in use, so the closed set is doing '
+            'over the centuries the Mamluks held Jerusalem'
+            '\n'
+            '2026-09-15: 1,058 → 1,121. 32 powers and 31 events were added '
+            'to fill the ancient end — before 1000 BC the chart held 27 '
+            'powers and 43 events for three and a half millennia, against '
+            '67 church bands for the last 1,300 years. China now runs '
+            'Yangshao → Longshan → 五帝 → 夏 → 二里頭 into the existing '
+            'Shang; India runs Harappan → Vedic; Japan runs 繩文 → 彌生 → '
+            '古墳; and Korea, Elam, Nubia, Mitanni, Minoan Crete and the '
+            'Olmec reach the chart for the first time.');
+
+    expect(seen, {'scripture', 'scripture+thiele', 'conventional',
+        'traditional'},
+        reason: 'all four words are in use, so the closed set is doing '
             'work rather than admitting the only value there is');
   });
 }

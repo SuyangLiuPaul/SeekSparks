@@ -393,6 +393,15 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
         'scripture+thiele' =>
           s('wheelBasisThiele', 'interval from scripture', locale),
         'thiele' => s('wheelBasisThieleOnly', 'year from Thiele', locale),
+        // 2026-09-15. A fourth value, because the third was telling a
+        // lie about the new entries. 「很多故事家喻户晓但是不一定靠谱的
+        // … 也可以加进去但有出处」 — 黃帝, 夏朝, 檀君 are wanted on the
+        // chart precisely because everyone knows them, and calling the
+        // year a 「通行年份」 asserts that a conventional date exists.
+        // It does not. There is a tradition, and the note names which
+        // text it comes from.
+        'traditional' => s('wheelBasisTraditional', 'traditional, not '
+            'established history', locale),
         _ => s('wheelBasisConventional', 'conventional date', locale),
       };
 
@@ -702,7 +711,16 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
                           horizontal: t.scaled(6), vertical: t.scaled(2)),
                       decoration:
                           BoxDecoration(border: Border.all(color: wb.border)),
-                      child: Text(ref,
+                      // 2026-09-15: localised, like every other sheet
+                      // on this page. This one printed the stored
+                      // English — 「Esther 9:1」 to a Chinese reader —
+                      // because it builds its own boxed chip instead of
+                      // using `_refRow`, and the localisation lived in
+                      // `_refRow`. Found when the default stream filter
+                      // gave the wheel room to draw the ministry arcs
+                      // that carry these refs; the defect was older than
+                      // the filter.
+                      child: Text(localizedReferenceLabel(ref, locale),
                           style: TextStyle(
                               color: wb.accent, fontSize: t.scaled(11))),
                     ),

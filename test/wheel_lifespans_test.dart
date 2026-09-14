@@ -536,12 +536,27 @@ void main() {
   // the one this whole pass is about — the chart's data getting the
   // radius that its annotation had taken. The falsifier below (20 of
   // 25) is untouched and still guards the real floor.
+  //
+  // `900 en` 21 → 20 later the same day, from the other half of the
+  // work: 31 events were added to the ancient end of the chart, so
+  // there are more planned spoke titles for a Genesis name to dodge.
+  // Abraham, Isaac, Jacob, Joseph and Moses are the five that lose the
+  // draw at that canvas in English, and Abraham, Joseph, Aaron and
+  // Moses at 1400 (`1400 en` 22 → 21). They are exactly the men whose
+  // arcs sit in the crowded Ur-to-Exodus centuries, which is where the
+  // new Mesopotamian and Egyptian bands landed — so this is the new
+  // data being visible, not the old data being lost.
+  //
+  // Note what did NOT move: both Chinese floors. Chinese names are two
+  // or three characters where 「Abraham」 is seven, so they were never
+  // the ones competing for the room, which is a small confirmation that
+  // the cause is width and not something structural.
   const floors = <String, int>{
     '700 en': 20,
     '700 zh-Hans': 22,
-    '900 en': 21,
+    '900 en': 20,
     '900 zh-Hans': 20,
-    '1400 en': 22,
+    '1400 en': 21,
     '1400 zh-Hans': 23,
   };
   test('every life can be named at rest, at every canvas the wheel gets', () {

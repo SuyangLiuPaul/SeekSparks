@@ -145,8 +145,15 @@ void main() {
   /// The defect this ticket actually found, stated as the reader saw it.
   test('a power dated from scripture does not say it is not in scripture',
       () {
-    final fromScripture =
-        data.powers.where((p) => p.basis != 'conventional').toList();
+    // 2026-09-15: `traditional` is excluded alongside `conventional`.
+    // The set below is the powers drawn on the SCRIPTURE baseline, and
+    // a traditional band is the opposite of that — 夏朝 and 五帝 are
+    // dated by 《史記》 and 《竹書紀年》, not by a verse, and the sheet
+    // says so in as many words (「傳說紀年 · 非信史」). Lumping them in
+    // here would assert they were read out of scripture.
+    final fromScripture = data.powers
+        .where((p) => p.basis != 'conventional' && p.basis != 'traditional')
+        .toList();
     // 2026-09-03: two more joined, both people rather than thrones, and
     // both take their years from the SAME Thiele reckoning the three
     // kingdoms do — Gedaliah from the fall of Jerusalem that made him
@@ -185,7 +192,24 @@ void main() {
     // Every one is conventional and none could be
     // anything else: scripture dates no pope and no emperor, and gives
     // no regnal years for Israel's neighbours either.
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 226);
+    // 2026-09-15: 226 → 255, the 32 ancient bands less the three that
+    // are `traditional` rather than conventional (五帝, 夏朝, 고조선).
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 255);
+    // And the three, named, because a value used by nothing is a value
+    // that quietly stopped being applied.
+    expect(
+        data.powers
+            .where((p) => p.basis == 'traditional')
+            .map((p) => p.id)
+            .toSet(),
+        <String>{
+          'five-emperors-traditional',
+          'xia-dynasty',
+          'gojoseon-traditional',
+        },
+        reason: 'the traditional bands changed — each one is a legend '
+            'everybody knows, carried on the chart deliberately and '
+            'marked as tradition in its name, its note and its basis');
   });
 
   test('both spellings of a power reference reach the model', () {
@@ -201,15 +225,25 @@ void main() {
         .toList();
     final plural =
         records('powers').where((p) => (p['refs'] as List?)?.isNotEmpty ?? false);
-    expect(singular.length, 17);
-    expect(plural.length, 14);
+    // 2026-09-15: 17 → 23 and 14 → 17. The ancient additions cite
+    // Genesis 10 heavily (Elam, Kush, Mitanni, the Hittite states), and
+    // `kush-napata` moved from the singular to the plural when 2 Kings
+    // 19:9 was added beside Genesis 10:6 — its note already argued from
+    // Tirhakah, and a verse a record argues from belongs in its refs
+    // rather than only in its prose.
+    expect(singular.length, 23);
+    expect(plural.length, 17);
     for (final p in singular) {
       final parsed = data.powers.firstWhere((q) => q.id == p['id']);
       expect(parsed.refs, contains(p['ref']), reason: p['id'] as String);
     }
+    // 2026-09-15: 31 → 40 carriers and 49 → 61 references. The ancient
+    // bands lean on Genesis 10 — Elam, Kush, Mitanni and the Hittite
+    // states are all in the table of nations — which is the chart's own
+    // rule working rather than an exception to it.
     final carried = data.powers.where((p) => p.refs.isNotEmpty).length;
-    expect(carried, 31);
-    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 49);
+    expect(carried, 40);
+    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 61);
   });
 
   /// Extends `wheel_history_asset_test.dart`'s resolvability sweep, which
@@ -228,9 +262,11 @@ void main() {
     };
     // 67 since 2026-09-03: Nahum 3:8 on the sack of Thebes and
     // 2 Kings 17:3-4 on Hoshea's appeal to So of Egypt.
-    expect(byCarrier['event']!.length, 83);
+    // 85 since 2026-09-15: the ancient events cite Genesis 10 and 11
+    // for Elam, Cush, Nimrod's Erech and Accad, and Ur of the Chaldees.
+    expect(byCarrier['event']!.length, 85);
     expect(byCarrier['nation']!.length, 82);
-    expect(byCarrier['power']!.length, 49);
+    expect(byCarrier['power']!.length, 61);
 
     final bad = <String>[];
     for (final entry in byCarrier.entries) {

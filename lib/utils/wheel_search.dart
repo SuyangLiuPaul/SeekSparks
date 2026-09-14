@@ -602,6 +602,23 @@ WheelSearchResult searchWheel({
         return (12, WheelHitVia.otherSpelling, a);
       }
     }
+    // 2026-09-15: the reference tier goes FIRST when the query is
+    // shaped like a reference.
+    //
+    // The tiers are tried in order and description sat two places above
+    // reference, which was invisible until a note named a chapter in
+    // its own prose — the Kingdom of Kush at Napata argues from
+    // 「特哈加」, and the Tirhakah of 2 Kings 19:9 is exactly who that is.
+    // Searching `2 Kings 19` then put that description ABOVE every
+    // record that actually cites the chapter. A reader who types an
+    // address is asking who is at that address; the prose that happens
+    // to mention it comes after.
+    if (refQuery != null) {
+      var early = '';
+      if (refHit(refs, (r) => early = r)) {
+        return (11, WheelHitVia.reference, early);
+      }
+    }
     for (final text in prose.values) {
       if (wheelMatches(foldForWheelSearch(text), q)) {
         return (13, WheelHitVia.description, '');

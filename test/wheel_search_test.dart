@@ -1,6 +1,6 @@
 /// Find on the wheel — the pure core, against the real asset.
 ///
-/// The wheel holds 1231 records and draws 64 labels at rest, so the
+/// The wheel holds 1294 records and draws 64 labels at rest, so the
 /// search box is now the only way most of the corpus can be reached at
 /// all. That makes a FALSE ABSENCE the defect that matters here: the
 /// app telling a reader it does not know something it does know. Every
@@ -13,13 +13,13 @@
 ///    `yearLabel` prints, for all 671 events and all 62 power spans, in
 ///    all three locales. Nothing enforces that but this test, and the
 ///    two functions live in different files.
-///  * THE BARE WILDCARD reaches 851 + 226 + 82 + 22 + 44 + 3 = 1231
+///  * THE BARE WILDCARD reaches 882 + 258 + 82 + 22 + 44 + 3 = 1294
 ///    records. Not a round number for its own sake — it is the only
 ///    assertion that fails if a whole KIND stops being searched, which
 ///    is exactly what a naive "search the events" version would do.
 ///    The last 3 are the omissions, which are records ABOUT what the
 ///    chart does not draw; `wheel_omissions_test.dart` owns them.
-///  * THE INDEX BAR. Every one of the 1231 records, in all three
+///  * THE INDEX BAR. Every one of the 1294 records, in all three
 ///    locales, must come back when its own printed title is typed —
 ///    3,096 searches, and never below second place. This is the only
 ///    pin here that grows with the corpus instead of with the examples
@@ -70,7 +70,7 @@ void main() {
     /// on screen.
     test('every event round-trips through both functions, in every locale',
         () {
-      expect(data.events, hasLength(849));
+      expect(data.events, hasLength(880));
       final broken = <String>[];
       for (final e in data.events) {
         for (final locale in _locales) {
@@ -85,7 +85,7 @@ void main() {
     });
 
     test('every power span round-trips too', () {
-      expect(data.powers, hasLength(231));
+      expect(data.powers, hasLength(263));
       final broken = <String>[];
       for (final p in data.powers) {
         for (final y in [p.start, if (p.end != null) p.end!]) {
@@ -193,7 +193,7 @@ void main() {
           isTrue);
     });
 
-    /// The matcher is called once per field per record — 1231 records
+    /// The matcher is called once per field per record — 1294 records
     /// across four fields on every keystroke — so a needle that
     /// compiles a pattern must compile it once. This asserts the
     /// behaviour the cache has to preserve, since a cache that returns
@@ -226,10 +226,10 @@ void main() {
     /// The single assertion that fails if a whole kind stops being
     /// searched. A version that searched only events would still pass
     /// most of this file.
-    test('the bare wildcard returns all 1231 records, of every asset kind',
+    test('the bare wildcard returns all 1294 records, of every asset kind',
         () {
       final r = find('*');
-      expect(r.hits, hasLength(1231));
+      expect(r.hits, hasLength(1294));
       final byKind = {
         for (final k in WheelHitKind.values)
           k: r.hits.where((h) => h.kind == k).length,
@@ -336,7 +336,7 @@ void main() {
       // reached from the other side.
       final bandIds = {for (final s in data.streams) s.id};
       final all = find('*', hidden: bandIds);
-      expect(all.hits, hasLength(1231));
+      expect(all.hits, hasLength(1294));
 
       final onABand =
           all.hits.where((h) => bandIds.contains(h.streamId)).toList();
@@ -480,10 +480,33 @@ void main() {
     test('a chapter reference reaches the records that cite it', () {
       final r = find('2 Kings 19');
       expect(r.hits, isNotEmpty);
-      expect(r.hits.every((h) => h.via == WheelHitVia.reference), isTrue);
+      expect(r.hits.any((h) => h.via == WheelHitVia.reference), isTrue,
+          reason: 'no record answered through the reference tier at all');
+      // 2026-09-15: this used to be `every`, which held only because no
+      // record's PROSE had ever named a chapter. One now does, honestly:
+      // the Kingdom of Kush at Napata argues from 「特哈加」, and the
+      // Tirhakah of 2 Kings 19:9 is exactly who that is. Its entry
+      // carries the verse in `refs` too, so it answers through the
+      // reference tier as well — but the description tier finding it is
+      // correct, not noise.
+      //
+      // What must still hold is that nothing is reached by ACCIDENT, so
+      // every non-reference hit has to be a record whose own text says
+      // the words.
       for (final h in r.hits) {
-        expect(h.matched, isNotEmpty,
-            reason: 'the row cannot say which verse it hit');
+        if (h.via == WheelHitVia.reference) {
+          expect(h.matched, isNotEmpty,
+              reason: 'the row cannot say which verse it hit');
+        } else {
+          // `matched` names the verse a reference hit landed on, so a
+          // description hit has none. What it must have instead is the
+          // words, somewhere a reader can see them.
+          expect(h.via, WheelHitVia.description,
+              reason: '"${h.title}" answered a chapter query through the '
+                  '${h.via} tier — only the description tier is expected '
+                  'to, and only because a note may name a chapter in '
+                  'prose');
+        }
       }
     });
   });
@@ -639,8 +662,16 @@ void main() {
       final firstPerson =
           hits.indexWhere((h) => h.via == WheelHitVia.person);
       expect(firstPerson, greaterThan(lastDesc));
-      expect(find('2 Kings 19').hits.every((h) => h.via == WheelHitVia.reference),
-          isTrue,
+      // Same correction as in the reference group above: `every` was
+      // only ever true because no note had named a chapter in prose,
+      // and one now does honestly. What this line is here to guard is
+      // that the reference tier still ANSWERS, and that it answers
+      // first — an address query must not be won by a description.
+      final refHits = find('2 Kings 19').hits;
+      expect(refHits.first.via, WheelHitVia.reference,
+          reason: 'the reference tier stopped answering first');
+      expect(refHits.where((h) => h.via == WheelHitVia.reference),
+          isNotEmpty,
           reason: 'the reference tier stopped answering');
     });
   });
@@ -658,7 +689,7 @@ void main() {
   /// wheel printed — in whichever of the three languages they are
   /// reading it in.
   ///
-  /// So this group asks the corpus itself: 1231 records x 3 locales,
+  /// So this group asks the corpus itself: 1294 records x 3 locales,
   /// 3,096 searches, each typing a record's own displayed title back
   /// at the search box. It is the only assertion in this file that
   /// scales with the corpus rather than with the examples someone
@@ -686,10 +717,10 @@ void main() {
       ];
     }
 
-    test('all 1231, in all three locales, come back when typed', () {
+    test('all 1294, in all three locales, come back when typed', () {
       for (final locale in _locales) {
         final ranks = ownTitleRank(locale);
-        expect(ranks, hasLength(1231),
+        expect(ranks, hasLength(1294),
             reason: 'the sweep itself stopped seeing the corpus');
         final unreachable =
             ranks.where((e) => e.value < 0).map((e) => e.key).toList();
@@ -725,7 +756,7 @@ void main() {
     /// `foldForWheelSearch` lowercases and strips diacritics on BOTH
     /// sides of the comparison; if it ever stopped doing so on the
     /// corpus side, every title with a capital in it would stop
-    /// answering to itself. That is all 1231 of them, so the sweep
+    /// answering to itself. That is all 1294 of them, so the sweep
     /// above is load-bearing for the case fold.
     ///
     /// The diacritic half is thin and says so: exactly three English
@@ -734,7 +765,7 @@ void main() {
     /// assertion is what will say so.
     test('the sweep is not passing vacuously', () {
       final titles = find('*').hits.map((h) => h.title).toList();
-      expect(titles.where((t) => RegExp(r'[A-Z]').hasMatch(t)), hasLength(1231),
+      expect(titles.where((t) => RegExp(r'[A-Z]').hasMatch(t)), hasLength(1294),
           reason: 'the case fold is exercised by every record, or was');
       final accented = titles
           .where((t) => RegExp(r'[À-ɏ]').hasMatch(t))
