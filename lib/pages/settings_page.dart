@@ -3597,6 +3597,11 @@ class _ExportDialogState extends State<_ExportDialog> {
               ),
               padding: const EdgeInsets.all(8),
               child: Scrollbar(
+                // SelectableText-owns-its-scroller: the box is capped at
+                // 280 px and the diagnostic text is longer than that, so
+                // this widget's own scrollable IS the scroller the
+                // Scrollbar above draws. Handing it
+                // kSelectableTextPhysics would make the box unscrollable.
                 child: SelectableText(
                   _content,
                   style: TextStyle(

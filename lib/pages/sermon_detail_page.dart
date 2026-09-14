@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:seeksparks/utils/app_scroll_behavior.dart'
+    show kSelectableTextPhysics;
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -894,6 +896,7 @@ class _SermonBody extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 14),
               child: SelectableText.rich(
                 _buildSpans(context, p.trim(), fontSize, scheme),
+                scrollPhysics: kSelectableTextPhysics,
                 style: TextStyle(
                   fontSize: fontSize,
                   height: 1.55,

@@ -29,6 +29,8 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/changelog_service.dart';
 import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/services/update_service.dart';
+import 'package:seeksparks/utils/app_scroll_behavior.dart'
+    show kSelectableTextPhysics;
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 
@@ -310,6 +312,7 @@ class _ChangelogPageState extends State<ChangelogPage> {
               padding: const EdgeInsets.only(top: 6),
               child: SelectableText(
                 'https://github.com/${UpdateService.repo}/releases',
+                scrollPhysics: kSelectableTextPhysics,
                 style: TextStyle(
                   fontSize: t.scaledChrome(WbMetrics.smallPrintFloor),
                   color: scheme.primary,

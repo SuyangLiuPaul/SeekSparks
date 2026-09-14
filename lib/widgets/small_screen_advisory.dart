@@ -6,6 +6,8 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/app_scroll_behavior.dart'
+    show kSelectableTextPhysics;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/workbench_fit.dart';
 
@@ -272,6 +274,7 @@ class SmallScreenAdvisory extends StatelessWidget {
                   if (!LinkOpener.isAvailable)
                     SelectableText(
                       kYsWordsUrl,
+                      scrollPhysics: kSelectableTextPhysics,
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: cs.primary),
                     )
@@ -309,6 +312,7 @@ class SmallScreenAdvisory extends StatelessWidget {
                   const SizedBox(height: 28),
                   SelectableText(
                     'v$kAppVersion · ${formatReleaseTimeLocal()}',
+                    scrollPhysics: kSelectableTextPhysics,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: cs.onSurface.withValues(alpha: 0.45),
                       fontSize: type.scaled(11),

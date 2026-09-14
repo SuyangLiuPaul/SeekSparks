@@ -3,6 +3,8 @@ import 'dart:async';
 // native compile. Replaced with a conditional-export helper —
 // see lib/utils/clear_cache_helper.dart.
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/utils/app_scroll_behavior.dart'
+    show kSelectableTextPhysics;
 import 'package:seeksparks/utils/clear_cache_helper.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -1035,6 +1037,7 @@ class _LoadingPageState extends State<LoadingPage> {
                       children: [
                         SelectableText(
                           mainProvider.loadError!,
+                          scrollPhysics: kSelectableTextPhysics,
                           style: TextStyle(
                             fontFamily: 'monospace',
                             fontSize: settings.wbType.scaledSmall(12),

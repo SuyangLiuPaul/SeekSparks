@@ -22,6 +22,32 @@ import 'package:flutter/material.dart';
 ///   hijacks click-drag from text selection — this is a Bible reader (and
 ///   Strong's search / concordance tool), so selecting text with the mouse
 ///   matters more than drag-scrolling.
+/// Physics for the scrollable that [EditableText] builds *inside* every
+/// [SelectableText] — pass it as `scrollPhysics:` at every call site.
+///
+/// 2026-09-14, reported on a phone as 「这里的问题和之前一样下滑不了
+/// 之前words也有过」 — and it is literally the same bug, because this
+/// app inherited [AppScrollBehavior] from YsWords in August and did not
+/// inherit the fix YsWords made to it on 2026-08-31.
+///
+/// [AppScrollBehavior] applies to EVERY [Scrollable] in the tree, and a
+/// `SelectableText` contains one of its own. Handing that inner
+/// scrollable [AlwaysScrollableScrollPhysics] makes it accept a vertical
+/// drag it has nothing to scroll — so it wins the gesture arena and the
+/// page underneath never moves. A thumb landing on the sermon body, or
+/// on a 梁家鏗 block note, finds the page dead; a thumb landing on the
+/// title, the chips or the margins scrolls normally, which is why it
+/// reads as "some pages scroll and some don't" rather than as a bug.
+///
+/// A display-only text widget should never own a scrollable, so the fix
+/// is here rather than in the behavior: dropping
+/// `AlwaysScrollableScrollPhysics` from [AppScrollBehavior] would also
+/// work, but it would take the short-list rubber-band with it, and that
+/// is the deliberate choice documented above.
+/// `test/selectable_text_scroll_test.dart` pins both the behaviour and
+/// the fact that every call site passes this.
+const ScrollPhysics kSelectableTextPhysics = NeverScrollableScrollPhysics();
+
 class AppScrollBehavior extends MaterialScrollBehavior {
   const AppScrollBehavior();
 

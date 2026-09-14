@@ -20,6 +20,8 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/passage_report_service.dart';
+import 'package:seeksparks/utils/app_scroll_behavior.dart'
+    show kSelectableTextPhysics;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/passage_report.dart';
 import 'package:seeksparks/widgets/wb_pane_bits.dart' show WbPaneChip;
@@ -226,6 +228,7 @@ class _PassageReportDialogState extends State<_PassageReportDialog> {
                   : SingleChildScrollView(
                       child: SelectableText(
                         reportToMarkdown(r),
+                        scrollPhysics: kSelectableTextPhysics,
                         style: TextStyle(
                             fontSize: t.chrome,
                             color: c.text,

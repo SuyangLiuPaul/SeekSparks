@@ -14,6 +14,8 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:seeksparks/utils/app_scroll_behavior.dart'
+    show kSelectableTextPhysics;
 import 'package:seeksparks/utils/copy_format.dart';
 import 'package:seeksparks/utils/copy_marking.dart'
     show hasHitMarks, hitMarkedSpans, markVerseHits;
@@ -479,6 +481,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
                 if (text.isEmpty) {
                   return SelectableText(
                     _s(locale, 'copyCenterEmpty', 'Nothing to copy.'),
+                    scrollPhysics: kSelectableTextPhysics,
                     style: style,
                   );
                 }
@@ -489,9 +492,11 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
                 // sentinels are display state, and the Copy button is
                 // what puts the marked flavour on the clipboard.
                 if (!hasHitMarks(text)) {
-                  return SelectableText(text, style: style);
+                  return SelectableText(text,
+                      scrollPhysics: kSelectableTextPhysics, style: style);
                 }
                 return SelectableText.rich(
+                  scrollPhysics: kSelectableTextPhysics,
                   TextSpan(
                     children: hitMarkedSpans(
                       text,
