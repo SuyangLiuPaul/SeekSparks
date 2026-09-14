@@ -37,8 +37,8 @@ const _confirmed = {
   'cuvs-yhwh': '雅简+',
   'cuvs-yhwh-tr': '雅繁+',
   'cuvs-plus': '和简+',
-  'biblexg-v2': '梁简',
-  'biblexg-v2-tr': '梁繁',
+  'biblexg-v3': '梁简',
+  'biblexg-v3-tr': '梁繁',
 };
 
 /// The rows that keep their Latin abbreviation, and what it is.
@@ -141,7 +141,7 @@ void main() {
     test('和合本雅伟版', () => startsWithBadge('aboutVerCuvsYhwh',
         shortBibleVersionLabel('cuvs-yhwh')));
     test('梁家铿译本', () =>
-        startsWithBadge('aboutVerLjk', shortBibleVersionLabel('biblexg-v2')));
+        startsWithBadge('aboutVerLjk', shortBibleVersionLabel('biblexg-v3')));
     test('the English rows are unchanged', () {
       startsWithBadge('aboutVerKjvs', shortBibleVersionLabel('kjvs'));
       startsWithBadge('aboutVerLxxwh', shortBibleVersionLabel('lxxwh'));
@@ -207,7 +207,7 @@ void main() {
     // pane. Four Chinese editions should not pay for LXX+WH existing.
     test('a Chinese-only stack is narrower than one containing LXX+WH', () {
       final chinese = versionGutterWidth(
-          const ['cuvs-yhwh', 'cuvs-plus', 'biblexg-v2'], defaultSize);
+          const ['cuvs-yhwh', 'cuvs-plus', 'biblexg-v3'], defaultSize);
       final withGreek = versionGutterWidth(
           const ['cuvs-yhwh', 'cuvs-plus', 'lxxwh'], defaultSize);
       expect(chinese, lessThan(withGreek));

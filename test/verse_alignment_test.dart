@@ -134,12 +134,12 @@ void main() {
 
   group('腓立比書 1:1 in the 梁家鏗譯本', () {
     const opening = {
-      'biblexg-v2': [
+      'biblexg-v3': [
         '腓立比书',
         '保罗和提摩太，基督耶稣的奴仆——致在腓立比在基督耶稣里的全体圣徒、各位监督及执事：',
         '我每次想起你们就感谢我的神，',
       ],
-      'biblexg-v2-tr': [
+      'biblexg-v3-tr': [
         '腓立比書',
         '保羅和提摩太，基督耶穌的奴僕——致在腓立比在基督耶穌裡的全體聖徒、各位監督及執事：',
         '我每次想起你們就感謝我的神，',
@@ -180,7 +180,7 @@ void main() {
           '提摩太前书',
           '提摩太后书',
         ])
-          book: await _chapter('biblexg-v2', book, '1'),
+          book: await _chapter('biblexg-v3', book, '1'),
       };
       for (final entry in chapters.entries) {
         expect(entry.value['1'], endsWith('——'), reason: entry.key);

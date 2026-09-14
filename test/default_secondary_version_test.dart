@@ -46,8 +46,8 @@ void main() {
       // sibling in the reader's language.
       expect(defaultSecondaryVersion('bsb'), 'kjv');
       expect(defaultSecondaryVersion('kjv'), 'leb');
-      expect(defaultSecondaryVersion('cuvs-yhwh'), 'biblexg-v2');
-      expect(defaultSecondaryVersion('cuvs-yhwh-tr'), 'biblexg-v2-tr');
+      expect(defaultSecondaryVersion('cuvs-yhwh'), 'biblexg-v3');
+      expect(defaultSecondaryVersion('cuvs-yhwh-tr'), 'biblexg-v3-tr');
     });
 
     test('an unknown version code still yields something readable', () {

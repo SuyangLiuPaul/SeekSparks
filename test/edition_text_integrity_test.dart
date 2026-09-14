@@ -29,8 +29,8 @@ const kEditionAssets = <String>[
   // that is not in it is a new import nothing has looked at.
   'assets/asv-yhwh.json',
   'assets/bsb-yhwh.json',
-  'assets/biblexg-v2-tr.json',
-  'assets/biblexg-v2.json',
+  'assets/biblexg-v3-tr.json',
+  'assets/biblexg-v3.json',
   'assets/bsb.json',
   'assets/cuvs-plus.json',
   'assets/cuvs-yhwh-tr.json',

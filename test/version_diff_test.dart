@@ -121,10 +121,10 @@ void main() {
       // screen, so Greek forms no group and is never diffed against the
       // English beside it.
       final g = comparableVersionGroups(
-          ['lxxwh', 'bsb', 'nasb', 'kjv', 'cuvs-yhwh', 'biblexg-v2']);
+          ['lxxwh', 'bsb', 'nasb', 'kjv', 'cuvs-yhwh', 'biblexg-v3']);
       expect(g.keys.toSet(), {'en', 'zh-Hans'});
       expect(g['en'], ['bsb', 'nasb', 'kjv']);
-      expect(g['zh-Hans'], ['cuvs-yhwh', 'biblexg-v2']);
+      expect(g['zh-Hans'], ['cuvs-yhwh', 'biblexg-v3']);
     });
 
     test('简体 and 繁體 are different languages and never compared', () {

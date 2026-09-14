@@ -39,6 +39,7 @@ apart.
 | `README.md` | GitHub-facing: what the app is, how to run it, licensing |
 | `docs/DATA-INTEGRITY.md` | every data check ever run, numbered |
 | `docs/WHEEL-PROVENANCE.md` | where every date on the history wheel came from |
+| `docs/LJK-UPDATE.md` | the one edition fetched from a live publisher: how to re-fetch it, and the five-step pipeline each step of which exists because skipping it shipped a defect |
 | `docs/PARITY-BACKLOG.md` | what the parent app has that this one does not |
 
 `HANDOFF.md` is canonical for *what happened*; `README.md` is allowed to

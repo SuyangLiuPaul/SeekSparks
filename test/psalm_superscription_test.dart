@@ -144,8 +144,8 @@ void main() {
     // about it — it would attach silently and the edition's own convention
     // would go unexamined.
     const others = <String>[
-      'assets/biblexg-v2-tr.json',
-      'assets/biblexg-v2.json',
+      'assets/biblexg-v3-tr.json',
+      'assets/biblexg-v3.json',
       'assets/bsb.json',
       'assets/cuvs-plus.json',
       'assets/cuvs-yhwh-tr.json',

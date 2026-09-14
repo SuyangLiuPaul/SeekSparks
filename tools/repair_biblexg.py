@@ -96,8 +96,17 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SIMPLIFIED = 'biblexg-v2.json'
-TRADITIONAL = 'biblexg-v2-tr.json'
+# 2026-09-14: the edition code is an argument now. The repairs below are
+# about the PUBLISHER'S converter, not about one snapshot of its output,
+# so every re-fetch needs them again — `tools/import_ljk2.py --code X`
+# then `tools/repair_biblexg.py --code X --write`.
+_CODE = 'biblexg-v3'
+for _i, _a in enumerate(sys.argv):
+    if _a == '--code' and _i + 1 < len(sys.argv):
+        _CODE = sys.argv[_i + 1]
+
+SIMPLIFIED = f'{_CODE}.json'
+TRADITIONAL = f'{_CODE}-tr.json'
 
 
 def write_like(path, original, data):
@@ -274,6 +283,10 @@ def repair_swallowed_ephesians(verses, log):
 LUKE_34A = '34a'
 
 
+# Set by `--sub-verses`; see `repairs_for`.
+SUB_VERSE_MODEL = False
+
+
 def repair_luke_34a(verses, log):
     hits = find(verses, '路加福音', '23', '33')
     if len(hits) != 1:
@@ -347,7 +360,32 @@ def repair_philippians(filename):
 # --- driver --------------------------------------------------------------
 
 def repairs_for(filename):
-    """(name, callable) in the order they are applied."""
+    """(name, callable) in the order they are applied.
+
+    With `--sub-verses`, B7 is DROPPED. The two apps that ship this
+    edition model 路加福音 23:34a differently, and both models are
+    defensible:
+
+      * Here, the 34a clause is moved into 23:34, so the reference holds
+        the whole verse and the publisher's 「34a」 affix stops printing
+        at the reader in the middle of a sentence.
+      * In the other app, 34a becomes its OWN row (verseLabel `34a`,
+        subVerseOrder 0) sitting before 23:34, which keeps the printed
+        edition's sub-verse labelling visible. That app has a
+        `subVerseOrder` field, a sort that uses it, and a test that pins
+        it; `tools/repair_biblexg_luke_23_34a.py` is the step that
+        builds it, and it needs 23:33 with the affix still in place.
+
+    Running both produces the prayer TWICE — once as row 34a and again
+    at the head of 34 — which is exactly what a 2026-09-14 refresh did
+    before this flag existed. A data refresh must not quietly change
+    which model an app uses, so the app states which one it wants.
+    """
+    return [r for r in _repairs_for(filename)
+            if not (SUB_VERSE_MODEL and r[0].startswith('B7 '))]
+
+
+def _repairs_for(filename):
     if filename == TRADITIONAL:
         return [
             ('T1 馬太福音 16:13 misfiled as 16:3', repair_misfiled_matthew),
@@ -366,6 +404,23 @@ def repairs_for(filename):
             ('B7 路加福音 23:34a inline in 23:33', repair_luke_34a),
             ('B8 腓立比書 1:1 split across 1:1/1:2',
              repair_philippians(TRADITIONAL)),
+            # B9 — 2026-09-14, found when the edition was re-fetched.
+            # Same class as B5-B7 and only in the traditional file: the
+            # publisher's converter poured FOUR whole verses into 5:10's
+            # markup, with two translator's notes between them. Not in
+            # the May snapshot, which is why the earlier pass did not
+            # name it.
+            #
+            # 約翰福音 5:3 was written as a second repair here and then
+            # REMOVED. It also carries a `<sup>4</sup>`, but inside a
+            # note — 「有較後期抄本加插」 — so the marker is part of the
+            # apparatus, not a verse the translation prints. Splitting on
+            # it manufactured a 5:4 whose text was the tail of a
+            # footnote. The simplified file has no 5:4 either, and that
+            # agreement is the translation being consistent, not a gap.
+            ('B9 啟示錄 5:11-14 inline in 5:10',
+             lambda v, log: split_inline(v, '啟示錄', '5', '10',
+                                         [11, 12, 13, 14], log)),
         ]
     return [
         ('B5 路加福音 22:43-44 inline in 22:42',
@@ -422,9 +477,14 @@ def run(filename, write):
 
 
 def main():
+    global SUB_VERSE_MODEL
     write = '--write' in sys.argv
+    SUB_VERSE_MODEL = '--sub-verses' in sys.argv
     if not write:
         print('dry run — pass --write to save\n')
+    if SUB_VERSE_MODEL:
+        print("--sub-verses: B7 路加福音 23:34a left to this repo's own "
+              'sub-verse step\n')
     bad = 0
     for filename in (TRADITIONAL, SIMPLIFIED):
         bad += run(filename, write)

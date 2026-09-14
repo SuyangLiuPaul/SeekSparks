@@ -58,6 +58,7 @@ Idempotent: the outputs match no input rule, so a second run is a no-op
 and says so with exit 0.
 """
 
+import argparse
 import json
 import sys
 
@@ -103,11 +104,39 @@ RULES = [
 ]
 
 
+def _defective_chars(old: str, new: str) -> set:
+    """The characters this rule exists to remove.
+
+    Both contexts are the same length in every rule here (each is a
+    one-for-one character substitution inside identical surroundings),
+    so the positions where they differ name the defect exactly.
+    """
+    if len(old) != len(new):
+        return set(old) - set(new)
+    return {a for a, b in zip(old, new) if a != b}
+
+
 def main() -> int:
-    data = json.load(open(PATH, encoding="utf-8"))
+    # `--code biblexg-v3` points the same 30 named sites at the newer
+    # fetch of the same translation. They are named by verse id and by
+    # the exact string they expect to find, so a site that moved or that
+    # the publisher has since corrected upstream FAILS LOUDLY rather
+    # than being silently skipped — which is the reason the rules are
+    # written this way and not as a character sweep.
+    #
+    # This step was missing from the v3 pipeline's first run, and the
+    # 30 defects came straight back: 「在他們的會堂里」, 「耶穌準許」,
+    # 「渾身顫斗」. `traditional_forms_test.dart` caught all five classes.
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--code", default="biblexg-v2-tr",
+                    help="traditional-script asset to repair, without "
+                         "assets/ or .json")
+    path = f"assets/{ap.parse_args().code}.json"
+
+    data = json.load(open(path, encoding="utf-8"))
     by_id = {r["id"]: r for r in data}
 
-    todo, done = [], 0
+    todo, done, upstream = [], 0, []
     for vid, cls, old, new in RULES:
         rec = by_id.get(vid)
         if rec is None:
@@ -118,9 +147,33 @@ def main() -> int:
             todo.append((vid, cls, old, new, rec))
         elif rec["text"].count(new) == 1:
             done += 1
+        elif not (_defective_chars(old, new) & set(rec["text"])):
+            # Neither context matches AND the character this rule exists
+            # to remove is nowhere in the verse.
+            #
+            # 2026-09-14, first seen on the v3 fetch: the publisher had
+            # REWRITTEN 哥林多前書 15:3 — 「我領受了的，第一重要的就是：
+            # 基督按照聖經所記」 became 「我領受的，第一重要的是：正如
+            # 聖經所記，基督」 — and in doing so wrote 為 where the older
+            # file had the 舊字形 爲. The site is correct; there is
+            # nothing to repair and nothing has gone wrong.
+            #
+            # This is the ONLY safe way to retire a named site
+            # automatically, and the condition is deliberately narrow:
+            # if 爲 still stood anywhere in that verse the branch below
+            # would fail instead, because then the rewrite would have
+            # moved the defect rather than removed it.
+            upstream.append((vid, cls, old, new))
         else:
-            print(f"FAIL: {vid} matches neither rule nor result: {old!r}", file=sys.stderr)
+            print(f"FAIL: {vid} matches neither rule nor result, and the "
+                  f"character it targets is still in the verse: {old!r}",
+                  file=sys.stderr)
+            print(f"      verse now reads: {rec['text']}", file=sys.stderr)
             return 1
+
+    for vid, cls, old, new in upstream:
+        print(f"  class {cls} {vid}: fixed upstream, rule retired for this "
+              f"edition ({old!r} -> {new!r})")
 
     if not todo:
         print(f"already repaired — all {done} sites carry the corrected reading, nothing to do")
@@ -139,7 +192,7 @@ def main() -> int:
     # trailing newline. Reformatting it would bury 30 real edits inside a
     # whole-file diff.
     out = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
-    open(PATH, "w", encoding="utf-8").write(out)
+    open(path, "w", encoding="utf-8").write(out)
 
     for cls in sorted(counts):
         print(f"  class {cls}: {counts[cls]} sites")

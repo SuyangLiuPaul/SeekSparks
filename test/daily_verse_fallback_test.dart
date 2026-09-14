@@ -15,12 +15,12 @@ void main() {
 
   group('bibleVersionFullCanonFallback mapping', () {
     test('NT-only Simplified version falls back to cuvs-yhwh', () {
-      expect(bibleVersionFullCanonFallback('biblexg-v2'), 'cuvs-yhwh');
+      expect(bibleVersionFullCanonFallback('biblexg-v3'), 'cuvs-yhwh');
     });
 
     test('NT-only Traditional version falls back to cuvs-yhwh-tr', () {
       expect(
-          bibleVersionFullCanonFallback('biblexg-v2-tr'), 'cuvs-yhwh-tr');
+          bibleVersionFullCanonFallback('biblexg-v3-tr'), 'cuvs-yhwh-tr');
     });
 
     test('full-canon versions have no fallback', () {
@@ -36,7 +36,7 @@ void main() {
           .firstWhere((v) => v.value == 'cuvs-yhwh')
           .menuLabel;
       expect(
-          DailyVerseFallback.fallbackVersionLabel('biblexg-v2'), expected);
+          DailyVerseFallback.fallbackVersionLabel('biblexg-v3'), expected);
     });
 
     test('null for versions without a fallback', () {
@@ -62,7 +62,7 @@ void main() {
         englishBook: 'Genesis',
         chapter: 1,
         verseNumber: 1,
-        currentVersion: 'biblexg-v2',
+        currentVersion: 'biblexg-v3',
       );
       expect(r, isNotNull,
           reason: 'Genesis 1:1 must resolve from the cuvs-yhwh bundle');
@@ -77,7 +77,7 @@ void main() {
         englishBook: 'Genesis',
         chapter: 99,
         verseNumber: 99,
-        currentVersion: 'biblexg-v2',
+        currentVersion: 'biblexg-v3',
       );
       expect(r, isNull);
     });

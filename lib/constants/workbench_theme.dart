@@ -974,8 +974,14 @@ const Map<String, Color> kVersionTagColors = {
   'cuvs-yhwh': Color(0xFFB0721A), // 雅简+
   'cuvs-yhwh-tr': Color(0xFFC98A2E), // 雅繁+
   'cuvs-plus': Color(0xFF8A5A10), // 和简+
-  'biblexg-v2': Color(0xFF7A3FA0), // 梁简
-  'biblexg-v2-tr': Color(0xFF9B62BE), // 梁繁
+  'biblexg-v3': Color(0xFF7A3FA0), // 梁简 — the hue readers know
+  'biblexg-v3-tr': Color(0xFF9B62BE), // 梁繁
+  // The hidden May-2026 snapshot. Same family, desaturated: these two
+  // appear only where a stored choice or an old link is being named,
+  // and the gutter colour exists so an edition is findable without
+  // reading it — two rows of the same purple would defeat that.
+  'biblexg-v2': Color(0xFF5E4A6B), // 梁简旧
+  'biblexg-v2-tr': Color(0xFF7E6B8C), // 梁繁旧
 };
 
 /// Fallback for a version with no assigned colour — derived from the

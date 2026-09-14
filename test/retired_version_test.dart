@@ -291,7 +291,7 @@ void main() {
         // where a now-hidden code turns up — and comes out as its
         // successor, which is this test's own claim (mapped, not
         // dropped) applied to a second code in the same list.
-        ['kjv', 'biblexg-v2', 'bsb-yhwh'],
+        ['kjv', 'biblexg-v3', 'bsb-yhwh'],
       );
     });
 
@@ -345,7 +345,7 @@ void main() {
       expect(wb.parallelVersions, ['kjv', 'cuvs-yhwh']);
 
       wb.setParallelVersions(['biblexg-tr', 'nope']);
-      expect(wb.parallelVersions, ['biblexg-v2-tr']);
+      expect(wb.parallelVersions, ['biblexg-v3-tr']);
     });
 
     test('every default Browse stack is loadable in every locale', () {

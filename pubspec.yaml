@@ -93,7 +93,9 @@ flutter:
     - assets/cuvs-yhwh.json
     - assets/cuvs-yhwh-tr.json
     - assets/biblexg-v2.json
+    - assets/biblexg-v3.json
     - assets/biblexg-v2-tr.json
+    - assets/biblexg-v3-tr.json
     - assets/nasb.json
     - assets/bsb.json
     - assets/kjvs.json

@@ -95,18 +95,18 @@ void main() {
         crossVersionTargets(
           mode: CrossVersionSearchMode.displayStack,
           reading: 'cuvs-yhwh',
-          stack: const ['cuvs-yhwh-tr', 'biblexg-v2'],
+          stack: const ['cuvs-yhwh-tr', 'biblexg-v3'],
         ),
-        ['cuvs-yhwh', 'biblexg-v2'],
+        ['cuvs-yhwh', 'biblexg-v3'],
       );
       expect(
         crossVersionTargets(
           mode: CrossVersionSearchMode.displayStack,
           reading: 'cuvs-yhwh',
-          stack: const ['cuvs-yhwh-tr', 'biblexg-v2'],
+          stack: const ['cuvs-yhwh-tr', 'biblexg-v3'],
           searchAcrossScripts: true,
         ),
-        ['cuvs-yhwh', 'cuvs-yhwh-tr', 'biblexg-v2'],
+        ['cuvs-yhwh', 'cuvs-yhwh-tr', 'biblexg-v3'],
       );
     });
 
@@ -150,12 +150,12 @@ void main() {
       final targets = crossVersionTargets(
         mode: CrossVersionSearchMode.displayStack,
         reading: 'cuvs-yhwh',
-        stack: const ['cuv-yhwd', 'biblexg-v2'],
+        stack: const ['cuv-yhwd', 'biblexg-v3'],
       );
       expect(targets, isNot(contains('cuv-yhwd')));
       // It maps onto the reading version, so it collapses rather than
       // producing a column comparing a text against itself.
-      expect(targets, ['cuvs-yhwh', 'biblexg-v2']);
+      expect(targets, ['cuvs-yhwh', 'biblexg-v3']);
     });
 
     test('an unknown reading version searches nothing at all', () {

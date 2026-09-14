@@ -45,6 +45,10 @@ const versionAttributionKeys = <String, String>{
   'cuvs-yhwh-tr': 'aboutLicenseCuvsYhwh',
   'biblexg-v2': 'aboutLicenseLjk',
   'biblexg-v2-tr': 'aboutLicenseLjk',
+  // The 2026-09 re-fetch of the same translation from the same
+  // publisher — same licence, same line.
+  'biblexg-v3': 'aboutLicenseLjk',
+  'biblexg-v3-tr': 'aboutLicenseLjk',
 };
 
 String? attributionKeyFor(String versionCode) {

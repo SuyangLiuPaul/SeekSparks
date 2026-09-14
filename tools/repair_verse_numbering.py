@@ -27,6 +27,7 @@ is idempotent — a second run reports "already repaired" and writes
 nothing.
 """
 
+import argparse
 import json
 import os
 import sys
@@ -155,6 +156,21 @@ def repair_tail_shift(data, spec):
 #
 # The join adds no character: the first row already ends in the comma
 # that separates the clauses.
+#
+# 2026-09-14, from the upstream JSON this edition is now imported from:
+# the split is the PUBLISHER'S OWN, and deliberate. A chapter-end note
+# says so —「另外，舊譯本將40、41兩節合為一節，歸入40節。本譯本遵從最新
+# 希臘文新約底本 NA28、UBS5 修正為40和41兩節。」— so this is not a
+# converter slip, and the note is the reason to record rather than to
+# hide. We depart from it anyway, for one reason that is about the app
+# and not about the text: every edition here is keyed by its ENGLISH
+# reference, and no English reference 「Acts 8:41」 exists. Left split,
+# the second half is reachable by no cross-reference, no parallel
+# column and no reference search — present in the file and invisible in
+# the app. (NA28 itself ends Acts 8 at verse 40; the note's appeal to it
+# is the publisher's, not ours to repeat.) The join keeps every
+# character the publisher printed, in their order, where a reader can
+# find them.
 # --------------------------------------------------------------------
 
 ROW_JOINS = [
@@ -183,7 +199,47 @@ def repair_row_join(data, spec):
     return f'joined {spec["chapter"]}:{spec["tail"]} into {spec["head"]}'
 
 
+def retarget(code):
+    """Point the 梁家鏗譯本 specs at `code`, and DROP every other spec.
+
+    Dropping the others is the point, not a side effect. This tool is
+    step 3 of the LJK re-import pipeline, and on 2026-09-14 a run of it
+    inside the other app silently repaired that app's `leb.json` as
+    well — a real defect, but not the one the operator had asked about,
+    landing in an unrelated asset in the middle of a Bible import. A
+    pipeline step must change only the edition the pipeline names.
+
+    Run with no `--code` to repair everything this file knows about.
+    """
+    keep = []
+    for spec in TAIL_SHIFTS + ROW_JOINS:
+        if not spec['code'].startswith('biblexg'):
+            continue
+        spec['code'] = code + ('-tr' if spec['code'].endswith('-tr') else '')
+        keep.append(spec)
+    TAIL_SHIFTS[:] = [s for s in TAIL_SHIFTS if s in keep]
+    ROW_JOINS[:] = [s for s in ROW_JOINS if s in keep]
+
+
 def main():
+    """`--code biblexg-v3` re-points the two 梁家鏗譯本 specs at that
+    edition, so a re-import gets the same two repairs.
+
+    They were hardcoded to `biblexg-v2` and so were silently skipped
+    when v3 arrived — the grace benediction went back to answering
+    2 Corinthians 13:13 and Acts 8:41 reappeared. Both guards still
+    hold: nothing is written unless the text the spec expects is the
+    text that is there.
+    """
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--code',
+                    help='LJK edition code to repair. Given, ONLY the '
+                         '梁家鏗譯本 specs run — see below. Omitted, every '
+                         'spec in this file runs, including LEB.')
+    args = ap.parse_args()
+    if args.code:
+        retarget(args.code)
+
     by_code = {}
     for spec in TAIL_SHIFTS:
         by_code.setdefault(spec['code'], []).append(('shift', spec))

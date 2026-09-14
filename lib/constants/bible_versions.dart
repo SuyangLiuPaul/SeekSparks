@@ -281,15 +281,38 @@ const bibleVersions = <BibleVersionInfo>[
     language: 'zh-Hant',
   ),
   BibleVersionInfo(
-    value: 'biblexg-v2',
+    value: 'biblexg-v3',
     shortLabel: '梁简',
     menuLabel: '梁家铿译本(简体)',
     language: 'zh-Hans',
   ),
   BibleVersionInfo(
-    value: 'biblexg-v2-tr',
+    value: 'biblexg-v3-tr',
     shortLabel: '梁繁',
     menuLabel: '梁家铿譯本(繁體)',
+    language: 'zh-Hant',
+  ),
+  // 2026-09-14 — the May 2026 snapshot of the same translation, kept
+  // and HIDDEN. See [disabledVersions]. It is not superseded in the
+  // usual sense: `biblexg-v3` is the same text re-fetched from the same
+  // publisher, and this row stays so that a stored choice and a shared
+  // `?v=biblexg-v2` link still resolve to something real.
+  //
+  // The label is 梁简旧 / 梁繁旧, not 「梁简 v2」: every label here is
+  // also a handle typed at the command bar, and the rule the catalog is
+  // held to is that a Chinese edition prints no Latin letter — a reader
+  // of Chinese should not have to read English to pick a Chinese Bible.
+  // `version_label_scheme_test.dart` enforces both.
+  BibleVersionInfo(
+    value: 'biblexg-v2',
+    shortLabel: '梁简旧',
+    menuLabel: '梁家铿译本(简体·2026-05)',
+    language: 'zh-Hans',
+  ),
+  BibleVersionInfo(
+    value: 'biblexg-v2-tr',
+    shortLabel: '梁繁旧',
+    menuLabel: '梁家铿譯本(繁體·2026-05)',
     language: 'zh-Hant',
   ),
   // 2026-09-08 — HIDDEN from the interface at the owner's instruction:
@@ -396,6 +419,24 @@ const disabledVersions = <String>{
   // it, because hiding a locale default without moving it strands every
   // fresh English install.
   'bsb',
+  // 2026-09-14 — 「现有的也留着但是隐藏」. The LJK translation was
+  // re-fetched from its publisher (`tools/import_ljk2.py`), and the
+  // revision ships as `biblexg-v3`. These two are the May 2026 snapshot:
+  // off the interface, still in the build, because a version code
+  // outlives the reader's choice of it — a stored preference and a
+  // shared `?v=biblexg-v2` link both have to resolve to something real.
+  //
+  // ⚠️ An earlier draft of this comment said the new edition carries
+  // seven verses forward from these files, and that is NOT true of what
+  // shipped. `tools/carry_forward_ljk.py` reports 0 carried: Eph 3:16,
+  // 1 Pet 3:11-12 and Rev 5:11-14 are not missing upstream at all —
+  // they are printed INLINE inside the preceding verse, and
+  // `tools/repair_biblexg.py` splits them back out of this run's own
+  // fetch. The only text still absent is Mark 6:8-11 from the
+  // SIMPLIFIED upstream file, and the old snapshot does not have it
+  // either.
+  'biblexg-v2',
+  'biblexg-v2-tr',
 };
 
 /// Editions the reader imported — bwh47. code → the name they gave it.
@@ -539,9 +580,11 @@ String menuBibleVersionLabel(String version) {
 /// already has full OT+NT coverage.
 String? bibleVersionFullCanonFallback(String version) {
   switch (version) {
-    case 'biblexg-v2':    // LJK2 (Simplified Chinese, NT only)
+    case 'biblexg-v3':    // LJK (Simplified Chinese, NT only)
+    case 'biblexg-v2':
       return 'cuvs-yhwh';      // 和合本雅伟版 (Simplified, full canon)
-    case 'biblexg-v2-tr': // LJK2 (Traditional Chinese, NT only)
+    case 'biblexg-v3-tr': // LJK (Traditional Chinese, NT only)
+    case 'biblexg-v2-tr':
       return 'cuvs-yhwh-tr';   // 和合本雅伟版 (Traditional, full canon)
   }
   return null;
@@ -640,9 +683,13 @@ const Map<String, String> retiredVersionSuccessors = <String, String>{
   // the name restored. A reader sitting on `bsb`, or following a
   // `?v=bsb` link, lands on the edition that supersedes it.
   'bsb': 'bsb-yhwh',
-  // 梁家铿译本 LJK1 → LJK2.
-  'biblexg': 'biblexg-v2',
-  'biblexg-tr': 'biblexg-v2-tr',
+  // 梁家铿译本 LJK1 → LJK2 → the 2026-09 revision. Chained through to
+  // what is actually on the interface, so an old link does not land on
+  // a hidden edition.
+  'biblexg': 'biblexg-v3',
+  'biblexg-tr': 'biblexg-v3-tr',
+  'biblexg-v2': 'biblexg-v3',
+  'biblexg-v2-tr': 'biblexg-v3-tr',
   // Removed 2026-05 for licensing (Biblica / Zondervan). KJV is the
   // closest English text that is unambiguously public domain.
   'niv': 'kjv',

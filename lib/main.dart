@@ -506,8 +506,8 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       // Traditional Chinese variant.
       'cuvs-yhwh-tr',
       // LJK2 — NT-only specialty translation.
-      'biblexg-v2',
-      'biblexg-v2-tr',
+      'biblexg-v3',
+      'biblexg-v3-tr',
     ];
     final toLoad =
         candidates.where((v) => v != mainProvider.currentVersion).toList();

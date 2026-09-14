@@ -26,8 +26,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 
-const _simplified = 'assets/biblexg-v2.json';
-const _traditional = 'assets/biblexg-v2-tr.json';
+const _simplified = 'assets/biblexg-v3.json';
+const _traditional = 'assets/biblexg-v3-tr.json';
 
 Future<List<Map<String, dynamic>>> _load(String asset) async {
   final raw = await rootBundle.loadString(asset);

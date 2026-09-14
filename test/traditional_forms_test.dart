@@ -132,7 +132,7 @@ void main() {
     late String all;
 
     setUpAll(() {
-      xg = _load('biblexg-v2-tr');
+      xg = _load('biblexg-v3-tr');
       all = xg.map((v) => v['text'] as String).join();
     });
 
@@ -157,7 +157,7 @@ void main() {
       // either edition fails this test, and repairing the known one
       // fails it too — at which point update check 41f rather than the
       // expectation.
-      final s = _load('biblexg-v2').map((v) => v['id'] as String).toSet();
+      final s = _load('biblexg-v3').map((v) => v['id'] as String).toSet();
       final t = xg.map((v) => v['id'] as String).toSet();
       expect(t.difference(s).toList()..sort(),
           ['41006008', '41006009', '41006010', '41006011']);
@@ -334,7 +334,15 @@ void main() {
       expect(_verse(xg, '路加福音', 7, 31), contains('耶穌又說：'));
       expect(_verse(xg, '使徒行傳', 1, 10), contains('站在旁邊說：'));
       expect(_verse(xg, '使徒行傳', 18, 12), contains('拉到審判臺前說：'));
-      expect(_verse(xg, '哥林多前書', 15, 3), contains('所記，為我們的罪'));
+      // 2026-09-14: the publisher REWROTE this verse between the May
+      // and September fetches — 「我領受了的，第一重要的就是：基督按照
+      // 聖經所記，為我們的罪死了」 became 「我領受的，第一重要的是：正如
+      // 聖經所記，基督為我們的罪死了」 — and wrote 為 themselves, so the
+      // repair rule retired itself. What this check is FOR is the
+      // character, not the sentence, so it now says that and survives
+      // the next revision of the wording too.
+      expect(_verse(xg, '哥林多前書', 15, 3), contains('為'));
+      expect(_verse(xg, '哥林多前書', 15, 3), isNot(contains('爲')));
       expect(_verse(xg, '約翰福音', 8, 46), contains('誰能指證我有罪'));
       expect(_verse(xg, '路加福音', 24, 32), contains('給我們開啟的時候'));
       expect(_verse(xg, '使徒行傳', 14, 27), contains('為外族開啟了'));

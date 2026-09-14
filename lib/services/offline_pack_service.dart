@@ -292,8 +292,8 @@ class OfflinePackService extends ChangeNotifier {
     'assets/leb.json',
     'assets/cuvs-yhwh.json',
     'assets/cuvs-yhwh-tr.json',
-    'assets/biblexg-v2.json',
-    'assets/biblexg-v2-tr.json',
+    'assets/biblexg-v3.json',
+    'assets/biblexg-v3-tr.json',
     // 2026-09-08: BSB-Y and ASV-Y, 12.1 MB between them. Added because
     // the rule this list is held to is "a visible edition is
     // downloadable offline like every other edition a reader can

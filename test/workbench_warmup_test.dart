@@ -113,9 +113,9 @@ void main() {
       // change is the one that matters — these three lines are the
       // ledger of it; the loop below is the rule.
       expect(defaultParallelVersions('zh-Hans'),
-          const ['cuvs-yhwh', 'biblexg-v2', 'bsb-yhwh']);
+          const ['cuvs-yhwh', 'biblexg-v3', 'bsb-yhwh']);
       expect(defaultParallelVersions('zh-Hant'),
-          const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb-yhwh']);
+          const ['cuvs-yhwh-tr', 'biblexg-v3-tr', 'bsb-yhwh']);
       // 2026-09-02: was `bsb, nasb, kjv`. With NASB hidden, a default
       // naming it would not simply be stale — `WorkbenchProvider` runs
       // every stack through `loadableVersions`, which maps `nasb` onto

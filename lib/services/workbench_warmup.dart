@@ -75,9 +75,9 @@ const String kWorkbenchParallelVersionsKey = 'workbench.parallelVersions';
 List<String> defaultParallelVersions(String locale) {
   switch (locale) {
     case 'zh-Hans':
-      return const ['cuvs-yhwh', 'biblexg-v2', 'bsb-yhwh'];
+      return const ['cuvs-yhwh', 'biblexg-v3', 'bsb-yhwh'];
     case 'zh-Hant':
-      return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb-yhwh'];
+      return const ['cuvs-yhwh-tr', 'biblexg-v3-tr', 'bsb-yhwh'];
     default:
       // 2026-09-02: was `bsb, nasb, kjv`. NASB is hidden from the
       // interface now, and a default stack naming a hidden edition is

@@ -34,8 +34,8 @@ const _versions = <String>[
   'cuvs-yhwh',
   'cuvs-yhwh-tr',
   'cuvs-plus',
-  'biblexg-v2',
-  'biblexg-v2-tr',
+  'biblexg-v3',
+  'biblexg-v3-tr',
   // 2026-09-08. An edition that is not in this list is not swept by any
   // of the checks below — versification, invisible characters, character
   // repertoire, whitespace — and nothing says so. `csb` has been in that
@@ -102,8 +102,8 @@ const _chineseVersions = <String>[
   'cuvs-yhwh',
   'cuvs-yhwh-tr',
   'cuvs-plus',
-  'biblexg-v2',
-  'biblexg-v2-tr',
+  'biblexg-v3',
+  'biblexg-v3-tr',
 ];
 
 // 2026-08-30: 合和译本并入上一节 added. It is the wording cuvs-plus uses
@@ -409,8 +409,8 @@ void main() {
       'Mark 6:10',
       'Mark 6:11',
     };
-    final simplified = {for (final v in _edition('biblexg-v2')) _ref(v)};
-    final traditional = {for (final v in _edition('biblexg-v2-tr')) _ref(v)};
+    final simplified = {for (final v in _edition('biblexg-v3')) _ref(v)};
+    final traditional = {for (final v in _edition('biblexg-v3-tr')) _ref(v)};
     expect(simplified.difference(traditional), knownSimplifiedOnly);
     expect(traditional.difference(simplified), knownTraditionalOnly);
   });
@@ -882,8 +882,8 @@ void main() {
         'leb': 21,
         'nasb': 13,
         'lxxwh': 302,
-        'biblexg-v2': 38,
-        'biblexg-v2-tr': 34,
+        'biblexg-v3': 38,
+        'biblexg-v3-tr': 34,
         // 2026-09-08: the same sixteen as `bsb`, and the same sixteen in
         // each. Both sources store the Received-Text verses empty and
         // `import_yahwehdehua_texts.py` omits them, which is what
@@ -959,8 +959,8 @@ void main() {
       'bsb',
       'leb',
       'nasb',
-      'biblexg-v2',
-      'biblexg-v2-tr',
+      'biblexg-v3',
+      'biblexg-v3-tr',
     ];
 
     late final Versification versification = Versification.fromJson(
@@ -1064,13 +1064,13 @@ void main() {
         // 21 of the 梁家鏗譯本 absences are the publisher's own printed
         // ranges — the largest single class in the corpus and the only
         // one where the edition itself supplies the evidence.
-        'biblexg-v2': {
+        'biblexg-v3': {
           'range': 21,
           'notInOriginal': 11,
           'sharedOriginal': 1,
           'unexplained': 5,
         },
-        'biblexg-v2-tr': {
+        'biblexg-v3-tr': {
           'range': 21,
           'notInOriginal': 11,
           'sharedOriginal': 1,
@@ -1124,13 +1124,13 @@ void main() {
       // 13:13 is up there.
       const grace = <String, List<String>>{
         'leb': ['grace', 'love of God', 'fellowship'],
-        'biblexg-v2': ['恩', '爱', '圣灵'],
-        'biblexg-v2-tr': ['恩', '愛', '聖靈'],
+        'biblexg-v3': ['恩', '爱', '圣灵'],
+        'biblexg-v3-tr': ['恩', '愛', '聖靈'],
       };
       const salute = <String, List<String>>{
         'leb': ['holy kiss', 'saints greet you'],
-        'biblexg-v2': ['亲吻', '全体圣徒'],
-        'biblexg-v2-tr': ['親吻', '全體聖徒'],
+        'biblexg-v3': ['亲吻', '全体圣徒'],
+        'biblexg-v3-tr': ['親吻', '全體聖徒'],
       };
       for (final code in grace.keys) {
         final byRef = {
@@ -1152,7 +1152,7 @@ void main() {
       // reader saw Philip appear at Azotus and the sentence end there.
       // The join added no character; the comma was already the clause
       // separator.
-      const tails = {'biblexg-v2': '凯撒利亚', 'biblexg-v2-tr': '凱撒利亞'};
+      const tails = {'biblexg-v3': '凯撒利亚', 'biblexg-v3-tr': '凱撒利亞'};
       for (final code in tails.keys) {
         final byRef = {
           for (final v in _edition(code)) _ref(v): v['text'] as String,

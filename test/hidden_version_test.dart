@@ -75,13 +75,27 @@ import 'package:seeksparks/utils/version_abbreviation.dart';
 /// `unrestrictedCopyVersions` still names it and why the assertions
 /// below about the asset shipping are the ones that matter most here.
 ///
-/// The three entries are NOT the same decision and should not be
+/// 2026-09-14: `biblexg-v2` and `biblexg-v2-tr` join, on the owner's
+/// 「现有的也留着但是隐藏」. Different again from the other three — this
+/// is not one translation superseding another but the SAME translation
+/// re-fetched from the same publisher, shipping as `biblexg-v3`. The old
+/// pair is kept only so that a stored preference and a shared
+/// `?v=biblexg-v2` link still land somewhere real.
+///
+/// The five entries are NOT the same decision and should not be
 /// collapsed into one: the NASB is hidden pending a licensing answer
-/// from its publisher and could come back, while `cuvs-plus` and `bsb`
-/// are superseded and are not expected to. What they share is the
-/// requirement below — nothing offers them, and nobody is stranded on
-/// them.
-const _hidden = <String>['nasb', 'cuvs-plus', 'bsb'];
+/// from its publisher and could come back; `cuvs-plus` and `bsb` are
+/// superseded and are not expected to; the `biblexg-v2` pair is a
+/// snapshot that will be dropped outright once no stored preference can
+/// still name it. What all five share is the requirement below —
+/// nothing offers them, and nobody is stranded on them.
+const _hidden = <String>[
+  'nasb',
+  'cuvs-plus',
+  'bsb',
+  'biblexg-v2',
+  'biblexg-v2-tr',
+];
 
 /// The edition that was hidden with it and is visible again. Every place
 /// `_hidden` is asserted absent, this is asserted PRESENT, so a re-hide
@@ -137,12 +151,12 @@ void main() {
       }
     });
 
-    // 2026-09-08: was "these two" (nasb, cuvs-plus); `bsb` makes three,
-    // on 「bsbs 不用，就 bsb yahweh 版本导入」. Pinned as an exact set
-    // rather than a containment so that hiding a fourth edition cannot
-    // happen without this line, and this file's [_hidden] list, both
-    // being edited.
-    test('the hidden set is exactly these three', () {
+    // 2026-09-08: was "these two" (nasb, cuvs-plus); `bsb` made three,
+    // on 「bsbs 不用，就 bsb yahweh 版本导入」. 2026-09-14: the two
+    // `biblexg-v2` rows make five. Pinned as an exact set rather than a
+    // containment so that hiding a sixth edition cannot happen without
+    // this line, and this file's [_hidden] list, both being edited.
+    test('the hidden set is exactly these five', () {
       expect(disabledVersions, _hidden.toSet());
     });
   });

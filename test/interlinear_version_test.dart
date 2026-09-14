@@ -103,7 +103,7 @@ void main() {
         () {
       // 梁家铿译本 ships no alignment; 和合本雅伟版(简体) is the tagged
       // edition in the same script.
-      final choice = resolveInterlinearEdition(currentVersion: 'biblexg-v2');
+      final choice = resolveInterlinearEdition(currentVersion: 'biblexg-v3');
       expect(choice.version, 'cuvs-yhwh');
       expect(choice.source, InterlinearSource.substituted,
           reason: 'the panel has to say this out loud');
@@ -407,11 +407,11 @@ void main() {
     testWidgets('a reader on an untagged Bible is told whose text this is',
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpPanel(tester, 375, currentVersion: 'biblexg-v2');
+      await pumpPanel(tester, 375, currentVersion: 'biblexg-v3');
       // Nothing narrows in silence: both editions named, in the
       // reader's own locale.
       expect(
-          find.textContaining(fullBibleVersionLabel('biblexg-v2'),
+          find.textContaining(fullBibleVersionLabel('biblexg-v3'),
               findRichText: true),
           findsWidgets);
       expect(find.textContaining('没有原文编号对照', findRichText: true),

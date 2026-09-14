@@ -23,7 +23,7 @@ void main() {
         book: 'Psalms',
         chapter: 23,
         locale: 'zh-Hans',
-        currentVersion: 'biblexg-v2',
+        currentVersion: 'biblexg-v3',
       );
       expect(msg, contains(shortBibleVersionLabel('cuvs-yhwh'))); // 雅简+
       expect(msg, contains('诗篇'));
@@ -37,7 +37,7 @@ void main() {
         book: 'Psalms',
         chapter: 23,
         locale: 'zh-Hant',
-        currentVersion: 'biblexg-v2-tr',
+        currentVersion: 'biblexg-v3-tr',
       );
       expect(msg, contains(shortBibleVersionLabel('cuvs-yhwh-tr'))); // 雅繁+
       expect(msg, isNot(contains(shortBibleVersionLabel('cuvs-yhwh'))));
@@ -79,7 +79,7 @@ void main() {
         book: 'Psalms',
         chapter: 23,
         locale: 'zh-Hant',
-        currentVersion: 'biblexg-v2-tr',
+        currentVersion: 'biblexg-v3-tr',
       );
       expect(msg, contains('目前版本沒有'));
       expect(msg, isNot(contains('当前版本')));
@@ -116,7 +116,7 @@ void main() {
         book: 'Psalms',
         chapter: 23,
         locale: 'zh-Hant',
-        currentVersion: 'biblexg-v2-tr',
+        currentVersion: 'biblexg-v3-tr',
       );
       expect(msg, contains('詩篇'));
     });

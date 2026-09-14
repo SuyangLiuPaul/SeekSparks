@@ -86,8 +86,8 @@ void main() {
     for (final live in const [
       'assets/cuvs-yhwh.json',
       'assets/cuvs-yhwh-tr.json',
-      'assets/biblexg-v2.json',
-      'assets/biblexg-v2-tr.json',
+      'assets/biblexg-v3.json',
+      'assets/biblexg-v3-tr.json',
     ]) {
       expect(urls, contains(live));
     }

@@ -89,14 +89,14 @@ void main() {
     expect(versionsForLanguage('en').map((v) => v.value),
         isNot(contains('nasb')));
     expect(versionsForLanguage('zh-Hans').map((v) => v.value),
-        containsAll(<String>['cuvs-yhwh', 'biblexg-v2']));
+        containsAll(<String>['cuvs-yhwh', 'biblexg-v3']));
     // The same shape as the 'nasb' line above: hidden means the picker
     // does not list it, asserted in the one function that fills the
     // picker. `cuvs-plus` was in the containsAll until 2026-09-08.
     expect(versionsForLanguage('zh-Hans').map((v) => v.value),
         isNot(contains('cuvs-plus')));
     expect(versionsForLanguage('zh-Hant').map((v) => v.value),
-        containsAll(<String>['cuvs-yhwh-tr', 'biblexg-v2-tr']));
+        containsAll(<String>['cuvs-yhwh-tr', 'biblexg-v3-tr']));
   });
 
   test(
@@ -142,10 +142,26 @@ void main() {
     // LORD → Yahweh rewrite it and `bsb-yhwh` differ in 636 verses of
     // 31,086 (2.0%).
     //
-    // The three entries are separate decisions with separate futures:
-    // the NASB may come back if its publisher answers, `cuvs-plus` and
-    // `bsb` will not.
-    expect(disabledVersions, <String>{'nasb', 'cuvs-plus', 'bsb'},
+    // 2026-09-14: `biblexg-v2` / `-v2-tr` joined on the owner's
+    // 「现有的也留着但是隐藏」. This one is NOT a supersession between two
+    // translations — it is the SAME translation re-fetched from the
+    // same publisher, shipping as `biblexg-v3`. The old pair stays in
+    // the build because a stored preference and a shared
+    // `?v=biblexg-v2` link both have to resolve to something real.
+    //
+    // The five entries are separate decisions with separate futures:
+    // the NASB may come back if its publisher answers; `cuvs-plus` and
+    // `bsb` will not; the `biblexg-v2` pair is a snapshot and will be
+    // dropped outright once no stored preference can still name it.
+    expect(
+        disabledVersions,
+        <String>{
+          'nasb',
+          'cuvs-plus',
+          'bsb',
+          'biblexg-v2',
+          'biblexg-v2-tr',
+        },
         reason: 'hiding an edition is a product decision, not a detail — '
             'it belongs in a diff someone reads');
   });

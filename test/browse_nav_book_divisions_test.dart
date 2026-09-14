@@ -118,4 +118,92 @@ void main() {
     expect(find.text('创世纪'), findsWidgets);
     expect(find.text('马太福音'), findsOneWidget);
   });
+
+  // ── The shape, not just the content ──────────────────────────────
+  //
+  // 2026-09-14: 「这个sword很难看的 能不能就清晰两竖行新约旧约分开」. The
+  // division headers added the day before were the right information in
+  // a shape you still had to scroll 1,300px to read. Everything below
+  // pins the TWO-COLUMN layout, because the four tests above all passed
+  // while the menu was one tall list and would pass again if it went
+  // back to being one.
+  group('two standing columns, not one tall list', () {
+    /// Left edge of the row that prints [book], in the menu overlay.
+    double left(WidgetTester tester, String book) =>
+        tester.getTopLeft(find.text(book).last).dx;
+
+    testWidgets('the Greek column stands to the right of the Hebrew one',
+        (tester) async {
+      await open(tester, const ['创世纪', '诗篇', '马太福音', '启示录']);
+      // Within a column, books share an x; across columns they do not.
+      expect(left(tester, '诗篇'), left(tester, '创世纪'));
+      expect(left(tester, '启示录'), left(tester, '马太福音'));
+      expect(left(tester, '马太福音'), greaterThan(left(tester, '创世纪')));
+    });
+
+    testWidgets('each column is headed by the corpus it holds',
+        (tester) async {
+      await open(tester, const ['创世纪', '马太福音']);
+      // 希伯来 / 希腊, not 旧约 / 新约 — the #280 ruling, which is
+      // terminological and not per-screen.
+      expect(find.text(label('oldTestamentShort')), findsOneWidget);
+      expect(find.text(label('newTestamentShort')), findsOneWidget);
+      expect(left(tester, label('newTestamentShort')),
+          greaterThan(left(tester, label('oldTestamentShort'))));
+    });
+
+    testWidgets('an NT-only edition gets ONE column, not one empty one',
+        (tester) async {
+      // 梁家铿译本 is the real case. A two-column menu with an empty
+      // column is worse than a single column.
+      await open(tester, const ['马太福音', '罗马书', '启示录']);
+      expect(find.text(label('oldTestamentShort')), findsNothing);
+      expect(find.text(label('newTestamentShort')), findsOneWidget);
+      expect(left(tester, '罗马书'), left(tester, '马太福音'));
+    });
+
+    testWidgets('a book row is a 24px target and reports the book it prints',
+        (tester) async {
+      // WCAG 2.5.8 is 24×24, and the old rows were 22px — which also
+      // made them easy to mis-click in a list this dense.
+      String? picked;
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(ChangeNotifierProvider<AppSettings>.value(
+        value: AppSettings(),
+        child: MaterialApp(
+          home: Scaffold(
+            body: BrowseNavStrip(
+              corpus: corpus(const ['创世纪', '诗篇', '马太福音']),
+              version: 'kjv',
+              localBook: '创世纪',
+              chapter: 1,
+              verse: 1,
+              bookLabel: (b) => b,
+              locale: locale,
+              onVersion: (_) {},
+              onBook: (b) => picked = b,
+              onChapter: (_) {},
+              onVerse: (_) {},
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('创世纪').first);
+      await tester.pumpAndSettle();
+
+      expect(tester.getSize(find.text('马太福音').last).height, lessThan(24));
+      final row = find
+          .ancestor(
+              of: find.text('马太福音').last, matching: find.byType(InkWell))
+          .first;
+      expect(tester.getSize(row).height, greaterThanOrEqualTo(24));
+
+      await tester.tap(find.text('马太福音').last);
+      await tester.pumpAndSettle();
+      expect(picked, '马太福音');
+    });
+  });
 }
