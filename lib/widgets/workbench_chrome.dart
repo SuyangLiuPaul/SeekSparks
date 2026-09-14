@@ -14,12 +14,16 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
     show fullBibleVersionLabel, shortBibleVersionLabel;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/version_gutter.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
 
 // ── Menu bar ────────────────────────────────────────────────────────
 
@@ -200,25 +204,59 @@ class WorkbenchToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
+    final locale = context.watch<AppSettings>().locale;
     return Container(
       height: t.toolbarHeight,
       decoration: BoxDecoration(
         color: wb.chromeBg,
         border: Border(bottom: BorderSide(color: wb.border)),
       ),
-      child: Row(
-        children: [
-          for (var g = 0; g < groups.length; g++) ...[
-            if (g > 0)
-              Container(
-                width: WbMetrics.hairline,
-                height: 16,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                color: wb.border,
-              ),
-            for (final b in groups[g]) WbToolIcon(button: b),
-          ],
-        ],
+      // 2026-09-14: the toolbar scrolls when it does not fit.
+      //
+      // It was a bare Row, and a bare Row that runs out of width does not
+      // shrink or wrap — it overflows and CLIPS. Measured at 320x568
+      // (iPhone SE, and the same build ships there): 18 pixels off the
+      // right, which is Settings, with nothing on screen to say the
+      // control exists. In a debug build that is the yellow-and-black
+      // hazard band; in release it is silence.
+      //
+      // `OverflowHintScroll` is the app's existing answer to this — the
+      // reading pane's selection bar and the projection control strip
+      // both use it — and it is the right one here for the reason the
+      // brief gives: the toolbar must not respond to a narrow window by
+      // shrinking its targets or hiding commands. It fades the edge that
+      // has more behind it and puts a tappable chevron there, so the
+      // reader can see that the strip continues.
+      //
+      // `minWidth` is the viewport, so nothing changes at any width where
+      // the Row already fits — which is every desktop size this tool is
+      // designed for. Found by adding WorkbenchPage to
+      // `test/responsive_overflow_smoke_test.dart`, which had covered
+      // About, Settings and Library and skipped the screen the app opens
+      // on.
+      child: LayoutBuilder(
+        builder: (context, box) => OverflowHintScroll(
+          fadeColor: wb.chromeBg,
+          minWidth: box.maxWidth,
+          moreLabel: uiStrings['moreActions']?[locale] ?? 'More',
+          backLabel:
+              uiStrings['moreActionsBack']?[locale] ?? 'Previous actions',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var g = 0; g < groups.length; g++) ...[
+                if (g > 0)
+                  Container(
+                    width: WbMetrics.hairline,
+                    height: 16,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    color: wb.border,
+                  ),
+                for (final b in groups[g]) WbToolIcon(button: b),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

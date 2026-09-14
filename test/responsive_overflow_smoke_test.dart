@@ -6,6 +6,8 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/about_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
+import 'package:seeksparks/pages/workbench_page.dart';
+import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 
 /// 2026-06-11 audit: responsive overflow smoke tests.
@@ -17,11 +19,20 @@ import 'package:seeksparks/providers/main_provider.dart';
 /// "RIGHT OVERFLOWED BY N PIXELS" regression on these pages fails CI
 /// instead of shipping.
 ///
-/// Pages covered: About, Settings, Library. The reading
-/// pane needs loaded bible data and is covered by the on-device
-/// flows. Each page is pumped with fresh providers and empty
-/// SharedPreferences (the cold-install state, which is also the state
-/// most likely to show placeholder/empty layouts that overflow).
+/// Pages covered: About, Settings, Library — and, since 2026-09-14, the
+/// Workbench, which is the screen the app actually opens on and was the
+/// one page excluded here. The note this replaces said "the reading pane
+/// needs loaded bible data and is covered by the on-device flows"; the
+/// first half is true and the second was a hope. Seeding two verses into
+/// the provider is enough to lay the whole workspace out — every pane,
+/// the top strip, the tab strip — and that is what the four widths below
+/// are for. 320px is the interesting one: a workspace designed for a
+/// 1280px desktop still has to survive an iPhone SE, because the same
+/// build ships there.
+///
+/// Each page is pumped with fresh providers and empty SharedPreferences
+/// (the cold-install state, which is also the state most likely to show
+/// placeholder/empty layouts that overflow).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -36,7 +47,16 @@ void main() {
     'AboutPage': () => const AboutPage(),
     'SettingsPage': () => const SettingsPage(),
     'LibraryPage': () => const LibraryPage(),
+    'WorkbenchPage': () => const WorkbenchPage(),
   };
+
+  /// Enough scripture for the panes to have something to lay out. An
+  /// empty provider would let the workspace render placeholders and pass
+  /// for the wrong reason.
+  const seed = [
+    Verse(book: 'Genesis', chapter: 1, verse: 1, text: 'seed 1'),
+    Verse(book: 'Genesis', chapter: 1, verse: 2, text: 'seed 2'),
+  ];
 
   Future<void> pumpAt(
     WidgetTester tester,
@@ -48,7 +68,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => MainProvider()),
+          ChangeNotifierProvider(create: (_) => MainProvider()..setVerses(seed)),
           ChangeNotifierProvider(create: (_) => AppSettings()),
         ],
         child: MaterialApp(home: page),
