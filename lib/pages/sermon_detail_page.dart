@@ -807,7 +807,10 @@ class _LanguageToggle extends StatelessWidget {
   }
 }
 
-/// Square corners and a 1px hairline, per `workbench_theme.dart`. Not an
+/// A 1px hairline and no corner radius, per `workbench_theme.dart` —
+/// whose square-corner clause was retired on 2026-09-07, so this notice
+/// is square by omission now rather than by rule; the hairline is the
+/// part that is still required. Not an
 /// error — the summary is real material and worth reading — so it takes
 /// the surface palette rather than the error one, and sits above the body
 /// where it cannot be scrolled past unread.

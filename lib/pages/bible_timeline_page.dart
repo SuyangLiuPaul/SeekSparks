@@ -415,7 +415,6 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
       context: context,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      shape: const RoundedRectangleBorder(),
       builder: (sheetCtx) {
         final wb = WbColors.of(sheetCtx);
         final t = WbType.of(sheetCtx);

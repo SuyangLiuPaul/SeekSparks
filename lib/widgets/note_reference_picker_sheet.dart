@@ -506,9 +506,6 @@ Future<String?> showNoteReferencePicker({
     context: context,
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
     builder: (sheetCtx) => NoteReferencePickerSheet(
       locale: locale,
       mainProvider: mainProvider,

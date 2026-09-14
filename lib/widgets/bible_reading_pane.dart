@@ -83,6 +83,7 @@ import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
 import 'package:seeksparks/widgets/version_picker_sheet.dart'
     show showLanguageGroupedVersionMenu;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/motion.dart';
 
 /// 2026-08 (ported from YsWords v1.3.156): "护眼" (easy-on-eyes) reading
 /// theme — a warm sepia/paper palette for the Bible reading pane, toggled
@@ -3281,8 +3282,6 @@ void _showOriginalsSheet({
     // wide desktop/iPad screens. Allow up to 1100px so the panel
     // breathes on web while still feeling sheet-like on phones.
     constraints: const BoxConstraints(maxWidth: 1100),
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: buildSheet,
   );
 }
@@ -3308,8 +3307,6 @@ void _showCrossRefsSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 900),
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.35,
@@ -3369,8 +3366,6 @@ void _showChapterSermonsSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 800),
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.55,
       minChildSize: 0.3,
@@ -3514,8 +3509,6 @@ void _showRelatedSermonsSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 800),
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.55,
       minChildSize: 0.3,
@@ -3982,8 +3975,6 @@ void showNoteEditor({
     enableDrag: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 720),
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) {
       // 2026-05-20 (v1.2.63): viewInsets watcher closed over by the
       // StatefulBuilder so we can fire restoreScroll on EVERY
@@ -4587,8 +4578,6 @@ void _showHighlightsSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => HighlightsSheet(
       highlights: highlights,
       locale: locale,
@@ -4665,8 +4654,6 @@ void _showMapPicker(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) {
       return _MapPickerSheet(
         chapterMaps: chapterMaps,
@@ -5737,7 +5724,13 @@ class _BibleReaderBottomBar extends StatelessWidget {
           // 320 ms + easeInOutCubic feels considerably less abrupt
           // than the previous 200 ms easeOutCubic — both bars now
           // ease in/out at the same pace.
-          duration: const Duration(milliseconds: 320),
+          //
+          // 2026-09-14: and zero for a reader who asked for less motion.
+          // This is the largest movement in the app — a full bar
+          // travelling 1.4x its own height, twice, every time the reader
+          // taps to hide the chrome.
+          duration: AppMotion.duration(
+              context, const Duration(milliseconds: 320)),
           curve: Curves.easeInOutCubic,
           child: _GlassSurface(
             // Opaque and edge-to-edge so the surface fills all the way
@@ -6047,8 +6040,10 @@ class _FloatingHeader extends StatelessWidget {
         child: AnimatedSlide(
           offset: chromeVisible ? Offset.zero : const Offset(0, -1.4),
           // 2026-05-22 (v1.2.71): smoother chrome animation — matches
-          // the bottom bar's timing.
-          duration: const Duration(milliseconds: 320),
+          // the bottom bar's timing. Reduced motion, too — see the
+          // bottom bar.
+          duration: AppMotion.duration(
+              context, const Duration(milliseconds: 320)),
           curve: Curves.easeInOutCubic,
           // 2026-05-22 (v1.2.71): single edge-to-edge surface that
           // matches the bottom bar's pattern — opaque background,
@@ -7009,8 +7004,6 @@ void _showSynopsisSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 900),
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.35,
@@ -7339,7 +7332,8 @@ class _SectionHeadingState extends State<_SectionHeading> {
         ),
         if (hasContext)
           AnimatedSize(
-            duration: const Duration(milliseconds: 180),
+            duration: AppMotion.duration(
+                context, const Duration(milliseconds: 180)),
             curve: Curves.easeOut,
             alignment: Alignment.topLeft,
             child: _expanded
@@ -7530,7 +7524,8 @@ class _BookIntroCardState extends State<_BookIntroCard> {
             // passage. AnimatedSize gives a soft expand/collapse
             // motion without dropping into the verse layout.
             AnimatedSize(
-              duration: const Duration(milliseconds: 200),
+              duration: AppMotion.duration(
+                  context, const Duration(milliseconds: 200)),
               curve: Curves.easeOut,
               alignment: Alignment.topLeft,
               child: _expanded

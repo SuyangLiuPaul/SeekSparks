@@ -1928,7 +1928,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         onTap: () => showModalBottomSheet<void>(
           context: context,
           backgroundColor: wb.paneBg,
-          shape: const RoundedRectangleBorder(),
           isScrollControlled: true,
           builder: (sheet) => SafeArea(
             child: Padding(
@@ -2535,7 +2534,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) => FutureBuilder<WheelHistoryData>(
         future: _future,
@@ -2721,7 +2719,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) => FutureBuilder<WheelHistoryData>(
         future: _future,
@@ -2840,7 +2837,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) => FutureBuilder<WheelHistoryData>(
         future: _future,

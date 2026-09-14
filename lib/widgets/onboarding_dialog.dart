@@ -6,6 +6,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/motion.dart';
 
 /// First-run onboarding carousel. ~4 slides explaining the
 /// non-obvious features (daily verse, reading plans, library,
@@ -176,7 +177,10 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                 children: List.generate(slides.length, (i) {
                   final selected = i == _index;
                   return AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
+                    // The dot GROWS from 8 to 22 — size, not colour, so
+                    // reduced motion applies (2026-09-14).
+                    duration: AppMotion.duration(
+                        context, const Duration(milliseconds: 220)),
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     width: selected ? 22 : 8,
                     height: 8,

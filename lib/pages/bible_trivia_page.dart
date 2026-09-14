@@ -20,6 +20,7 @@ import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
+import 'package:seeksparks/constants/motion.dart';
 
 /// Curated catalogue of "Bible trivia" / 冷知识 — patterns and
 /// hidden structures most readers don't notice unless someone
@@ -560,7 +561,9 @@ class _TriviaFilterBar extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       // No `shape:`/`backgroundColor:` overrides — `workbench_theme`'s
-      // `bottomSheetTheme` already squares the corners, draws the
+      // `bottomSheetTheme` already rounds the top corners off
+      // `WbMetrics.radiusSurface` — it squared them until 2026-09-07 —
+      // draws the
       // hairline and sets elevation 0. An override here would only ever
       // be a way to disagree with it.
       builder: (sheetCtx) {
@@ -871,7 +874,8 @@ class _TriviaTileState extends State<_TriviaTile> {
                 const Spacer(),
               AnimatedRotation(
                 turns: _expanded ? 0.5 : 0,
-                duration: const Duration(milliseconds: 220),
+                duration: AppMotion.duration(
+                    context, const Duration(milliseconds: 220)),
                 child: Icon(
                   Icons.expand_more,
                   size: 18,
@@ -1491,10 +1495,12 @@ Future<void> showBibleTriviaSheet({
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    // Square corners, hairline and elevation 0 all come from
+    // The corner, the hairline and elevation 0 all come from
     // `workbench_theme`'s `bottomSheetTheme`; overriding them here is
     // how the reader-side sheet drifted from the page in the first
-    // place.
+    // place. (It said "square corners" until 2026-09-14 — true when
+    // written, and twenty-five other sheets were still asserting it by
+    // hand long after the rule was retired.)
     builder: (sheetCtx) {
       return SafeArea(
         child: ConstrainedBox(

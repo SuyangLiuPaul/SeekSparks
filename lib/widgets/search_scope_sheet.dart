@@ -39,8 +39,6 @@ Future<Set<String>?> showSearchScopeSheet({
   return showModalBottomSheet<Set<String>>(
     context: context,
     isScrollControlled: true,
-    // Square, per workbench_theme: the sheet is a window edge, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (ctx) => SearchScopeSheet(
       locale: locale,
       version: version,

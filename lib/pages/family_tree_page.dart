@@ -812,7 +812,6 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
       context: context,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      shape: const RoundedRectangleBorder(),
       builder: (sheetCtx) {
         final wb = WbColors.of(sheetCtx);
         final t = WbType.of(sheetCtx);
@@ -892,7 +891,9 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
       // No `shape:` / `backgroundColor:` — `workbenchTheme`'s
-      // bottomSheetTheme is already square and already `paneBg`.
+      // bottomSheetTheme already sets the shape (rounded at the top off
+      // `WbMetrics.radiusSurface` since 2026-09-07, not square as this
+      // line used to say) and already sets `paneBg`.
       builder: (sheetCtx) => DraggableScrollableSheet(
         initialChildSize: 0.65,
         minChildSize: 0.35,

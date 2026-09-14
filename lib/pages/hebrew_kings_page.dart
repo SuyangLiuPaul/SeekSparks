@@ -165,7 +165,6 @@ class _HebrewKingsPageState extends State<HebrewKingsPage> {
       context: context,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      shape: const RoundedRectangleBorder(),
       builder: (sheetCtx) => FutureBuilder<HebrewKingsData>(
         future: _future,
         builder: (c, snap) {
@@ -262,7 +261,6 @@ class _HebrewKingsPageState extends State<HebrewKingsPage> {
       context: context,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      shape: const RoundedRectangleBorder(),
       builder: (sheetCtx) => DraggableScrollableSheet(
         initialChildSize: 0.62,
         minChildSize: 0.35,

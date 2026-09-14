@@ -35,6 +35,7 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
 import 'package:seeksparks/widgets/word_distribution.dart';
 import 'package:seeksparks/widgets/word_distribution_table.dart';
+import 'package:seeksparks/constants/motion.dart';
 
 /// Bottom sheet that shows the original Hebrew/Greek text for one or
 /// more selected verses, with each word as a tappable chip linked to
@@ -2251,9 +2252,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       // Wider sheet on desktop/iPad — Material's default ~640dp cap
       // squeezes the table on wide screens.
       constraints: const BoxConstraints(maxWidth: 1400),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => DraggableScrollableSheet(
         initialChildSize: 0.92,
         minChildSize: 0.5,
@@ -2425,7 +2423,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 children: [
                   AnimatedRotation(
                     turns: isExpanded ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
+                    duration: AppMotion.duration(
+                        context, const Duration(milliseconds: 180)),
                     child: Icon(Icons.arrow_right_rounded,
                         size: 20, color: scheme.onSurfaceVariant),
                   ),

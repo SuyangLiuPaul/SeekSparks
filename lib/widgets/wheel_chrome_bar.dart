@@ -145,7 +145,6 @@ void _showOverflow({
   showModalBottomSheet<void>(
     context: context,
     backgroundColor: wb.paneBg,
-    shape: const RoundedRectangleBorder(),
     builder: (sheet) => SafeArea(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         ListTile(

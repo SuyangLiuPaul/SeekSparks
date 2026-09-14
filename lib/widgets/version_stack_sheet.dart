@@ -58,8 +58,6 @@ Future<List<String>?> showVersionStackSheet({
   return showModalBottomSheet<List<String>>(
     context: context,
     isScrollControlled: true,
-    // Square, per workbench_theme: the sheet is a window edge, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     // Ten rows of a two-word label do not want 1440px of width. The
     // scope sheet spans the window because 66 book chips need the room;
     // this one would just push its remove buttons out of sight of the

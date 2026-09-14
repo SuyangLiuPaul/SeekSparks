@@ -469,9 +469,6 @@ Future<void> showVersePopup(BuildContext context, BibleReference ref) {
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 720),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
     builder: (_) => VersePopupSheet(reference: ref),
   );
 }

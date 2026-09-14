@@ -7,8 +7,10 @@
 ///     the touch-first app. Rounded, roomy, 14px prose.
 ///   * As the workbench's **Word Study analysis tab**, docked in a pane
 ///     that can be as narrow as 256px, beside eleven other tabs that
-///     all obey `workbench_theme.dart`: "Square corners and 1px hairline
-///     borders. No shadows, no cards."
+///     all obey `workbench_theme.dart`: 1px hairline borders, no
+///     shadows, no cards. (That rule said "square corners" too, until
+///     2026-09-07 — a corner now comes off the `WbMetrics` scale. The
+///     half quoted here is the half that did not change.)
 ///
 /// Until now it only knew the first. That mattered more than it sounds,
 /// because the Word Study tab has **two bodies**: hovering a word gives

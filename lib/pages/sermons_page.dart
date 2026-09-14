@@ -447,9 +447,6 @@ class _SermonsPageState extends State<SermonsPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) {
         return _PassageFilterSheet(
           locale: locale,

@@ -154,9 +154,9 @@ const Map<String, int> _remaining = <String, int>{
   'lib/pages/bible_timeline_page.dart': 3,
   'lib/main.dart': 4,
   'lib/pages/highlights_page.dart': 4,
-  'lib/pages/sermons_page.dart': 5, // re-measured
+  'lib/pages/sermons_page.dart': 4, // re-measured
   'lib/pages/strongs_entry_page.dart': 4,
-  'lib/pages/loading_page.dart': 3,
+  'lib/pages/loading_page.dart': 2,
   'lib/pages/phrasing_page.dart': 3,
   'lib/widgets/highlights_sheet.dart': 3,
   // 2026-09-08: `lib/pages/home_page.dart` (2) left this inventory
@@ -168,7 +168,7 @@ const Map<String, int> _remaining = <String, int>{
   'lib/widgets/onboarding_dialog.dart': 2,
   'lib/widgets/search_stats_strip.dart': 2,
   'lib/widgets/small_screen_advisory.dart': 2,
-  'lib/widgets/verse_popup_sheet.dart': 3, // re-measured
+  'lib/widgets/verse_popup_sheet.dart': 2, // re-measured
   'lib/widgets/version_picker_sheet.dart': 2,
   'lib/constants/word_study_style.dart': 1,
   'lib/constants/workbench_theme.dart': 1,
@@ -187,8 +187,8 @@ const Map<String, int> _remaining = <String, int>{
   'lib/widgets/contact_line.dart': 1,
   'lib/widgets/copy_center_sheet.dart': 1,
   'lib/widgets/docked_panel.dart': 1,
-  'lib/widgets/note_reference_picker_sheet.dart': 2, // re-measured
-  'lib/widgets/originals_sheet.dart': 2, // re-measured
+  'lib/widgets/note_reference_picker_sheet.dart': 1, // re-measured
+  'lib/widgets/originals_sheet.dart': 1, // re-measured
   'lib/widgets/workbench_chrome.dart': 1,
 };
 
@@ -287,6 +287,58 @@ void main() {
       );
     });
 
+    // 2026-09-14: the blind spot that let the retirement miss 25 sheets.
+    //
+    // Everything above asks "whose number is this?" — it reads a
+    // `Radius.circular(N)` and checks N against the scale. All three
+    // ways a call site squares a sheet name no number at all:
+    // `BorderRadius.zero`, a bare `const RoundedRectangleBorder()`
+    // (square and borderless by DEFAULT, which is the sneakiest of the
+    // three), and `shape:` omitted-but-overridden with some other
+    // radius. So when the square-corner rule was retired on 2026-09-07
+    // and `bottomSheetTheme` grew its `radiusSurface` top corners,
+    // twenty-five of the app's sixty-four modal sheets went on drawing
+    // the old rule and this test stayed green.
+    //
+    // The invariant is not about a shape at all, which is why it could
+    // not be expressed as a count of radii: a modal sheet's shape
+    // belongs to the theme, and a call site that passes `shape:` has
+    // taken that decision away from it. One place decides, so one place
+    // can be changed.
+    test('no modal sheet overrides the shape the theme sets', () {
+      final offenders = <String>[];
+      for (final entity in Directory('lib').listSync(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('.dart')) continue;
+        if (entity.path.endsWith('workbench_theme.dart')) continue;
+        final src = _stripComments(entity.readAsStringSync());
+        var from = 0;
+        while (true) {
+          final at = src.indexOf('showModalBottomSheet', from);
+          if (at == -1) break;
+          from = at + 1;
+          // The argument list only: stop at the `builder:`, whose own
+          // widget tree may legitimately shape things inside the sheet.
+          final builder = src.indexOf('builder:', at);
+          final end = builder == -1 ? src.length : builder;
+          final args = src.substring(at, end);
+          if (RegExp(r'(^|[\s(,])shape:').hasMatch(args)) {
+            final line = src.substring(0, at).split('\n').length;
+            offenders.add('${entity.path}:$line');
+          }
+        }
+      }
+      expect(
+        offenders,
+        isEmpty,
+        reason: 'a modal sheet takes its shape from '
+            "workbench_theme.dart's `bottomSheetTheme` — rounded at the "
+            'top off WbMetrics.radiusSurface, with a hairline. Passing '
+            '`shape:` here overrides that, and 25 call sites doing it is '
+            'how the square-corner retirement missed most of the app for '
+            'a week:\n  ${offenders.join('\n  ')}',
+      );
+    });
+
     test('the list is a ratchet, not a snapshot', () {
       // Guards against the cheapest way to make the test above pass:
       // emptying the list. If a page is genuinely deleted, the sibling
@@ -343,6 +395,29 @@ void main() {
       }
       expect(grown, isEmpty,
           reason: 'These files got MORE unconverted chrome, not less.');
+
+      // 2026-09-14: a number that is too HIGH fails too, which is what
+      // the paragraph at the top of this test always claimed ("Lower one
+      // and the test tells you to write the new number, which keeps the
+      // figure honest instead of letting it rot") and what the code did
+      // not do — it only failed on growth, so a fix could quietly leave
+      // the inventory overstating the work left. It had already rotted:
+      // `loading_page.dart` was declared 3 and measured 2, by a fix
+      // nobody was asked to record. Five numbers came down with this
+      // change; four of them are sheets whose hardcoded 16px corner went
+      // to the theme.
+      final stale = <String>[];
+      for (final entry in _remaining.entries) {
+        final now = actual[entry.key] ?? 0;
+        if (now > 0 && now < entry.value) {
+          stale.add('${entry.key}: ${entry.value} -> $now');
+        }
+      }
+      expect(stale, isEmpty,
+          reason: 'These files have FEWER offences than declared, which '
+              'is good news the inventory has not recorded. Write the '
+              'new number — an overstated ceiling is room for a '
+              'regression to hide in.');
       expect(finished, isEmpty,
           reason: 'These files are clean now — move them from _remaining '
               'to _passed so they can never regress.');

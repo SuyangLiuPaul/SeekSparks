@@ -1122,7 +1122,11 @@ class _BarPainter extends CustomPainter {
     final split = begat;
     final mid = split == null ? right : x(split.clamp(birth, death));
 
-    // Square corners, per workbench_theme.dart:16.
+    // A square bar, and deliberately not a chrome decision: this is a
+    // lifespan drawn on a canvas, where the rectangle IS the datum and a
+    // rounded end would read as uncertainty about the date. (The line
+    // used to cite workbench_theme's square-corner rule, which was
+    // retired on 2026-09-07; the shape here never depended on it.)
     canvas.drawRect(
       Rect.fromLTRB(left, top, mid, top + 12),
       Paint()..color = hue.withValues(alpha: selected || contemporary ? 1 : 0.75),

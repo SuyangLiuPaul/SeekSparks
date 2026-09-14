@@ -269,6 +269,21 @@ who finds the old phrasing needs to land somewhere.
 - **Whether the Reader becomes a workbench mode** rather than a separate
   surface. `[carried forward]`
 - **Shortening the English strip lane headings** (above).
+- **Whether the reading column should be capped on a wide monitor.**
+  `lib/utils/responsive.dart` carries `maxContentWidth` — 1100 on tablet,
+  1400 on desktop, 1800 on a TV — with forty lines of rationale about the
+  ~75-character measure, the CJK adjustment, and a Xiaomi Pad 7 Ultra
+  report. **Nothing in this app calls it.** It came over with the rest of
+  the port from YsWords, where `home_page.dart` wraps the reading column
+  in it; here it is dead code, and a verse on a 1920 monitor in single-pane
+  runs the full width.
+  This is the owner's call and not an obvious bug: the brief for the
+  Workbench is density — "a dense, flat, neutral, keyboard-driven desktop
+  tool" — and four panes at 1920 are each under 500px, where a cap would
+  do nothing. It bites only the single-pane reading surface. Either wire
+  it up there or delete the helper; what should not stay is a documented
+  readability rule that no screen obeys. `[verified 2026-09-14 — grep for
+  maxContentWidth returns its own definition and nothing else]`
 
 ---
 

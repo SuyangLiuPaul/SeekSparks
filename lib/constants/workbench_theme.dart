@@ -1355,6 +1355,29 @@ ThemeData workbenchTheme(
       // of the window, and rounding the two corners that are off-screen
       // is how a sheet ends up with a 1px sliver of pane showing under
       // it.
+      //
+      // 2026-09-14: this is now the ONLY place a modal sheet's shape is
+      // decided. Twenty-five of the app's sixty-four
+      // `showModalBottomSheet` calls were overriding it, in three
+      // spellings that all landed somewhere other than here:
+      //
+      //   * twelve passed `BorderRadius.zero` with the comment "a sheet
+      //     is a window edge here, not a card" — the #279 square rule,
+      //     retired on 2026-09-07 at the owner's request;
+      //   * twenty-one passed a bare `const RoundedRectangleBorder()`,
+      //     whose DEFAULT is square and borderless, so they read as the
+      //     old rule without naming it;
+      //   * four hardcoded a 16px top corner, twice `radiusSurface`,
+      //     from before there was a scale to read.
+      //
+      // None of them survived the retirement, because nothing was
+      // looking: `page_chrome_pass_test.dart` asks whether a
+      // `Radius.circular` reads its number off this scale, and all
+      // three spellings name no number at all. The ratchet now also
+      // fails a `showModalBottomSheet` that passes `shape:`, which is
+      // the invariant that actually holds — the theme decides, and a
+      // call site restating the theme is only somewhere for the two to
+      // drift apart.
       shape: RoundedRectangleBorder(
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(WbMetrics.radiusSurface),

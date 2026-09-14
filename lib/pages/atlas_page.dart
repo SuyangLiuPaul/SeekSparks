@@ -479,8 +479,6 @@ class _AtlasPageState extends State<AtlasPage> {
       context: context,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      // Square: a sheet is a window edge here, not a card.
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.62,
         minChildSize: 0.35,
@@ -538,7 +536,6 @@ class _AtlasPageState extends State<AtlasPage> {
       context: context,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (sheetCtx) => DraggableScrollableSheet(
         initialChildSize: 0.62,
         minChildSize: 0.35,

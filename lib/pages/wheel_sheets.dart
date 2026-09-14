@@ -405,7 +405,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       // `WbType.of` WATCHES, and a tap handler is not a build — resolving
       // it out here threw before the sheet ever opened, so no detail sheet
@@ -580,7 +579,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);
@@ -647,7 +645,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);
@@ -763,7 +760,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);
@@ -844,7 +840,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);
@@ -1106,7 +1101,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);
@@ -1330,7 +1324,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);
@@ -1394,7 +1387,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);
@@ -1601,7 +1593,6 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) {
         final t = WbType.of(sheet);

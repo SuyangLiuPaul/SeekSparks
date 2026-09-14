@@ -975,7 +975,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) => FutureBuilder<WheelHistoryData>(
         future: _future,
@@ -1149,7 +1148,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) => FutureBuilder<WheelHistoryData>(
         future: _future,
@@ -1300,7 +1298,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
       builder: (sheet) => FutureBuilder<WheelHistoryData>(
         future: _future,
