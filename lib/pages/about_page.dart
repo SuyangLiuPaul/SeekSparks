@@ -274,14 +274,24 @@ class _ContactCard extends StatelessWidget {
                 Icon(Icons.alternate_email_rounded,
                     size: 18, color: scheme.primary),
                 const SizedBox(width: 8),
-                Text(
-                  uiStrings['aboutContactTitle']?[locale] ??
-                      'Contact / Takedown',
-                  style: TextStyle(
-                    fontSize: t.scaled(13),
-                    fontWeight: FontWeight.w700,
-                    color: scheme.primary,
-                    letterSpacing: 0.4,
+                // 2026-09-14: `Expanded`, so the heading wraps instead
+                // of running off the card. 「联系方式 · 版权下架请求」 is
+                // the longest of these headings and at the top of both
+                // sliders — reader size 40, menu scale 1.5 — it
+                // overflowed a 390px screen by 47px, taking the
+                // takedown half of the line with it. The card above
+                // already wraps its title this way; this Row was the
+                // one that did not.
+                Expanded(
+                  child: Text(
+                    uiStrings['aboutContactTitle']?[locale] ??
+                        'Contact / Takedown',
+                    style: TextStyle(
+                      fontSize: t.scaled(13),
+                      fontWeight: FontWeight.w700,
+                      color: scheme.primary,
+                      letterSpacing: 0.4,
+                    ),
                   ),
                 ),
               ],

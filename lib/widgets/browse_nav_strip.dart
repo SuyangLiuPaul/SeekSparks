@@ -22,6 +22,7 @@ import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
 
 class BrowseNavStrip extends StatelessWidget {
   const BrowseNavStrip({
@@ -87,44 +88,66 @@ class BrowseNavStrip extends StatelessWidget {
         border: Border(bottom: BorderSide(color: wb.border)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+      // 2026-09-14: the four dropdowns scroll when they do not fit, the
+      // same answer the toolbar and the menu bar got. Measured at 320px
+      // with both sliders at maximum (reader size 40, menu scale 1.5):
+      // 323px of controls in a 310px strip, so 13 pixels of the verse
+      // dropdown were clipped — the control a reader on a phone reaches
+      // for most. The step buttons stay pinned at the right, where they
+      // were; only the dropdowns move.
       child: Row(
         children: [
-          _Dropdown<String>(
-            value: version,
-            // The reading version — the one whose book names and canon
-            // drive the other three lists.
-            // `availableVersions`: this dropdown is one of the places a
-            // reader CHOOSES the reading version, so a hidden edition
-            // must not appear in it (2026-09-02).
-            items: [
-              for (final v in availableVersions) (v.value, v.shortLabel),
-            ],
-            onChanged: onVersion,
-            minWidth: 62,
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, box) => OverflowHintScroll(
+                fadeColor: wb.paneBg,
+                minWidth: box.maxWidth,
+                moreLabel: uiStrings['moreActions']?[locale] ?? 'More',
+                backLabel: uiStrings['moreActionsBack']?[locale] ??
+                    'Previous actions',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                  _Dropdown<String>(
+                    value: version,
+                    // The reading version — the one whose book names and canon
+                    // drive the other three lists.
+                    // `availableVersions`: this dropdown is one of the places a
+                    // reader CHOOSES the reading version, so a hidden edition
+                    // must not appear in it (2026-09-02).
+                    items: [
+                      for (final v in availableVersions) (v.value, v.shortLabel),
+                    ],
+                    onChanged: onVersion,
+                    minWidth: 62,
+                  ),
+                  const SizedBox(width: 4),
+                  _BookMenu(
+                    value: localBook,
+                    books: books,
+                    bookLabel: bookLabel,
+                    locale: locale,
+                    onChanged: onBook,
+                  ),
+                  const SizedBox(width: 4),
+                  _Dropdown<int>(
+                    value: chapter,
+                    items: [for (final c in chapterList) (c, '$c')],
+                    onChanged: onChapter,
+                    minWidth: 46,
+                  ),
+                  const SizedBox(width: 4),
+                  _Dropdown<int>(
+                    value: verseList.contains(verse) ? verse : null,
+                    items: [for (final n in verseList) (n, '$n')],
+                    onChanged: onVerse,
+                    minWidth: 46,
+                  ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 4),
-          _BookMenu(
-            value: localBook,
-            books: books,
-            bookLabel: bookLabel,
-            locale: locale,
-            onChanged: onBook,
-          ),
-          const SizedBox(width: 4),
-          _Dropdown<int>(
-            value: chapter,
-            items: [for (final c in chapterList) (c, '$c')],
-            onChanged: onChapter,
-            minWidth: 46,
-          ),
-          const SizedBox(width: 4),
-          _Dropdown<int>(
-            value: verseList.contains(verse) ? verse : null,
-            items: [for (final n in verseList) (n, '$n')],
-            onChanged: onVerse,
-            minWidth: 46,
-          ),
-          const Spacer(),
           // Step buttons as well: moving one verse at a time is the most
           // common motion of all, and opening a dropdown for it is a
           // worse deal than a single click.

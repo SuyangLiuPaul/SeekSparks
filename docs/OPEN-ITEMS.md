@@ -532,3 +532,56 @@ verse-level synopsis stays open. All three are recorded in
 compounds (`Catch - Seize - Steal`), so Nave's whole-headword prefix rule
 answers `seize` with **zero**. Matching had to be per-segment and
 bilingual — `爱` reaches 3 topics no English query finds.
+
+---
+
+### Every overflow test in the repo asked at one interface size `[FIXED 2026-09-14]`
+
+`test/responsive_overflow_smoke_test.dart` laid four pages out at 320 /
+390 / 768 / 1280 and asserted nothing threw. It ran every one of them at
+menu scale **1.0** and reader size **20**, and both sliders go higher —
+Menu Size to 1.5x, the reader's own text to 40. Chrome sizes come from
+`fontSize.clamp(16, 28) * menuScale`, so the largest interface this app
+can draw was the one configuration never laid out.
+
+Added as a paired axis — `default 1.0x / 20pt` and `largest 1.5x / 40pt`,
+because the clamp only saturates at the top of the *font* slider and both
+had to be up — and it found three clipped rows immediately:
+
+| row | width | overflow | what was off the screen |
+|---|---|---|---|
+| `WorkbenchMenuBar` | 320 | 45px | 帮助 and the build label — the **first row on the screen** |
+| `BrowseNavStrip` | 320 | 13px | the verse dropdown |
+| `AboutPage` contact heading | 390 | 47px | 「版权下架请求」 — the takedown half of the line |
+
+The two strips got `OverflowHintScroll`, which is this repo's existing
+answer and already carries the toolbar (2026-09-14, earlier): the strip
+fades the edge that has more behind it and puts a chevron there. `minWidth`
+is the viewport, so nothing moves at any width where the row already fits
+— every desktop size this tool is designed for. The About heading got
+`Expanded`; the card above it already wrapped its title that way.
+
+A four-line clause, not a redesign: the brief is "a dense, flat, neutral,
+keyboard-driven desktop tool", and none of these shrink a target or hide
+a command.
+
+**Found in the Words repo first**, where the same missing axis was hiding
+a 64px overflow in the reading page's bottom bar — the screen a reader
+spends every minute on. Both repos now carry the axis.
+
+#### Two labels still truncate at that corner, and are left alone `[measured 2026-09-14]`
+
+A sweep for `maxLines: 1` + `TextOverflow.ellipsis` paragraphs drawn
+narrower than their own text, at 320/390 with both sliders at maximum:
+
+| label | short by | what the reader still sees |
+|---|---|---|
+| `关于与版权说明 · v1.6.276` (About app bar) | 142px | the title; the version number is gone |
+| `创世纪 1  —  雅简+ · 梁简 · BSB-Y` (pane title) | 221px | the reference; the edition stack is gone |
+
+Both cut from the right, and in both the important half is on the left —
+a long descriptive title truncating on a 320px phone is ordinary, and no
+reader has reported either. Recorded rather than fixed, because inventing
+a fold here would be answering a problem nobody has: the Words case that
+started this was different in kind, a three-character label reduced to
+one (「雅伟版」 → 「雅…」) with nothing left to read.

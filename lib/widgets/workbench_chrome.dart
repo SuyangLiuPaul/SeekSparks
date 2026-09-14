@@ -72,16 +72,41 @@ class WorkbenchMenuBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
+    final locale = context.watch<AppSettings>().locale;
     return Container(
       height: t.menuBarHeight,
       decoration: BoxDecoration(
         color: wb.chromeBg,
         border: Border(bottom: BorderSide(color: wb.border)),
       ),
+      // 2026-09-14: the menu titles scroll when they do not fit, the
+      // same answer the toolbar below got and for the same reason. File
+      // / View / Search / Tools / Resources / Help plus the build label
+      // wanted 365px of a 320px screen with both sliders at maximum
+      // (reader size 40, menu scale 1.5) — 45 pixels of Help and the
+      // version number clipped off the right edge, which is the first
+      // row on the screen. `minWidth` is the viewport, so nothing moves
+      // at any width where the titles already fit, which is every
+      // desktop size this tool is designed for.
       child: Row(
         children: [
-          for (final m in menus) _MenuTitle(menu: m),
-          const Spacer(),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, box) => OverflowHintScroll(
+                fadeColor: wb.chromeBg,
+                minWidth: box.maxWidth,
+                moreLabel: uiStrings['moreActions']?[locale] ?? 'More',
+                backLabel: uiStrings['moreActionsBack']?[locale] ??
+                    'Previous actions',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final m in menus) _MenuTitle(menu: m),
+                  ],
+                ),
+              ),
+            ),
+          ),
           if (trailing != null)
             Padding(
               padding: const EdgeInsets.only(right: 8),

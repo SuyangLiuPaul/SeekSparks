@@ -538,6 +538,25 @@ void main() {
           greaterThanOrEqualTo(10));
     });
 
+    /// Tap something on the syntax card, scrolling to it first.
+    ///
+    /// 2026-09-14: the card became a scroll region. The touch target
+    /// floor raised its own operator chips from 21px to 24 and the
+    /// column overflowed the pane by 96px, so the card now takes the
+    /// height it can get and scrolls for the rest. At the 500px width
+    /// this group pumps, every rule wraps onto two or three lines and
+    /// the card is taller than any phone — the rules near the bottom
+    /// (the wildcard row, the word-list link) sit below the fold until
+    /// scrolled to. Which is what a reader does, and now what these
+    /// taps do; `ensureVisible` is a no-op when the target is already
+    /// on screen, so the taps higher up the card read the same.
+    Future<void> tapCard(WidgetTester tester, Finder target) async {
+      await tester.ensureVisible(target);
+      await tester.pumpAndSettle();
+      await tester.tap(target);
+      await tester.pump();
+    }
+
     testWidgets('the hint speaks the reader\'s language', (tester) async {
       await pump(tester, locale: 'zh-Hant');
       await tester.enterText(find.byType(TextField), 'G25 NEAR5 G26');
@@ -563,8 +582,7 @@ void main() {
       await pump(tester);
       await tester.tap(find.text('?'));
       await tester.pump();
-      await tester.tap(find.textContaining('G25✶ —'));
-      await tester.pump();
+      await tapCard(tester, find.textContaining('G25✶ —'));
       expect(lineOf(tester), 'G25*');
       expect(parseStrongsBoolean(lineOf(tester)), isNotNull);
     });
@@ -630,8 +648,7 @@ void main() {
       await pump(tester, onOpenWordList: () => opened++);
       await tester.tap(find.text('?'));
       await tester.pump();
-      await tester.tap(find.text(uiStrings['cmdSyntaxFindNumber']!['en']!));
-      await tester.pump();
+      await tapCard(tester, find.text(uiStrings['cmdSyntaxFindNumber']!['en']!));
       expect(opened, 1);
     });
 
