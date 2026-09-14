@@ -52,6 +52,8 @@ import 'package:seeksparks/utils/version_gutter.dart'
 import 'package:seeksparks/utils/version_diff.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
+import 'package:seeksparks/widgets/verse_notes_block.dart'
+    show superscriptNumber;
 
 /// The one word gap in the Browse pane.
 ///
@@ -1257,6 +1259,23 @@ class _TranslationLine extends StatelessWidget {
                   ),
                 ScriptureSpanKind.versification =>
                   versificationSpan(span, wb, fontSize: t.text * 0.8),
+                // 2026-09-15: a CIRCLED NUMBER, the same glyph the
+                // reader draws, instead of the letter `n`.
+                //
+                // Every note in this view printed a literal lower-case
+                // n, so 羅馬書 8:28 in 梁家鏗 came out as
+                // 「…蒙召的人。n n n n n」 — five identical letters that
+                // look like text and say nothing about which note is
+                // which. Reported with that run circled:
+                // 「sword这里能不能也做成这样 就是对照这个」, pointing at
+                // the reader beside it, where the same five notes are
+                // ①②③④⑤ and each number leads somewhere.
+                //
+                // Numbered per ROW, not across the pane: a row is one
+                // edition's verse, which is the unit a reader counts
+                // notes in. `superscriptNumber` is the reader's own
+                // function, so a note is the same character in both
+                // views.
                 ScriptureSpanKind.note => WidgetSpan(
                     alignment: PlaceholderAlignment.top,
                     child: Tooltip(
@@ -1265,7 +1284,7 @@ class _TranslationLine extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 1),
                         child: Text(
-                          'n',
+                          superscriptNumber(_noteOrdinal(row.text ?? '', unit)),
                           style: TextStyle(
                             fontSize: t.chrome * 0.85,
                             fontWeight: FontWeight.w700,
@@ -1887,4 +1906,19 @@ class _HoverWordState extends State<_HoverWord> {
       ),
     );
   }
+}
+
+/// Which note this is, counting from one, within [text].
+///
+/// [spanIndex] is the index `parseScripture(text).indexed` gave, over
+/// spans of every kind; this counts only the notes at or before it. A
+/// row's notes are numbered independently of its neighbours', because a
+/// row is one edition's verse and that is the unit a reader counts in.
+int _noteOrdinal(String text, int spanIndex) {
+  var n = 0;
+  for (final (i, span) in parseScripture(text).indexed) {
+    if (span.kind == ScriptureSpanKind.note) n++;
+    if (i == spanIndex) break;
+  }
+  return n;
 }

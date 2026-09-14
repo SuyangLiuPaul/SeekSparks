@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart' show uiStrings;
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
+import 'package:seeksparks/models/app_settings.dart';
 
 /// The wheel and the strip AppBars, collapsed for a phone pane — shared
 /// so the two forms cannot drift apart the way two hand-rolled copies
@@ -142,6 +144,11 @@ void _showOverflow({
   required VoidCallback onAbout,
 }) {
   final wb = WbColors.of(context);
+  // Asked BEFORE the sheet is pushed. Once it is open the sheet is
+  // itself a route, so `canPop` answers true on every page including
+  // the root — which would offer a Home row that pops the sheet and
+  // goes nowhere.
+  final canGoHome = Navigator.of(context).canPop();
   showModalBottomSheet<void>(
     context: context,
     backgroundColor: wb.paneBg,
@@ -175,23 +182,81 @@ void _showOverflow({
           },
         ),
         // The two the AppBar gave up so the page could keep its name.
-        // Both are their own widgets with their own behaviour — the
-        // language switcher opens its own menu, the home button
-        // navigates — so they are placed here AS THEMSELVES rather
-        // than re-implemented as two more `ListTile`s that would have
-        // to duplicate what each already does.
+        //
+        // 2026-09-15: these carried NO `onTap`. They were placed "as
+        // themselves" — a `LanguageSwitcherButton` and a
+        // `HomeIconButton` in the `leading` slot — on the reasoning that
+        // each already knows what it does and should not be
+        // reimplemented. What that overlooked is where those widgets
+        // are: in an AppBar a button IS the row, and in a `ListTile` it
+        // is a 24 px icon at the left end of a 300 px row whose title
+        // and whole remaining width do nothing at all. Reported as
+        // 「按了没反应」, with both rows circled, which is exactly what a
+        // reader gets for pressing the words.
+        //
+        // The row is the target now, and the icons are plain `Icon`s so
+        // there is no live button inside a live row for a tap to fall
+        // between.
         const Divider(height: 1),
         ListTile(
-          leading: const LanguageSwitcherButton(),
+          leading: Icon(Icons.language_rounded, color: wb.text),
           title: Text(
               uiStrings['interfaceLanguage']?[locale] ?? 'Interface Language',
               style: TextStyle(color: wb.text)),
+          onTap: () {
+            Navigator.of(sheet).pop();
+            _showLanguagePicker(context, locale);
+          },
         ),
-        ListTile(
-          leading: const HomeIconButton(),
-          title: Text(uiStrings['home']?[locale] ?? 'Home',
-              style: TextStyle(color: wb.text)),
-        ),
+        if (canGoHome)
+          ListTile(
+            leading: Icon(Icons.home_rounded, color: wb.text),
+            title: Text(uiStrings['home']?[locale] ?? 'Home',
+                style: TextStyle(color: wb.text)),
+            onTap: () {
+              Navigator.of(sheet).pop();
+              Navigator.of(context).popUntil((r) => r.isFirst);
+            },
+          ),
+      ]),
+    ),
+  );
+}
+
+/// The three interface languages, as a sheet.
+///
+/// `LanguageSwitcherButton` shows the same three through a
+/// `PopupMenuButton`, which anchors its menu to the button it lives in
+/// — fine in an AppBar and wrong here, because the button this row
+/// would anchor to is about to be dismissed with the sheet. A second
+/// sheet is the shape that survives the first one closing, and it is
+/// also the bigger tap target of the two on a phone.
+void _showLanguagePicker(BuildContext context, String locale) {
+  final wb = WbColors.of(context);
+  final settings = context.read<AppSettings>();
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: wb.paneBg,
+    builder: (sheet) => SafeArea(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        for (final (code, name) in const [
+          ('zh-Hans', '简体中文'),
+          ('zh-Hant', '繁體中文'),
+          ('en', 'English'),
+        ])
+          ListTile(
+            leading: Icon(
+              code == locale
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: code == locale ? wb.accent : wb.mutedText,
+            ),
+            title: Text(name, style: TextStyle(color: wb.text)),
+            onTap: () {
+              Navigator.of(sheet).pop();
+              settings.setLocale(code);
+            },
+          ),
       ]),
     ),
   );
