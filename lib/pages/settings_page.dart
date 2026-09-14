@@ -18,6 +18,7 @@ import 'package:seeksparks/services/version_import_service.dart';
 import 'package:seeksparks/utils/pick_text_file.dart';
 import 'package:seeksparks/constants/fuzzy_search_strings.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/update_check_frequency.dart';
 import 'package:seeksparks/utils/cross_version_search.dart'
     show CrossVersionSearchMode;
 import 'package:seeksparks/constants/workbench_theme.dart'
@@ -1375,6 +1376,57 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                             ?[settings.locale],
                         value: settings.autoCheckUpdates,
                         onChanged: settings.setAutoCheckUpdates,
+                      ),
+                    ),
+                  ),
+                  // 2026-09-14: the interval, which used to be a compiled
+                  // `Duration(days: 1)`. Under the switch and disabled
+                  // with it — a frequency for a check that is off is a
+                  // control with nothing to do, and greying it says so
+                  // better than hiding it, which would leave a reader who
+                  // turned the switch off wondering where the choice went.
+                  SizedBox(height: 8 * s),
+                  Card(
+                    child: ListTile(
+                      dense: true,
+                      enabled: settings.autoCheckUpdates,
+                      leading: const Icon(Icons.schedule_rounded),
+                      title: Text(
+                        uiStrings['settingsUpdateFrequency']
+                                ?[settings.locale] ??
+                            'How often',
+                        style: TextStyle(
+                          fontSize: settings.fontSize,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      trailing: DropdownButton<UpdateCheckFrequency>(
+                        value: settings.updateCheckFrequency,
+                        underline: const SizedBox.shrink(),
+                        onChanged: settings.autoCheckUpdates
+                            ? (f) {
+                                if (f != null) {
+                                  settings.setUpdateCheckFrequency(f);
+                                }
+                              }
+                            : null,
+                        items: [
+                          for (final f in UpdateCheckFrequency.values)
+                            DropdownMenuItem(
+                              value: f,
+                              child: Text(
+                                uiStrings[_updateFrequencyKey(f)]
+                                        ?[settings.locale] ??
+                                    f.prefValue,
+                                style: TextStyle(
+                                  fontSize: settings.fontSize,
+                                  fontFamily: settings.fontFamily,
+                                  fontFamilyFallback: kCjkFontFallback,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -3852,6 +3904,25 @@ extension _SettingsSmallPrint on AppSettings {
 /// A switch and not `'crossVersionMode${m.name}'`: a key built by string
 /// concatenation is invisible to a grep for the key, which is how a
 /// locale ends up missing a line nobody can find.
+/// The `uiStrings` key for one update-check interval.
+///
+/// A switch rather than a name-derived key, for the reason the enum's own
+/// `prefValue` gives: a key computed from `name` ties a translation to a
+/// Dart identifier, and this way adding a value does not compile until
+/// somebody has written the four words it needs.
+String _updateFrequencyKey(UpdateCheckFrequency f) {
+  switch (f) {
+    case UpdateCheckFrequency.everyLaunch:
+      return 'updateFreqEveryLaunch';
+    case UpdateCheckFrequency.daily:
+      return 'updateFreqDaily';
+    case UpdateCheckFrequency.weekly:
+      return 'updateFreqWeekly';
+    case UpdateCheckFrequency.monthly:
+      return 'updateFreqMonthly';
+  }
+}
+
 String _crossVersionModeKey(CrossVersionSearchMode m) {
   switch (m) {
     case CrossVersionSearchMode.currentOnly:

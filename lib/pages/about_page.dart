@@ -57,10 +57,26 @@ class AboutPage extends StatelessWidget {
         // 2026-05-10 (v1.2.22): added overflow + maxLines so the
         // combined "About · v1.2.22" doesn't clip on 320 px-class
         // viewports when the user has bumped settings.fontSize.
-        title: Text(
-          '${uiStrings['aboutPageTitle']?[locale] ?? 'About'} · v$kAppVersion',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        // 2026-09-14: shrinks rather than truncates. The ellipsis was
+        // added in v1.2.22 for exactly this case — "so the combined
+        // About · v1.2.22 doesn't clip on 320 px-class viewports when the
+        // user has bumped settings.fontSize" — and it does not clip, it
+        // DELETES, from the right, which is the end the version number is
+        // on. Measured at 390px with both sliders at maximum: 142px short,
+        // so the reader saw 「关于与版...」 and none of the version. That
+        // version is in the app bar in the first place because the footer
+        // is six sections down a ListView and nobody scrolls to it
+        // (v1.2.19), so truncating it away undoes the reason it is here.
+        //
+        // `scaleDown` only ever shrinks: at every width where the line
+        // already fits, which is every ordinary one, nothing changes.
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            '${uiStrings['aboutPageTitle']?[locale] ?? 'About'} · v$kAppVersion',
+            maxLines: 1,
+          ),
         ),
         actions: const [LanguageSwitcherButton(), HomeIconButton()],
       ),

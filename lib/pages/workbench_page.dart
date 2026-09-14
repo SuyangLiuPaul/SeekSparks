@@ -71,8 +71,9 @@ import 'package:seeksparks/services/modern_concordance_service.dart';
 import 'package:seeksparks/services/naves_service.dart';
 import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/widgets/resource_summary_pane.dart';
-import 'package:seeksparks/widgets/update_check_tile.dart'
-    show buildUpdateAvailableBar;
+import 'package:seeksparks/widgets/update_available_banner.dart';
+import 'package:seeksparks/services/update_service.dart'
+    show UpdateInfo, UpdateService;
 import 'package:seeksparks/widgets/synopsis_columns_pane.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/sermon_service.dart';
@@ -407,6 +408,21 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// it the way a desktop tool's command line always can.
   final FocusNode _commandFocus = FocusNode();
 
+  /// The newer release the daily check found, or null. Held here rather
+  /// than shown and forgotten: this is the state behind the banner under
+  /// the toolbar, and it stays set until the reader installs it or waves
+  /// it away. See `update_available_banner.dart` for why it is no longer
+  /// a SnackBar.
+  UpdateInfo? _update;
+
+  /// The version string the reader said 暂不 to. Kept for the life of the
+  /// page rather than persisted: a reader who dismisses it and reopens
+  /// the app tomorrow is being told about a release that is a day older
+  /// and still not installed, which is a fact worth repeating. What must
+  /// not repeat is the banner reappearing on the same screen it was just
+  /// dismissed from.
+  String? _updateWavedAway;
+
   @override
   void initState() {
     super.initState();
@@ -418,7 +434,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // before it — this is a network call about a version number and the
     // reader opened the app to read a verse. `unawaited` is the point:
     // nothing on screen waits for it, and every path through
-    // `runDailyUpdateCheck` that is not "there is a newer build"
+    // `runScheduledUpdateCheck` that is not "there is a newer build"
     // returns null and says nothing at all.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -426,23 +442,78 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     });
   }
 
-  /// Offer a newer release, once a day, if there is one.
+  /// Offer a newer release, at the reader's chosen interval, if there is
+  /// one.
   ///
-  /// A SnackBar rather than a dialog. A dialog on launch takes the app
-  /// away from the reader to tell them something that is true all day
-  /// and can wait; a bar states the fact, carries the one action, and
-  /// goes away on its own.
+  /// Neither a dialog nor a SnackBar. A dialog on launch takes the app
+  /// away from the reader to tell them something that is true all day and
+  /// can wait. A SnackBar — which this was until 2026-09-14 — states the
+  /// fact at the foot of the screen for six seconds and then takes it
+  /// away again, leaving nothing to come back to; the owner asked for it
+  /// on the home screen instead. What it sets is state, and the banner
+  /// under the toolbar renders it until it is acted on.
   ///
-  /// 2026-09-09 (review finding 6): the bar itself is built beside the
-  /// About page's dialog in `update_check_tile.dart`, so that its
-  /// action on Android is the same in-app install and not a trip to
-  /// the browser the About page had already stopped asking for.
+  /// 2026-09-09 (review finding 6): the ACTION is built beside the About
+  /// page's dialog in `update_check_tile.dart`, so that on Android it is
+  /// the same in-app install and not a trip to the browser the About page
+  /// had already stopped asking for. That is still true — the banner
+  /// calls the same two functions.
   Future<void> _maybeOfferUpdate() async {
     final settings = context.read<AppSettings>();
-    final info = await runDailyUpdateCheck(settings);
+    final info = await runScheduledUpdateCheck(settings);
     if (!mounted || info == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      buildUpdateAvailableBar(context, info, locale: settings.locale),
+    setState(() => _update = info);
+  }
+
+  /// Help ▸ Check for updates.
+  ///
+  /// The same question the periodic check asks, minus the two gates that
+  /// exist to stop the app asking on its OWN: the reader's interval and
+  /// the automatic-check switch. Somebody who opened a menu and chose
+  /// this meant now.
+  ///
+  /// Unlike the periodic check it answers either way — a reader who asks
+  /// a direct question and is told nothing cannot tell "you are current"
+  /// from "the check is broken", which is the failure mode this whole
+  /// feature exists to end.
+  Future<void> _checkForUpdatesNow() async {
+    final settings = context.read<AppSettings>();
+    final locale = settings.locale;
+    await settings.markUpdateChecked(DateTime.now());
+    UpdateInfo? info;
+    try {
+      info = await UpdateService.checkForUpdate();
+    } catch (_) {
+      info = null;
+    }
+    if (!mounted) return;
+    if (info != null && info.updateAvailable) {
+      setState(() {
+        _update = info;
+        _updateWavedAway = null;
+      });
+      return;
+    }
+    // The one case in this feature that speaks when there is nothing to
+    // report, and it is a dialog rather than a banner because it is an
+    // answer to a question, not a notice: it belongs to the moment, and
+    // the moment ends when the reader closes it.
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(info == null
+            ? (uiStrings['updateCheckFailed']?[locale] ??
+                'Could not reach GitHub. Try again later.')
+            : (uiStrings['updateUpToDate']?[locale] ??
+                'You are on the latest version.')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(uiStrings['close']?[locale] ?? 'Close'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -773,6 +844,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ),
         WbMenuItem(s('about', 'About & data sources'),
             () => pushPage(const AboutPage())),
+        // 2026-09-14: ask now, rather than wait for the interval.
+        //
+        // The sibling Words app answers this by pulling the home screen
+        // down; this app has no such screen to pull — the workspace is
+        // panes, and the one scrollable thing on it is the reading
+        // column, where a pull already means "the previous chapter". So
+        // the same request lands where a desktop tool puts it, in a menu.
+        //
+        // It is also, until today, the only way to ask at all without
+        // walking into About: the check ran on its own or not at all.
+        WbMenuItem(s('checkForUpdates', 'Check for updates'),
+            UpdateService.isSupported ? _checkForUpdatesNow : null),
         const WbMenuItem.separator(),
         WbMenuItem(
             '${shortBibleVersionLabel(mp.currentVersion)} · v$kAppVersion',
@@ -1587,6 +1670,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 ),
               ),
               WorkbenchToolbar(groups: _buildToolbar(context)),
+              // Under the toolbar, above the panes: the first horizontal
+              // band that is not chrome the reader uses every second, and
+              // the place their eye is already travelling through on the
+              // way to the text.
+              if (_update != null &&
+                  _update!.latestVersion != _updateWavedAway)
+                UpdateAvailableBanner(
+                  info: _update!,
+                  locale: locale,
+                  onDismiss: () => setState(
+                      () => _updateWavedAway = _update!.latestVersion),
+                ),
             ],
             Expanded(child: _buildPanes(context)),
             // The phone's navigation, between the panes and the status
@@ -2083,6 +2178,26 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       ...wbp.parallelVersions.where((c) => c != mp.currentVersion),
     ];
 
+    // 2026-09-14: the stack is named in full where there is room for it
+    // and counted where there is not.
+    //
+    // This title is also the CONTROL for changing the stack — see the note
+    // on `onTitleTap` below — so an ellipsis here does not trim a caption,
+    // it hides what the control is currently set to. Measured at 320px
+    // with both sliders at maximum: 「创世纪 1  —  雅简+ · 梁简 · BSB-Y」 was
+    // drawn 221px narrower than it needs, which is the whole stack gone
+    // and the reader left with a tappable reference.
+    //
+    // 「雅简+ +2」 keeps the edition they are actually reading, says there
+    // are two more, and fits. The same `_isThreePane` line the bars use to
+    // decide what goes in them decides this, rather than a second
+    // threshold that would drift away from the first.
+    final stack = codes.map(shortBibleVersionLabel).toList();
+    final stackLabel =
+        !_isThreePane(MediaQuery.of(context).size.width) && stack.length > 1
+            ? '${stack.first} +${stack.length - 1}'
+            : stack.join(' · ');
+
     return ColoredBox(
       color: wb.paneBg,
       child: Column(
@@ -2091,7 +2206,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             title: book == null || chapter == null
                 ? (uiStrings['parallelBrowse']?[locale] ?? 'Browse')
                 : '${localeAwareBookName(book, locale, mp.currentVersion)} '
-                    '$chapter  —  ${codes.map(shortBibleVersionLabel).join(" · ")}',
+                    '$chapter  —  $stackLabel',
             // The version list IS the control for changing it — that is
             // where a reader looks first, not at an unlabelled icon.
             onTitleTap: () => _pickParallelVersions(context),

@@ -1,4 +1,6 @@
-// 2026-09-08: the once-a-day update check.
+// 2026-09-08: the periodic update check. Once a day until 2026-09-14,
+// when the interval became the reader's — see `UpdateCheckFrequency` and
+// `AppSettings.updateCheckDueAt`. Daily is still the default.
 //
 // SeekSparks ships as a sideloaded APK and as desktop archives. There is
 // no store behind any of them, so the only way a reader learns their
@@ -17,10 +19,11 @@
 //      screen waits for it and a failure is silent. A reader who opened
 //      the app to read a verse is not going to be shown a spinner
 //      because of a version number.
-//   2. **Once a day, whatever the answer.** The timestamp is stamped
-//      even when the check FAILS — a device that is offline every
+//   2. **Once per interval, whatever the answer.** The timestamp is
+//      stamped even when the check FAILS — a device that is offline every
 //      morning would otherwise retry on every launch all day, which is
-//      the opposite of what "daily" means.
+//      the opposite of what "daily" means. (The reader may of course ASK
+//      for every launch, and then there is no gap to consume.)
 //   3. **Says nothing when there is nothing to say.** Up-to-date is
 //      silent. The reader hears from this code only when a newer build
 //      actually exists.
@@ -29,7 +32,7 @@ library;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/update_service.dart';
 
-/// Runs the daily check if it is due, and reports a newer release.
+/// Runs the check if it is due, and reports a newer release.
 ///
 /// Returns null when the check did not run, could not run, failed, or
 /// found nothing — the caller has exactly one thing to do with a
@@ -38,7 +41,7 @@ import 'package:seeksparks/services/update_service.dart';
 /// [now] and [check] are injectable so the whole decision — due / not
 /// due / disabled / unsupported — is testable without a clock or a
 /// network.
-Future<UpdateInfo?> runDailyUpdateCheck(
+Future<UpdateInfo?> runScheduledUpdateCheck(
   AppSettings settings, {
   DateTime? now,
   bool? supported,

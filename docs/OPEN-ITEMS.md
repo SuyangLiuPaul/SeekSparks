@@ -569,19 +569,108 @@ a command.
 a 64px overflow in the reading page's bottom bar — the screen a reader
 spends every minute on. Both repos now carry the axis.
 
-#### Two labels still truncate at that corner, and are left alone `[measured 2026-09-14]`
+#### Two labels truncated at that corner `[FIXED 2026-09-14, having first been recorded and left]`
 
 A sweep for `maxLines: 1` + `TextOverflow.ellipsis` paragraphs drawn
 narrower than their own text, at 320/390 with both sliders at maximum:
 
-| label | short by | what the reader still sees |
+| label | short by | what the reader saw |
 |---|---|---|
-| `关于与版权说明 · v1.6.276` (About app bar) | 142px | the title; the version number is gone |
-| `创世纪 1  —  雅简+ · 梁简 · BSB-Y` (pane title) | 221px | the reference; the edition stack is gone |
+| `关于与版权说明 · v1.6.276` (About app bar) | 142px | 「关于与版...」 — the version number gone |
+| `创世纪 1  —  雅简+ · 梁简 · BSB-Y` (pane title) | 221px | the reference; the whole edition stack gone |
 
-Both cut from the right, and in both the important half is on the left —
-a long descriptive title truncating on a 320px phone is ordinary, and no
-reader has reported either. Recorded rather than fixed, because inventing
-a fold here would be answering a problem nobody has: the Words case that
-started this was different in kind, a three-character label reduced to
-one (「雅伟版」 → 「雅…」) with nothing left to read.
+**The first disposition was to leave them**, on the grounds that both cut
+from the right with the important half on the left, and that no reader had
+reported either. That was wrong on the facts in both cases, and the owner
+asking for them anyway is what made me go and look:
+
+* the version is in the About app bar **because** the footer is six
+  sections down a `ListView` and nobody scrolls to it (v1.2.19). The
+  ellipsis was deleting the one thing the line exists to carry — and the
+  ellipsis had been added in v1.2.22 *for this exact case*, which is a
+  neat illustration of a fix that stops the striped band and leaves the
+  defect.
+* the pane title is not a caption. It names the edition stack **and is
+  the control for changing it**, so what the ellipsis deleted is what the
+  control is currently set to.
+
+Both shrink instead, through `FittedBox(fit: BoxFit.scaleDown)`, which
+only ever shrinks — at every width where the line already fits, which is
+every desktop size this tool is designed for, nothing moves. The ellipsis
+stays underneath as the floor. The pane title also folds its stack to
+`雅简+ +2` on a screen too narrow to name it, using the same
+`_isThreePane` line the bars use to decide what goes in them rather than
+a second threshold that would drift from the first.
+
+`test/chrome_label_truncation_test.dart` is the guard, and it is the
+companion the overflow grid never had: same pages, same widths, but
+measuring paragraphs instead of watching for exceptions. Its allow-list
+holds exactly one entry — verse text, which is prose and belongs to the
+reader — and it carries a case that puts a clipped label in front of the
+walk, so a change that stopped the walk finding anything cannot turn the
+file green.
+
+---
+
+### The update notice was a six-second bar at the foot of the screen `[FIXED 2026-09-14]`
+
+「如果有 upgrade available 应该在 home page 显示而不是最下面 popup」, with
+雅伟的话 named as the reference. Everything wrong with the old shape was
+the shape rather than the words: a `SnackBar` arrives while the reader is
+opening the app, sits at the bottom edge furthest from what they are
+looking at, and then takes the fact away again, leaving nothing to come
+back to but a tile on the About page nothing points at.
+
+`UpdateAvailableBanner` sits under the toolbar instead — one row, the
+version, one action, and a 暂不 that means "not this build" rather than
+"never again", so the next release gets through. It calls the same
+`canInstallInApp` / `installUpdateInApp` pair the About dialog calls,
+which is the half of the SnackBar worth keeping (2026-09-09 finding 6);
+`buildUpdateAvailableBar` is deleted rather than left for a second caller
+to find, and a source-level test says so, because two surfaces for one
+fact is how those two drifted apart in the first place.
+
+#### The interval is the reader's now
+
+`updateCheckDueAt` compared against a compiled `const Duration(days: 1)`
+and the only control over it was a switch. `UpdateCheckFrequency` — every
+launch / daily / weekly / monthly — is stored as a written-out
+`prefValue`, not an index (which breaks when a value is inserted) and not
+`name` (which ties a stored preference to a Dart identifier). Anything
+unrecognised reads as daily, which is also still the default and still
+what the switch turns on; the switch's label stopped saying 每天 in both
+apps, because a switch promising daily above a 每周 selection is the
+interface lying.
+
+`runDailyUpdateCheck` is `runScheduledUpdateCheck`. The name was accurate
+and stopped being so.
+
+Tests, in both repos: the full interval table asserted a minute either
+side of each gap (a wrong `gap` shows up as the adjacent row's answer), a
+weekly reader not asked on any of the six days inside the week, the switch
+still beating every interval, the choice surviving a reload, an unknown
+stored value reading as daily, and every enum value having a label in all
+three locales — that last one derived from `UpdateCheckFrequency.values`
+rather than a key list, so a fifth frequency cannot ship unlabelled.
+
+#### Asking now, without waiting for the interval `[2026-09-14]`
+
+The sibling Words app answers 「往下拉 ... 就会等于manual sync一下 并且自动
+检查最新更新」 with a `RefreshIndicator` on its home screen. This app has
+no such screen to pull: the workspace is panes, and the one scrollable
+thing on it is the reading column, where a pull already means the
+previous chapter. So the same request lands where a desktop tool puts it
+— **Help ▸ Check for updates** — which is also, until today, the only way
+to ask at all without walking into the About page.
+
+It skips the two gates that exist to stop the app asking on its OWN (the
+reader's interval and the automatic-check switch) and still stamps the
+timestamp, so asking by hand spends the period. It is the one place in
+this feature that **speaks when there is nothing to report**, in a dialog
+rather than the banner: a reader who asks a direct question and is told
+nothing cannot tell "you are current" from "the check is broken", which
+is the failure this whole feature exists to end.
+
+**There is no sync half here, and that is not an omission.** This app has
+no account and no cloud sync — `url_sync_service.dart` is about URL
+state, not a profile — so there is nothing for a manual sync to push.

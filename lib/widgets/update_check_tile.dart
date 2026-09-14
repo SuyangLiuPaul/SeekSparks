@@ -13,7 +13,13 @@
 // workbench is, and it was still sending Android readers to the
 // browser while the About page offered a button. One flow, two doors:
 // [installUpdateInApp], [showUpdateAvailableDialog] and
-// [buildUpdateAvailableBar] are called from both.
+// the in-app install are called from both.
+//
+// 2026-09-14: `buildUpdateAvailableBar` is gone with the SnackBar it
+// built. The launch-time notice is a banner on the home screen now —
+// `update_available_banner.dart` — and it calls [canInstallInApp] and
+// [installUpdateInApp] directly, which is the part of the bar worth
+// keeping (review finding 6).
 
 import 'dart:async' show unawaited;
 
@@ -330,45 +336,6 @@ void showUpdateAvailableDialog(
           ),
       ],
     ),
-  );
-}
-
-/// The daily check's bar, with the one action that fits this build.
-///
-/// A SnackBar rather than a dialog: see `_maybeOfferUpdate` in
-/// `workbench_page.dart`, which shows it. 2026-09-09 (review finding
-/// 6): on Android with an APK the action is the in-app install — the
-/// same [installUpdateInApp] the About page runs — where it used to
-/// hand the URL to [LinkOpener], which on a native build is a stub.
-SnackBar buildUpdateAvailableBar(
-  BuildContext context,
-  UpdateInfo info, {
-  required String locale,
-  @visibleForTesting http.Client? client,
-}) {
-  final label = _s(locale, 'updateAvailableBar', 'Version v{new} is available')
-      .replaceAll('{new}', info.latestVersion);
-  final SnackBarAction? action;
-  if (canInstallInApp(info)) {
-    action = SnackBarAction(
-      label: _s(locale, 'updateInstallNow', 'Update now'),
-      onPressed: () => unawaited(
-          installUpdateInApp(context, info, locale: locale, client: client)),
-    );
-  } else if (LinkOpener.isAvailable) {
-    action = SnackBarAction(
-      label: _s(locale, 'updateDownload', 'Download'),
-      onPressed: () => LinkOpener.open(info.downloadUrl),
-    );
-  } else {
-    action = null;
-  }
-  // Six seconds because it has a button — the default four is not
-  // long enough to read a sentence and decide.
-  return SnackBar(
-    content: Text(label),
-    duration: const Duration(seconds: 6),
-    action: action,
   );
 }
 

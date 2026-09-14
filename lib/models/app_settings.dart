@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/projection_agenda.dart';
 
+import 'package:seeksparks/constants/update_check_frequency.dart';
 import 'package:seeksparks/constants/projection_setup.dart';
 import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
 import 'package:seeksparks/utils/cross_version_search.dart'
@@ -147,6 +148,11 @@ const _kAutoCheckUpdates = 'autoCheckUpdates';
 // — a stale timestamp with the switch back on would silently skip the
 // first day.
 const _kLastUpdateCheck = 'lastUpdateCheckMs';
+
+// How often that check runs — `UpdateCheckFrequency.prefValue`, not an
+// index or an enum name. 2026-09-14, at the owner's request: daily was
+// compiled in and is now the default rather than the rule.
+const _kUpdateCheckFrequency = 'updateCheckFrequency';
 
 // 2026-05-24 (v1.3.19): TTS voice preference constants removed
 // along with the 朗读 feature. Existing SharedPreferences keys
@@ -399,6 +405,7 @@ class AppSettings extends ChangeNotifier {
   /// Settings → Reading.
   bool _showBookIntro = true;
   bool _autoCheckUpdates = true;
+  UpdateCheckFrequency _updateCheckFrequency = UpdateCheckFrequency.daily;
   int _lastUpdateCheckMs = 0;
 
   /// The resolved family for TextStyle.fontFamily. Existing call
@@ -487,9 +494,21 @@ class AppSettings extends ChangeNotifier {
   /// True when the switch is on AND a day has passed. The caller still
   /// has to decide whether the PLATFORM supports updating at all —
   /// that is `UpdateService.isSupported`, and it is not a setting.
+  /// How often the automatic check runs. Daily unless the reader said
+  /// otherwise; see [UpdateCheckFrequency].
+  UpdateCheckFrequency get updateCheckFrequency => _updateCheckFrequency;
+
   bool updateCheckDueAt(DateTime now) =>
       _autoCheckUpdates &&
-      now.difference(lastUpdateCheck) >= const Duration(days: 1);
+      now.difference(lastUpdateCheck) >= _updateCheckFrequency.gap;
+
+  Future<void> setUpdateCheckFrequency(UpdateCheckFrequency value) async {
+    if (_updateCheckFrequency == value) return;
+    _updateCheckFrequency = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kUpdateCheckFrequency, value.prefValue);
+  }
 
   Future<void> setAutoCheckUpdates(bool enabled) async {
     if (_autoCheckUpdates == enabled) return;
@@ -1027,6 +1046,7 @@ class AppSettings extends ChangeNotifier {
     _showSectionTitles = true;
     _showBookIntro = true;
     _autoCheckUpdates = true;
+    _updateCheckFrequency = UpdateCheckFrequency.daily;
     _lastUpdateCheckMs = 0;
     // 2026-09-09: the projection's four scalars are preferences and go
     // back to their factory values. Its named PRESETS do not — they are
@@ -1067,6 +1087,7 @@ class AppSettings extends ChangeNotifier {
       _kShowBookIntro,
       _kAutoCheckUpdates,
       _kLastUpdateCheck,
+      _kUpdateCheckFrequency,
       _kProjectionTypeStep,
       _kProjectionSecondOn,
       _kProjectionSecondVersion,
@@ -1257,6 +1278,8 @@ class AppSettings extends ChangeNotifier {
     _showSectionTitles = prefs.getBool(_kShowSectionTitles) ?? true;
     _showBookIntro = prefs.getBool(_kShowBookIntro) ?? true;
     _autoCheckUpdates = prefs.getBool(_kAutoCheckUpdates) ?? true;
+    _updateCheckFrequency = UpdateCheckFrequency.fromPref(
+        prefs.getString(_kUpdateCheckFrequency));
     _lastUpdateCheckMs = prefs.getInt(_kLastUpdateCheck) ?? 0;
     // 2026-05-24 (v1.3.19): TTS voice pref restore removed with the
     // 朗读 feature. The stored SharedPreferences keys are left in

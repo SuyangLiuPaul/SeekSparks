@@ -3964,11 +3964,49 @@ const uiStrings = {
   },
   // The switch in Settings → App. Named for what it DOES rather than
   // for the machinery: a reader deciding whether to leave it on is
-  // deciding about a daily network request, not about a scheduler.
+  // deciding about a network request, not about a scheduler.
+  //
+  // 2026-09-14: it stopped saying "daily". It said so because daily was
+  // compiled in; the interval is the reader's now, and a switch labelled
+  // 每天检查更新 sitting above a 每周 selection is the interface lying to
+  // them.
   'settingsAutoCheckUpdates': {
-    'zh-Hans': '每天检查更新',
-    'zh-Hant': '每天檢查更新',
-    'en': 'Check for updates daily',
+    'zh-Hans': '自动检查更新',
+    'zh-Hant': '自動檢查更新',
+    'en': 'Check for updates automatically',
+  },
+  // The interval, directly under the switch and disabled when it is off.
+  'settingsUpdateFrequency': {
+    'zh-Hans': '检查频率',
+    'zh-Hant': '檢查頻率',
+    'en': 'How often',
+  },
+  'updateFreqEveryLaunch': {
+    'zh-Hans': '每次启动',
+    'zh-Hant': '每次啟動',
+    'en': 'Every launch',
+  },
+  'updateFreqDaily': {
+    'zh-Hans': '每天',
+    'zh-Hant': '每天',
+    'en': 'Daily',
+  },
+  'updateFreqWeekly': {
+    'zh-Hans': '每周',
+    'zh-Hant': '每週',
+    'en': 'Weekly',
+  },
+  'updateFreqMonthly': {
+    'zh-Hans': '每月',
+    'zh-Hant': '每月',
+    'en': 'Monthly',
+  },
+  // The banner's own dismiss. 暂不 rather than 忽略: it comes back when a
+  // NEWER build appears, so "not now" is the truth and "ignore" is not.
+  'updateBannerLater': {
+    'zh-Hans': '暂不',
+    'zh-Hant': '暫不',
+    'en': 'Not now',
   },
   'settingsAutoCheckUpdatesHint': {
     'zh-Hans': '每天一次向 GitHub 询问是否有新版本。只在确实有新版时提示，'

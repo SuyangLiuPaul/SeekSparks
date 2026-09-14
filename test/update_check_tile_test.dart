@@ -25,7 +25,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/update_check_frequency.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/widgets/update_available_banner.dart';
 import 'package:seeksparks/services/app_update_installer.dart';
 import 'package:seeksparks/services/update_service.dart';
 import 'package:seeksparks/widgets/update_check_tile.dart';
@@ -146,14 +148,17 @@ void main() {
   File downloaded() => File('${dir.path}/update.apk');
   int count(String method) => calls.where((c) => c.method == method).length;
 
-  Future<void> pumpHost(WidgetTester tester) async {
+  /// [child] is for the cases that put a widget on screen rather than
+  /// calling a function against `host` — the banner group below. The
+  /// default keeps every earlier case pumping an empty page.
+  Future<void> pumpHost(WidgetTester tester, {Widget? child}) async {
     await tester.pumpWidget(ChangeNotifierProvider(
       create: (_) => AppSettings(),
       child: MaterialApp(
         home: Scaffold(
           body: Builder(builder: (ctx) {
             host = ctx;
-            return const SizedBox.shrink();
+            return child ?? const SizedBox.shrink();
           }),
         ),
       ),
@@ -291,51 +296,109 @@ void main() {
     });
   });
 
-  group('the daily bar (finding 6)', () {
+  group('the home banner (finding 6, and the surface it moved to)', () {
+    // 2026-09-14: these two claims were made about a `SnackBar` until the
+    // owner asked for the notice on the home screen instead. The claims
+    // are the ones worth keeping — the action must be the in-app install
+    // on Android, and must not be offered when there is no APK to install
+    // — so they follow the surface rather than dying with it.
+    Widget banner(UpdateInfo info) => Builder(
+          builder: (context) => UpdateAvailableBanner(
+            info: info,
+            locale: 'en',
+            onDismiss: () {},
+          ),
+        );
+
     _onPlatform('on Android with an APK its action is the in-app install, '
         'the same flow as the About page', (tester) async {
-      await pumpHost(tester);
+      await pumpHost(tester, child: banner(_info()));
       await tester.runAsync(() async {
-        final body = StreamController<List<int>>();
-        ScaffoldMessenger.of(host).showSnackBar(
-          buildUpdateAvailableBar(host, _info(),
-              locale: 'en', client: _held(body)),
-        );
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
         expect(find.text('Version v1.6.272 is available'), findsOneWidget);
         expect(find.text('Update now'), findsOneWidget,
-            reason: 'the bar used to hand the URL to LinkOpener, which '
+            reason: 'the notice used to hand the URL to LinkOpener, which '
                 'on a native build is a stub');
         expect(find.text('Download'), findsNothing);
-
-        await tester.tap(find.text('Update now'));
-        await _until(tester, () => find.text(_downloading).evaluate().isNotEmpty,
-            what: 'progress dialog from the bar');
-        expect(count('updateDir'), 1);
-
-        await tester.tap(find.text('Stop download'));
-        await _until(tester, () => find.text(_downloading).evaluate().isEmpty,
-            what: 'dialog to close');
-        await _until(tester, () => !updateInstallInProgress.value,
-            what: 'flow to finish');
-        await body.close();
       });
     });
 
     _onPlatform('with no APK it does not offer the in-app install',
         (tester) async {
-      await pumpHost(tester);
-      ScaffoldMessenger.of(host).showSnackBar(
-        buildUpdateAvailableBar(
-          host,
-          _info(downloadUrl: 'https://example.invalid/releases/v1.6.272'),
-          locale: 'en',
+      await pumpHost(tester,
+          child: banner(
+              _info(downloadUrl: 'https://example.invalid/releases/v1.6.272')));
+      await tester.pump();
+      expect(find.text('Update now'), findsNothing);
+    });
+
+    _onPlatform('暂不 is the reader saying "not this build", and the caller '
+        'is the one told', (tester) async {
+      // The banner holds no dismissed state of its own: the page behind
+      // it does, because the banner is rebuilt on every frame and a latch
+      // inside it would be reset by the next repaint.
+      var dismissed = 0;
+      await pumpHost(
+        tester,
+        child: Builder(
+          builder: (context) => UpdateAvailableBanner(
+            info: _info(),
+            locale: 'en',
+            onDismiss: () => dismissed++,
+          ),
         ),
       );
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Update now'), findsNothing);
+      await tester.tap(find.text('Not now'));
+      await tester.pump();
+      expect(dismissed, 1);
+    });
+  });
+
+  group('the wiring, which is the half a widget cannot assert', () {
+    test('the Workbench mounts the banner and shows no bar', () {
+      // A banner nothing mounts is a banner the reader never sees, and
+      // that is exactly how this app once sat nineteen versions behind its
+      // own newest release with every phone being told it was current.
+      final source = File('lib/pages/workbench_page.dart').readAsStringSync();
+      expect(source.contains('UpdateAvailableBanner('), isTrue,
+          reason: 'the periodic check has nowhere to report');
+      expect(source.contains('showSnackBar'), isFalse,
+          reason: 'the bottom popup must be gone, not merely shadowed by '
+              'the banner — that was the whole request');
+    });
+
+    test('Help carries a check-now, and it is the menu that has it', () {
+      // 2026-09-14: the sibling Words app answers 「往下拉」 with a
+      // RefreshIndicator on its home screen. This app has no such screen
+      // — the workspace is panes, and the one scrollable thing on it is
+      // the reading column, where a pull already means the previous
+      // chapter — so the same request is a menu item, which is where a
+      // desktop tool puts it.
+      final source = File('lib/pages/workbench_page.dart').readAsStringSync();
+      expect(source.contains("s('checkForUpdates'"), isTrue,
+          reason: 'Help ▸ Check for updates is the only way to ask '
+              'without walking into About');
+      expect(source.contains('_checkForUpdatesNow'), isTrue);
+      expect(source.contains('markUpdateChecked'), isTrue,
+          reason: 'asking by hand must spend the period too, or the '
+              'automatic check asks again an hour later');
+    });
+
+    test('nothing anywhere still builds the old SnackBar', () {
+      // Deleted rather than left for a second caller to find: two
+      // surfaces for one fact is how the About dialog and the bar drifted
+      // apart in the first place (finding 6).
+      for (final path in [
+        'lib/widgets/update_check_tile.dart',
+        'lib/pages/workbench_page.dart',
+      ]) {
+        // With the paren: the name still appears in this file's own
+        // header, explaining where the bar went, and a note about a
+        // deletion is not the deletion coming back.
+        expect(File(path).readAsStringSync().contains(
+            'buildUpdateAvailableBar('), isFalse, reason: path);
+      }
     });
   });
 
@@ -355,9 +418,38 @@ void main() {
         'updateAvailableBodyAndroid',
         'updateCancelDownload',
         'updatePermissionBody',
+        // 2026-09-14: the home banner and the interval selector. The four
+        // frequency labels are here rather than derived from
+        // `UpdateCheckFrequency.values`, on purpose — a loop over the enum
+        // would pass by testing a key that does not exist against a
+        // locale that does not either.
+        'updateBannerLater',
+        'settingsUpdateFrequency',
+        'updateFreqEveryLaunch',
+        'updateFreqDaily',
+        'updateFreqWeekly',
+        'updateFreqMonthly',
       ]) {
         for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
           expect(uiStrings[key]?[locale], isNotNull, reason: '$key/$locale');
+          expect(uiStrings[key]![locale]!.trim(), isNotEmpty,
+              reason: '$key/$locale');
+        }
+      }
+    });
+
+    test('every interval the picker offers has a label in all three '
+        'locales', () {
+      // The other direction, and the one the list above cannot give: it
+      // names keys, this names VALUES. A fifth frequency added to the enum
+      // without four words written for it fails here rather than showing
+      // a reader `fortnightly` in a Chinese menu.
+      for (final f in UpdateCheckFrequency.values) {
+        final key = 'updateFreq'
+            '${f.prefValue[0].toUpperCase()}${f.prefValue.substring(1)}';
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(uiStrings[key]?[locale]?.trim(), isNotNull,
+              reason: '$key/$locale — ${f.prefValue} has no label');
           expect(uiStrings[key]![locale]!.trim(), isNotEmpty,
               reason: '$key/$locale');
         }

@@ -383,17 +383,35 @@ class WbPaneTitle extends StatelessWidget {
             child: _HoverBox(
               onTap: onTitleTap,
               padding: const EdgeInsets.symmetric(vertical: 3),
+              // 2026-09-14: shrinks before it truncates.
+              //
+              // A pane title is not a caption here — the parallel pane's
+              // title names the edition stack AND is the control for
+              // changing it, so an ellipsis hides what the control is set
+              // to. Measured at 320px with both sliders at maximum: the
+              // stack was 221px short, and 54px short even after being
+              // folded to a count.
+              //
+              // `scaleDown` only ever shrinks, so at every width where the
+              // title already fits — every desktop size this tool is
+              // designed for — nothing moves. The ellipsis stays as the
+              // floor: a title long enough to shrink past legibility
+              // should still end in one rather than reach 2pt.
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: t.chrome,
-                    fontWeight: FontWeight.w600,
-                    color: wb.text,
-                    letterSpacing: 0.2,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: t.chrome,
+                      fontWeight: FontWeight.w600,
+                      color: wb.text,
+                      letterSpacing: 0.2,
+                    ),
                   ),
                 ),
               ),
