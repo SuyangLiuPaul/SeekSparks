@@ -45,6 +45,7 @@ import 'package:seeksparks/utils/radial_chronology_layout.dart'
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -106,9 +107,27 @@ void main() {
   /// The page's own row layout, rebuilt from the same PUBLIC functions the
   /// page calls — the discipline `strip_chronology_page_test.dart` uses,
   /// because `_buildRows` is private to the page.
+  /// [data] reduced to the streams the strip opens on, matching
+  /// `_applyDefaultHidden`. 2026-09-15: the strip stopped opening with
+  /// all twenty-two lanes, so a row table built from the whole corpus
+  /// names the wrong y for every lane below the first hidden one — and
+  /// this file taps a y.
+  WheelHistoryData asOpened(WheelHistoryData d) {
+    final keep = defaultVisibleStreams(d.streams.map((s) => s.id), 12).toSet();
+    return WheelHistoryData(
+      streams: d.streams.where((s) => keep.contains(s.id)).toList(),
+      nations: d.nations,
+      powers: d.powers.where((p) => keep.contains(p.stream)).toList(),
+      ministries: d.ministries,
+      omissions: d.omissions,
+      events: d.events.where((e) => keep.contains(e.stream)).toList(),
+      meta: d.meta,
+    );
+  }
+
   List<StripRow> rowsFor(double pxPerYear) {
     final lanes = buildStripLanes(
-      wheel: data,
+      wheel: asOpened(data),
       kings: kings,
       familyTreePeople: const [],
       patriarchs: patriarchs,

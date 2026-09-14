@@ -152,7 +152,26 @@ const int kMaxYear = 2026;
 /// axes and actually resolves it. Raising this is worth doing because a
 /// reader who is on the wheel should not hit a wall; it does not make
 /// the wheel the right instrument for a dense century.
-const double kWheelMaxScale = 40;
+/// 2026-09-15: 40 → 120, on 「另外zoom in应该可以有更大Zoom in 看更多
+/// 细节」.
+///
+/// The paragraph above is still true and still the reason the strip
+/// exists — magnifying a circle magnifies Methuselah along with Zimri
+/// and pushes crowding off screen rather than resolving it. What
+/// changed is that hitting a wall while the crowding is still visible
+/// is worse than either. At 120x a single year spans about 6 px of
+/// screen at 900 px, which is the point past which the wheel's own
+/// angular resolution stops adding anything: `angleForSpan` is linear
+/// in the year, so two events in the same year sit at the same bearing
+/// at any magnification whatever, and no further zoom will separate
+/// them. 120 is where the reader runs out of chart rather than out of
+/// permission.
+///
+/// Label sizes divide by `_labelScale` (the square root of the zoom),
+/// so type holds its on-screen size all the way up and more of it fits
+/// as the reader goes in — which is what makes the extra range worth
+/// having rather than merely bigger.
+const double kWheelMaxScale = 120;
 
 // Wheel geometry as fractions of the square's side.
 //   hub  .. bands   the stream bands, one ring each

@@ -143,6 +143,7 @@ import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 /// The address this page owns, in the same shape as `kWheelUrlPath`.
 ///
@@ -186,6 +187,34 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// nothing for that id to switch off, which stopped being true the
   /// hour the rail was added.
   final Set<String> _hidden = {};
+
+  /// Whether the opening set has been chosen. One-shot, like the
+  /// wheel's: a rebuild must not switch the reader's own choices back
+  /// on.
+  bool _defaultsApplied = false;
+
+  /// Fill [_hidden] with the lanes the strip does not open on.
+  ///
+  /// 2026-09-15, 「strip wheel都是 而且一开始filter不要全部都有 这样
+  /// loading很慢 一些主要的和圣经里面有的就行」.
+  ///
+  /// The strip is not capacity-bound the way the wheel is — lanes stack
+  /// and it scrolls, so twenty-two of them fit in a way twenty-two rings
+  /// never can. The ceiling here is the reader's eye rather than the
+  /// geometry: a categorical palette stops being discriminable past
+  /// about a dozen hues, which is also roughly where a first screen
+  /// stops being a chart and starts being a texture. So the strip opens
+  /// on the same twelve the widest wheel shows, in the same order, and
+  /// the other ten are one tap away in the filter.
+  void _applyDefaultHidden(WheelHistoryData data) {
+    if (_defaultsApplied) return;
+    _defaultsApplied = true;
+    final keep =
+        defaultVisibleStreams(data.streams.map((s) => s.id), 12).toSet();
+    for (final s in data.streams) {
+      if (!keep.contains(s.id)) _hidden.add(s.id);
+    }
+  }
 
   /// Kept on the state for the same reason the wheel's is
   /// (`_RadialChronologyPageState._findCtl`'s own doc): a reader who
@@ -358,6 +387,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           final data = snap.data;
           if (data == null) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (!_defaultsApplied) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || _defaultsApplied) return;
+              setState(() => _applyDefaultHidden(data));
+            });
           }
           return _body(context, data, locale);
         },

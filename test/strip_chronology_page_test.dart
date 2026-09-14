@@ -36,6 +36,7 @@ import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
+import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -69,14 +70,34 @@ void main() {
   /// [WheelHistoryData] through the SAME `buildStripLanes` call to
   /// predict what hiding one stream must produce, rather than trusting
   /// a number written into the test.
+  /// [data] reduced to the streams the strip opens on, matching
+  /// `_applyDefaultHidden`.
+  WheelHistoryData asOpened(WheelHistoryData d) {
+    final keep = defaultVisibleStreams(d.streams.map((s) => s.id), 12).toSet();
+    return WheelHistoryData(
+      streams: d.streams.where((s) => keep.contains(s.id)).toList(),
+      nations: d.nations,
+      powers: d.powers.where((p) => keep.contains(p.stream)).toList(),
+      ministries: d.ministries,
+      omissions: d.omissions,
+      events: d.events.where((e) => keep.contains(e.stream)).toList(),
+      meta: d.meta,
+    );
+  }
+
   List<StripRow> rowsFor(
     double pxPerYear, {
     WheelHistoryData? forData,
     List<HebrewKing>? forKings,
     List<Patriarch>? forPatriarchs,
   }) {
+    // 2026-09-15: the strip no longer opens with all twenty-two lanes
+    // (「一开始filter不要全部都有 这样loading很慢」), so a row table built
+    // from the whole corpus names the wrong y for every lane below the
+    // first hidden one — and these tests tap a y. Filtered here the way
+    // the page filters, so what is measured is what is drawn.
     final lanes = buildStripLanes(
-      wheel: forData ?? data,
+      wheel: forData ?? asOpened(data),
       kings: forKings ?? kings,
       familyTreePeople: const [],
       patriarchs: forPatriarchs ?? patriarchs,
@@ -528,19 +549,24 @@ void main() {
   testWidgets('hiding a stream removes its lane rather than blanking it',
       (tester) async {
     await pump(tester, const Size(900, 700));
-    final stream = data.streams.first;
+    // Hidden ON TOP of the opening set, not on top of all twenty-two:
+    // the page opens with twelve lanes, so a stream the reader switches
+    // off is one of those twelve and the height it costs has to be
+    // measured against the same baseline.
+    final opened = asOpened(data);
+    final stream = opened.streams.first;
 
     final baseRows = rowsFor(kStripInitialPxPerYear);
     final beforeHeight = totalHeight(baseRows);
 
     final visibleData = WheelHistoryData(
-      streams: data.streams.where((s) => s.id != stream.id).toList(),
-      nations: data.nations,
-      powers: data.powers.where((p) => p.stream != stream.id).toList(),
-      ministries: data.ministries,
-      omissions: data.omissions,
-      events: data.events.where((e) => e.stream != stream.id).toList(),
-      meta: data.meta,
+      streams: opened.streams.where((s) => s.id != stream.id).toList(),
+      nations: opened.nations,
+      powers: opened.powers.where((p) => p.stream != stream.id).toList(),
+      ministries: opened.ministries,
+      omissions: opened.omissions,
+      events: opened.events.where((e) => e.stream != stream.id).toList(),
+      meta: opened.meta,
     );
     final predictedRows =
         rowsFor(kStripInitialPxPerYear, forData: visibleData);
