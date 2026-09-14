@@ -31,14 +31,16 @@ import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
 /// greyed out, which is how a real menu says "exists, not available
 /// right now" — better than hiding it and changing shape each time.
 class WbMenuItem {
-  const WbMenuItem(this.label, this.onSelected, {this.checked, this.shortcut});
+  const WbMenuItem(this.label, this.onSelected,
+      {this.checked, this.shortcut, this.hint});
 
   /// A horizontal rule between groups.
   const WbMenuItem.separator()
       : label = '',
         onSelected = null,
         checked = null,
-        shortcut = null;
+        shortcut = null,
+        hint = null;
 
   final String label;
   final VoidCallback? onSelected;
@@ -46,8 +48,20 @@ class WbMenuItem {
   /// Non-null renders a check column — for toggles like "Search window".
   final bool? checked;
 
-  /// Right-aligned accelerator hint, e.g. "Ctrl+F".
+  /// Right-aligned accelerator, e.g. "Ctrl+F". A COLUMN, sized for a
+  /// key combination — never a sentence. See [hint].
   final String? shortcut;
+
+  /// Why a greyed item is greyed, in words, e.g. "needs a wider centre".
+  ///
+  /// 2026-09-14: this used to be passed as [shortcut], and on an iPad it
+  /// came out one word per line down the right-hand side of the menu —
+  /// 「sword这个是什么」. The accelerator column is `Expanded` after a
+  /// label that takes its full intrinsic width, so a long label leaves
+  /// it a few characters wide and a sentence in it wraps to a column of
+  /// words. A reason belongs under the label, where it has the whole
+  /// menu to read across, and that is what this renders as.
+  final String? hint;
 
   bool get isSeparator => label.isEmpty && onSelected == null;
 }
@@ -149,34 +163,61 @@ class _MenuTitle extends StatelessWidget {
               enabled: item.onSelected != null,
               height: 24,
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
-                    width: 16,
-                    child: item.checked == true
-                        ? Icon(Icons.check, size: 12, color: wb.text)
-                        : null,
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        child: item.checked == true
+                            ? Icon(Icons.check, size: 12, color: wb.text)
+                            : null,
+                      ),
+                      // Flexible, so a long label ellipsizes instead of
+                      // starving the accelerator column beside it.
+                      Flexible(
+                        child: Text(
+                          item.label,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: t.chrome,
+                            color: item.onSelected == null
+                                ? wb.mutedText
+                                : wb.text,
+                          ),
+                        ),
+                      ),
+                      if (item.shortcut != null) ...[
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: Text(
+                            item.shortcut!,
+                            textAlign: TextAlign.right,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: t.chrome,
+                              color: wb.mutedText,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      fontSize: t.chrome,
-                      color: item.onSelected == null ? wb.mutedText : wb.text,
-                    ),
-                  ),
-                  if (item.shortcut != null) ...[
-                    const SizedBox(width: 24),
-                    Expanded(
+                  if (item.hint != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 1),
                       child: Text(
-                        item.shortcut!,
-                        textAlign: TextAlign.right,
+                        item.hint!,
                         style: TextStyle(
-                          fontSize: t.chrome,
+                          fontSize: t.chrome * 0.85,
                           color: wb.mutedText,
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
             ),

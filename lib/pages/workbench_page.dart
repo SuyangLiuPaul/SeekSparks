@@ -664,7 +664,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           s('splitView', 'Split (two editions side by side)'),
           splitFits ? () => _setCentreMode(WbCentreMode.split) : null,
           checked: _wb.centreMode == WbCentreMode.split,
-          shortcut: splitFits ? null : s('splitNeedsWidth', 'needs more width'),
+          hint: splitFits ? null : s('splitNeedsWidth', 'needs more width'),
         ),
         const WbMenuItem.separator(),
         WbMenuItem(s('parallelPickVersions', 'Choose versions…'),
@@ -682,7 +682,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           s('browseDiffHighlight', 'Highlight version differences'),
           diffFits ? () => _wb.setBrowseDiff(!_wb.browseDiff) : null,
           checked: _wb.browseDiff && diffFits,
-          shortcut: diffFits
+          hint: diffFits
               ? null
               : s('browseDiffNeedsPair', 'needs two editions in one language'),
         ),
