@@ -269,46 +269,36 @@ who finds the old phrasing needs to land somewhere.
 - **Whether the Reader becomes a workbench mode** rather than a separate
   surface. `[carried forward]`
 - **Shortening the English strip lane headings** (above).
-- **Target size on the Workbench: 73 of 105 tappable nodes are under
-  24px in at least one dimension.** Measured 2026-09-14 by pumping
-  `WorkbenchPage` at 1280x900 and reading the rendered size of every
-  `GestureDetector` / `InkWell` / `IconButton` in the tree (the harness is
-  `test/workbench_keyboard_reach_test.dart`'s `pump`; the probe itself was
-  not kept — it is four lines of tree-walk and it belongs in whichever
-  iteration acts on this). The common heights are 21px and 15px: the
-  version popups in the top strip come out 41x21, the tab-strip entries
-  25x15, the pane collapse chevrons 20x20.
-  **This is not filed as a bug, because the number is the density the
-  owner asked for.** WCAG 2.5.8 wants 24x24 unless the target is inline,
-  essential, or has 24px of clear spacing around it; the Workbench brief
-  is "a dense, flat, neutral, keyboard-driven desktop tool", and the
-  2026-09-07 modernisation note says in as many words that density did
-  NOT change and "modern does not mean airy". Raising every target to
-  24px would undo that, and on a pointer-driven desktop tool 2.5.8's
-  rationale — touch, tremor — bites least.
-  What is worth a decision is the TOUCH build: the same widgets ship in
-  the Android and iPad apps, where the criterion is meant to apply, and
-  nothing in the app varies target size by input device. Three options,
-  none taken: leave it and say so; grow targets only when
-  `MediaQuery.gestureSettings`/the primary pointer is coarse; or take the
-  reader surface out of the workbench layout on a phone. `[verified
-  2026-09-14 — measured, not estimated]`
-- **Whether the reading column should be capped on a wide monitor.**
-  `lib/utils/responsive.dart` carries `maxContentWidth` — 1100 on tablet,
-  1400 on desktop, 1800 on a TV — with forty lines of rationale about the
-  ~75-character measure, the CJK adjustment, and a Xiaomi Pad 7 Ultra
-  report. **Nothing in this app calls it.** It came over with the rest of
-  the port from YsWords, where `home_page.dart` wraps the reading column
-  in it; here it is dead code, and a verse on a 1920 monitor in single-pane
-  runs the full width.
-  This is the owner's call and not an obvious bug: the brief for the
-  Workbench is density — "a dense, flat, neutral, keyboard-driven desktop
-  tool" — and four panes at 1920 are each under 500px, where a cap would
-  do nothing. It bites only the single-pane reading surface. Either wire
-  it up there or delete the helper; what should not stay is a documented
-  readability rule that no screen obeys. `[verified 2026-09-14 — grep for
-  maxContentWidth returns its own definition and nothing else]`
+- ~~**Target size on the Workbench.**~~ `[CLOSED 2026-09-14 — two
+  sizes, chosen by input device]` 73 of 105 tappable nodes were under
+  24px in at least one dimension, measured by pumping `WorkbenchPage` at
+  1280x900 and reading each rendered control. On a pointer that is the
+  brief — "a dense, flat, neutral, keyboard-driven desktop tool", and the
+  2026-09-07 note says density did not change — so the desktop is
+  untouched and is asserted to stay dense. On Android and the iPad, where
+  WCAG 2.5.8 applies and the same widgets ship, nothing is under 24px any
+  more. `WbMetrics.minTarget` carries the rule and why it is 24 rather
+  than Apple's 44 or Material's 48; `test/touch_target_test.dart`
+  measures both platforms and fails either way round.
+  Three things had to move for one rule to work: the shared chrome box,
+  the four chrome STRIP heights (a 24px control cannot live in a 21px
+  strip — the strip's height becomes the child's maximum), and three
+  widgets that draw their own controls outside that box. The only targets
+  left under 24 on touch are the two pane dividers, which 2.5.8 exempts
+  as essential: a divider's size is its position, and it is 16px across
+  and 824 long.
 
+- ~~**Whether the reading column should be capped on a wide monitor.**~~
+  `[CLOSED 2026-09-14 — wired up, not deleted]`
+  `ResponsiveBreakpoints.maxContentWidth` had forty lines of rationale
+  and no caller. It is now read by the verse column in
+  `bible_reading_pane.dart` — the column only, not the pane frame, so a
+  pane's own title strip and status line still run the full width of
+  their column and the workspace does not grow gutters. It binds on one
+  surface, the Reader centre mode at full width on a large display; in
+  Browse and Split every column is already far under the cap.
+  `test/reading_measure_test.dart` pins both halves, including that no
+  workbench column width is ever narrowed by it.
 ---
 
 ## Operational landmines

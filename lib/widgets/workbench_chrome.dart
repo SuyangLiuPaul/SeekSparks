@@ -101,17 +101,18 @@ class _MenuTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
+    // 2026-09-14: the surface comes from `popupMenuTheme` — paneBg, a
+    // hairline, elevation 0 and `radiusSurface` corners. This call site
+    // used to restate all four and get two of them wrong: square corners
+    // and a shadow, both retired on 2026-09-07 when the owner asked for
+    // "最现代的界面风格". The File/View/Search menus are the first thing
+    // on the screen, so they were the most visible copy of the old rule
+    // left in the app.
     return PopupMenuButton<VoidCallback>(
       tooltip: '',
       position: PopupMenuPosition.under,
       offset: const Offset(0, 0),
       padding: EdgeInsets.zero,
-      color: wb.paneBg,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
-        side: BorderSide(color: wb.border),
-      ),
       onSelected: (cb) => cb(),
       itemBuilder: (context) => [
         for (final item in menu.items)
@@ -601,6 +602,7 @@ class _HoverBoxState extends State<_HoverBox> {
     final wb = WbColors.of(context);
     final interactive = widget.onTap != null || widget.onDoubleTap != null;
     final onTap = widget.onTap;
+    final minTarget = WbMetrics.minTarget(Theme.of(context).platform);
 
     // Hover is a step FROM the current fill, not a replacement for it.
     //
@@ -663,7 +665,32 @@ class _HoverBoxState extends State<_HoverBox> {
                         BorderRadius.circular(WbMetrics.radiusControl),
                   )
                 : null,
-            child: widget.child,
+            // 2026-09-14: on a touch device the control cannot be
+            // smaller than `WbMetrics.minTarget` — 24px, WCAG 2.5.8.
+            // Every chrome control in the workspace is drawn by this
+            // box, which is why the rule can live in one place; the
+            // reasoning, and why it is 24 rather than Apple's 44 or
+            // Material's 48, is on `minTarget` itself.
+            //
+            // `Align` with both factors at 1, inside a `ConstrainedBox`,
+            // rather than an alignment on the Container: an aligned
+            // Container expands to its constraints, and in a Row the
+            // main axis is unbounded, so that route asserts instead of
+            // centring. This one takes the child's size, raises it to
+            // the minimum, and centres the glyph in what is left.
+            child: minTarget == 0
+                ? widget.child
+                : ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: minTarget,
+                      minHeight: minTarget,
+                    ),
+                    child: Align(
+                      widthFactor: 1,
+                      heightFactor: 1,
+                      child: widget.child,
+                    ),
+                  ),
           ),
         ),
       ),

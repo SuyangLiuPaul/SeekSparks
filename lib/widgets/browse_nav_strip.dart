@@ -155,13 +155,18 @@ class BrowseNavStrip extends StatelessWidget {
 /// ceiling counts each literal `elevation:` — and which caught the book
 /// menu on 2026-09-14 the moment it was written as a second copy.
 ///
-/// ⚠️ The elevation stays a LITERAL here on purpose. Hoisting it to a
-/// named constant takes the file to zero offences and reads as "the
-/// chrome pass finished this file", when nothing about the surface would
-/// have changed. Passing that test by renaming the thing it counts is
-/// worse than the shadow.
+/// **2026-09-14, later the same day: the surface is described once more
+/// than that, and this was the copy.** `workbench_theme.dart`'s
+/// `popupMenuTheme` already says `paneBg`, elevation 0, a hairline, and
+/// `radiusSurface` corners. This function overrode all four — square
+/// corners and a shadow among them — which is the same defect that had
+/// left twenty-five modal sheets drawing the retired square-corner rule
+/// a week after it was retired. The note that stood here argued the
+/// elevation literal should stay rather than be renamed into a
+/// constant, and that was right as far as it went; what it missed is
+/// that the literal should not be here at all. Deleting an override is
+/// not gaming the ratchet — it is the thing the ratchet is for.
 PopupMenuButton<T> _menu<T>({
-  required WbColors wb,
   required BoxConstraints constraints,
   required ValueChanged<T> onSelected,
   required List<PopupMenuEntry<T>> Function(BuildContext) itemBuilder,
@@ -170,13 +175,7 @@ PopupMenuButton<T> _menu<T>({
   return PopupMenuButton<T>(
     tooltip: '',
     position: PopupMenuPosition.under,
-    color: wb.paneBg,
-    elevation: 4,
     constraints: constraints,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.zero,
-      side: BorderSide(color: wb.border),
-    ),
     onSelected: onSelected,
     itemBuilder: itemBuilder,
     child: child,
@@ -242,7 +241,6 @@ class _BookMenu extends StatelessWidget {
     final live = columns.where((c) => c.books.isNotEmpty).toList();
 
     return _menu<String>(
-      wb: wb,
       // Tall enough for the longer column — 39 books and their five
       // division headers — and it scrolls when the window is shorter
       // than that, which is the case the single list was ALWAYS in.
@@ -522,8 +520,17 @@ class _MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 21px tall on the desktop — the strip's own row height, and the
+    // density this tool is built on — and at least 24 on a touch device.
+    // See `WbMetrics.minTarget`. These three dropdowns (book, chapter,
+    // verse, version) are the most-pressed controls in the app.
+    final minTarget = WbMetrics.minTarget(Theme.of(context).platform);
     return Container(
-      constraints: BoxConstraints(minWidth: minWidth),
+      constraints: BoxConstraints(
+        minWidth: minWidth,
+        minHeight: minTarget,
+      ),
+      alignment: minTarget == 0 ? null : Alignment.centerLeft,
       padding: const EdgeInsets.fromLTRB(6, 2, 3, 2),
       decoration: BoxDecoration(
         color: wb.paneBg,
@@ -584,7 +591,6 @@ class _Dropdown<T> extends StatelessWidget {
         .first;
 
     return _menu<T>(
-      wb: wb,
       // Long lists (150 Psalms) need to scroll rather than run off the
       // screen. The 66-book list does not come through here any more —
       // it has its own two-column menu above.
@@ -625,32 +631,13 @@ class _Dropdown<T> extends StatelessWidget {
           ),
         ],
       ],
-      child: Container(
-        constraints: BoxConstraints(minWidth: minWidth),
-        padding: const EdgeInsets.fromLTRB(6, 2, 3, 2),
-        decoration: BoxDecoration(
-          color: wb.paneBg,
-          border: Border.all(color: wb.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: t.chrome,
-                  fontWeight: FontWeight.w600,
-                  color: wb.text,
-                ),
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, size: 14, color: wb.mutedText),
-          ],
-        ),
-      ),
+      // 2026-09-14: was a second, character-for-character copy of
+      // `_MenuButton` written out inline — and the copy is how the touch
+      // floor came to be applied to the book menu's face and not to
+      // these. The class doc above already called `_MenuButton` "the
+      // hairline button the dropdowns and the book menu share"; it was
+      // shared by one of them.
+      child: _MenuButton(label: label, minWidth: minWidth, wb: wb, t: t),
     );
   }
 }
@@ -669,20 +656,29 @@ class _StepButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final minTarget = WbMetrics.minTarget(Theme.of(context).platform);
+    final Widget glyph = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+      child: Icon(
+        icon,
+        size: 16,
+        color: onTap == null ? wb.mutedText.withValues(alpha: 0.4) : wb.text,
+      ),
+    );
     return Tooltip(
       message: tooltip,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-          child: Icon(
-            icon,
-            size: 16,
-            color: onTap == null
-                ? wb.mutedText.withValues(alpha: 0.4)
-                : wb.text,
-          ),
-        ),
+        // 22x18 under a mouse, 24x24 under a thumb — and this is the
+        // previous/next chapter arrow, which a reader presses more than
+        // anything else in the strip.
+        child: minTarget == 0
+            ? glyph
+            : ConstrainedBox(
+                constraints: BoxConstraints(
+                    minWidth: minTarget, minHeight: minTarget),
+                child: Align(widthFactor: 1, heightFactor: 1, child: glyph),
+              ),
       ),
     );
   }

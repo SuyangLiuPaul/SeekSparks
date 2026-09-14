@@ -793,7 +793,26 @@ class _CommandPaneState extends State<CommandPane> {
         // for exactly this reason and they are the only part of its
         // command line that reviewers describe as discoverable.
         _operatorStrip(locale),
-        if (_showSyntax) _syntaxCard(locale),
+        // 2026-09-14: `Flexible` + a scroll, because the card is the one
+        // child here that can be taller than the pane.
+        //
+        // Found when the touch target floor raised the operator strip
+        // and this card's own operator chips from 21px to 24: the column
+        // overflowed by 96px at 500x900, which is a phone. The floor
+        // exposed it rather than caused it — the card is a list of
+        // syntax rules that grows with every rule added and with every
+        // translation that runs longer than English, and a `Column`
+        // child at its natural height has no answer to that but to spill
+        // past the bottom of the screen.
+        //
+        // Loose fit: it still takes its natural height whenever there is
+        // room, so nothing changes on the desktop, where there always
+        // is.
+        if (_showSyntax)
+          Flexible(
+            fit: FlexFit.loose,
+            child: SingleChildScrollView(child: _syntaxCard(locale)),
+          ),
         const Divider(height: 1),
         // ── Results ───────────────────────────────────────────────
         Expanded(child: _buildResults(context, wb, settings, scheme, locale)),
@@ -2243,14 +2262,26 @@ class _MiniIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wbc = WbColors.of(context);
+    // 20x20 on the desktop, which is the density this tool is for, and
+    // 24x24 on a touch device — see `WbMetrics.minTarget`. A 14px glyph
+    // with 3px of padding is a comfortable mouse target and a poor
+    // thumb one.
+    final minTarget = WbMetrics.minTarget(Theme.of(context).platform);
+    final Widget glyph = Padding(
+      padding: const EdgeInsets.all(3),
+      child: Icon(icon, size: 14, color: color ?? wbc.mutedText),
+    );
     return Tooltip(
       message: tooltip,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(3),
-          child: Icon(icon, size: 14, color: color ?? wbc.mutedText),
-        ),
+        child: minTarget == 0
+            ? glyph
+            : ConstrainedBox(
+                constraints: BoxConstraints(
+                    minWidth: minTarget, minHeight: minTarget),
+                child: Align(widthFactor: 1, heightFactor: 1, child: glyph),
+              ),
       ),
     );
   }
@@ -2360,9 +2391,21 @@ class _OperatorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final wbc = WbColors.of(context);
     final t = WbType.of(context);
+    // 2026-09-14: 24px on a touch device, unchanged on a pointer — the
+    // operator strip measured 25x21 (and 93x21 for `NEARn`) on the
+    // Browse screen, and this app ships to Android and the iPad. See
+    // `WbMetrics.minTarget` for why 24 rather than Apple's 44, and why
+    // the rule keys off the platform. Same `Align`-inside-a-
+    // `ConstrainedBox` shape as the workbench's own chrome box: an
+    // aligned Container would try to fill an unbounded Row.
+    final minTarget = WbMetrics.minTarget(Theme.of(context).platform);
     final button = InkWell(
       onTap: onTap,
       child: Container(
+        constraints: minTarget == 0
+            ? null
+            : BoxConstraints(minWidth: minTarget, minHeight: minTarget),
+        alignment: minTarget == 0 ? null : Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color: selected ? wbc.hoverBg : wbc.chromeBg,

@@ -167,6 +167,46 @@ abstract final class WbMetrics {
 
   /// Count badges and version tags, where the shape IS the affordance.
   static const double radiusPill = 999.0;
+
+  /// The smallest a chrome control may be drawn — **on a touch device
+  /// only**. Zero everywhere else, which means "whatever the density
+  /// says", and the density is the point of this tool.
+  ///
+  /// 2026-09-14, from the accessibility pass, which measured the Browse
+  /// screen rather than guessing: 73 of 105 tappable nodes were under
+  /// 24px in at least one dimension. The version popups came out 41x21,
+  /// the tab strip 25x15, the pane chevrons 20x20.
+  ///
+  /// On the desktop that is not a defect, it is the brief — "a dense,
+  /// flat, neutral, keyboard-driven desktop tool", and the 2026-09-07
+  /// modernisation note says in as many words that density did not
+  /// change and "modern does not mean airy". WCAG 2.5.8's rationale is
+  /// touch and tremor; a 21px target under a mouse is ordinary desktop
+  /// software.
+  ///
+  /// But the same widgets ship in the Android and iPad builds, where
+  /// the criterion does apply and where 15px of tab strip is a real
+  /// miss, and nothing in the app varied by input device. So the answer
+  /// is not one size — it is two, chosen by what the reader is pointing
+  /// with.
+  ///
+  /// **24, not 44 or 48.** Apple asks 44 and Material 48, and either
+  /// would double the height of a strip built for 21px rows — on a
+  /// tablet that is a different product, not an accessible version of
+  /// this one. 24 is what WCAG 2.5.8 requires, it is the number the
+  /// audit measured against, and it is reachable without redrawing the
+  /// workspace.
+  ///
+  /// The platform, not the pointer, because Flutter exposes no
+  /// "pointer is coarse" signal — there is no media query for it. An
+  /// iPad with a trackpad attached therefore gets the touch size, which
+  /// is the right way round to be wrong: it costs a few pixels to a
+  /// reader who has a pointer, where the other error costs a target to
+  /// a reader who does not.
+  static double minTarget(TargetPlatform platform) =>
+      platform == TargetPlatform.android || platform == TargetPlatform.iOS
+          ? 24.0
+          : 0.0;
 }
 
 /// The Workbench palette. Kept separate from `ColorScheme` because most
@@ -1631,6 +1671,7 @@ class WbType {
       lineSpacing: s.lineSpacing,
       menuScale: s.menuScale,
       fontFamily: s.fontFamily,
+      platform: Theme.of(context).platform,
     );
   }
 
@@ -1678,12 +1719,31 @@ class WbType {
     required double lineSpacing,
     required double menuScale,
     String? fontFamily,
+    /// 2026-09-14. The chrome strips have a floor on a touch device and
+    /// none on a pointer — see [WbMetrics.minTarget], which carries the
+    /// reasoning and the number.
+    ///
+    /// Defaulted rather than required so the dozens of call sites that
+    /// resolve a scale outside a widget tree keep the desktop metrics
+    /// they have always had. A missing platform therefore means "leave
+    /// the density alone", which is the safe direction: the other way
+    /// round, a forgotten argument would silently grow the workspace.
+    TargetPlatform platform = TargetPlatform.macOS,
   }) {
     // 20 / 1.5 / 1.0 are the app defaults for these three. Expressing
     // the bounds as the slider's own ends divided by the default is what
     // makes the two impossible to drift apart again.
     final textScale = scaleFor(fontSize);
     final chromeScale = menuScale.clamp(kMenuScaleMin, kMenuScaleMax);
+    // Plus the hairline, because every one of these strips draws one
+    // and a border eats its own width out of the content box: floored
+    // at a bare 24 the strips came out 24 and the buttons inside them
+    // 23, which is the kind of miss that passes a code review and fails
+    // a ruler. Measured, not reasoned: the first run of
+    // `test/touch_target_test.dart` reported 34.0x23.0.
+    final floor = WbMetrics.minTarget(platform) == 0
+        ? 0.0
+        : WbMetrics.minTarget(platform) + WbMetrics.hairline;
     // Line spacing moves the workbench's own tighter leading in the
     // same direction the reader asked for, without adopting the
     // reader's roomier value outright.
@@ -1698,10 +1758,23 @@ class WbType {
       original:
           math.max(WbMetrics.original * textScale, WbMetrics.originalFloor),
       lineHeight: leading.toDouble(),
-      menuBarHeight: WbMetrics.menuBarHeight * chromeScale,
-      toolbarHeight: WbMetrics.toolbarHeight * chromeScale,
-      statusBarHeight: WbMetrics.statusBarHeight * chromeScale,
-      paneTitleHeight: WbMetrics.paneTitleHeight * chromeScale,
+      // A control cannot be 24px tall inside a 21px strip: the strip's
+      // own fixed height becomes the child's max, and a minimum larger
+      // than a maximum is simply the maximum. So the floor has to reach
+      // the strip, not only the button — this is the other half of
+      // `_HoverBox`'s `minTarget`, and without it that one silently
+      // does nothing on three of the four chrome surfaces.
+      //
+      // `max`, never a replacement: a reader who has scaled the chrome
+      // UP keeps their larger strip.
+      menuBarHeight:
+          math.max(WbMetrics.menuBarHeight * chromeScale, floor),
+      toolbarHeight:
+          math.max(WbMetrics.toolbarHeight * chromeScale, floor),
+      statusBarHeight:
+          math.max(WbMetrics.statusBarHeight * chromeScale, floor),
+      paneTitleHeight:
+          math.max(WbMetrics.paneTitleHeight * chromeScale, floor),
       textScale: textScale.toDouble(),
       chromeScale: chromeScale.toDouble(),
       fontFamily: (fontFamily ?? '').isEmpty ? null : fontFamily,

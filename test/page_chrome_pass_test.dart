@@ -54,6 +54,20 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Files that have been through the chrome pass. Add, never remove.
 const List<String> _passed = <String>[
+  // 2026-09-14: the last offence here was a `_menu()` helper that
+  // overrode `popupMenuTheme` — square corners, elevation 4 and a
+  // colour the theme already sets. The note beside it argued the
+  // elevation literal should stay rather than be renamed into a
+  // constant, which was right; what it missed is that the literal
+  // should not have been there at all. Deleting an override is not
+  // gaming this test, it is the outcome it exists to produce.
+  'lib/widgets/browse_nav_strip.dart',
+  // Joined the same day and for the same reason: the menu bar's own
+  // PopupMenuButton restated `popupMenuTheme` and got the corner and
+  // the shadow wrong. File / View / Search are the first controls on
+  // the screen, so it was the most visible copy of the retired rule
+  // left anywhere in the app.
+  'lib/widgets/workbench_chrome.dart',
   'lib/pages/stats_page.dart',
   'lib/pages/settings_page.dart',
   'lib/pages/evidence_page.dart',
@@ -181,7 +195,6 @@ const Map<String, int> _remaining = <String, int>{
   // check could not see.
   'lib/widgets/block_note_card.dart': 2,
   'lib/widgets/left_accent_card.dart': 1,
-  'lib/widgets/browse_nav_strip.dart': 1,
   'lib/widgets/browse_window.dart': 1,
   'lib/widgets/confidence_badge.dart': 1,
   'lib/widgets/contact_line.dart': 1,
@@ -189,7 +202,6 @@ const Map<String, int> _remaining = <String, int>{
   'lib/widgets/docked_panel.dart': 1,
   'lib/widgets/note_reference_picker_sheet.dart': 1, // re-measured
   'lib/widgets/originals_sheet.dart': 1, // re-measured
-  'lib/widgets/workbench_chrome.dart': 1,
 };
 
 /// Counts rule violations in already-comment-stripped source.
@@ -305,15 +317,32 @@ void main() {
     // belongs to the theme, and a call site that passes `shape:` has
     // taken that decision away from it. One place decides, so one place
     // can be changed.
-    test('no modal sheet overrides the shape the theme sets', () {
+    test('no sheet or menu overrides the shape the theme sets', () {
+      // 2026-09-14, second pass: `PopupMenuButton` joins
+      // `showModalBottomSheet`, because the same thing had happened one
+      // layer over. `browse_nav_strip.dart` built every dropdown in the
+      // Browse strip through one helper that set `color`, `elevation: 4`
+      // and a SQUARE `shape` — all three of which `popupMenuTheme`
+      // already says, and says differently: paneBg, elevation 0, a
+      // hairline and `radiusSurface` corners. A menu in the strip the
+      // reader uses most was drawing the retired rule.
+      //
+      // Only `shape:` and `elevation:` are flagged. A `color:` override
+      // is sometimes a real per-menu decision; a corner and a shadow are
+      // the chrome rule itself.
+      const owners = <String, List<String>>{
+        'showModalBottomSheet': ['shape'],
+        'PopupMenuButton': ['shape', 'elevation'],
+      };
       final offenders = <String>[];
       for (final entity in Directory('lib').listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
         if (entity.path.endsWith('workbench_theme.dart')) continue;
         final src = _stripComments(entity.readAsStringSync());
+        for (final owner in owners.keys) {
         var from = 0;
         while (true) {
-          final at = src.indexOf('showModalBottomSheet', from);
+          final at = src.indexOf(owner, from);
           if (at == -1) break;
           from = at + 1;
           // The argument list only: stop at the `builder:`, whose own
@@ -321,21 +350,25 @@ void main() {
           final builder = src.indexOf('builder:', at);
           final end = builder == -1 ? src.length : builder;
           final args = src.substring(at, end);
-          if (RegExp(r'(^|[\s(,])shape:').hasMatch(args)) {
-            final line = src.substring(0, at).split('\n').length;
-            offenders.add('${entity.path}:$line');
+          for (final banned in owners[owner]!) {
+            if (RegExp('(^|[\\s(,])$banned:').hasMatch(args)) {
+              final line = src.substring(0, at).split('\n').length;
+              offenders.add('${entity.path}:$line — $owner sets $banned');
+            }
           }
+        }
         }
       }
       expect(
         offenders,
         isEmpty,
-        reason: 'a modal sheet takes its shape from '
-            "workbench_theme.dart's `bottomSheetTheme` — rounded at the "
-            'top off WbMetrics.radiusSurface, with a hairline. Passing '
-            '`shape:` here overrides that, and 25 call sites doing it is '
-            'how the square-corner retirement missed most of the app for '
-            'a week:\n  ${offenders.join('\n  ')}',
+        reason: 'a sheet and a popup menu take their shape from '
+            "workbench_theme.dart — `bottomSheetTheme` rounds a sheet's "
+            'top corners off WbMetrics.radiusSurface with a hairline, and '
+            '`popupMenuTheme` does the same for a menu at elevation 0. '
+            'Overriding either at the call site is how the square-corner '
+            'retirement missed 25 sheets and every dropdown in the Browse '
+            'strip:\n  ${offenders.join('\n  ')}',
       );
     });
 
