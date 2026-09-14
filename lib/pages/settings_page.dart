@@ -1391,86 +1391,111 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                   // button, Help ▸ Check for updates in the menu bar, and
                   // the periodic check that raises the banner. All of
                   // them end in `installUpdateInApp` on Android.
-                  Card(
-                    child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 4 * s),
-                      child: UpdateCheckTile(
-                        locale: settings.locale,
-                        scheme: Theme.of(context).colorScheme,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8 * s),
+                  //
+                  // 2026-09-15, from a tablet photo with the whole block
+                  // circled: 「这一块字体感觉很不协调」.
+                  //
+                  // Three things about one subject, in three cards, each
+                  // with its own left edge (12 px, 4 px, and a
+                  // ListTile's own 16) — and the check set in the
+                  // theme's label type while the two below it followed
+                  // the reader's font size. Nothing was individually
+                  // broken, which is why it survived a year of reading:
+                  // it simply did not read as ONE thing.
+                  //
+                  // One card, one inset, one type. The check is still
+                  // the same widget the About page shows; it is only
+                  // told which room it is standing in.
                   Card(
                     child: Padding(
                       padding:
                           EdgeInsets.symmetric(horizontal: 4, vertical: 4 * s),
-                      child: _SettingsSwitch(
-                        settings: settings,
-                        icon: Icons.system_update_alt_rounded,
-                        label: uiStrings['settingsAutoCheckUpdates']
-                                ?[settings.locale] ??
-                            'Check for updates daily',
-                        subtitle: uiStrings['settingsAutoCheckUpdatesHint']
-                            ?[settings.locale],
-                        value: settings.autoCheckUpdates,
-                        onChanged: settings.setAutoCheckUpdates,
-                      ),
-                    ),
-                  ),
-                  // 2026-09-14: the interval, which used to be a compiled
-                  // `Duration(days: 1)`. Under the switch and disabled
-                  // with it — a frequency for a check that is off is a
-                  // control with nothing to do, and greying it says so
-                  // better than hiding it, which would leave a reader who
-                  // turned the switch off wondering where the choice went.
-                  SizedBox(height: 8 * s),
-                  Card(
-                    child: ListTile(
-                      dense: true,
-                      enabled: settings.autoCheckUpdates,
-                      leading: const Icon(Icons.schedule_rounded),
-                      title: Text(
-                        uiStrings['settingsUpdateFrequency']
-                                ?[settings.locale] ??
-                            'How often',
-                        style: TextStyle(
-                          fontSize: settings.fontSize,
-                          fontFamily: settings.fontFamily,
-                          fontFamilyFallback: kCjkFontFallback,
-                        ),
-                      ),
-                      // Under the title, not `trailing:` — see the
-                      // cross-version tile above for what a wide
-                      // DropdownButton in a ListTile's trailing slot
-                      // does to the title on a phone.
-                      subtitle: DropdownButton<UpdateCheckFrequency>(
-                        isExpanded: true,
-                        value: settings.updateCheckFrequency,
-                        underline: const SizedBox.shrink(),
-                        onChanged: settings.autoCheckUpdates
-                            ? (f) {
-                                if (f != null) {
-                                  settings.setUpdateCheckFrequency(f);
-                                }
-                              }
-                            : null,
-                        items: [
-                          for (final f in UpdateCheckFrequency.values)
-                            DropdownMenuItem(
-                              value: f,
-                              child: Text(
-                                uiStrings[_updateFrequencyKey(f)]
-                                        ?[settings.locale] ??
-                                    f.prefValue,
-                                style: TextStyle(
-                                  fontSize: settings.fontSize,
-                                  fontFamily: settings.fontFamily,
-                                  fontFamilyFallback: kCjkFontFallback,
-                                ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: UpdateCheckTile(
+                              locale: settings.locale,
+                              scheme: Theme.of(context).colorScheme,
+                              iconSize: 24,
+                              labelStyle: TextStyle(
+                                fontSize: settings.fontSize,
+                                fontFamily: settings.fontFamily,
+                                fontFamilyFallback: kCjkFontFallback,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
+                          ),
+                          _SettingsSwitch(
+                            settings: settings,
+                            icon: Icons.system_update_alt_rounded,
+                            label: uiStrings['settingsAutoCheckUpdates']
+                                    ?[settings.locale] ??
+                                'Check for updates daily',
+                            subtitle: uiStrings[
+                                    'settingsAutoCheckUpdatesHint']
+                                ?[settings.locale],
+                            value: settings.autoCheckUpdates,
+                            onChanged: settings.setAutoCheckUpdates,
+                          ),
+                          // 2026-09-14: the interval, which used to be a
+                          // compiled `Duration(days: 1)`. Under the
+                          // switch and disabled with it — a frequency
+                          // for a check that is off is a control with
+                          // nothing to do, and greying it says so better
+                          // than hiding it, which would leave a reader
+                          // who turned the switch off wondering where
+                          // the choice went.
+                          ListTile(
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 4),
+                            dense: true,
+                            enabled: settings.autoCheckUpdates,
+                            leading: const Icon(Icons.schedule_rounded),
+                            title: Text(
+                              uiStrings['settingsUpdateFrequency']
+                                      ?[settings.locale] ??
+                                  'How often',
+                              style: TextStyle(
+                                fontSize: settings.fontSize,
+                                fontFamily: settings.fontFamily,
+                                fontFamilyFallback: kCjkFontFallback,
+                              ),
+                            ),
+                            // Under the title, not `trailing:` — see the
+                            // cross-version tile above for what a wide
+                            // DropdownButton in a ListTile's trailing
+                            // slot does to the title on a phone.
+                            subtitle: DropdownButton<UpdateCheckFrequency>(
+                              isExpanded: true,
+                              value: settings.updateCheckFrequency,
+                              underline: const SizedBox.shrink(),
+                              onChanged: settings.autoCheckUpdates
+                                  ? (f) {
+                                      if (f != null) {
+                                        settings.setUpdateCheckFrequency(f);
+                                      }
+                                    }
+                                  : null,
+                              items: [
+                                for (final f in UpdateCheckFrequency.values)
+                                  DropdownMenuItem(
+                                    value: f,
+                                    child: Text(
+                                      uiStrings[_updateFrequencyKey(f)]
+                                              ?[settings.locale] ??
+                                          f.prefValue,
+                                      style: TextStyle(
+                                        fontSize: settings.fontSize,
+                                        fontFamily: settings.fontFamily,
+                                        fontFamilyFallback: kCjkFontFallback,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),

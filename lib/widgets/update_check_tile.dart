@@ -342,10 +342,30 @@ void showUpdateAvailableDialog(
 class UpdateCheckTile extends StatefulWidget {
   final String locale;
   final ColorScheme scheme;
+
+  /// The type the label is set in, and the size of the glyph beside it.
+  ///
+  /// 2026-09-15, from a tablet photo with the whole update block
+  /// circled: 「这一块字体感觉很不协调」. This widget was written for the
+  /// About page, where it stands among other `TextButton.icon` links
+  /// with 16 px glyphs and takes the theme's own label type — and there
+  /// it is right. Settings then reused it, where its neighbours are
+  /// switch rows set in the READER'S font size with 24 px glyphs, and a
+  /// theme-sized label among them reads as a fragment of a different
+  /// app.
+  ///
+  /// Rather than pick one of the two rooms and make the other wrong,
+  /// the caller says which room the tile is standing in. Null keeps the
+  /// About page exactly as it was.
+  final TextStyle? labelStyle;
+  final double iconSize;
+
   const UpdateCheckTile({
     super.key,
     required this.locale,
     required this.scheme,
+    this.labelStyle,
+    this.iconSize = 16,
   });
 
   @override
@@ -393,19 +413,20 @@ class _UpdateCheckTileState extends State<UpdateCheckTile> {
     return TextButton.icon(
       icon: _checking
           ? SizedBox(
-              width: 16,
-              height: 16,
+              width: widget.iconSize,
+              height: widget.iconSize,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor:
                     AlwaysStoppedAnimation<Color>(widget.scheme.primary),
               ),
             )
-          : const Icon(Icons.system_update_alt_rounded, size: 16),
+          : Icon(Icons.system_update_alt_rounded, size: widget.iconSize),
       label: Text(
         _checking
             ? _s(widget.locale, 'updateChecking', 'Checking…')
             : _s(widget.locale, 'checkForUpdates', 'Check for updates'),
+        style: widget.labelStyle,
       ),
       onPressed: _checking ? null : _check,
     );
