@@ -268,7 +268,7 @@ void main() {
 
     expect(counter.pushes, 1);
     expect(find.byType(RadialChronologyPage), findsOneWidget);
-    expect(find.byKey(const ValueKey('chronologyWheel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('stackedChronologyWheel')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());

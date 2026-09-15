@@ -94,7 +94,7 @@ void main() {
 
   group('the wheel at 375 px', () {
     testWidgets('the title stays whole at 360 px', (tester) async {
-      await pump(tester, const RadialChronologyPage(), const Size(360, 800));
+      await pump(tester, const RadialChronologyPage(initialStacked: false), const Size(360, 800));
       final title =
           find.byWidget(tester.widget<AppBar>(find.byType(AppBar)).title!);
       expect(tester.getSize(title).width,
@@ -108,7 +108,7 @@ void main() {
     });
 
     testWidgets('the AppBar title is actually on screen', (tester) async {
-      await pump(tester, const RadialChronologyPage(), const Size(375, 812));
+      await pump(tester, const RadialChronologyPage(initialStacked: false), const Size(375, 812));
       expect(tester.takeException(), isNull);
       // Before the fix: `AppBar` gave the title a `Flexible` and six
       // actions (three `IconButton`s, the `SegmentedButton`, the
@@ -131,7 +131,7 @@ void main() {
 
     testWidgets('the view switch is still reachable in one tap',
         (tester) async {
-      await pump(tester, const RadialChronologyPage(), const Size(375, 812));
+      await pump(tester, const RadialChronologyPage(initialStacked: false), const Size(375, 812));
       // A direct AppBar action, not one hidden behind the overflow
       // menu — the round trip itself (tapping it actually reaches
       // `StripChronologyPage`) is already covered at a desktop width
@@ -149,7 +149,7 @@ void main() {
     });
 
     testWidgets('the hub caption fits inside the hub', (tester) async {
-      await pump(tester, const RadialChronologyPage(), const Size(375, 812));
+      await pump(tester, const RadialChronologyPage(initialStacked: false), const Size(375, 812));
       final wheel = find.byKey(const ValueKey('chronologyWheel'));
       final side = tester.getSize(wheel).width;
       const hubFrac = 0.115; // mirrors `_kHubFrac`, private to the page
@@ -174,7 +174,7 @@ void main() {
 
     testWidgets('the legend is a chip, not a quadrant of the wheel',
         (tester) async {
-      await pump(tester, const RadialChronologyPage(), const Size(375, 812));
+      await pump(tester, const RadialChronologyPage(initialStacked: false), const Size(375, 812));
       // Before the fix: `_legend` sat directly at `Positioned(left: 10,
       // bottom: 10, ...)` and measured 238.5 x 216 px at rest with
       // every layer on — 216 px of a 375 px wheel, most of its
@@ -221,7 +221,7 @@ void main() {
     });
 
     testWidgets('nothing regresses at a desktop width', (tester) async {
-      await pump(tester, const RadialChronologyPage(), const Size(1440, 900));
+      await pump(tester, const RadialChronologyPage(initialStacked: false), const Size(1440, 900));
       expect(tester.takeException(), isNull);
       // The chart now reserves its whole area for the rings. The same
       // full legend opens from a chip at desktop and phone widths.

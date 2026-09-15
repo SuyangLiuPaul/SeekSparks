@@ -11,13 +11,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
-    show kDrawnTradition;
 import 'package:seeksparks/utils/font_catalog.dart';
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:seeksparks/utils/strip_event_cards.dart';
+import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
 import 'package:seeksparks/utils/strip_paint_visibility.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
@@ -144,38 +143,37 @@ void main() {
           TimelineEvent.fromJson(entry as Map<String, dynamic>),
       ]),
     ]..sort((a, b) => a.year.compareTo(b.year));
-    final wheel = WheelHistoryData(
-      streams: base.streams,
-      nations: base.nations,
-      powers: base.powers,
-      ministries: base.ministries,
-      omissions: base.omissions,
-      meta: base.meta,
-      events: events,
-    );
     const zoom = 1.5;
-    final lanes = buildStripLanes(
-      wheel: wheel,
-      kings: const [],
-      patriarchs: const [],
-      familyTreePeople: const [],
-      tradition: kDrawnTradition,
-      creationYear:
-          ((timeline['_meta'] as Map)['creation'] as Map)['year'] as int,
-      pxPerYear: zoom,
-    ).where((lane) => lane.kind == StripLaneKind.events).toList();
-    final rowHeight = stripLaneHeightPx(1);
-    final rows = [
-      for (var i = 0; i < lanes.length; i++)
-        StripRow.lane(lanes[i], top: i * rowHeight, height: rowHeight),
-    ];
+    final plan = buildStripEventCards(
+        events: events,
+        pxPerYear: zoom,
+        viewportWidth: 900,
+        laneFontPx: 12,
+        locale: 'zh-Hant',
+        measureHeight: measureStripEventTextHeight);
+    var rowTop = 0.0;
+    final rows = <StripRow>[];
+    for (var i = 0; i < plan.rows.length; i++) {
+      rows.add(StripRow.events(
+        StripLane(
+            id: 'events:$i',
+            kind: StripLaneKind.events,
+            subLane: i,
+            spans: const []),
+        eventCards: plan.rows[i],
+        top: rowTop,
+        height: plan.rowHeights[i],
+      ));
+      rowTop += plan.rowHeights[i];
+    }
+    StripPaintTextCache.resetForTest();
     final palette = StripPalette(
       streamColors: const {},
       spanLabel: const {},
       eventById: {for (final event in events) event.id: event},
     );
     final width = stripContentWidth(zoom);
-    final height = rowHeight * rows.length;
+    final height = rowTop;
     StripLanesPainter painter(double x0, double x1,
             {double y0 = 0, double y1 = double.infinity}) =>
         StripLanesPainter(

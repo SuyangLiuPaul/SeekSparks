@@ -173,12 +173,19 @@ void main() {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
     addTearDown(tester.view.reset);
+    final settings = AppSettings();
+    await settings.setFontFamily('Roboto');
+    await tester.pump(const Duration(milliseconds: 650));
     await tester.pumpWidget(MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MainProvider()),
-        ChangeNotifierProvider(create: (_) => AppSettings()),
+        ChangeNotifierProvider(create: (_) => settings),
       ],
-      child: const MaterialApp(home: RadialChronologyPage()),
+      child: MaterialApp(
+        theme: ThemeData(
+            fontFamily: 'Roboto', fontFamilyFallback: kCjkFontFallback),
+        home: const RadialChronologyPage(initialStacked: false),
+      ),
     ));
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -286,12 +293,23 @@ void main() {
           expect(tester.takeException(), isNull);
           final legend = find.byKey(const ValueKey('wheelLegendControl'));
           final controls = find.byKey(const ValueKey('wheelZoomControls'));
+          final mode = find.byKey(const ValueKey('wheelStackedMode'));
+          final modeBox = tester.getRect(mode);
           final legendBox = tester.getRect(legend);
           final controlsBox = tester.getRect(controls);
           expect(legendBox.height, greaterThanOrEqualTo(44));
           expect(legendBox.width, greaterThanOrEqualTo(44));
           expect(legendBox.left, greaterThanOrEqualTo(0));
           expect(controlsBox.right, lessThanOrEqualTo(360));
+          expect(modeBox.width, greaterThanOrEqualTo(44));
+          expect(modeBox.height, greaterThanOrEqualTo(44));
+          expect(tester.getSemantics(mode).label, isNotEmpty);
+          expect(legendBox.right + 4, lessThanOrEqualTo(modeBox.left),
+              reason:
+                  '$locale at menu scale $scale must separate Legend and 3D.');
+          expect(modeBox.right + 4, lessThanOrEqualTo(controlsBox.left),
+              reason:
+                  '$locale at menu scale $scale must separate 3D and zoom.');
           expect(legendBox.right + 4, lessThanOrEqualTo(controlsBox.left),
               reason: '$locale at menu scale $scale must leave room between '
                   'the legend and zoom controls');

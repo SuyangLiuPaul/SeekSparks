@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
-/// One immutable line, reusable by the strip's three canvases.
+/// One immutable paragraph, reusable by the strip's three canvases.
 class StripPaintText {
   StripPaintText._(this._paragraph, this.width, this.height);
 
@@ -33,7 +33,8 @@ class StripPaintTextCache {
     String text,
     TextStyle style,
     double width,
-    String? ellipsis
+    String? ellipsis,
+    int? maxLines,
   }),
       StripPaintText>{};
   static int _layouts = 0;
@@ -56,6 +57,7 @@ class StripPaintTextCache {
     required TextStyle style,
     double maxWidth = double.infinity,
     String? ellipsis,
+    int? maxLines = 1,
   }) {
     // Canvas text has no inherited font chain. Keep the bundled CJK
     // face here too, so a new call site cannot cache missing glyphs.
@@ -65,6 +67,7 @@ class StripPaintTextCache {
       style: resolved,
       width: maxWidth,
       ellipsis: ellipsis,
+      maxLines: maxLines,
     );
     final cached = _entries.remove(key);
     if (cached != null) {
@@ -77,7 +80,7 @@ class StripPaintTextCache {
       fontWeight: resolved.fontWeight,
       fontStyle: resolved.fontStyle,
       textDirection: TextDirection.ltr,
-      maxLines: 1,
+      maxLines: maxLines,
       ellipsis: ellipsis,
     ))
       ..pushStyle(resolved.getTextStyle())

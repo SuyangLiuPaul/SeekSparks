@@ -6,8 +6,8 @@
 /// lightly tinted duration bars, and names in the theme's text colour.
 ///
 /// Every painter now rejects work outside its visible axes before
-/// laying out text. Event clustering still runs over the complete lane
-/// so a viewport change never changes the records behind a +n badge.
+/// laying out text. Event cards group the complete visible event corpus
+/// into stable calendar buckets; scrolling cannot change their members.
 /// Straight labels share immutable Paragraphs through
 /// `StripPaintTextCache`; moving a warm label costs no new layout.
 ///
@@ -42,31 +42,11 @@ import 'package:seeksparks/utils/radial_chronology_layout.dart'
     show selectionCovers;
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
+import 'package:seeksparks/utils/strip_event_cards.dart';
 import 'package:seeksparks/utils/strip_paint_visibility.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
-    show localizedReferenceLabel;
 
-/// The verse beside an event title is set smaller than the title —
-/// the wheel's own `_kRefSizeRatio` (`radial_chronology_page.dart:930`),
-/// unchanged (`docs/strip-painter-spec.md` §7.2: "not independently
-/// floored," the same category as the wheel's own hint text).
-const double kStripRefSizeRatio = 0.86;
-
-/// How close two event ticks may be, in ems of the lane's own type,
-/// before one stands for both and carries a `+n` badge.
-///
-/// 1.35 line-heights is the wheel's own heuristic (`_kLabelPx * 1.35`),
-/// and it is right for TICKS in either geometry: it is asking how close
-/// two marks may be before the eye reads them as one, which has nothing
-/// to do with which way the words run. (It is NOT the gate for the
-/// words — see `_paintOneEventRow`, where transposing it to the label
-/// cost a lane of solid black ink.)
-///
-/// PUBLIC, AND SHARED WITH THE PAGE ON PURPOSE. The badge is a promise
-/// that `n` more records are behind this tick, and the page's tap
-/// handler is what has to cash it — so both sides must group by the
-/// same rule or the sheet would list a different set from the one the
-/// badge counted. One constant is the only way to keep that true.
+/// Retained as the old tick-cluster threshold for regression measurements.
+/// Event navigation now uses dated cards shared by painting and hit-testing.
 const double kStripEventClusterEm = 1.35;
 
 /// A readable row keeps at least 32 logical pixels of vertical target.
@@ -137,13 +117,24 @@ class StripRow {
     this.headingKey, {
     required this.top,
     required this.height,
-  }) : lane = null;
+  })  : lane = null,
+        eventCards = const [];
 
   const StripRow.lane(
     StripLane this.lane, {
     required this.top,
     required this.height,
+  })  : headingKey = null,
+        eventCards = const [];
+
+  const StripRow.events(
+    StripLane this.lane, {
+    required this.eventCards,
+    required this.top,
+    required this.height,
   }) : headingKey = null;
+
+  final List<StripEventCard> eventCards;
 
   /// A key into [stripStrings], non-null only for a heading row.
   final String? headingKey;
@@ -184,6 +175,17 @@ double _measure(String text, double size, {FontWeight? weight}) =>
       text: text,
       style: canvasTextStyle(fontSize: size, fontWeight: weight),
     )).width;
+
+double measureStripEventTextHeight(
+        String text, double width, double fontSize, bool bold) =>
+    StripPaintTextCache.layout(
+      text: text,
+      style: canvasTextStyle(
+          fontSize: fontSize,
+          fontWeight: bold ? FontWeight.w600 : FontWeight.w400),
+      maxWidth: width,
+      maxLines: null,
+    ).height;
 
 /// A span's fill/stroke colour — never invented, always traced to
 /// [WbColors]/[StripPalette] or the wheel's own family palette
@@ -311,8 +313,8 @@ class StripLanesPainter extends CustomPainter {
     _paintFilledBars(canvas);
     _paintLifespans(canvas);
     _paintRail(canvas);
-    _paintEvents(canvas);
     _paintCrosshair(canvas, size.height);
+    _paintEvents(canvas);
   }
 
   double _rowFor(StripSpan span, StripRow row) => row.top + row.height / 2;
@@ -572,180 +574,91 @@ class StripLanesPainter extends CustomPainter {
     );
   }
 
-  /// Event ticks and their labels, running rightward — §3.5. Declutter
-  /// is per lane row via [clusterByX]: within one row, ticks already
-  /// clear `packIntoLanes`' own `minGapPx`, which is far smaller than a
-  /// title needs, so several close ticks still fight for the same
-  /// stretch of row without this pass.
+  /// A card is a callout whose printed range and lower anchor line
+  /// identify its date extent. Width is reading space, never duration.
+  /// The complete title wraps; the reference and source remain in the
+  /// detail sheet reached by the card's explicit action.
   void _paintEvents(Canvas canvas) {
     for (final row in rows) {
-      if (!_rowVisible(row) ||
-          row.isHeading ||
-          row.lane!.kind != StripLaneKind.events) {
-        continue;
+      if (!_rowVisible(row) || row.eventCards.isEmpty) continue;
+      for (final card in row.eventCards) {
+        if (!_spanVisible(card.x, card.x + card.width)) continue;
+        _paintEventCard(canvas, row, card);
       }
-      _paintOneEventRow(canvas, row);
     }
   }
 
-  void _paintOneEventRow(Canvas canvas, StripRow row) {
-    final lane = row.lane!;
-    if (lane.spans.isEmpty) return;
-    final xs = [for (final s in lane.spans) xForYear(s.startYear, pxPerYear)];
-    final minGapPx = laneFontPx * kStripEventClusterEm;
-    final pinned = lane.spans.indexWhere((s) => s.id == selectedId);
-    final clusters = clusterByX(xs, minGapPx, pinned: pinned);
-    final has = selectedId != null;
-
-    // WHY A SECOND, WIDER GATE BELOW. `minGapPx` above is right for the
-    // TICKS and wrong for the WORDS, and the reason is the one thing
-    // that changes when a chart stops being round.
-    //
-    // On the wheel an event's title runs along the RADIUS — across the
-    // time axis — so the angular room it needs is its LINE HEIGHT, and
-    // `_kLabelPx * 1.35` is that line height. `radial_chronology_layout`
-    // says so in as many words: "Angular space is scarce... a label
-    // running outward occupies an angle no wider than its type."
-    //
-    // Here the title runs ALONG the axis, so what it occupies is its
-    // WIDTH. Measured on the shipped corpus at 1.5 px/year, that gate
-    // let clusters 15 px apart each draw a title 60-250 px wide, and the
-    // events lane came out as solid black ink wherever the corpus is
-    // dense — which is every century after 1500. The heuristic was
-    // transposed from the wheel with its dimension unchanged.
-    //
-    // The gate is per-tick room (see the loop below), which makes ink
-    // touching ink impossible by construction rather than by a running
-    // cursor. The TICK is never suppressed either way: it is drawn
-    // before any label decision, so the event stays visible and stays
-    // tappable and its sheet is one tap away. That is the wheel's own
-    // rule for a label that will not fit — legible or absent — and it
-    // costs less here than there, because on a strip the reader's lever
-    // really is free: the same title reappears at the next zoom step
-    // without the chart having to give up anything else to show it.
-
-    for (var ci = 0; ci < clusters.length; ci++) {
-      final cluster = clusters[ci];
-      final repIdx = cluster.representative;
-      final repSpan = lane.spans[repIdx];
-      final event = palette.eventById[repSpan.id];
-      final x = xs[repIdx];
-      final nextX = ci + 1 < clusters.length
-          ? xs[clusters[ci + 1].representative]
-          : xForYear(kStripMaxYear, pxPerYear);
-      // Keep the preceding label while any of its allotted interval
-      // remains visible. Culling only its tick would cut the label off
-      // the instant its start crossed the left edge during a drag.
-      if (!_spanVisible(x, nextX)) continue;
-      final sel = repSpan.id == selectedId;
-      final lit = selectionCovers(
-        selectedId: selectedId,
-        ownId: repSpan.id,
-        streamId: _streamIdFor(repSpan, lane, palette),
-      );
-      final dim = has && !lit ? 0.28 : 1.0;
-      final color = _spanColor(repSpan, lane, palette);
-
-      canvas.drawLine(
-        Offset(x, row.top + row.height * 0.15),
-        Offset(x, row.top + row.height * 0.85),
+  void _paintEventCard(Canvas canvas, StripRow row, StripEventCard card) {
+    final selected = card.events.any((event) => event.id == selectedId);
+    final accent = card.isGroup
+        ? wb.link
+        : palette.streamColors[card.events.single.stream] ?? wb.link;
+    final rect = Rect.fromLTWH(card.x, row.top + 8, card.width, card.height);
+    final radius = Radius.circular(WbMetrics.radiusControl + 2);
+    final shape = RRect.fromRectAndRadius(rect, radius);
+    // An offset backplate supplies a quiet raised edge without a
+    // blurred shadow or a texture beneath every line of text.
+    canvas.drawRRect(shape.shift(const Offset(0, 3)),
+        Paint()..color = wb.text.withValues(alpha: .06));
+    canvas.drawRRect(shape, Paint()..color = wb.paneBg);
+    canvas.drawRRect(shape, Paint()..color = accent.withValues(alpha: .045));
+    canvas.drawRRect(
+        shape,
         Paint()
-          ..strokeWidth = sel ? 1.5 : 0.8
-          ..color = color.withValues(alpha: 0.8 * dim),
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = selected ? 1.8 : .8
+          ..color = (selected ? accent : wb.text)
+              .withValues(alpha: selected ? .9 : .18));
+    final titleSize = stripEventCardTitleSize(laneFontPx);
+    final metaSize = stripEventCardMetaSize(laneFontPx);
+    var y = rect.top + 12;
+    void line(String text, double size, Color color, {bool bold = false}) {
+      final paragraph = StripPaintTextCache.layout(
+        text: text,
+        style: canvasTextStyle(
+            fontSize: size,
+            color: color,
+            fontWeight: bold ? FontWeight.w600 : FontWeight.w400),
+        maxWidth: card.width - 24,
+        maxLines: null,
       );
-      if (event == null) continue;
-
-      // A LABEL BELONGS TO ITS OWN TICK, AND MAY NOT REACH THE NEXT.
-      //
-      // The first cut of this gate only asked that a title clear the
-      // last title DRAWN, which stops ink touching ink and does not
-      // stop a title running straight past two or three later ticks.
-      // `packIntoLanes` fills a row with whatever fits, so one row
-      // carries events from 4200 BC, 490 BC, AD 180 and AD 1170 side by
-      // side; with titles crossing ticks the row reads as one nonsense
-      // sentence and — worse — there is no way to tell which mark any
-      // given name belongs to. Reported as 「你这种要人怎么读」, which is
-      // the right question.
-      //
-      // The room a title actually has is therefore the distance to the
-      // NEXT TICK IN THIS ROW, less a gap, and never more. That makes
-      // the label unambiguous by construction: every name sits in the
-      // clear stretch its own mark owns.
-      final room = nextX - x - laneFontPx * 0.75;
-
-      final badge =
-          cluster.members.length > 1 ? '+${cluster.members.length - 1}' : '';
-      // The order of sacrifice is the wheel's, for the wheel's reason
-      // (`fitRadialLabel`): verse, then title, then badge. The badge is
-      // the only mark saying other records are behind this tick, so it
-      // is the last thing given up.
-      final badgeW = badge.isEmpty
-          ? 0.0
-          : _measure('  $badge', laneFontPx * kStripRefSizeRatio);
-      final fit = fitBarLabel(
-        text: event.titleFor(locale),
-        roomPx: room - badgeW,
-        size: laneFontPx,
-        measure: _measure,
-      );
-      final title = fit.text;
-      var ref = '';
-      if (title.isNotEmpty && event.refs.isNotEmpty) {
-        final candidate = localizedReferenceLabel(event.refs.first, locale);
-        final w = _measure('  $candidate', laneFontPx * kStripRefSizeRatio);
-        if (_measure(title, laneFontPx) + w + badgeW <= room) ref = candidate;
-      }
-      if (title.isEmpty && badge.isEmpty) continue;
-
-      final titleTp = title.isEmpty
-          ? null
-          : (StripPaintTextCache.layout(
-              text: title,
-              style: canvasTextStyle(
-                  fontSize: laneFontPx,
-                  color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
-                  fontWeight: sel ? FontWeight.w600 : FontWeight.w400),
-            ));
-      final refTp = ref.isEmpty
-          ? null
-          : (StripPaintTextCache.layout(
-              text: '  $ref',
-              style: canvasTextStyle(
-                  fontSize: laneFontPx * kStripRefSizeRatio,
-                  color: wb.link.withValues(alpha: 0.95 * dim)),
-            ));
-      final badgeTp = badge.isEmpty
-          ? null
-          : (StripPaintTextCache.layout(
-              text: title.isEmpty ? badge : '  $badge',
-              style: canvasTextStyle(
-                  fontSize: laneFontPx * kStripRefSizeRatio,
-                  color: wb.mutedText.withValues(alpha: 0.95 * dim)),
-            ));
-
-      // NO RIGHT-EDGE FLIP. An earlier cut pulled a label left so its
-      // end stayed inside the viewport, and that is wrong here twice
-      // over: it walks the name backwards over the PREVIOUS tick, so
-      // the reader cannot tell whose name it is; and it is computed
-      // from the visible window, so every label near an edge moves as
-      // the reader drags — a chart whose words shuffle while you scroll
-      // it. A label now always starts at its own tick and runs right
-      // inside the room that tick owns. Near the right edge it is
-      // simply clipped, and one drag brings it back, which on a strip
-      // costs nothing.
-      final labelX = x;
-      var penX = labelX;
-      final y = row.top + row.height / 2;
-      if (titleTp != null) {
-        titleTp.paint(canvas, Offset(penX, y - titleTp.height / 2));
-        penX += titleTp.width;
-      }
-      if (refTp != null) {
-        refTp.paint(canvas, Offset(penX, y - refTp.height / 2));
-        penX += refTp.width;
-      }
-      badgeTp?.paint(canvas, Offset(penX, y - badgeTp.height / 2));
+      paragraph.paint(canvas, Offset(rect.left + 12, y));
     }
+
+    line(card.title, titleSize, wb.text, bold: true);
+    y += card.titleHeight + 6;
+    line(card.dates, metaSize, wb.mutedText);
+    y += card.datesHeight;
+    if (card.isGroup) {
+      final maximum = card.density.reduce(math.max);
+      final binWidth = (card.width - 24) / card.density.length;
+      for (var i = 0; i < card.density.length; i++) {
+        if (card.density[i] == 0) continue;
+        final height = 3 + 9 * card.density[i] / maximum;
+        canvas.drawRRect(
+            RRect.fromRectAndRadius(
+                Rect.fromLTWH(rect.left + 12 + i * binWidth, y + 16 - height,
+                    math.max(1, binWidth - 2), height),
+                const Radius.circular(WbMetrics.radiusControl / 4)),
+            Paint()..color = accent.withValues(alpha: .55));
+      }
+      y += 22;
+    } else {
+      y += 8;
+    }
+    line(card.action, metaSize, wb.link);
+
+    final firstX = xForYear(card.firstYear, pxPerYear);
+    final lastX = xForYear(card.lastYear, pxPerYear);
+    final anchorY = rect.bottom + 10;
+    final anchor = Paint()
+      ..color = accent.withValues(alpha: .65)
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(firstX, anchorY), Offset(lastX, anchorY), anchor);
+    canvas.drawLine(Offset((firstX + lastX) / 2, rect.bottom),
+        Offset((firstX + lastX) / 2, anchorY), anchor);
+    canvas.drawCircle(Offset(firstX, anchorY), 2, anchor);
+    if (firstX != lastX) canvas.drawCircle(Offset(lastX, anchorY), 2, anchor);
   }
 
   /// §3.6 — a full-height vertical rule at the selected span's own

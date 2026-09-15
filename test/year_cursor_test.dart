@@ -84,7 +84,7 @@ void main() {
 
   Future<void> pumpWheel(WidgetTester tester,
           [Size size = const Size(1440, 900)]) =>
-      pumpPage(tester, const RadialChronologyPage(), size);
+      pumpPage(tester, const RadialChronologyPage(initialStacked: false), size);
 
   Future<void> unmount(WidgetTester tester) async {
     await tester.pumpWidget(const SizedBox.shrink());

@@ -137,6 +137,8 @@ import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/utils/strip_viewport.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
+import 'package:seeksparks/utils/strip_event_cards.dart';
+import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
 import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
 import 'package:seeksparks/utils/year_digest.dart';
@@ -522,9 +524,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     final laneFontPx = t.scaledSmall(12) * _laneZoom;
     final headingFontPx = laneFontPx * 1.15;
     final tickFontPx = t.scaledChrome(11) * _laneZoom;
-    final rows = _currentRows(data, kings, patriarchs, t.textScale);
-    final contentW = stripContentWidth(_pxPerYear);
-    final contentH = rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
 
     final palette = _paletteFor(data, kings, patriarchs, locale);
 
@@ -536,6 +535,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         measure: _measureText,
       );
       _viewportW = box.maxWidth - headerW;
+      final rows = _currentRows(data, kings, patriarchs, t.textScale);
+      final contentW = stripContentWidth(_pxPerYear);
+      final contentH = rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
       final rulerH = tickFontPx * WbMetrics.lineHeight * 2 + 6;
 
       final visibleX0 = _hCtl.hasClients ? _hCtl.offset : 0.0;
@@ -677,7 +679,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                           child: Listener(
                             onPointerDown: (e) => _pressOrigin = e.position,
                             onPointerUp: (e) => _commitPress(e, () {
-                              _placeCursorAtX(e.localPosition.dx);
+                              final card = _eventCardAt(e.localPosition, rows);
+                              if (card == null) {
+                                _placeCursorAtX(e.localPosition.dx);
+                              } else if (card.firstYear == card.lastYear) {
+                                _placeCursor(card.firstYear);
+                              }
                             }),
                             onPointerCancel: (_) => _pressOrigin = null,
                             child: GestureDetector(
@@ -690,12 +697,27 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                                   kings,
                                   patriarchs,
                                   locale,
-                                  rows,
-                                  laneFontPx),
+                                  rows),
                               child: SizedBox(
                                 width: contentW,
                                 height: contentH,
                                 child: Stack(children: [
+                                  // Keep the year rule visible through the
+                                  // data lanes, but below opaque callouts:
+                                  // a selection must not strike through the
+                                  // words the reader just chose.
+                                  if (_cursorYear case final int y)
+                                    Positioned(
+                                      key: const ValueKey('stripYearCursor'),
+                                      left: xForYear(y, _pxPerYear) -
+                                          _kCursorHalfWidth,
+                                      top: 0,
+                                      bottom: 0,
+                                      width: _kCursorHalfWidth * 2,
+                                      child: IgnorePointer(
+                                        child: ColoredBox(color: wb.accent),
+                                      ),
+                                    ),
                                   Positioned.fill(
                                     child: CustomPaint(
                                       painter: StripLanesPainter(
@@ -713,23 +735,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                                       ),
                                     ),
                                   ),
-                                  // THE LINE. Drawn over everything and
-                                  // hit-transparent: 「没有线根本不知道哪
-                                  // 一年」 was the whole report, and a rule
-                                  // that swallowed taps would answer it by
-                                  // breaking the chart underneath.
-                                  if (_cursorYear case final int y)
-                                    Positioned(
-                                      key: const ValueKey('stripYearCursor'),
-                                      left: xForYear(y, _pxPerYear) -
-                                          _kCursorHalfWidth,
-                                      top: 0,
-                                      bottom: 0,
-                                      width: _kCursorHalfWidth * 2,
-                                      child: IgnorePointer(
-                                        child: ColoredBox(color: wb.accent),
-                                      ),
-                                    ),
                                 ]),
                               ),
                             ),
@@ -801,13 +806,40 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// the 22 streams share one heading because their [StripLane.kind]
   /// never changes across them (`docs/strip-painter-spec.md` §5: the
   /// streams are homogeneous, unlike kings/lifespans/ministries).
-  List<StripRow> _buildRows(List<StripLane> lanes, double textScale) {
+  List<StripRow> _buildRows(
+      List<StripLane> lanes, double textScale, StripEventCards events) {
     final laneH = stripLaneHeightPx(textScale);
     final headH = stripHeadingHeightPx(textScale);
     final rows = <StripRow>[];
     var y = 0.0;
+    if (events.rows.isNotEmpty) {
+      rows.add(StripRow.heading('stripLaneEvents', top: y, height: headH));
+      y += headH;
+      for (var i = 0; i < events.rows.length; i++) {
+        final cards = events.rows[i];
+        // Retain every point in the lane model for the selected-year
+        // digest and search reveal; the card is the reading geometry.
+        final lane = StripLane(
+            id: 'eventCards:$i',
+            kind: StripLaneKind.events,
+            subLane: i,
+            spans: [
+              for (final card in cards)
+                for (final event in card.events)
+                  StripSpan(
+                      id: event.id,
+                      kind: StripLaneKind.events,
+                      startYear: event.year,
+                      endYear: event.year),
+            ]);
+        rows.add(StripRow.events(lane,
+            eventCards: cards, top: y, height: events.rowHeights[i]));
+        y += events.rowHeights[i];
+      }
+    }
     StripLaneKind? lastKind;
     for (final lane in lanes) {
+      if (lane.kind == StripLaneKind.events) continue;
       if (lane.kind != lastKind) {
         final key = switch (lane.kind) {
           StripLaneKind.events => 'stripLaneEvents',
@@ -830,37 +862,38 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     return rows;
   }
 
-  /// The events one event tick stands for, in year order, the tapped
-  /// one included — so a `+n` badge can be cashed.
-  ///
-  /// Recomputed rather than carried out of the painter, because a
-  /// painter is not a plan: it is handed the same lane and the same
-  /// `pxPerYear` this handler has, and `clusterByX` is a pure function
-  /// of those. What must NOT drift is the gap, which is why it is the
-  /// painter's own `kStripEventClusterEm` and not a second 1.35 written
-  /// here — the set listed has to be the set the badge counted.
-  ///
-  /// Year order, because `showCluster` reads `events.first.year` and
-  /// `events.last.year` for its own header range and asserts neither.
-  List<WheelHistoryEvent> _eventsUnder(
-    int index,
-    StripLane lane,
-    double laneFontPx,
-    WheelHistoryData data,
-  ) {
-    final xs = [for (final s in lane.spans) xForYear(s.startYear, _pxPerYear)];
-    final clusters = clusterByX(xs, laneFontPx * kStripEventClusterEm);
-    for (final c in clusters) {
-      if (!c.members.contains(index)) continue;
-      final out = [
-        for (final m in c.members)
-          if (find(data.events, (e) => e.id == lane.spans[m].id)
-              case final WheelHistoryEvent e)
-            e
-      ]..sort((a, b) => a.year.compareTo(b.year));
-      return out;
+  StripEventCard? _eventCardAt(Offset pos, List<StripRow> rows) {
+    for (final row in rows) {
+      if (pos.dy < row.top || pos.dy >= row.top + row.height) continue;
+      for (final card in row.eventCards) {
+        if (card.contains(pos.dx, pos.dy - row.top)) return card;
+      }
     }
-    return const [];
+    return null;
+  }
+
+  void _openEventCard(BuildContext context, StripEventCard card,
+      WheelHistoryData data, String locale) {
+    final range = stripEventCardZoomRange(card,
+        currentScale: _pxPerYear, viewportWidth: _viewportW);
+    if (range != null) {
+      _browseRange(range.start, range.end);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _vCtl.hasClients) _vCtl.jumpTo(0);
+      });
+      return;
+    }
+    _select(card.events.first.id);
+    _placeCursor(card.events.first.year);
+    if (card.isGroup) {
+      showCluster(context, card.events, data, locale, (id) {
+        _select(id);
+        final event = find(card.events, (event) => event.id == id);
+        if (event != null) _placeCursor(event.year);
+      });
+    } else {
+      showEvent(context, card.events.single, data, locale);
+    }
   }
 
   /// Which row [pos.dy] falls in, then which span [pos.dx] falls on
@@ -876,7 +909,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     List<Patriarch> patriarchs,
     String locale,
     List<StripRow> rows,
-    double laneFontPx,
   ) {
     StripRow? hit;
     for (final row in rows) {
@@ -890,6 +922,15 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       return;
     }
     final lane = hit.lane!;
+    if (lane.kind == StripLaneKind.events) {
+      final card = _eventCardAt(pos, rows);
+      if (card != null) {
+        _openEventCard(context, card, data, locale);
+      } else if (_selectedId != null) {
+        _select(null);
+      }
+      return;
+    }
 
     void openStreamBackground() {
       final stream = find(data.streams, (s) => s.id == lane.ownerId);
@@ -933,24 +974,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     final span = lane.spans[pick.index];
     switch (span.kind) {
       case StripLaneKind.events:
-        // A TICK MAY STAND FOR SEVERAL EVENTS, AND THE BADGE SAYS SO.
-        // Opening only the representative would leave `+3` as a promise
-        // the chart never keeps — the reader is told three more records
-        // are here and given no way to reach them, which is exactly the
-        // silent narrowing #280, #308 and #319 each were. So the same
-        // grouping the painter drew is recomputed here (one shared
-        // `kStripEventClusterEm`, so the set listed IS the set counted)
-        // and a tick standing for more than itself opens the list.
-        final members = _eventsUnder(pick.index, lane, laneFontPx, data);
-        if (members.length > 1) {
-          _select(span.id);
-          showCluster(context, members, data, locale, _select);
-          return;
-        }
-        final event = find(data.events, (e) => e.id == span.id);
-        if (event == null) return;
-        _select(event.id);
-        showEvent(context, event, data, locale);
+        // Event callouts were resolved against their rectangles above.
+        return;
       case StripLaneKind.lives:
         final man = ChronologyService.instance.cached?.byId(span.id);
         if (man == null) return;
@@ -1075,10 +1100,13 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     List<Patriarch> patriarchs,
     double textScale,
   ) {
+    final locale = context.read<AppSettings>().locale;
     final key = (
       data,
       kings,
       patriarchs,
+      locale,
+      _viewportW,
       FamilyTreeService.instance.cached,
       creationYear,
       _pxPerYear,
@@ -1104,178 +1132,40 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       pxPerYear: _pxPerYear,
     );
     _rowsKey = key;
-    return _rowsCache = _buildRows(lanes, textScale * _laneZoom);
+    final events = buildStripEventCards(
+      events: visible.data.events,
+      pxPerYear: _pxPerYear,
+      viewportWidth: _viewportW,
+      laneFontPx:
+          math.max(12 * textScale, WbMetrics.smallPrintFloor) * _laneZoom,
+      locale: locale,
+      measureHeight: measureStripEventTextHeight,
+    );
+    return _rowsCache = _buildRows(lanes, textScale * _laneZoom, events);
   }
 
-  void _showFilter(BuildContext context, String locale) {
-    final wb = WbColors.of(context);
-    showModalBottomSheet<void>(
+  Future<void> _showFilter(BuildContext context, String locale) async {
+    final data = await _future;
+    if (!mounted || !context.mounted || data == null) return;
+    final result = await showChronologyFilterSheet(
       context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
-      builder: (sheet) => FutureBuilder<WheelHistoryData>(
-        future: _future,
-        builder: (c, snap) {
-          final t = WbType.of(c);
-          final data = snap.data;
-          if (data == null) return const SizedBox(height: 120);
-          final colors = colorsFor(data);
-          return StatefulBuilder(builder: (c, setSheet) {
-            return ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(sheet).size.height * 0.7),
-              child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-                children: [
-                  Row(children: [
-                    Expanded(
-                      child: Text(s('wheelFilter', 'Filter', locale),
-                          style: TextStyle(
-                              color: wb.text,
-                              fontSize: t.scaled(15),
-                              fontWeight: FontWeight.w600)),
-                    ),
-                    TextButton(
-                      onPressed: () =>
-                          setSheet(() => setState(() => _hidden.clear())),
-                      child: Text(s('wheelAll', 'All', locale)),
-                    ),
-                    TextButton(
-                      // NOT `kLineageLayerId` — see the class doc and
-                      onPressed: () => setSheet(() => setState(() {
-                            _hidden.addAll(data.streams.map((s) => s.id));
-                            _hidden.add(kLifespanLayerId);
-                            _hidden.add(kReignLayerId);
-                            _hidden.add(kMinistryLayerId);
-                            _hidden.add(kLineageLayerId);
-                          })),
-                      child: Text(s('wheelNone', 'None', locale)),
-                    ),
-                  ]),
-                  CheckboxListTile(
-                    key: const ValueKey('stripFilterLifespans'),
-                    dense: true,
-                    value: !_hidden.contains(kLifespanLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kLifespanLayerId)) {
-                            _hidden.add(kLifespanLayerId);
-                          }
-                        })),
-                    title: Text(
-                        s('wheelLifespans', 'Genesis lifespans', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelLifespansNote', '', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(12),
-                        height: t.scaled(12),
-                        color: lineColor('shem')),
-                  ),
-                  CheckboxListTile(
-                    key: const ValueKey('stripFilterReigns'),
-                    dense: true,
-                    value: !_hidden.contains(kReignLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kReignLayerId)) {
-                            _hidden.add(kReignLayerId);
-                          }
-                        })),
-                    title: Text(
-                        s('wheelReigns', 'Reigns of Judah & Israel', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelKingsThiele', 'reigns (Thiele)', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(12),
-                        height: t.scaled(12),
-                        color: kingdomArcColor(Kingdom.judah)),
-                  ),
-                  CheckboxListTile(
-                    key: const ValueKey('stripFilterMinistries'),
-                    dense: true,
-                    value: !_hidden.contains(kMinistryLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kMinistryLayerId)) {
-                            _hidden.add(kMinistryLayerId);
-                          }
-                        })),
-                    title: Text(
-                        s('wheelMinistries', 'Prophets & apostles', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelMinistriesNote', '', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(12),
-                        height: t.scaled(12),
-                        color: ministryArcColor()),
-                  ),
-                  CheckboxListTile(
-                    key: const ValueKey('stripFilterLineage'),
-                    dense: true,
-                    value: !_hidden.contains(kLineageLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kLineageLayerId)) {
-                            _hidden.add(kLineageLayerId);
-                          }
-                        })),
-                    title: Text(s('wheelLineage', 'Genealogy', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelLineageNote', '', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(12),
-                        height: t.scaled(12),
-                        color: lineageRailColor()),
-                  ),
-                  for (final stream in data.streams)
-                    CheckboxListTile(
-                      dense: true,
-                      value: !_hidden.contains(stream.id),
-                      onChanged: (_) => setSheet(() => setState(() {
-                            if (!_hidden.remove(stream.id)) {
-                              _hidden.add(stream.id);
-                            }
-                          })),
-                      title: Text(stream.nameFor(locale),
-                          style: TextStyle(
-                              color: wb.text, fontSize: t.scaled(12.5))),
-                      subtitle: Text(
-                        '${s('wheelPowers', 'Powers', locale)} '
-                        '${data.powersOf(stream.id).length} · '
-                        '${s('wheelEvents', 'Events', locale)} '
-                        '${data.eventsOf(stream.id).length}',
-                        style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(11)),
-                      ),
-                      secondary: Container(
-                          width: t.scaled(12),
-                          height: t.scaled(12),
-                          color: colors[stream.id] ?? lineColor(stream.line)),
-                    ),
-                ],
-              ),
-            );
-          });
-        },
-      ),
+      locale: locale,
+      data: data,
+      hidden: _hidden,
+      streamColors: colorsFor(data),
+      layerColors: {
+        kLifespanLayerId: lineColor('shem'),
+        kReignLayerId: kingdomArcColor(Kingdom.judah),
+        kMinistryLayerId: ministryArcColor(),
+        kLineageLayerId: lineageRailColor(),
+      },
+      text: (key, fallback) => s(key, fallback, locale),
+      keyPrefix: 'stripFilter',
     );
+    if (!mounted || result == null) return;
+    setState(() => _hidden
+      ..clear()
+      ..addAll(result));
   }
 
   // ── about ──────────────────────────────────────────────────────────

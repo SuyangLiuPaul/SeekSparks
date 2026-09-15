@@ -66,7 +66,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => MainProvider()),
           ChangeNotifierProvider(create: (_) => AppSettings()),
         ],
-        child: const MaterialApp(home: RadialChronologyPage()),
+        child: const MaterialApp(home: RadialChronologyPage(initialStacked: false)),
       ),
     );
     for (var i = 0; i < 10; i++) {

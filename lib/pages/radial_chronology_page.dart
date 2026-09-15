@@ -13,7 +13,7 @@ import 'package:seeksparks/models/chronology.dart'
     show ChronologyData, Patriarch;
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/models/strip_lanes.dart'
-    show StripLane, buildStripLanes;
+    show StripLane, StripLaneKind, buildStripLanes, stripLineageCohorts;
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
@@ -33,7 +33,8 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/utils/year_digest.dart' show buildYearDigest;
+import 'package:seeksparks/utils/year_digest.dart'
+    show buildYearDigest, YearDigestItem, YearMoment;
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
 import 'package:seeksparks/utils/wheel_text_metrics.dart';
@@ -41,7 +42,14 @@ import 'package:seeksparks/utils/wheel_default_streams.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
+import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
+import 'package:seeksparks/widgets/stacked_chronology_wheel.dart';
 
+/// The default stacked view gives concurrent spans separate heights and
+/// focuses one selected group. StackedChronologyWheel owns its projection;
+/// the event explorer and detail sheets are shared with the flat view.
+/// The geometry notes below describe the retained flat view.
+///
 /// World history on one wheel: 4200 BC at twelve o'clock, time sweeping
 /// clockwise to the present, one concentric band per people or
 /// institution, every dated thing drawn on the band it belongs to.
@@ -115,13 +123,17 @@ import 'package:seeksparks/widgets/chronology_explorer.dart';
 /// January.
 class RadialChronologyPage extends StatefulWidget {
   const RadialChronologyPage(
-      {super.key, this.initialPeriod, this.initialHiddenStreams});
+      {super.key,
+      this.initialPeriod,
+      this.initialHiddenStreams,
+      this.initialStacked = true});
 
   /// Switching forms keeps the reader's range and layer choices. Each
   /// route still owns its controller, so replacing one cannot dispose
   /// the incoming page's navigation state.
   final ChronologyPeriod? initialPeriod;
   final Set<String>? initialHiddenStreams;
+  final bool initialStacked;
 
   @override
   State<RadialChronologyPage> createState() => _RadialChronologyPageState();
@@ -707,9 +719,9 @@ const Map<String, Map<String, String>> wheelStrings = {
     'en': '+n — n more events here; tap to list them',
   },
   'wheelClusterNote': {
-    'zh-Hans': '此处轮缘只容得下一个名称。点按任一大事可打开。',
-    'zh-Hant': '此處輪緣只容得下一個名稱。點按任一大事可開啟。',
-    'en': 'The rim has room for one name here. Tap any event to open it.',
+    'zh-Hans': '这组包含多项事件。点按任一事件可查看详情。',
+    'zh-Hant': '這組包含多項事件。點按任一事件可查看詳情。',
+    'en': 'This group contains several events. Tap an event for its details.',
   },
   'wheelAll': {'zh-Hans': '全选', 'zh-Hant': '全選', 'en': 'All'},
   'wheelNone': {'zh-Hans': '全不选', 'zh-Hant': '全不選', 'en': 'None'},
@@ -1304,6 +1316,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   Future<WheelHistoryData>? _future;
   final _viewer = TransformationController();
   final _explorer = ChronologyExplorerController();
+  late bool _stacked;
+  int _stackRevealRevision = 0;
+  Object? _stackGroupsKey;
+  List<StackedChronologyGroup> _stackGroups = const [];
 
   /// Streams the reader has switched off.
   ///
@@ -1326,8 +1342,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     _defaultsApplied = true;
     final capacity = ringCapacity(side,
         hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side));
-    final keep =
-        defaultVisibleStreams(data.streams.map((s) => s.id), capacity).toSet();
+    final keep = _stacked
+        ? {'israel', 'judah', 'egypt', 'china', 'church', 'scripture'}
+        : defaultVisibleStreams(data.streams.map((s) => s.id), capacity)
+            .toSet();
     for (final s in data.streams) {
       if (!keep.contains(s.id)) _hidden.add(s.id);
     }
@@ -1416,6 +1434,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   @override
   void initState() {
     super.initState();
+    _stacked = widget.initialStacked;
     if (widget.initialPeriod case final period?) {
       _explorer.selectPeriod(period);
     }
@@ -1745,7 +1764,133 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   List<WheelStream> _visible(WheelHistoryData d) =>
       d.streams.where((s) => !_hidden.contains(s.id)).toList();
 
+  List<StackedChronologyGroup> _stackGroupsFor(
+      WheelHistoryData data, String locale) {
+    final lanes = _lanesFor(data);
+    final key = (lanes, locale);
+    if (_stackGroupsKey == key) return _stackGroups;
+    _stackGroupsKey = key;
+    final colors = colorsFor(data);
+    final grouped = <String, List<YearDigestItem>>{};
+    for (final lane in lanes) {
+      final id = switch (lane.kind) {
+        StripLaneKind.stream => lane.ownerId!,
+        StripLaneKind.lives => kLifespanLayerId,
+        StripLaneKind.kings => kReignLayerId,
+        StripLaneKind.ministries => kMinistryLayerId,
+        StripLaneKind.rail => kLineageLayerId,
+        _ => null,
+      };
+      if (id == null) continue;
+      final records = grouped.putIfAbsent(id, () => []);
+      for (final span in lane.spans) {
+        records.add(YearDigestItem(
+            id: span.id,
+            kind: span.kind,
+            moment: YearMoment.ongoing,
+            startYear: span.startYear,
+            endYear: span.endYear,
+            line: span.line,
+            openEnded: span.ongoing));
+      }
+    }
+    final names = {
+      for (final stream in _visible(data)) stream.id: stream.nameFor(locale),
+      kLifespanLayerId: s('wheelLifespans', 'Genesis lifespans', locale),
+      kReignLayerId: s('wheelReigns', 'Kings of Israel & Judah', locale),
+      kMinistryLayerId: s('wheelMinistries', 'Ministries', locale),
+      kLineageLayerId: s('wheelLineage', 'Genealogy', locale)
+    };
+    colors.addAll({
+      kLifespanLayerId: lineColor('shem'),
+      kReignLayerId: kingdomArcColor(Kingdom.judah),
+      kMinistryLayerId: ministryArcColor(),
+      kLineageLayerId: lineageRailColor()
+    });
+    return _stackGroups = [
+      for (final id in names.keys)
+        if (grouped[id]?.isNotEmpty ?? false)
+          StackedChronologyGroup(
+              id: id,
+              name: names[id]!,
+              color: colors[id]!,
+              records: grouped[id]!,
+              symbol: id == 'egypt'
+                  ? 5
+                  : id == 'china' || id == 'world'
+                      ? 3
+                      : id == 'rome' || id == 'church'
+                          ? 2
+                          : id == kLifespanLayerId || id == kLineageLayerId
+                              ? 4
+                              : id == kMinistryLayerId || id == 'scripture'
+                                  ? 0
+                                  : 1),
+    ];
+  }
+
   Widget _body(BuildContext context, WheelHistoryData data, String locale) {
+    if (_stacked) {
+      final kings =
+          HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[];
+      final patriarchs =
+          ChronologyService.instance.cached?.patriarchs ?? const <Patriarch>[];
+      return StackedChronologyWheel(
+        groups: _stackGroupsFor(data, locale),
+        locale: locale,
+        startYear: _rangeStart ?? kMinYear,
+        endYear: _rangeEnd ?? kMaxYear,
+        selectedId: _selectedId,
+        revealRevision: _stackRevealRevision,
+        label: (item) => digestLabel(item, data, kings, patriarchs, locale),
+        dateLabel: (item) {
+          final approximate = switch (item.kind) {
+            StripLaneKind.stream =>
+              data.powers.firstWhere((p) => p.id == item.id).approximate,
+            StripLaneKind.rail => true,
+            StripLaneKind.ministries => data.ministries
+                .firstWhere((m) => '$kMinistryArcPrefix${m.id}' == item.id)
+                .approximate,
+            _ => false,
+          };
+          return '${approximate ? approximatePrefix(locale) : ''}${yearLabel(item.startYear, locale)}'
+              '${item.startYear == item.endYear ? '' : ' — ${item.openEnded ? s('wheelPresent', 'present', locale) : yearLabel(item.endYear, locale)}'}';
+        },
+        onFlat: () => setState(() => _stacked = false),
+        onOpen: (item) {
+          _placeCursor(item.startYear);
+          if (item.kind == StripLaneKind.rail) {
+            final people =
+                FamilyTreeService.instance.cached ?? const <BiblicalPerson>[];
+            // The projected records come from _lanesFor. Its rail excludes
+            // people already named by visible lifespans, kings or events;
+            // tapping that rail must use the same exclusion set.
+            final drawn = <String>{
+              if (!_hidden.contains(kLifespanLayerId) && creationYear != null)
+                for (final p in patriarchs) p.id,
+              if (!_hidden.contains(kReignLayerId))
+                for (final k in kings) k.id,
+              for (final event in data.events)
+                if (!_hidden.contains(event.stream))
+                  for (final person in event.people) person.id,
+            };
+            final cohort = find(
+                stripLineageCohorts(people: people, drawnIds: drawn),
+                (c) => c.year == item.startYear);
+            if (cohort != null) {
+              _select(item.id);
+              showCohort(
+                  context,
+                  LineageCohort(year: cohort.year, people: cohort.people),
+                  locale);
+            }
+          } else {
+            openDigestRecord(
+                context, item, data, kings, patriarchs, locale, _select);
+          }
+        },
+      );
+    }
     final wb = WbColors.of(context);
     final t = WbType.of(context);
 
@@ -1890,13 +2035,25 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         height: wheelControlsFooterHeight,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _legendChip(context, locale, t, wb),
-              _zoomControls(locale, t, wb),
-            ],
-          ),
+          child: LayoutBuilder(
+              builder: (context, constraints) => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _legendChip(context, locale, t, wb),
+                      Tooltip(
+                          message: stackedWheelText('stacked', locale),
+                          child: TextButton(
+                              key: const ValueKey('wheelStackedMode'),
+                              style: TextButton.styleFrom(
+                                  minimumSize: const Size(44, 44),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4)),
+                              onPressed: () => setState(() => _stacked = true),
+                              child: const Text('3D'))),
+                      _zoomControls(locale, t, wb,
+                          showPercentage: constraints.maxWidth >= 420),
+                    ],
+                  )),
         ),
       ),
       // Always present. It used to appear on the first tap, and that
@@ -2033,7 +2190,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// wheel they could not enlarge — which is what made the labels
   /// unreadable rather than merely dense. The percentage is shown
   /// because at 300% the reader should know why more labels appeared.
-  Widget _zoomControls(String locale, WbType t, WbColors wb) {
+  Widget _zoomControls(String locale, WbType t, WbColors wb,
+      {required bool showPercentage}) {
     final (zoomOut, zoomIn) = switch (locale) {
       'zh-Hans' => ('缩小', '放大'),
       'zh-Hant' => ('縮小', '放大'),
@@ -2047,7 +2205,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           onTap: go,
           excludeSemantics: true,
           child: Tooltip(
-            message: tip,
+            message: showPercentage ? tip : '$tip · ${(_zoom * 100).round()}%',
             child: SizedBox(
               width: 44,
               height: 44,
@@ -2068,16 +2226,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         btn('wheelZoomOutControl', Icons.remove, zoomOut,
             () => _zoomBy(1 / 1.4)),
         Container(width: 1, height: t.scaledChrome(18), color: wb.border),
-        SizedBox(
-          // Three 44 px targets plus this percentage stay beside the
-          // named legend at 360 px. Menu scaling enlarges their contents,
-          // while these touch areas never fall below the finger target.
-          width: 64,
-          child: Text('${(_zoom * 100).round()}%',
-              textAlign: TextAlign.center,
-              style:
-                  TextStyle(color: wb.mutedText, fontSize: t.scaledChrome(11))),
-        ),
+        // The 3D switch adds a 44 px target. At 360 px and maximum menu
+        // scale the previous footer overflowed in the regression fixture.
+        // Drop the 64 px percentage first; each zoom tooltip still
+        // reports it, and all actions retain their 44 px touch areas.
+        if (showPercentage)
+          SizedBox(
+            width: 64,
+            child: Text('${(_zoom * 100).round()}%',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: wb.mutedText, fontSize: t.scaledChrome(11))),
+          ),
         Container(width: 1, height: t.scaledChrome(18), color: wb.border),
         btn('wheelZoomInControl', Icons.add, zoomIn, () => _zoomBy(1.4)),
         Container(width: 1, height: t.scaledChrome(18), color: wb.border),
@@ -2640,189 +2800,30 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     );
   }
 
-  void _showFilter(BuildContext context, String locale) {
-    final wb = WbColors.of(context);
-    showModalBottomSheet<void>(
+  Future<void> _showFilter(BuildContext context, String locale) async {
+    final data = await _future;
+    if (data == null || !mounted || !context.mounted) return;
+    final result = await showChronologyFilterSheet(
       context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
-      builder: (sheet) => FutureBuilder<WheelHistoryData>(
-        future: _future,
-        builder: (c, snap) {
-          final t = WbType.of(c);
-          final data = snap.data;
-          if (data == null) return const SizedBox(height: 120);
-          final colors = colorsFor(data);
-          return StatefulBuilder(builder: (c, setSheet) {
-            return ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(sheet).size.height * 0.7),
-              child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-                children: [
-                  Row(children: [
-                    Expanded(
-                      child: Text(s('wheelFilter', 'Filter', locale),
-                          style: TextStyle(
-                              color: wb.text,
-                              fontSize: t.scaled(15),
-                              fontWeight: FontWeight.w600)),
-                    ),
-                    TextButton(
-                      onPressed: () =>
-                          setSheet(() => setState(() => _hidden.clear())),
-                      child: Text(s('wheelAll', 'All', locale)),
-                    ),
-                    TextButton(
-                      onPressed: () => setSheet(() => setState(() {
-                            _hidden.addAll(data.streams.map((s) => s.id));
-                            _hidden.add(kLifespanLayerId);
-                            _hidden.add(kReignLayerId);
-                            _hidden.add(kMinistryLayerId);
-                            _hidden.add(kLineageLayerId);
-                          })),
-                      child: Text(s('wheelNone', 'None', locale)),
-                    ),
-                  ]),
-                  // The lifespans are a LAYER, not a band: they belong
-                  // to no stream, they live in the annulus rather than
-                  // on a ring, and their id is deliberately not a
-                  // stream id (the stream set is pinned by tests, and a
-                  // collision would switch a band off with the arcs).
-                  // First in the list because it is the one row here
-                  // that is not a people.
-                  CheckboxListTile(
-                    key: const ValueKey('wheelFilterLifespans'),
-                    dense: true,
-                    value: !_hidden.contains(kLifespanLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kLifespanLayerId)) {
-                            _hidden.add(kLifespanLayerId);
-                          }
-                        })),
-                    title: Text(
-                        s('wheelLifespans', 'Genesis lifespans', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelLifespansNote', '', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(12),
-                        height: t.scaled(12),
-                        color: lineColor('shem')),
-                  ),
-                  // The other two layers in the same annulus. Separate
-                  // switches because they are separate kinds of claim,
-                  // and because only one of them costs anything: the
-                  // reigns fit in the sub-rings the patriarchs already
-                  // demand, while the ministries take the band from
-                  // eleven to fifteen. A reader on a small canvas who
-                  // wants a bigger target turns this one off.
-                  CheckboxListTile(
-                    key: const ValueKey('wheelFilterReigns'),
-                    dense: true,
-                    value: !_hidden.contains(kReignLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kReignLayerId)) {
-                            _hidden.add(kReignLayerId);
-                          }
-                        })),
-                    title: Text(
-                        s('wheelReigns', 'Reigns of Judah & Israel', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelKingsThiele', 'reigns (Thiele)', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(12),
-                        height: t.scaled(12),
-                        color: kingdomArcColor(Kingdom.judah)),
-                  ),
-                  CheckboxListTile(
-                    key: const ValueKey('wheelFilterMinistries'),
-                    dense: true,
-                    value: !_hidden.contains(kMinistryLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kMinistryLayerId)) {
-                            _hidden.add(kMinistryLayerId);
-                          }
-                        })),
-                    title: Text(
-                        s('wheelMinistries', 'Prophets & apostles', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelMinistriesNote', '', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(12),
-                        height: t.scaled(12),
-                        color: ministryArcColor()),
-                  ),
-                  CheckboxListTile(
-                    key: const ValueKey('wheelFilterLineage'),
-                    dense: true,
-                    value: !_hidden.contains(kLineageLayerId),
-                    onChanged: (_) => setSheet(() => setState(() {
-                          if (!_hidden.remove(kLineageLayerId)) {
-                            _hidden.add(kLineageLayerId);
-                          }
-                        })),
-                    title: Text(
-                        s('wheelLineage', 'Genealogy (approximate)', locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12.5))),
-                    subtitle: Text(
-                      s('wheelLineageNote', '', locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                    secondary: Container(
-                        width: t.scaled(3),
-                        height: t.scaled(12),
-                        color: lineageRailColor()),
-                  ),
-                  for (final stream in data.streams)
-                    CheckboxListTile(
-                      dense: true,
-                      value: !_hidden.contains(stream.id),
-                      onChanged: (_) => setSheet(() => setState(() {
-                            if (!_hidden.remove(stream.id)) {
-                              _hidden.add(stream.id);
-                            }
-                          })),
-                      title: Text(stream.nameFor(locale),
-                          style: TextStyle(
-                              color: wb.text, fontSize: t.scaled(12.5))),
-                      subtitle: Text(
-                        '${s('wheelPowers', 'Powers', locale)} '
-                        '${data.powersOf(stream.id).length} · '
-                        '${s('wheelEvents', 'Events', locale)} '
-                        '${data.eventsOf(stream.id).length}',
-                        style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(11)),
-                      ),
-                      secondary: Container(
-                          width: t.scaled(12),
-                          height: t.scaled(12),
-                          color: colors[stream.id] ?? lineColor(stream.line)),
-                    ),
-                ],
-              ),
-            );
-          });
-        },
-      ),
+      locale: locale,
+      data: data,
+      hidden: _hidden,
+      streamColors: colorsFor(data),
+      layerColors: {
+        kLifespanLayerId: lineColor('shem'),
+        kReignLayerId: kingdomArcColor(Kingdom.judah),
+        kMinistryLayerId: ministryArcColor(),
+        kLineageLayerId: lineageRailColor()
+      },
+      text: (key, fallback) => s(key, fallback, locale),
+      keyPrefix: 'wheelFilter',
     );
+    if (result == null || !mounted) return;
+    setState(() {
+      _hidden
+        ..clear()
+        ..addAll(result);
+    });
   }
 
   void _showAbout(BuildContext context, String locale) {
@@ -3417,30 +3418,32 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       if (o != null) showOmission(context, o, locale);
       return;
     }
-    final event = hit.kind == WheelHitKind.event
-        ? find(data.events, (event) => event.id == hit.id)
-        : null;
+    // Repeating a search is still a request to reveal its record, even
+    // after the reader has switched groups or panned away from it.
+    _stackRevealRevision++;
+    final year = hit.year;
+    if (year != null && !_explorer.period.contains(year)) {
+      final period = chronologyPeriods.skip(1).firstWhere(
+            (period) => period.contains(year),
+            orElse: () => chronologyPeriods.first,
+          );
+      // The controller updates the menu, list and projected range together.
+      // Its range callback clears selection and resets the flat view, so
+      // preserve that view here and set the found record after the callback.
+      final view = Matrix4.copy(_viewer.value);
+      _explorer.selectPeriod(period);
+      _viewer.value = view;
+    }
     setState(() {
       _hidden.remove(hit.streamId);
       // A nation of Genesis 10 is not drawn on the axis — it is the
       // descent behind a band — so what gets selected is that band.
-      _selectedId = hit.kind == WheelHitKind.nation ? hit.streamId : hit.id;
-      if (event != null) {
-        _cursorYear = event.year;
-        if (!_explorer.period.contains(event.year)) {
-          // Explorer reveals an out-of-range selection in the first
-          // matching navigation window. The painted sector must use
-          // that same shared list; calling _showRange here would clear
-          // the event selection and replace its year with a midpoint.
-          final period = chronologyPeriods.skip(1).firstWhere(
-                (period) => period.contains(event.year),
-                orElse: () => chronologyPeriods.first,
-              );
-          final full = period.id == chronologyPeriods.first.id;
-          _rangeStart = full ? null : period.start;
-          _rangeEnd = full ? null : period.end;
-        }
-      }
+      _selectedId = switch (hit.kind) {
+        WheelHitKind.nation => hit.streamId,
+        WheelHitKind.ministry => '$kMinistryArcPrefix${hit.id}',
+        _ => hit.id,
+      };
+      if (year != null) _cursorYear = year;
     });
     _panTo(hit, data);
     switch (hit.kind) {

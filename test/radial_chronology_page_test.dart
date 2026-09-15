@@ -43,6 +43,10 @@ import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
+import 'package:seeksparks/utils/radial_chronology_layout.dart'
+    show RadialLabel, scriptureLabelBase;
+import 'package:seeksparks/utils/wheel_default_streams.dart'
+    show bandsFractionFor;
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart' show kWheelNearestPerYear;
@@ -75,7 +79,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => MainProvider()),
           ChangeNotifierProvider(create: (_) => AppSettings()),
         ],
-        child: const MaterialApp(home: RadialChronologyPage()),
+        child: const MaterialApp(home: RadialChronologyPage(initialStacked: false)),
       ),
     );
     for (var i = 0; i < 10; i++) {
@@ -199,126 +203,95 @@ void main() {
   testWidgets('a spoke standing for several events lists all of them',
       (tester) async {
     await pump(tester, const Size(1440, 900));
-    final rect = tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
-    final side = rect.width;
-    final centre = rect.center;
-    const startRad = -math.pi / 2;
-    const sweepRad = 320 * math.pi / 180;
-
-    // '大事 · 66' — the sheet's own header, in the shipped default
-    // locale. A stream's sheet prints the identical header over its own
-    // event list, so the cluster sheet is identified by the note only it
-    // carries. Matching on the header alone found the stream sheet and
-    // measured the wrong list.
-    final header = RegExp(r'^大事 · (\d+)$');
-    const note = '此处轮缘只容得下一个名称。点按任一大事可打开。';
-    var listsOpened = 0;
+    final wheelFinder = find.byKey(const ValueKey('chronologyWheel'));
+    final side = tester.getSize(wheelFinder).width;
+    final opened = <String>{};
     var biggest = 0;
 
-    // The event spokes live between the bands at 0.285 and the rim at
-    // 0.445, so sweep that annulus rather than the whole disc.
-    for (var ri = 0; ri < 4; ri++) {
-      final r = side * (0.30 + (0.44 - 0.30) * ri / 3);
-      for (var ai = 0; ai < 40; ai++) {
-        final a = startRad + sweepRad * ai / 39;
-        await tester.tapAt(centre + Offset(r * math.cos(a), r * math.sin(a)));
-        await tester.pump(const Duration(milliseconds: 400));
-        if (find.byType(BottomSheet).evaluate().isEmpty) continue;
+    // Read the actual filtered and selected scene. An angular sweep at
+    // copied radius fractions can miss every current tick, and a literal
+    // sentence used to identify the sheet broke when its wording changed.
+    // Keep the original breadth requirement, but target four real groups.
+    for (var i = 0; i < 4; i++) {
+      final dynamic painter = tester.widget<CustomPaint>(find.descendant(
+          of: find.byKey(const ValueKey('wheelSceneBoundary')),
+          matching: find.byType(CustomPaint))).painter!;
+      final candidates = (painter.spokes as List).where((dynamic spoke) =>
+          (spoke.members as List).length > 1 &&
+          !opened.contains((spoke.event as WheelHistoryEvent).id)).toList()
+        ..sort((dynamic a, dynamic b) =>
+            (b.members as List).length.compareTo((a.members as List).length));
+      expect(candidates, isNotEmpty,
+          reason: 'each tap must target a distinct actual clustered spoke');
+      final dynamic spoke = candidates.first;
+      final members = List<WheelHistoryEvent>.of(
+          (spoke.members as List).cast<WheelHistoryEvent>());
+      final label = spoke.label as RadialLabel;
+      final zoom = painter.zoom as double;
+      // The tick is painted immediately inside the shared scripture
+      // baseline. At this radius the label's arc cannot take its tap.
+      final radius = scriptureLabelBase(side * bandsFractionFor(side)) - 2.5 / zoom;
+      final local = Offset(side / 2 + radius * math.cos(label.angle),
+          side / 2 + radius * math.sin(label.angle));
+      final tap = tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
+      expect(tester.getRect(find.byType(InteractiveViewer)).contains(tap), isTrue);
+      await tester.tapAt(tap);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(BottomSheet), findsOneWidget);
+      final sheet = find.byType(BottomSheet);
+      expect(find.descendant(of: sheet,
+          matching: find.text(wheelStrings['wheelClusterNote']!['zh-Hans']!)),
+          findsOneWidget, reason: 'the tick must open its cluster, not a stream sheet');
+      expect(find.descendant(of: sheet, matching: find.text(
+          '${wheelStrings['wheelEvents']!['zh-Hans']} · ${members.length}')),
+          findsOneWidget, reason: 'the header count must name the exact drawn group');
 
-        int? stated;
-        var isCluster = false;
-        for (final para in tester
-            .renderObjectList<RenderParagraph>(find.byType(RichText))) {
-          final plain = para.text.toPlainText().trim();
-          final m = header.firstMatch(plain);
-          if (m != null) stated = int.parse(m.group(1)!);
-          if (plain == note) isCluster = true;
+      final list = find.descendant(of: sheet, matching: find.byType(ListView));
+      final pos = tester.state<ScrollableState>(find.descendant(
+          of: list, matching: find.byType(Scrollable))).position;
+      final seen = <int, ({String title, String year})>{};
+      void harvest() {
+        // Position identifies a row even when two records share a title.
+        // Restrict to the event list: the sheet's close button is also an
+        // ink response, but is not one of the members promised by the count.
+        for (final ink in find.descendant(of: list,
+            matching: find.byType(InkWell)).evaluate()) {
+          final box = ink.renderObject as RenderBox?;
+          if (box == null || !box.hasSize) continue;
+          final labels = tester.widgetList<Text>(find.descendant(
+              of: find.byElementPredicate((element) => identical(element, ink)),
+              matching: find.byType(Text))).map((text) => text.data).toList();
+          expect(labels, hasLength(2));
+          expect((ink.widget as InkWell).onTap, isNotNull);
+          final position = (box.localToGlobal(Offset.zero).dy + pos.pixels).round();
+          seen[position] = (title: labels[0]!, year: labels[1]!);
         }
-        if (isCluster && stated != null && stated > 1) {
-          listsOpened++;
-          if (stated > biggest) biggest = stated;
-          // One tappable row per member is what makes them reachable.
-          //
-          // Counting the `InkWell`s in the tree does NOT answer this:
-          // the sheet is a `ListView`, which builds only what its
-          // viewport needs, so a complete list of 47 shows 22 elements
-          // and a truncated list of 22 shows the same 22. The instrument
-          // has to do what the reader does — go to the bottom — and
-          // count what it passes.
-          //
-          // Rows are identified by where they sit in the list, not by
-          // what they say. When this was written `nero_persecution` and
-          // `great_fire_rome` were two records for one fire, carrying
-          // the SAME title in all three locales, so a set keyed on the
-          // words would silently count 46 of 47 and blame the page for
-          // it — the only such pair in the corpus.
-          //
-          // 2026-09-03: they are two events now, the fire and the
-          // persecution, with different titles — and their ids had been
-          // left CROSSED, each carrying the other's headline, which is
-          // how that split was found. Keying by position is kept
-          // anyway: it is the reader's own way through a lazy list, and
-          // it does not need the corpus to stay free of duplicate
-          // titles to keep working.
-          final pos = tester
-              .state<ScrollableState>(find.descendant(
-                  of: find.byType(BottomSheet),
-                  matching: find.byType(Scrollable)))
-              .position;
-          final seen = <int>{};
-          void harvest() {
-            // Scoped to the LIST, not to the whole sheet. `buildSheet`
-            // puts a close button in a `Stack` beside the list, and it
-            // is an `IconButton` — so it carries an ink well and was
-            // counted as a third openable row against a sheet that
-            // states two. What this test is about is whether every
-            // event the sheet CLAIMS is reachable; chrome outside the
-            // list is not one of them.
-            for (final ink in find
-                .descendant(
-                    of: find.descendant(
-                        of: find.byType(BottomSheet),
-                        matching: find.byType(ListView)),
-                    matching: find.byType(InkWell))
-                .evaluate()) {
-              final box = ink.renderObject as RenderBox?;
-              if (box == null || !box.hasSize) continue;
-              seen.add(
-                  (box.localToGlobal(Offset.zero).dy + pos.pixels).round());
-            }
-          }
-
-          harvest();
-          // Driven through the scroll position rather than by dragging.
-          // A drag on this sheet never moves it — the modal's own
-          // drag-to-dismiss recogniser takes the gesture, so `pixels`
-          // stays at 0.0 and the list looks truncated when it is not.
-          // That is an arena question, and this test is not asking it.
-          var at = 0.0;
-          while (seen.length < stated && at < pos.maxScrollExtent) {
-            at =
-                math.min(at + pos.viewportDimension * 0.8, pos.maxScrollExtent);
-            pos.jumpTo(at);
-            await tester.pump();
-            harvest();
-          }
-          expect(seen.length, equals(stated),
-              reason: 'the sheet said $stated events and a reader who '
-                  'went to the bottom of it could open ${seen.length}');
-        }
-        tester.state<NavigatorState>(find.byType(Navigator).first).pop();
-        await tester.pump(const Duration(milliseconds: 400));
       }
-    }
 
+      harvest();
+      while (seen.length < members.length && pos.pixels < pos.maxScrollExtent) {
+        pos.jumpTo(math.min(pos.pixels + pos.viewportDimension * .8,
+            pos.maxScrollExtent));
+        await tester.pump();
+        harvest();
+      }
+      final ordered = seen.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+      expect(ordered.map((entry) => entry.value).toList(), [
+        for (final event in members)
+          (title: event.titleFor('zh-Hans'), year: yearLabel(event.year, 'zh-Hans')),
+      ], reason: 'every actual cluster member must be reachable in date order, '
+          'with its own complete title and date');
+      expect(seen.length, members.length);
+      opened.add((spoke.event as WheelHistoryEvent).id);
+      biggest = math.max(biggest, members.length);
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
     expect(tester.takeException(), isNull);
-    expect(listsOpened, greaterThan(3),
-        reason: 'the sweep never landed on a clustered spoke, so it '
-            'checked nothing — 49 of the 55 spokes drawn at rest stand '
-            'for more than one event');
+    expect(opened.length, greaterThan(3),
+        reason: 'the test must open more than three distinct actual clusters');
     expect(biggest, greaterThan(5),
-        reason: 'the crowded stretches are the whole point; a sweep that '
-            'only found pairs is not reaching them');
+        reason: 'the dense groups must be covered, not only pairs');
     await unmount(tester);
   });
 

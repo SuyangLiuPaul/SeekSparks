@@ -16,15 +16,39 @@ windows open the same list in a sheet. Canvas labels that cannot
 fit are recoverable in the browser and the existing search/detail sheets.
 Date qualifications and the distinction between a scripture reference and a
 source for the date remain visible. Switching forms carries the selected
-range and layers. Fit/reset synchronizes the chart, range menu and list.
+range and layers. Flat-view fit/reset synchronizes the chart, range menu and
+list; the stacked view’s Reset view restores its camera within the chosen period.
 
 ## Design decisions
 
-- Use native Flutter drawing and ordinary widgets. Perspective would shorten
-  the available label and touch space; no 3D engine, external images, runtime
-  CDN, or new package is needed for this redesign. CanvasKit still comes
-  from the site's own origin through `release_web.sh`.
-- At rest, the wheel shows its streams and time structure. Event titles are
+- The default wheel now projects native Flutter paths into a 2.5D view.
+  Concurrent intervals occupy stable height tiers; China needs two and
+  Europe eight in the actual power corpus. The same paths determine paint,
+  occlusion and hit-testing. A zero-year record remains a point, not an
+  invented duration. No 3D runtime, package or CDN was added; CanvasKit
+  continues to come from the site's own origin through `release_web.sh`.
+- One civilization or layer is focused at a time, with an explicit all-layer
+  overview. The initial six streams are Israel, Judah, Egypt, China, Church
+  and Scripture. Chinese opens on China and English on Egypt. Under "All
+  years", a focused layer fits its actual record extent, printed above the
+  chart; a selected numerical period keeps that window. The existing flat
+  wheel remains available through Flat / 3D and keeps its viewport defaults.
+- Concurrent records can be separated or brought closer, rotated, panned
+  and zoomed. Full names are admitted onto visible top faces when they fit;
+  otherwise, bounded side callouts use an ellipsis and a leader to a visible
+  part of the record. Names never print over one another. Full names and
+  exact records remain accessible through the same-screen All names button
+  and, on taller screens, a scrollable record rail. Short landscape screens
+  use the button to leave room for the chart. Existing detail sheets retain
+  provenance, approximate flags, scripture links and alternate traditions.
+- The six symbolic category icons were generated with Higgsfield and are
+  bundled as one 1,003,858-byte PNG atlas. They are category illustrations,
+  not portraits or archaeological reconstructions. See
+  `assets/chronology/README.md`. Canvas geometry, not the image, carries dates.
+- Filtering is transactional in both forms: checkboxes and All/None edit a
+  draft; Apply returns one set to the page. Cancel, outside click and Back
+  discard that draft. The action row remains visible while options scroll.
+- In the flat wheel, event titles are
   read horizontally in the browser; selecting an event or zooming in reveals
   canvas titles. Person, reign and ministry names follow the same rule,
   with names recoverable through the year digest, search and arc details.
@@ -48,6 +72,13 @@ range and layers. Fit/reset synchronizes the chart, range menu and list.
 - Strip lanes are at least 32 px high, with pale bars and restrained group
   headings. Painted width still means duration; short reigns are never
   widened to create a false duration. Controls occupy their own row.
+- The strip's event region now groups the complete visible event corpus by
+  calendar bins, rather than emitting `+N` independently on every packed
+  row. A card shows the true event span, count and density; its connector
+  lands at the actual dates, while the card itself does not encode duration.
+  Click a multi-year group to fit that period. Same-year groups, and groups
+  at the zoom ceiling, open the full event list. Single events wrap their
+  complete title and keep their date qualification and source.
 - Defaults are applied before scene planning rather than painting all 22
   streams once and reducing them in a second frame.
 
@@ -60,17 +91,27 @@ corpus/style/scale, it compares an unrestricted full-axis paint with a
 | Painter case | Full axis layouts | Visible interval layouts | Warm repeat |
 | --- | ---: | ---: | ---: |
 | Ruler at the highest time zoom | 6,228 | 11 | 0 |
-| Events from the 880-event merged corpus | 412 | 73 | 0 |
+| Event cards from the 880-event merged corpus | 47 | 7 | 0 |
 
 These isolate visibility culling and caching. They are deterministic text
 layout counts, not a claim about whole-app FPS or measured physical-device
-latency. The event clusters are still computed against their full lanes so
-panning does not change the membership of a `+N` marker.
+latency. Calendar-bin membership is computed independently of the pan.
+At a 900 px full-axis viewport, the previous 44 event rows and 254 `+N`
+badges became two rows containing five dated cards and zero `+N` badges.
+At 216 px, 139 rows and 239 badges became three rows with three cards.
 
-The real wheel-page test at 1440 × 900 made 345 cold text layouts and
+The flat wheel-page test at 1440 × 900 made 345 cold text layouts and
 one initial scene; a repeated paint, cursor move and pan each made zero
 additional layouts. These checks live in `wheel_redesign_test.dart` and
 `wheel_paint_cost_test.dart`.
+The stacked China page at AD 100–1500 made 16 cold text layouts, zero on
+a repeated frame, zero on rotation, and 16 when the text size changed at
+higher zoom. The actual painter retained 11 record names, including both
+Song and Liao, plus two axis labels. Liao's visible 907–960 segment is
+before its old quarter-span anchor (961.5), which was behind Song; the
+callout planner now samples multiple angles and radii and still accepts
+only an actually visible top-surface point. The record dates were not changed.
+
 The pure geometry functions used by the pages are the same functions tested;
 no parallel implementation of the drawing rules is used as an oracle.
 

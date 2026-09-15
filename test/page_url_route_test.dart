@@ -237,7 +237,7 @@ void main() {
     expect(find.byType(RadialChronologyPage), findsOneWidget,
         reason: 'the wheel URL must open the wheel');
     // The wheel really built, rather than sitting on its spinner.
-    expect(find.byKey(const ValueKey('chronologyWheel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('stackedChronologyWheel')), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 50));
@@ -290,7 +290,7 @@ void main() {
     for (var i = 0; i < 12; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    expect(find.byKey(const ValueKey('chronologyWheel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('stackedChronologyWheel')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // Back off the wheel lands on the app, once.
@@ -342,7 +342,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(RadialChronologyPage), findsOneWidget);
-    expect(find.byKey(const ValueKey('chronologyWheel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('stackedChronologyWheel')), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 50));

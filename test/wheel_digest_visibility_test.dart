@@ -39,7 +39,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AppSettings()),
       ],
       child:
-          MaterialApp(home: RadialChronologyPage(initialHiddenStreams: hidden)),
+          MaterialApp(home: RadialChronologyPage(initialHiddenStreams: hidden, initialStacked: false)),
     ));
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -74,7 +74,7 @@ void main() {
     await tester.scrollUntilVisible(row, 250, scrollable: scrolling.first);
     await tester.tap(row);
     await tester.pump();
-    tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+    await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
     await tester.pump(const Duration(milliseconds: 400));
   }
 
@@ -104,7 +104,7 @@ void main() {
     await year(tester, event.year);
     expect(idsOf(tester, StripLaneKind.events), isNot(contains(event.id)));
 
-    // Changing the filter must invalidate the cached digest immediately.
+    // Applying the draft must invalidate the cached digest immediately.
     await year(tester, -450);
     final japanName = data.streams
         .singleWhere((stream) => stream.id == 'japan')

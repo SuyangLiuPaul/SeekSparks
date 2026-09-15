@@ -39,6 +39,8 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:seeksparks/utils/wheel_view_layout.dart'
+    show wheelShowsEventText;
 
 // The page's own geometry, restated because the fractions are private
 // to it. `wheel_arc_label_behaviour_test.dart` does the same.
@@ -788,7 +790,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => MainProvider()),
           ChangeNotifierProvider(create: (_) => AppSettings()),
         ],
-        child: const MaterialApp(home: RadialChronologyPage()),
+        child: const MaterialApp(home: RadialChronologyPage(initialStacked: false)),
       ),
     );
     for (var i = 0; i < 10; i++) {
@@ -981,84 +983,77 @@ void main() {
     //     start of Methuselah's arc is `methuselah_born`, whose title is
     //     「玛土撒拉出生」, so a name check passes whichever sheet opens.
     //
-    // So the spoke here is chosen by MEASURING which planned label
-    // actually spans the arc's radius, and the assertion is on 「创世后」
-    // — the Anno Mundi line, which only the life sheet prints.
+    // Read the actual painter after zooming: overview now suppresses
+    // event text, and a second plan built from every unfiltered event
+    // no longer describes the page. The tap is at a real arc's angular
+    // midpoint, with a visible label inside its competing finger target.
+    // 「创世后」 is the Anno Mundi line only the life sheet prints.
     await pump(tester, const Size(900, 900));
-    final rect = tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
-    final side = rect.width;
-    final rBands = side * bandsFractionFor(side);
-    final rRim = side * rimFractionFor(side);
-    final inner = scriptureLabelBase(rBands);
-    final rings = lifeArcRingCount(arcs());
-
-    final wheel = await WheelHistoryService.instance.load();
-    const locale = 'zh-Hans';
-    final titleSize = _rimFontPx;
-    final all = wheel.events.toList()..sort((x, y) => x.year.compareTo(y.year));
-    final angles = [
-      for (final e in all) angleForSpan(e.year, kMinYear, kMaxYear)
-    ];
-    final minGapLabel = (_rimFontPx * 1.35) / rBands;
-    final clusters = clusterByAngle(angles, minGapLabel);
-    final planned = planRadialSpokes(
-      requests: [
-        for (final c in clusters)
-          SpokeRequest(
-            angle: angles[c.representative],
-            scripture: all[c.representative].basis != 'conventional',
-            title: all[c.representative].titleFor(locale),
-            ref: all[c.representative].refs.isEmpty
-                ? ''
-                : localizedReferenceLabel(
-                    all[c.representative].refs.first, locale),
-            badge: c.hidden == 0 ? '' : '+${c.hidden}',
-          )
-      ],
-      rBands: rBands,
-      rRim: rRim,
-      titleSize: titleSize,
-      refSize: titleSize * 0.86,
-      measure: _measureLabel,
-      minGap: minGapLabel,
-      lineHeight: titleSize * 1.35,
-    );
-
-    // A (life, spoke) pair where the label really does run across the
-    // arc's own radius and its angle really does fall inside the arc.
-    ({LifeArc arc, double radius, double angle})? found;
-    for (final arc in patriarchArcs()) {
-      final band = lifeArcRadii(arc.ring, rings, inner, rRim);
-      for (final p in planned) {
-        if (!p.hasText) continue;
-        if (p.label.rStart > band.centre || p.label.rEnd < band.centre) {
-          continue;
+    final wheelFinder = find.byKey(const ValueKey('chronologyWheel'));
+    final viewerFinder = find.byType(InteractiveViewer);
+    final controller = tester.widget<InteractiveViewer>(viewerFinder)
+        .transformationController!;
+    ({String id, double radius, double angle, double spokeDistancePx,
+      String spokeTitle, double zoom})? found;
+    for (final zoom in [1.6, 2.0, 3.0, 4.0, 6.0, 8.0]) {
+      controller.value = Matrix4.identity()..scaleByDouble(zoom, zoom, 1, 1);
+      await tester.pump();
+      final dynamic painter = tester.widget<CustomPaint>(find.descendant(
+          of: find.byKey(const ValueKey('wheelSceneBoundary')),
+          matching: find.byType(CustomPaint))).painter!;
+      final paintedZoom = painter.zoom as double;
+      if (!wheelShowsEventText(zoom: paintedZoom, selected: false)) continue;
+      for (final dynamic life in painter.lives as List) {
+        if (life.man == null) continue;
+        final arc = life.arc as LifeArc;
+        final radius = life.centre as double;
+        final at = (arc.a0 + arc.a1) / 2;
+        for (final dynamic spoke in painter.spokes as List) {
+          final title = spoke.title as String;
+          final label = spoke.label as RadialLabel;
+          if (title.isEmpty || label.rStart > radius || label.rEnd < radius) {
+            continue;
+          }
+          if (label.angle <= arc.a0 || label.angle >= arc.a1) continue;
+          final distance = (at - label.angle).abs() * radius * paintedZoom;
+          if (distance >= 9) continue;
+          found = (id: life.id as String, radius: radius, angle: at,
+              spokeDistancePx: distance, spokeTitle: title, zoom: paintedZoom);
+          break;
         }
-        if (p.label.angle <= arc.a0 || p.label.angle >= arc.a1) continue;
-        found = (arc: arc, radius: band.centre, angle: p.label.angle);
-        break;
+        if (found != null) break;
       }
       if (found != null) break;
     }
     expect(found, isNotNull,
-        reason: 'no planned label crosses any arc at its own radius, so '
-            'the two never compete and this test proves nothing');
+        reason: 'no currently drawn label crosses a life arc and competes '
+            'at its midpoint; the regression needs a real overlapping target');
 
     final hit = found!;
-    final tol = 9.0 / hit.radius;
-    // Just inside the spoke's own target, and dead on the arc's centre
-    // radius where the arc's score is 0. Under the old rule the spoke
-    // took every point it could reach.
-    final at = hit.angle + tol * 0.7;
-    expect(at, lessThan(hit.arc.a1), reason: 'the tap left the arc');
-
-    await tester.tapAt(rect.topLeft +
-        Offset(side / 2 + hit.radius * math.cos(at),
-            side / 2 + hit.radius * math.sin(at)));
+    expect(hit.spokeTitle, isNotEmpty);
+    expect(hit.spokeDistancePx, lessThan(9),
+        reason: 'the visible spoke must compete for the same tap');
+    final side = tester.getSize(wheelFinder).width;
+    final local = Offset(side / 2 + hit.radius * math.cos(hit.angle),
+        side / 2 + hit.radius * math.sin(hit.angle));
+    final viewport = tester.getRect(viewerFinder);
+    final current = tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
+    final move = viewport.center - current;
+    final focused = Matrix4.copy(controller.value);
+    focused.setTranslationRaw(focused.entry(0, 3) + move.dx,
+        focused.entry(1, 3) + move.dy, focused.entry(2, 3));
+    controller.value = focused;
+    await tester.pump();
+    final tap = tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
+    expect(viewport.deflate(12).contains(tap), isTrue,
+        reason: 'the real intersection must be inside the visible hit area');
+    expect(controller.value.getMaxScaleOnAxis(), closeTo(hit.zoom, .000001));
+    await tester.tapAt(tap);
     await tester.pump(const Duration(milliseconds: 400));
     expect(sheetText(tester), contains('创世后'),
         reason: 'a label crossing the band took a tap that landed dead on '
             'the band — the labels are taking the arcs\' taps again');
+    expect(sheetText(tester), contains(chron.byId(hit.id)!.nameFor('zh-Hans')));
     await unmount(tester);
   });
 
@@ -1092,15 +1087,14 @@ void main() {
     }
 
     await tester.tap(find.byIcon(Icons.filter_list));
-    // The filter sheet is a `FutureBuilder` on the page's own load, and
-    // shows a 120 px placeholder until it resolves.
+    // The filter waits for the page's own cached corpus before opening.
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(find.byKey(const ValueKey('wheelFilterLifespans')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('wheelFilterLifespans')));
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tapAt(const Offset(5, 5)); // dismiss the sheet
+    await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
     await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tapAt(at);
@@ -1109,14 +1103,13 @@ void main() {
         reason: 'the layer is switched off and an arc still answered a tap');
 
     await tester.tap(find.byIcon(Icons.filter_list));
-    // The filter sheet is a `FutureBuilder` on the page's own load, and
-    // shows a 120 px placeholder until it resolves.
+    // Reopening starts a new draft from the last confirmed filter.
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
     await tester.tap(find.byKey(const ValueKey('wheelFilterLifespans')));
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tapAt(const Offset(5, 5));
+    await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
     await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tapAt(at);

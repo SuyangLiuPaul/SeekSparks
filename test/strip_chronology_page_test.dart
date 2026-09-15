@@ -23,17 +23,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart'
-    show RadialChronologyPage, kDrawnTradition;
+    show RadialChronologyPage;
 import 'package:seeksparks/pages/strip_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
@@ -43,8 +40,6 @@ void main() {
 
   late WheelHistoryData data;
   late List<HebrewKing> kings;
-  late List<Patriarch> patriarchs;
-  late int creationYear;
 
   setUpAll(() async {
     // Real I/O never completes inside a widget test's fake-async zone;
@@ -54,14 +49,10 @@ void main() {
     // reason `radial_chronology_page_test.dart` does it.
     data = await WheelHistoryService.instance.load();
     kings = HebrewKingsService.instance.cached!.kings;
-    patriarchs = ChronologyService.instance.cached!.patriarchs;
-    creationYear = TimelineService.instance.meta.creation!.year;
   });
 
-  /// The expected filter delta still uses the public lane builder on
-  /// independently filtered data. Tap tests below read the actual painter
-  /// instead: the opening fit ratio belongs to the viewport, not to a
-  /// fixed rung, and its packed rows must be the ones a finger reaches.
+  /// Use the same opening stream choice, then compare surviving event
+  /// ids independently of whichever card rows the painter needs.
   WheelHistoryData asOpened(WheelHistoryData d) {
     final keep = defaultVisibleStreams(d.streams.map((s) => s.id), 12).toSet();
     return WheelHistoryData(
@@ -73,43 +64,6 @@ void main() {
       events: d.events.where((e) => keep.contains(e.stream)).toList(),
       meta: d.meta,
     );
-  }
-
-  List<StripRow> rowsFor(
-    double pxPerYear, {
-    WheelHistoryData? forData,
-    List<HebrewKing>? forKings,
-    List<Patriarch>? forPatriarchs,
-  }) {
-    // 2026-09-15: the strip no longer opens with all twenty-two lanes
-    // (「一开始filter不要全部都有 这样loading很慢」), so a row table built
-    // from the whole corpus names the wrong y for every lane below the
-    // first hidden one — and these tests tap a y. Filtered here the way
-    // the page filters, so what is measured is what is drawn.
-    final lanes = buildStripLanes(
-      wheel: forData ?? asOpened(data),
-      kings: forKings ?? kings,
-      familyTreePeople: const [],
-      patriarchs: forPatriarchs ?? patriarchs,
-      tradition: kDrawnTradition,
-      creationYear: creationYear,
-      pxPerYear: pxPerYear,
-    );
-    final laneH = stripLaneHeightPx(1);
-    final headH = stripHeadingHeightPx(1);
-    final rows = <StripRow>[];
-    var y = 0.0;
-    StripLaneKind? lastKind;
-    for (final lane in lanes) {
-      if (lane.kind != lastKind) {
-        rows.add(StripRow.heading('_', top: y, height: headH));
-        y += headH;
-        lastKind = lane.kind;
-      }
-      rows.add(StripRow.lane(lane, top: y, height: laneH));
-      y += laneH;
-    }
-    return rows;
   }
 
   double totalHeight(List<StripRow> rows) =>
@@ -233,6 +187,68 @@ void main() {
   /// `reignStart == reignEnd == -885`. Rule 1 says this bar is drawn as
   /// a DOT, never stretched, and its hit target still has to reach a
   /// finger via `hitTargetFor`/`nearestSpanAt`'s own widening.
+  testWidgets('an overview card expands its own dated period', (tester) async {
+    await pump(tester, const Size(900, 700));
+    final before = actualPainter(tester);
+    final row = before.rows.firstWhere((row) => row.eventCards
+        .any((card) => card.isGroup && card.firstYear < card.lastYear));
+    final card = row.eventCards
+        .firstWhere((card) => card.isGroup && card.firstYear < card.lastYear);
+    await tapContent(
+        tester, card.x + card.width / 2, row.top + 8 + card.height / 2);
+    final after = actualPainter(tester);
+    expect(after.pxPerYear, greaterThan(before.pxPerYear));
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(
+        after.rows
+            .expand((row) => row.eventCards)
+            .expand((card) => card.events)
+            .map((event) => event.id)
+            .toSet(),
+        asOpened(data).events.map((event) => event.id).toSet());
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  testWidgets('a same-year event card opens every member without zooming',
+      (tester) async {
+    await pump(tester, const Size(390, 844));
+    await zoomTo(tester, kStripZoomSteps.last);
+    final before = actualPainter(tester);
+    final row = before.rows.firstWhere((row) => row.eventCards
+        .any((card) => card.isGroup && card.firstYear == card.lastYear));
+    final card = row.eventCards
+        .firstWhere((card) => card.isGroup && card.firstYear == card.lastYear);
+    await tapContent(
+        tester, card.x + card.width / 2, row.top + 8 + card.height / 2);
+    expect(actualPainter(tester).pxPerYear, before.pxPerYear);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    final shown = sheetText(tester);
+    for (final member in card.events) {
+      expect(shown, contains(member.titleFor('zh-Hans')));
+    }
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  testWidgets('a single event card resolves its full title to its detail',
+      (tester) async {
+    await pump(tester, const Size(390, 844));
+    await zoomTo(tester, kStripZoomSteps.last);
+    final painter = actualPainter(tester);
+    final row = painter.rows
+        .firstWhere((row) => row.eventCards.any((card) => !card.isGroup));
+    final card = row.eventCards.firstWhere((card) => !card.isGroup);
+    expect(card.title, card.events.single.titleFor('zh-Hans'));
+    await tapContent(
+        tester, card.x + card.width / 2, row.top + 8 + card.height / 2);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(sheetText(tester), contains(card.title));
+    expect(actualPainter(tester).selectedId, card.events.single.id);
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
   testWidgets('a tap on a one-year reign opens that king\'s sheet',
       (tester) async {
     final zimri = kings.firstWhere((k) => k.id == 'zimri');
@@ -517,15 +533,9 @@ void main() {
   /// and the strip's page doc says the filter mirrors that (see
   /// `_visibleInputs`'s own comment there).
   ///
-  /// Proven by total content height, not by absence of on-screen text
-  /// — canvas text leaves no widget (this file's own library note) —
-  /// and the expected height is not a hand-counted number but the SAME
-  /// `buildStripLanes` call, run here on a hand-filtered
-  /// [WheelHistoryData] that drops the one stream's own streams/powers/
-  /// events entry exactly the way the page's `_visibleInputs` does.
-  /// That is what catches the real defect this test is for: an
-  /// emptied-but-still-PRESENT row would leave `contentH` unchanged,
-  /// not merely smaller.
+  /// The hidden stream's own rows must disappear. Event groups can
+  /// repack after filtering, so account for their measured section
+  /// height and independently assert every surviving event id.
   testWidgets('hiding a stream removes its lane rather than blanking it',
       (tester) async {
     await pump(tester, const Size(900, 700));
@@ -537,23 +547,16 @@ void main() {
     final stream = opened.streams.first;
 
     final painter = actualPainter(tester);
-    final scale = painter.pxPerYear;
-    final beforeHeight = totalHeight(rowsFor(scale));
-
-    final visibleData = WheelHistoryData(
-      streams: opened.streams.where((s) => s.id != stream.id).toList(),
-      nations: opened.nations,
-      powers: opened.powers.where((p) => p.stream != stream.id).toList(),
-      ministries: opened.ministries,
-      omissions: opened.omissions,
-      events: opened.events.where((e) => e.stream != stream.id).toList(),
-      meta: opened.meta,
-    );
-    final predictedRows = rowsFor(scale, forData: visibleData);
-    final removedHeight = beforeHeight - totalHeight(predictedRows);
-    expect(removedHeight, greaterThan(0),
-        reason: 'this test needs a stream whose own band and/or events '
-            'actually cost at least one lane to prove anything');
+    final ownHeight = painter.rows
+        .where((row) => row.lane?.ownerId == stream.id)
+        .fold<double>(0, (height, row) => height + row.height);
+    expect(ownHeight, greaterThan(0));
+    double eventsHeight(StripLanesPainter p) => p.rows
+        .where((row) =>
+            row.lane?.kind == StripLaneKind.events ||
+            row.headingKey == 'stripLaneEvents')
+        .fold<double>(0, (height, row) => height + row.height);
+    final beforeEventsHeight = eventsHeight(painter);
 
     final before =
         tester.getSize(find.byKey(const ValueKey('chronologyStrip')));
@@ -569,12 +572,30 @@ void main() {
     }
     expect(tester.takeException(), isNull);
 
+    expect(actualPainter(tester).rows, same(painter.rows),
+        reason: 'checkbox edits are a draft until Apply');
+    await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
+    await tester.pumpAndSettle();
+
     final after = tester.getSize(find.byKey(const ValueKey('chronologyStrip')));
     final afterPainter = actualPainter(tester);
     expect(afterPainter.rows.where((row) => row.lane?.ownerId == stream.id),
         isEmpty,
         reason: 'a hidden lane must not survive as a blank placeholder');
     expect(after.height, totalHeight(afterPainter.rows));
+    final removedHeight =
+        ownHeight + beforeEventsHeight - eventsHeight(afterPainter);
+    final remainingEventIds = afterPainter.rows
+        .expand((row) => row.eventCards)
+        .expand((card) => card.events)
+        .map((event) => event.id)
+        .toSet();
+    expect(
+        remainingEventIds,
+        opened.events
+            .where((event) => event.stream != stream.id)
+            .map((event) => event.id)
+            .toSet());
     expect(before.height - after.height, closeTo(removedHeight, 0.5),
         reason: 'the content must shrink by exactly the hidden stream\'s '
             'own lanes, not merely get shorter, and not stay the same '
