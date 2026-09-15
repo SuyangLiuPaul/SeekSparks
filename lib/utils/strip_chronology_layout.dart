@@ -65,8 +65,8 @@ const int kStripMaxYear = 2026;
 /// The zoom ladder, in pixels per year.
 ///
 /// Chosen so each step roughly doubles and the ends are the two things a
-/// reader actually wants: 0.15 fits the whole axis on a phone (6226 x
-/// 0.15 = 934 px), and the top step names every record in the densest
+/// reader actually wants: 0.15 shows the whole axis in a 934 px time
+/// viewport, and the top step names every record in the densest
 /// stretch the corpus has.
 ///
 /// WHY THE TOP IS 96 AND NOT 24. The ladder stopped at 24 until the
@@ -99,20 +99,10 @@ const List<double> kStripZoomSteps = [
   96,
 ];
 
-/// The zoom the strip OPENS on — deliberately not the widest step.
-///
-/// `kStripZoomSteps.first` (0.15) puts all 6226 years on one screen,
-/// which is the wheel's fixed condition and the one this form exists to
-/// escape. Measured on the shipped corpus at that scale, an event tick
-/// owns about 3 px before the next one, so no title fits and the events
-/// lane opens as a field of bare `+n` badges: the reader is told a great
-/// deal is here and shown none of it.
-///
-/// 1.5 px/year shows about 930 years on a 1400 px pane and about 250 on
-/// a phone — an era at a time, with room for names — and the whole axis
-/// is one drag or one press of Fit All away. Free scrolling is what a
-/// strip buys; spending it to reproduce a single crowded screen would be
-/// paying for the ticket and staying home.
+/// The pre-layout scale and a useful first reading step. The explorer
+/// fits its selected range once the time viewport has been laid out;
+/// it no longer opens on only the first 144 years of a phone's axis.
+/// Exact fit ratios are supported alongside this ladder by strip_viewport.
 const double kStripInitialPxPerYear = 1.5;
 
 /// The lane/type zoom ladder — the strip's SECOND axis, and the one
@@ -175,8 +165,8 @@ double pxPerYearToFit(int fromYear, int toYear, double viewportPx) {
 ///
 /// Distance is measured linearly, not geometrically, even though the
 /// ladder itself roughly doubles step to step. "Nearest" is the literal
-/// contract and the ladder was chosen for its two ENDS (0.15 fits the
-/// axis, 24 separates the post-1900 events), not for even perceptual
+/// contract and the ladder was chosen for its two ENDS (0.15 fits a
+/// 934 px viewport, 24 separates the post-1900 events), not for even perceptual
 /// spacing, so there is no geometric mean here worth preferring over
 /// the plain one.
 double snapZoom(double want) {
@@ -197,22 +187,31 @@ double snapZoom(double want) {
 /// The year step between labelled ticks at [pxPerYear], given that a
 /// label needs [labelPx] of room.
 ///
-/// Returns one of 1, 5, 10, 25, 50, 100, 250, 500, 1000 — a "nice"
+/// Returns a nice step from 1 to 5000 years — a round-number
 /// ladder, because a ruler stepping by 137 years is a ruler nobody can
 /// read. The smallest step whose spacing clears [labelPx] wins.
 int rulerStep(double pxPerYear, {double labelPx = 56}) {
   for (final step in _kNiceSteps) {
     if (step * pxPerYear >= labelPx) return step;
   }
-  // Even the coarsest step does not clear labelPx: pxPerYear is smaller
-  // than any ladder value would ever produce (kStripZoomSteps bottoms
-  // out at 0.15, where 1000 * 0.15 = 150 already clears 56). Returning
-  // the coarsest step is the honest best effort rather than a step the
-  // ladder promises but cannot reach.
+  // The exact fit ratio can be smaller than any ladder zoom on a
+  // narrow time viewport; 2000/5000-year ticks keep that overview calm.
   return _kNiceSteps.last;
 }
 
-const List<int> _kNiceSteps = [1, 5, 10, 25, 50, 100, 250, 500, 1000];
+const List<int> _kNiceSteps = [
+  1,
+  5,
+  10,
+  25,
+  50,
+  100,
+  250,
+  500,
+  1000,
+  2000,
+  5000
+];
 
 /// Every labelled tick year on the axis at [step], ascending.
 ///

@@ -135,10 +135,15 @@ import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:seeksparks/utils/strip_viewport.dart';
+import 'package:seeksparks/utils/strip_paint_text.dart';
+import 'package:seeksparks/widgets/chronology_explorer.dart';
+import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
 import 'package:seeksparks/utils/year_digest.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
+import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
@@ -164,7 +169,14 @@ const Map<String, String> _kPageTitle = {
 };
 
 class StripChronologyPage extends StatefulWidget {
-  const StripChronologyPage({super.key});
+  const StripChronologyPage(
+      {super.key, this.initialPeriod, this.initialHiddenStreams});
+
+  /// Switching forms keeps the reader's range and layer choices. Each
+  /// route still owns its controller, so replacing one cannot dispose
+  /// the incoming page's navigation state.
+  final ChronologyPeriod? initialPeriod;
+  final Set<String>? initialHiddenStreams;
 
   @override
   State<StripChronologyPage> createState() => _StripChronologyPageState();
@@ -173,6 +185,7 @@ class StripChronologyPage extends StatefulWidget {
 class _StripChronologyPageState extends State<StripChronologyPage>
     with WheelSheets<StripChronologyPage> {
   Future<WheelHistoryData>? _future;
+  final _explorer = ChronologyExplorerController();
 
   double _pxPerYear = kStripInitialPxPerYear;
   String? _selectedId;
@@ -260,6 +273,14 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   @override
   void initState() {
     super.initState();
+    if (widget.initialPeriod case final period?) {
+      _explorer.selectPeriod(period);
+    }
+    if (widget.initialHiddenStreams case final hidden?) {
+      _hidden.addAll(hidden);
+      _defaultsApplied = true;
+    }
+
     _future = WheelHistoryService.instance.load();
     UrlSyncService.claimUrl(kStripUrlPath, owner: this);
     _hCtl.addListener(_onHScroll);
@@ -295,21 +316,48 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     _rulerHCtl.dispose();
     _headerVCtl.dispose();
     _findCtl.dispose();
+    _explorer.dispose();
     super.dispose();
   }
 
   void _select(String? id) => setState(() => _selectedId = id);
 
   void _zoomStep(int delta) {
-    final i = kStripZoomSteps.indexOf(_pxPerYear);
-    final next = (i < 0 ? 0 : i + delta).clamp(0, kStripZoomSteps.length - 1);
-    setState(() => _pxPerYear = kStripZoomSteps[next]);
+    final next = stripNextScale(_pxPerYear, delta, _viewportW);
+    final offset = stripZoomOffset(
+      offset: _hCtl.hasClients ? _hCtl.offset : 0,
+      viewportWidth: _viewportW,
+      oldScale: _pxPerYear,
+      newScale: next,
+    );
+    _setTimeViewport(next, offset);
   }
 
-  void _fitAll() {
+  void _setTimeViewport(double scale, double offset) {
+    final revision = ++_viewportRevision;
+    setState(() => _pxPerYear = scale);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || revision != _viewportRevision || !_hCtl.hasClients) {
+        return;
+      }
+      _hCtl.jumpTo(offset.clamp(0.0, _hCtl.position.maxScrollExtent));
+    });
+  }
+
+  int _viewportRevision = 0;
+
+  void _fitAll() => _explorer.showAll();
+
+  void _browseRange(int start, int end) {
     if (_viewportW <= 0) return;
-    setState(() => _pxPerYear =
-        snapZoom(pxPerYearToFit(kStripMinYear, kStripMaxYear, _viewportW)));
+    final scale = pxPerYearToFit(start, end, _viewportW)
+        .clamp(stripFitScale(_viewportW), kStripZoomSteps.last);
+    _setTimeViewport(
+        scale, stripOffsetForYear((start + end) / 2, _viewportW, scale));
+    setState(() {
+      _selectedId = null;
+      _cursorYear = null;
+    });
   }
 
   void _laneZoomStep(int delta) {
@@ -388,13 +436,43 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!_defaultsApplied) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || _defaultsApplied) return;
-              setState(() => _applyDefaultHidden(data));
-            });
-          }
-          return _body(context, data, locale);
+          // Resolve the initial set before either the chart or the browser
+          // sees the data: a post-frame default painted all 22 streams first.
+          _applyDefaultHidden(data);
+          final textScale = WbType.of(context).textScale;
+          return ChronologyExplorer(
+            controller: _explorer,
+            data: data,
+            locale: locale,
+            hiddenStreams: Set.of(_hidden),
+            streamColors: colorsFor(data),
+            selectedId: _selectedId,
+            onFind: () => _showSearch(context, locale),
+            onFilter: () => _showFilter(context, locale),
+            onRange: _browseRange,
+            onEvent: (event) {
+              _placeCursor(event.year);
+              _reveal(
+                  context,
+                  WheelHit(
+                    kind: WheelHitKind.event,
+                    via: WheelHitVia.title,
+                    id: event.id,
+                    streamId: event.stream,
+                    title: event.titleFor(locale),
+                    year: event.year,
+                    matched: '',
+                    rank: 0,
+                    streamHidden: _hidden.contains(event.stream),
+                  ),
+                  data,
+                  HebrewKingsService.instance.cached?.kings ?? const [],
+                  ChronologyService.instance.cached?.patriarchs ?? const [],
+                  locale,
+                  textScale);
+            },
+            chart: _body(context, data, locale),
+          );
         },
       ),
     );
@@ -416,7 +494,10 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           context.read<AppSettings>().setChronologyView('wheel');
           Navigator.of(context).pushReplacement(
             MaterialPageRoute<void>(
-                builder: (_) => const RadialChronologyPage()),
+                builder: (_) => RadialChronologyPage(
+                      initialPeriod: _explorer.period,
+                      initialHiddenStreams: Set.unmodifiable(_hidden),
+                    )),
           );
         },
       );
@@ -445,18 +526,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     final contentW = stripContentWidth(_pxPerYear);
     final contentH = rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
 
-    final streamColors = colorsFor(data);
-    final eventById = {for (final e in data.events) e.id: e};
-    final spanLabel = <String, String>{
-      for (final k in kings) '$kStripKingPrefix${k.id}': k.nameFor(locale),
-      for (final m in data.ministries)
-        '$kStripMinistryPrefix${m.id}': m.nameFor(locale),
-      for (final p in data.powers) p.id: p.nameFor(locale),
-      for (final pa in patriarchs) pa.id: pa.nameFor(locale),
-      for (final s in data.streams) s.id: s.nameFor(locale),
-    };
-    final palette = StripPalette(
-        streamColors: streamColors, eventById: eventById, spanLabel: spanLabel);
+    final palette = _paletteFor(data, kings, patriarchs, locale);
 
     return LayoutBuilder(builder: (context, box) {
       final headerW = stripHeaderColumnWidth(
@@ -469,6 +539,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       final rulerH = tickFontPx * WbMetrics.lineHeight * 2 + 6;
 
       final visibleX0 = _hCtl.hasClients ? _hCtl.offset : 0.0;
+      final visibleY0 = _vCtl.hasClients ? _vCtl.offset : 0.0;
+      final visibleY1 = visibleY0 +
+          (_vCtl.hasClients ? _vCtl.position.viewportDimension : box.maxHeight);
       final visibleX1 = visibleX0 +
           (_hCtl.hasClients ? _hCtl.position.viewportDimension : _viewportW);
 
@@ -512,6 +585,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                                 locale: locale,
                                 wb: wb,
                                 tickFontPx: tickFontPx,
+                                visibleX0: visibleX0,
+                                visibleX1: visibleX1,
                               ),
                             ),
                           ),
@@ -550,6 +625,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                           laneFontPx: laneFontPx,
                           headingFontPx: headingFontPx,
                           palette: palette,
+                          visibleY0: visibleY0,
+                          visibleY1: visibleY1,
                         ),
                       ),
                     ),
@@ -631,6 +708,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                                         palette: palette,
                                         visibleX0: visibleX0,
                                         visibleX1: visibleX1,
+                                        visibleY0: visibleY0,
+                                        visibleY1: visibleY1,
                                       ),
                                     ),
                                   ),
@@ -681,26 +760,38 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                 ? _vCtl.position.maxScrollExtent
                 : math.max(0.0, contentH - (box.maxHeight - rulerH)),
           ),
-          // Lifted clear of the "more below" banner when that banner is
-          // showing. Found on an iPhone 17: the cluster is right-aligned
-          // and the banner is a full-width strip at `bottom: 0`, so on a
-          // 402 pt phone the zoom controls sat on top of the one hint
-          // that tells the reader there are more lanes underneath.
-          Positioned(
-              right: 10,
-              bottom: 10 +
-                  (_vMoreBelow(
-                          math.max(0.0, contentH - (box.maxHeight - rulerH)))
-                      ? stripScrollBannerHeight(t)
-                      : 0.0),
-              child: _zoomControls(locale, t, wb)),
         ])),
+        _zoomControls(locale, t, wb),
         // Always, not only once a year is picked — see [YearDigestBar]'s
         // own doc: a row that appears on the first tap takes its height
         // out of the chart at the moment the reader is looking at it.
         _digestBar(context, _cursorYear, data, kings, patriarchs, locale, rows),
       ]);
     });
+  }
+
+  Object? _paletteKey;
+  StripPalette? _paletteCache;
+
+  StripPalette _paletteFor(WheelHistoryData data, List<HebrewKing> kings,
+      List<Patriarch> patriarchs, String locale) {
+    final key = (data, kings, patriarchs, locale);
+    if (_paletteKey == key && _paletteCache != null) return _paletteCache!;
+    final streamColors = colorsFor(data);
+    final eventById = {for (final e in data.events) e.id: e};
+    final spanLabel = <String, String>{
+      for (final k in kings) '$kStripKingPrefix${k.id}': k.nameFor(locale),
+      for (final m in data.ministries)
+        '$kStripMinistryPrefix${m.id}': m.nameFor(locale),
+      for (final p in data.powers) p.id: p.nameFor(locale),
+      for (final pa in patriarchs) pa.id: pa.nameFor(locale),
+      for (final s in data.streams) s.id: s.nameFor(locale),
+    };
+    final palette = StripPalette(
+        streamColors: streamColors, eventById: eventById, spanLabel: spanLabel);
+
+    _paletteKey = key;
+    return _paletteCache = palette;
   }
 
   /// Sort the lanes into rows, one heading per kind block. `buildStrip
@@ -972,20 +1063,30 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     );
   }
 
-  /// [_body]'s own row list, and also what a search reveal recomputes
-  /// against (`_scrollToHit`) — one function, so a row a filter just
-  /// hid cannot be the row a search scrolls to a moment later. Reads
-  /// [_hidden] and [_pxPerYear] fresh each call rather than trusting a
-  /// cached list, the same reason the wheel's own `_panTo` rebuilds
-  /// `_packBand` instead of reusing the last frame's geometry: "a pan
-  /// computed over arcs the reader has switched off would land in the
-  /// wrong sub-ring."
+  // Panning changes only the visible rectangle. Repacking every row
+  // on every scroll notification made text caching only half a saving.
+  // Include the hidden-set VALUES: the filter mutates its Set in place.
+  Object? _rowsKey;
+  List<StripRow>? _rowsCache;
+
   List<StripRow> _currentRows(
     WheelHistoryData data,
     List<HebrewKing> kings,
     List<Patriarch> patriarchs,
     double textScale,
   ) {
+    final key = (
+      data,
+      kings,
+      patriarchs,
+      FamilyTreeService.instance.cached,
+      creationYear,
+      _pxPerYear,
+      textScale,
+      _laneZoom,
+      (_hidden.toList()..sort()).join(',')
+    );
+    if (_rowsKey == key && _rowsCache != null) return _rowsCache!;
     final visible = _visibleInputs(data, kings, patriarchs);
     final lanes = buildStripLanes(
       wheel: visible.data,
@@ -1002,7 +1103,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       creationYear: creationYear ?? 0,
       pxPerYear: _pxPerYear,
     );
-    return _buildRows(lanes, textScale * _laneZoom);
+    _rowsKey = key;
+    return _rowsCache = _buildRows(lanes, textScale * _laneZoom);
   }
 
   void _showFilter(BuildContext context, String locale) {
@@ -1528,7 +1630,13 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       _hidden.remove(hit.streamId);
       _selectedId = hit.kind == WheelHitKind.nation ? hit.streamId : hit.id;
     });
-    _scrollToHit(hit, data, kings, patriarchs, textScale);
+    // The newly revealed stream can add rows beyond the old scroll
+    // extent. Wait for those rows before clamping to the viewport.
+    final revision = ++_viewportRevision;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || revision != _viewportRevision) return;
+      _scrollToHit(hit, data, kings, patriarchs, textScale);
+    });
     switch (hit.kind) {
       case WheelHitKind.event:
         final e = find(data.events, (e) => e.id == hit.id);
@@ -1689,15 +1797,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// current OFFSET is still read off the controller (`_hCtl.offset`,
   /// guarded by `hasClients`), because before attachment it is
   /// genuinely 0 — the one thing a fresh page cannot be wrong about.
-  /// Whether the "more below" banner is showing — the zoom cluster has
-  /// to know, because it is right-aligned over a full-width banner.
-  bool _vMoreBelow(double fallbackMaxScrollY) {
-    final maxScrollY =
-        _vCtl.hasClients ? _vCtl.position.maxScrollExtent : fallbackMaxScrollY;
-    return maxScrollY > 0.5 &&
-        (!_vCtl.hasClients || _vCtl.offset < maxScrollY - 0.5);
-  }
-
   List<Widget> _scrollIndicators({
     required double headerW,
     required WbColors wb,
@@ -1835,53 +1934,47 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// on it is, and neither touches the other. The wheel's single
   /// `InteractiveViewer` scale cannot separate them.
   Widget _zoomControls(String locale, WbType t, WbColors wb) {
-    Widget btn(IconData icon, String tip, VoidCallback? go) => InkWell(
-          onTap: go,
-          child: Padding(
-            padding: EdgeInsets.all(t.scaled(6)),
-            child: Tooltip(
-              message: tip,
-              child: Icon(icon,
-                  size: t.scaled(17),
-                  color: go == null
-                      ? wb.mutedText.withValues(alpha: 0.4)
-                      : wb.text),
-            ),
-          ),
+    Widget btn(IconData icon, String tip, VoidCallback? go) => IconButton(
+          onPressed: go,
+          tooltip: tip,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          padding: const EdgeInsets.all(8),
+          icon: Icon(icon, size: t.scaledChrome(18)),
         );
-    final i = kStripZoomSteps.indexOf(_pxPerYear);
     final j = kStripLaneZoomSteps.indexOf(_laneZoom);
+    final years = (_viewportW / _pxPerYear).round();
+    final rangeLabel = locale == 'en' ? '$years yr / view' : '$years 年 / 屏';
     return Container(
       decoration: BoxDecoration(
-        color: wb.paneBg.withValues(alpha: 0.94),
-        border: Border.all(color: wb.border),
+        color: wb.chromeBg,
+        border: Border(top: BorderSide(color: wb.border)),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        btn(Icons.remove, ss('stripZoomOut', locale),
-            i > 0 ? () => _zoomStep(-1) : null),
-        Container(width: 1, height: t.scaled(18), color: wb.border),
-        SizedBox(
-          width: t.scaled(60),
-          child: Text('${_pxPerYear}px/yr',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
-        ),
-        Container(width: 1, height: t.scaled(18), color: wb.border),
-        btn(Icons.add, ss('stripZoomIn', locale),
-            i < kStripZoomSteps.length - 1 ? () => _zoomStep(1) : null),
-        Container(width: 1, height: t.scaled(18), color: wb.border),
-        btn(Icons.fit_screen, ss('stripFitAll', locale), _fitAll),
-        Container(width: 1, height: t.scaled(18), color: wb.border),
-        // The second axis. Deliberately in the SAME control cluster as
-        // the first and deliberately not merged with it: a reader who
-        // wants bigger type reaches for the same corner they already
-        // reach for, and still gets to keep the span of years they are
-        // looking at.
-        btn(Icons.text_decrease, ss('stripTypeSmaller', locale),
-            j > 0 ? () => _laneZoomStep(-1) : null),
-        btn(Icons.text_increase, ss('stripTypeBigger', locale),
-            j < kStripLaneZoomSteps.length - 1 ? () => _laneZoomStep(1) : null),
-      ]),
+      child: OverflowHintScroll(
+        fadeColor: wb.chromeBg,
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          btn(
+              Icons.remove,
+              ss('stripZoomOut', locale),
+              _pxPerYear > stripFitScale(_viewportW) + 0.000001
+                  ? () => _zoomStep(-1)
+                  : null),
+          Text(rangeLabel,
+              style:
+                  TextStyle(color: wb.mutedText, fontSize: t.scaledChrome(11))),
+          btn(Icons.add, ss('stripZoomIn', locale),
+              _pxPerYear < kStripZoomSteps.last ? () => _zoomStep(1) : null),
+          btn(Icons.fit_screen, ss('stripFitAll', locale), _fitAll),
+          Container(width: 1, height: 18, color: wb.border),
+          btn(Icons.text_decrease, ss('stripTypeSmaller', locale),
+              j > 0 ? () => _laneZoomStep(-1) : null),
+          btn(
+              Icons.text_increase,
+              ss('stripTypeBigger', locale),
+              j < kStripLaneZoomSteps.length - 1
+                  ? () => _laneZoomStep(1)
+                  : null),
+        ]),
+      ),
     );
   }
 }
@@ -1919,9 +2012,6 @@ class _PanByMouseScrollBehavior extends MaterialScrollBehavior {
 /// 2 px of padding top and bottom.
 double stripScrollBannerHeight(WbType t) => t.scaledChrome(14) + 4;
 
-double _measureText(String text, double size) => (TextPainter(
-      text: TextSpan(text: text, style: canvasTextStyle(fontSize: size)),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout())
-        .width;
+double _measureText(String text, double size) => StripPaintTextCache.layout(
+        text: text, style: canvasTextStyle(fontSize: size))
+    .width;

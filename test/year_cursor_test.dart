@@ -29,42 +29,34 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart'
-    show RadialChronologyPage, kDrawnTradition, kMaxYear, kMinYear, yearLabel;
+    show RadialChronologyPage, kMaxYear, kMinYear, yearLabel;
 import 'package:seeksparks/pages/strip_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart'
     show angleForSpan, startRad, sweepRad;
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late WheelHistoryData data;
   late List<HebrewKing> kings;
-  late List<Patriarch> patriarchs;
-  late int creationYear;
 
   setUpAll(() async {
     // Real I/O never completes inside a widget test's fake-async zone, so
     // every service either page's `initState` awaits is warmed here and
     // resolves from the cache — the same reason both sibling page tests
     // do it.
-    data = await WheelHistoryService.instance.load();
+    await WheelHistoryService.instance.load();
     await ChronologyService.instance.load();
     kings = HebrewKingsService.instance.cached!.kings;
-    patriarchs = ChronologyService.instance.cached!.patriarchs;
-    creationYear = TimelineService.instance.meta.creation!.year;
   });
 
   Future<void> pumpPage(WidgetTester tester, Widget page, Size size) async {
@@ -104,52 +96,33 @@ void main() {
           .descendant(of: find.byKey(key), matching: find.byType(Scrollable))
           .first);
 
-  /// The page's own row layout, rebuilt from the same PUBLIC functions the
-  /// page calls — the discipline `strip_chronology_page_test.dart` uses,
-  /// because `_buildRows` is private to the page.
-  /// [data] reduced to the streams the strip opens on, matching
-  /// `_applyDefaultHidden`. 2026-09-15: the strip stopped opening with
-  /// all twenty-two lanes, so a row table built from the whole corpus
-  /// names the wrong y for every lane below the first hidden one — and
-  /// this file taps a y.
-  WheelHistoryData asOpened(WheelHistoryData d) {
-    final keep = defaultVisibleStreams(d.streams.map((s) => s.id), 12).toSet();
-    return WheelHistoryData(
-      streams: d.streams.where((s) => keep.contains(s.id)).toList(),
-      nations: d.nations,
-      powers: d.powers.where((p) => keep.contains(p.stream)).toList(),
-      ministries: d.ministries,
-      omissions: d.omissions,
-      events: d.events.where((e) => keep.contains(e.stream)).toList(),
-      meta: d.meta,
-    );
-  }
+  /// Read the rows and scale that are actually painted. Fit is now a
+  /// ratio of the current time viewport, so a copied opening-scale row
+  /// table can point to an entirely different record.
+  StripLanesPainter actualStripPainter(WidgetTester tester) => tester
+      .widgetList<CustomPaint>(find.byType(CustomPaint))
+      .map((widget) => widget.painter)
+      .whereType<StripLanesPainter>()
+      .single;
 
-  List<StripRow> rowsFor(double pxPerYear) {
-    final lanes = buildStripLanes(
-      wheel: asOpened(data),
-      kings: kings,
-      familyTreePeople: const [],
-      patriarchs: patriarchs,
-      tradition: kDrawnTradition,
-      creationYear: creationYear,
-      pxPerYear: pxPerYear,
-    );
-    final laneH = stripLaneHeightPx(1);
-    final headH = stripHeadingHeightPx(1);
-    final rows = <StripRow>[];
-    var y = 0.0;
-    StripLaneKind? lastKind;
-    for (final lane in lanes) {
-      if (lane.kind != lastKind) {
-        rows.add(StripRow.heading('_', top: y, height: headH));
-        y += headH;
-        lastKind = lane.kind;
+  Future<void> makeStripScrollable(WidgetTester tester) async {
+    // The full-axis overview deliberately has nothing to drag. Reach
+    // the familiar 1.5 px/year rung before exercising the slop guard,
+    // then assert that the pointer has real scroll room beneath it.
+    for (var i = 0; i < kStripZoomSteps.length + 2; i++) {
+      final scale = actualStripPainter(tester).pxPerYear;
+      if ((scale - 1.5).abs() < 0.000001) {
+        expect(
+            scrollableFor(tester, const ValueKey('stripHScroll'))
+                .position
+                .maxScrollExtent,
+            greaterThan(120));
+        return;
       }
-      rows.add(StripRow.lane(lane, top: y, height: laneH));
-      y += laneH;
+      await tester.tap(find.byTooltip(scale < 1.5 ? '放大' : '缩小'));
+      await tester.pump();
     }
-    return rows;
+    fail('the strip did not reach a scale at which a drag can scroll');
   }
 
   StripRow rowContaining(List<StripRow> rows, String spanId) {
@@ -226,8 +199,9 @@ void main() {
             'nobody pointed is a claim about a year the reader did not '
             'choose');
 
-    final contentX = xForYear(-586, kStripInitialPxPerYear);
-    final expected = yearForX(contentX, kStripInitialPxPerYear).round();
+    final contentX = xForYear(-586, actualStripPainter(tester).pxPerYear);
+    final expected =
+        yearForX(contentX, actualStripPainter(tester).pxPerYear).round();
     await tester.tapAt(await revealStripPoint(tester, contentX, 4));
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -245,7 +219,8 @@ void main() {
   testWidgets('dragging the strip scrolls it without leaving a rule behind',
       (tester) async {
     await pumpStrip(tester);
-    final contentX = xForYear(-586, kStripInitialPxPerYear);
+    await makeStripScrollable(tester);
+    final contentX = xForYear(-586, actualStripPainter(tester).pxPerYear);
     final from = await revealStripPoint(tester, contentX, 4);
     final before =
         scrollableFor(tester, const ValueKey('stripHScroll')).position.pixels;
@@ -294,8 +269,9 @@ void main() {
 
     await pumpStrip(tester);
     final row = rowContaining(
-        rowsFor(kStripInitialPxPerYear), '$kStripKingPrefix${zimri.id}');
-    final contentX = xForYear(zimri.reignStart, kStripInitialPxPerYear);
+        actualStripPainter(tester).rows, '$kStripKingPrefix${zimri.id}');
+    final contentX =
+        xForYear(zimri.reignStart, actualStripPainter(tester).pxPerYear);
 
     await tester.tapAt(
         await revealStripPoint(tester, contentX, row.top + row.height / 2));
@@ -319,8 +295,9 @@ void main() {
   /// first, so a ruler that ignored the press would be the odd one out.
   testWidgets('a tap on the sticky ruler places the rule too', (tester) async {
     await pumpStrip(tester);
-    final contentX = xForYear(1000, kStripInitialPxPerYear);
-    final expected = yearForX(contentX, kStripInitialPxPerYear).round();
+    final contentX = xForYear(1000, actualStripPainter(tester).pxPerYear);
+    final expected =
+        yearForX(contentX, actualStripPainter(tester).pxPerYear).round();
 
     final h = scrollableFor(tester, const ValueKey('stripHScroll'));
     h.position.jumpTo((contentX - h.position.viewportDimension / 2)
@@ -350,7 +327,7 @@ void main() {
   testWidgets('closing the readout clears the rule as well as the bar',
       (tester) async {
     await pumpStrip(tester);
-    final contentX = xForYear(-586, kStripInitialPxPerYear);
+    final contentX = xForYear(-586, actualStripPainter(tester).pxPerYear);
     await tester.tapAt(await revealStripPoint(tester, contentX, 4));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('chronoYearReadout')), findsOneWidget);

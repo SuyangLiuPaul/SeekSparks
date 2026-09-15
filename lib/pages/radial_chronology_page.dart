@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
@@ -37,6 +38,9 @@ import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
 import 'package:seeksparks/utils/wheel_text_metrics.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:seeksparks/utils/wheel_view_layout.dart';
+import 'package:seeksparks/utils/chronology_explorer.dart';
+import 'package:seeksparks/widgets/chronology_explorer.dart';
 
 /// World history on one wheel: 4200 BC at twelve o'clock, time sweeping
 /// clockwise to the present, one concentric band per people or
@@ -110,7 +114,14 @@ import 'package:seeksparks/utils/wheel_default_streams.dart';
 /// year in would read as though it had ended, and would go stale every
 /// January.
 class RadialChronologyPage extends StatefulWidget {
-  const RadialChronologyPage({super.key});
+  const RadialChronologyPage(
+      {super.key, this.initialPeriod, this.initialHiddenStreams});
+
+  /// Switching forms keeps the reader's range and layer choices. Each
+  /// route still owns its controller, so replacing one cannot dispose
+  /// the incoming page's navigation state.
+  final ChronologyPeriod? initialPeriod;
+  final Set<String>? initialHiddenStreams;
 
   @override
   State<RadialChronologyPage> createState() => _RadialChronologyPageState();
@@ -167,10 +178,8 @@ const int kMaxYear = 2026;
 /// them. 120 is where the reader runs out of chart rather than out of
 /// permission.
 ///
-/// Label sizes divide by `_labelScale` (the square root of the zoom),
-/// so type holds its on-screen size all the way up and more of it fits
-/// as the reader goes in — which is what makes the extra range worth
-/// having rather than merely bigger.
+/// Label sizes use [wheelLabelScale]: type grows through the first 4x,
+/// then holds at twice its resting size as more detail becomes visible.
 const double kWheelMaxScale = 120;
 
 // Wheel geometry as fractions of the square's side.
@@ -178,7 +187,6 @@ const double kWheelMaxScale = 120;
 //   bands .. rim    radial event labels
 //   beyond rim      century years
 const double _kHubFrac = 0.115;
-
 
 /// The outermost hairline `_paintRim` draws, as an offset from the rim.
 /// Named because two things depend on it and they must not drift: the
@@ -1072,39 +1080,16 @@ const double _kRefSizeRatio = 0.86;
 // that can render Chinese at all — the label goes absent, not tofu. This
 // one is a MEASUREMENT, and it must use the same face as the paint or
 // `fitRadialLabel` is reserving room for a string nobody draws.
-double _measureLabel(String text, double size) => (TextPainter(
-      text: TextSpan(text: text, style: canvasTextStyle(fontSize: size)),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout())
-        .width;
+double _measureLabel(String text, double size) =>
+    WheelTextMetrics.shapedWidth(text, canvasTextStyle(fontSize: size));
 
-/// A tangential label's width: the sum of its characters, because
-/// `_charsOnArc` sets them one at a time along the curve. Shaping the
-/// whole string would measure a line nobody draws.
-double _measureChars(String text, double size) {
-  var total = 0.0;
-  for (final ch in text.characters) {
-    total += (TextPainter(
-      text: TextSpan(text: ch, style: canvasTextStyle(fontSize: size)),
-      textDirection: TextDirection.ltr,
-    )..layout())
-        .width;
-  }
-  return total;
-}
+/// Curved labels measure the same individual graphemes they paint.
+/// Sharing this cache with the painter removes the duplicate layout
+/// pass that remained after glyph painting was first cached.
+double _measureChars(String text, double size) =>
+    WheelTextMetrics.runWidth(text, canvasTextStyle(fontSize: size));
 
-/// How type responds to zoom.
-///
-/// Dividing the canvas size by the full zoom holds letters at a
-/// constant size on screen — mathematically tidy, and wrong: a reader
-/// who zooms to 500% has asked to see this part BETTER, and type that
-/// refuses to grow reads as a chart that ignored them. Dividing by
-/// `sqrt(zoom)` instead means the on-screen size grows as `sqrt(zoom)`:
-/// at 500% the letters are a bit over twice the size they were, while
-/// the wheel buys real angular room, so more labels appear as well.
-/// Legibility and density both improve, which is what zooming is for.
-double _labelScale(double zoom) => math.pow(zoom, 0.5).toDouble();
+double _labelScale(double zoom) => wheelLabelScale(zoom);
 
 /// A year as this page prints it: `586 BC` / `主前586` / `AD 33` / `主後33`.
 ///
@@ -1300,17 +1285,32 @@ class _Spoke {
   int get hidden => members.length - 1;
 }
 
+/// A scene survives cursor moves and widget rebuilds. Only a change to
+/// its geometry, content, locale or label size repeats the fitting work.
+class _WheelScene {
+  const _WheelScene(
+      this.streams, this.colors, this.arcs, this.spokes, this.lives, this.rail);
+
+  final List<WheelStream> streams;
+  final Map<String, Color> colors;
+  final List<_Arc> arcs;
+  final List<_Spoke> spokes;
+  final List<_Life> lives;
+  final List<_Rail> rail;
+}
+
 class _RadialChronologyPageState extends State<RadialChronologyPage>
     with WheelSheets<RadialChronologyPage> {
   Future<WheelHistoryData>? _future;
   final _viewer = TransformationController();
+  final _explorer = ChronologyExplorerController();
 
   /// Streams the reader has switched off.
   ///
   /// 2026-09-15: this is no longer empty on arrival. 「一开始filter不要
   /// 全部都有 这样loading很慢」 — and the geometry agrees, because a ring
-  /// has to be 24 px thick to be tappable and a phone's annulus holds
-  /// about four of those, not twenty-two. [_applyDefaultHidden] fills it
+  /// has to remain distinguishable and a 360 px phone's annulus gives
+  /// four streams 13.95 px each, rather than twenty-two thin shares. [_applyDefaultHidden] fills it
   /// once, the first time the page knows how big it is; after that it is
   /// the reader's.
   final Set<String> _hidden = {};
@@ -1326,29 +1326,104 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     _defaultsApplied = true;
     final capacity = ringCapacity(side,
         hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side));
-    final keep = defaultVisibleStreams(
-        data.streams.map((s) => s.id), capacity).toSet();
+    final keep =
+        defaultVisibleStreams(data.streams.map((s) => s.id), capacity).toSet();
     for (final s in data.streams) {
       if (!keep.contains(s.id)) _hidden.add(s.id);
     }
   }
+
   String? _selectedId;
+  int? _rangeStart;
+  int? _rangeEnd;
+  Object? _sceneKey;
+  _WheelScene? _scene;
+
+  _WheelScene _sceneFor(
+      WheelHistoryData data, double side, String locale, double labelSize) {
+    final hiddenKey = (_hidden.toList()..sort()).join(',');
+    final key = (
+      data,
+      side,
+      locale,
+      labelSize,
+      _zoom,
+      hiddenKey,
+      _selectedId,
+      ChronologyService.instance.cached,
+      HebrewKingsService.instance.cached,
+      FamilyTreeService.instance.cached,
+    );
+    if (_sceneKey == key && _scene != null) return _scene!;
+    final streams = _visible(data);
+    final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
+    final colors = colorsFor(data);
+    final rHub = side * _kHubFrac;
+    final rBands = side * bandsFractionFor(side);
+    final rRim = side * rimFractionFor(side);
+    final arcs = _buildArcs(
+        data, ringOf, colors, streams.length, rHub, rBands, locale, labelSize);
+    final spokes =
+        _buildSpokes(data, ringOf, rBands, rRim, colors, locale, labelSize);
+    final lives = _buildLifespans(rBands, rRim, spokes, locale, labelSize);
+    final rail = _buildRail(rBands, rRim, lives);
+    _sceneKey = key;
+    WheelRenderStats.sceneBuilds++;
+    return _scene = _WheelScene(streams, colors, arcs, spokes, lives, rail);
+  }
+
+  void _showRange(int start, int end) {
+    final full = start <= kMinYear && end >= kMaxYear;
+    setState(() {
+      _rangeStart = full ? null : start.clamp(kMinYear, kMaxYear);
+      _rangeEnd = full ? null : end.clamp(kMinYear, kMaxYear);
+      _cursorYear = full ? null : ((start + end) / 2).round();
+      _selectedId = null;
+    });
+    // A period is a sector of the overview. Keep the entire wheel in
+    // view so the coloured sector answers where the period belongs;
+    // its readable event list is beside the chart, at the same scale.
+    _resetViewMatrix();
+  }
+
+  void _openExplorerEvent(BuildContext context, WheelHistoryEvent event,
+      WheelHistoryData data, String locale) {
+    _placeCursor(event.year);
+    _reveal(
+        context,
+        WheelHit(
+          kind: WheelHitKind.event,
+          via: WheelHitVia.title,
+          id: event.id,
+          streamId: event.stream,
+          title: event.titleFor(locale),
+          year: event.year,
+          matched: '',
+          rank: 0,
+          streamHidden: _hidden.contains(event.stream),
+        ),
+        data,
+        locale);
+  }
 
   /// The viewer's current scale.
   ///
-  /// Everything about legibility hangs off this. InteractiveViewer
-  /// magnifies the whole canvas, so type drawn at a fixed canvas size
-  /// grows on screen as you zoom — which is backwards. What a reader
-  /// wants is type that stays the SAME size on screen while more of it
-  /// fits as they zoom in, the way a map behaves. So the painter is
-  /// given the zoom and divides by it, and the label thinning uses the
-  /// resulting on-screen size to decide how many labels can fit
-  /// without touching.
+  /// InteractiveViewer magnifies the whole canvas. Label sizing uses
+  /// wheelLabelScale so the first 4x can enlarge type, while higher zoom
+  /// reveals more detail without continuing to enlarge the letters.
   double _zoom = 1;
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialPeriod case final period?) {
+      _explorer.selectPeriod(period);
+    }
+    if (widget.initialHiddenStreams case final hidden?) {
+      _hidden.addAll(hidden);
+      _defaultsApplied = true;
+    }
+
     _future = WheelHistoryService.instance.load();
     _viewer.addListener(_onZoom);
     // Own the address bar while this page is up, so a reader who
@@ -1421,8 +1496,28 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     final cached = _digestLanes;
     if (cached != null && _digestLanesKey == key) return cached;
     final creation = creationYear;
+    // The digest describes the visible chart. Its old unfiltered input
+    // still listed Japan and the Americas while those rings were off.
+    // Match the strip's _visibleInputs: streams own powers and events,
+    // while ministries have their own switch, independent of streams.
+    // Detail sheets keep the original corpus and all its provenance.
+    final visible = _hidden.isEmpty
+        ? data
+        : WheelHistoryData(
+            streams:
+                data.streams.where((s) => !_hidden.contains(s.id)).toList(),
+            nations: data.nations,
+            powers:
+                data.powers.where((p) => !_hidden.contains(p.stream)).toList(),
+            ministries:
+                _hidden.contains(kMinistryLayerId) ? const [] : data.ministries,
+            omissions: data.omissions,
+            events:
+                data.events.where((e) => !_hidden.contains(e.stream)).toList(),
+            meta: data.meta,
+          );
     final lanes = buildStripLanes(
-      wheel: data,
+      wheel: visible,
       kings: _hidden.contains(kReignLayerId)
           ? const <HebrewKing>[]
           : (HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[]),
@@ -1511,13 +1606,16 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// year into a point search can pan to.
   double _side = 0;
 
-  void _resetZoom() => _viewer.value = Matrix4.identity();
+  void _resetViewMatrix() => _viewer.value = Matrix4.identity();
+
+  void _resetZoom() => _explorer.showAll();
 
   @override
   void dispose() {
     UrlSyncService.claimUrl(null, owner: this);
     _viewer.removeListener(_onZoom);
     _viewer.dispose();
+    _explorer.dispose();
     _findCtl.dispose();
     super.dispose();
   }
@@ -1574,7 +1672,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
               if (selected.first != 'strip') return;
               context.read<AppSettings>().setChronologyView('strip');
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const StripChronologyPage()),
+                MaterialPageRoute(
+                    builder: (_) => StripChronologyPage(
+                          initialPeriod: _explorer.period,
+                          initialHiddenStreams: Set.unmodifiable(_hidden),
+                        )),
               );
             },
           ),
@@ -1596,7 +1698,37 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          return _body(context, data, locale);
+          return LayoutBuilder(builder: (context, box) {
+            final available =
+                chronologyExplorerChartSize(Size(box.maxWidth, box.maxHeight));
+            // Apply defaults before either the explorer or the scene
+            // reads them. The old post-frame callback first built all
+            // streams, then built the intended four-stream phone view.
+            // YearDigestBar's collapsed height: 6 px padding, a 24 px
+            // header, 16 px scrubber, 30 px chip lane and a 1 px border.
+            // Keep the estimate on the same body scale and safe inset;
+            // the page test compares it with the rendered bar.
+            final digestHeight = WbType.of(context).scaled(76) +
+                1 +
+                MediaQuery.viewPaddingOf(context).bottom;
+            final side = math.min(available.width,
+                math.max(0.0, available.height - digestHeight));
+            _applyDefaultHidden(data, side);
+            return ChronologyExplorer(
+              controller: _explorer,
+              chart: _body(context, data, locale),
+              data: data,
+              locale: locale,
+              hiddenStreams: _hidden,
+              streamColors: colorsFor(data),
+              selectedId: _selectedId,
+              onEvent: (event) =>
+                  _openExplorerEvent(context, event, data, locale),
+              onRange: _showRange,
+              onFind: () => _showSearch(context, locale),
+              onFilter: () => _showFilter(context, locale),
+            );
+          });
         },
       ),
     );
@@ -1611,9 +1743,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   Widget _body(BuildContext context, WheelHistoryData data, String locale) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
-    final streams = _visible(data);
-    final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
-    final colors = colorsFor(data);
 
     // The readout is a ROW OF THE LAYOUT and the wheel is inside an
     // `Expanded` above it — not a panel floating over the chart. The
@@ -1627,28 +1756,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         child: LayoutBuilder(builder: (context, box) {
           _viewportSize = Size(box.maxWidth, box.maxHeight);
           final side = math.min(box.maxWidth, box.maxHeight);
-          // Before `_visible` reads `_hidden`, and only ever once.
-          if (!_defaultsApplied) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || _defaultsApplied) return;
-              setState(() => _applyDefaultHidden(data, side));
-            });
-          }
           _side = side;
           final hubD = side * _kHubFrac * 2;
           final rHub = side * _kHubFrac;
-          final rBands = side * bandsFractionFor(side);
           final rRim = side * rimFractionFor(side);
 
-          final arcs = _buildArcs(data, ringOf, colors, streams.length, rHub,
-              rBands, locale, t.scaledChrome(_kLabelPx));
-          final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors,
-              locale, t.scaledChrome(_kLabelPx));
-          // AFTER the spokes, because the arc names have to dodge the spoke
-          // titles and cannot know where they are until they are planned.
-          final lives = _buildLifespans(
-              rBands, rRim, spokes, locale, t.scaledChrome(_kLabelPx));
-          final rail = _buildRail(rBands, rRim, lives);
+          final scene =
+              _sceneFor(data, side, locale, t.scaledChrome(_kLabelPx));
+          final streams = scene.streams;
+          final colors = scene.colors;
+          final arcs = scene.arcs;
+          final spokes = scene.spokes;
+          final lives = scene.lives;
+          final rail = scene.rail;
 
           return Stack(children: [
             Positioned.fill(
@@ -1691,22 +1811,27 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                             rail,
                             locale),
                         child: Stack(children: [
-                          CustomPaint(
-                            size: Size(side, side),
-                            painter: _WorldWheelPainter(
-                              streams: streams,
-                              colors: colors,
-                              arcs: arcs,
-                              spokes: spokes,
-                              lives: lives,
-                              rail: rail,
-                              locale: locale,
-                              selectedId: _selectedId,
-                              wb: wb,
-                              zoom: _zoom,
-                              rimFont: t.scaledChrome(_kLabelPx),
-                              endFont: t.scaledChrome(11),
-                              bandFont: t.scaledChrome(10),
+                          RepaintBoundary(
+                            key: const ValueKey('wheelSceneBoundary'),
+                            child: CustomPaint(
+                              size: Size(side, side),
+                              painter: _WorldWheelPainter(
+                                streams: streams,
+                                colors: colors,
+                                arcs: arcs,
+                                spokes: spokes,
+                                lives: lives,
+                                rail: rail,
+                                locale: locale,
+                                selectedId: _selectedId,
+                                rangeStart: _rangeStart,
+                                rangeEnd: _rangeEnd,
+                                wb: wb,
+                                zoom: _zoom,
+                                rimFont: t.scaledChrome(_kLabelPx),
+                                endFont: t.scaledChrome(11),
+                                bandFont: t.scaledChrome(10),
+                              ),
                             ),
                           ),
                           // THE LINE, and on a wheel it is a spoke: year is
@@ -1758,9 +1883,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             Positioned(
                 left: 10,
                 bottom: 10,
-                child: side < kWheelNarrowPaneWidth
-                    ? _legendChip(context, locale, t, wb)
-                    : _legend(locale, t, wb)),
+                child: _legendChip(context, locale, t, wb)),
             Positioned(
                 right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
           ]);
@@ -1802,177 +1925,36 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     ]);
   }
 
-  /// The hub's caption — title, year range, counts, hint — sized to fit
-  /// [hubD] rather than the SizedBox's fixed WIDTH alone, the way it was
-  /// measured until 2026-09-04. The width constraint (`hubD * 0.94`) was
-  /// the whole fit check; nothing bounded the STACK's height, and at
-  /// side=375 (the width `#/wheel` is now reached at — no
-  /// `SmallScreenGate` since 2026-09-03) the app's own shipped default
-  /// locale, 简体中文, measured **171 px against an 86 px hub** — pumped
-  /// against the real asset, real corpus, real faces, no maxLines cap
-  /// on any of the four `Text` widgets (the same cap the widgets
-  /// themselves do not carry, so a capped measurement here would have
-  /// predicted a string nobody draws — `fitArcLabel`'s own warning, for
-  /// the same reason). Two of the four lines wrap on their own at 81 px
-  /// of width — the year range to 3 lines, and the counts line to 4
-  /// once `· ${lives.length}` is the real corpus figure (111, not a
-  /// short guess) — so the caption printed out over the bands twice
-  /// its own hub's height, not merely a little past it.
-  ///
-  /// The fix is [fitRadialLabel]'s own doctrine (`radial_chronology_
-  /// layout.dart`), read onto a real widget instead of a canvas string:
-  /// drop lines CHEAPEST FIRST until what remains fits, rather than
-  /// clip or shrink type silently. The hint goes first — it explains a
-  /// gesture, not a fact, and a reader who has already found the
-  /// wheel's zoom and tap without it loses nothing durable. The year
-  /// range goes second, and only if losing the hint alone still isn't
-  /// enough — it is RECOVERABLE: `_paintAxisEnds` already prints both
-  /// years, once each, at the axis's own two ends, so dropping the copy
-  /// here loses no information from the screen. The title and the
-  /// counts are never dropped: measured the same way, title+counts
-  /// alone is 85 px against the same 86 px hub at 375 — the counts line
-  /// still wraps to four lines on its own, and the fit is real but
-  /// tight, which is the honest shape of "never dropped" once the
-  /// corpus itself is long — so the two facts a reader needs are never
-  /// the ones squeezed out. (A hub smaller still than title+counts
-  /// together is not reached at any width this app now opens at; if
-  /// one ever is, this stops being enough and the overflow will show
-  /// rather than lie, which is the same trade [fitRadialLabel] makes at
-  /// its own floor.)
+  /// The hub identifies the chart; readable records and counts belong to
+  /// the explorer. Removing the four-block caption also keeps a small
+  /// wheel's centre inside its circle instead of wrapping into the bands.
   Widget _hubCaption(
-      BuildContext context,
-      String locale,
-      WbType t,
-      WbColors wb,
-      double hubD,
-      List<WheelStream> streams,
-      WheelHistoryData data,
-      List<_Life> lives) {
-    final hubW = hubD * 0.94;
-    final ambient = DefaultTextStyle.of(context).style;
-    // No `maxLines` cap: none of the four `Text` widgets below carries
-    // one either, so a cap here would measure a STRING NOBODY DRAWS —
-    // exactly the mistake `fitArcLabel`'s own doc warns against for a
-    // shaped run, for the same reason. Caught in review: the counts
-    // line wraps to FOUR lines at 81 px width once `+ ${lives.length}`
-    // is real corpus data (`111`, not a guessed `39`) — 64 px on its
-    // own — and a `maxLines: 1` guess here had let that line's true
-    // height go unmeasured, so the cascade below kept the hint on a
-    // caption that was already 136 px against an 86 px hub.
-    double blockHeight(String text, double size, FontWeight weight) {
-      if (text.isEmpty) return 0;
-      return (TextPainter(
-        text: TextSpan(
-            text: text,
-            // `fontFamilyFallback: kCjkFontFallback` explicitly, on
-            // top of `ambient`'s own family and line height, rather
-            // than `canvasTextStyle` — this is a real widget's OWN
-            // size being measured before it is built, not a canvas
-            // string with no ambient at all, and `ambient`'s height
-            // and letter-spacing are exactly what the `Text` widgets
-            // below actually render at.
-            style: ambient.copyWith(
-                fontSize: size,
-                fontWeight: weight,
-                fontFamilyFallback: kCjkFontFallback)),
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.center,
-      )..layout(maxWidth: hubW))
-          .height;
-    }
-
-    final titleText = s('wheelTitle', 'World History Wheel', locale);
-    final yearRangeText =
-        '${yearLabel(kMinYear, locale)} – ${yearLabel(kMaxYear, locale)}';
-    // Bands, powers, events — and the lives, last and only when the
-    // layer is on, so the count is of what is actually drawn rather
-    // than of what the file holds.
-    final countsText = '${streams.length} · ${data.powers.length} · '
-        '${data.events.length}${lives.isEmpty ? '' : ' · ${lives.length}'}';
-    final hintText = s('wheelHint', '', locale);
-
-    final titleSize = t.scaled(12);
-    final bodySize = t.scaled(11);
-    final gapAfterTitle = t.scaled(4);
-    final gapBetween = t.scaled(3);
-
-    final titleH = blockHeight(titleText, titleSize, FontWeight.w600);
-    final yearRangeH = blockHeight(yearRangeText, bodySize, FontWeight.normal);
-    final countsH = blockHeight(countsText, bodySize, FontWeight.normal);
-    final hintH = blockHeight(hintText, bodySize, FontWeight.normal);
-
-    double totalWith({required bool yearRange, required bool hint}) {
-      var h = titleH + gapAfterTitle;
-      if (yearRange) h += yearRangeH + gapBetween;
-      h += countsH;
-      if (hint) h += gapBetween + hintH;
-      return h;
-    }
-
-    var showHint = hintText.isNotEmpty;
-    var showYearRange = true;
-    if (showHint && totalWith(yearRange: true, hint: true) > hubD) {
-      showHint = false;
-    }
-    if (!showHint && totalWith(yearRange: true, hint: false) > hubD) {
-      showYearRange = false;
-    }
-
-    Text body(String text) => Text(text,
-        textAlign: TextAlign.center,
-        style: TextStyle(color: wb.mutedText, fontSize: bodySize));
-
-    return SizedBox(
-      key: const ValueKey('wheelHubCaption'),
-      width: hubW,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            titleText,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: wb.text,
-              fontSize: titleSize,
-              fontWeight: FontWeight.w600,
-            ),
+          BuildContext context,
+          String locale,
+          WbType t,
+          WbColors wb,
+          double hubD,
+          List<WheelStream> streams,
+          WheelHistoryData data,
+          List<_Life> lives) =>
+      SizedBox(
+        key: const ValueKey('wheelHubCaption'),
+        width: hubD * 0.82,
+        child: Text(
+          s('wheelTitle', 'World History Wheel', locale),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: wb.mutedText,
+            fontSize: t.scaledChrome(11),
+            fontWeight: FontWeight.w600,
+            height: 1.25,
           ),
-          SizedBox(height: gapAfterTitle),
-          if (showYearRange) ...[
-            body(yearRangeText),
-            SizedBox(height: gapBetween),
-          ],
-          body(countsText),
-          if (showHint) ...[
-            SizedBox(height: gapBetween),
-            body(hintText),
-          ],
-        ],
-      ),
-    );
-  }
+        ),
+      );
 
-  /// The legend, collapsed to a single tappable chip in the wheel's own
-  /// bottom-left corner — the same corner [_legend] itself sits in,
-  /// below [kWheelNarrowPaneWidth] of wheel DIAMETER (`side`, not the
-  /// screen width the AppBar collapse reads — the two happen to share
-  /// one constant because both are answering "is this a phone", and a
-  /// second, separately-tuned number would only invite the two to
-  /// drift).
-  ///
-  /// MEASURED, NOT GUESSED. [_legend] at rest with every layer on (the
-  /// app's own default — `_hidden` starts empty) is 238.5 x 216 px,
-  /// independent of `side` since nothing in it scales with the canvas.
-  /// At side=375 that is 216 px of a 375 px wheel sitting in one
-  /// corner — most of its bottom-left QUADRANT, which is the reported
-  /// defect — while at a desktop side of 900+ the same 216 px is under
-  /// a quarter of the diameter, the size the wheel already shipped at.
-  /// A chip in the same corner keeps the affordance where a reader
-  /// already looks for it; tapping it opens [_legend]'s own body
-  /// UNCHANGED in a bottom sheet, so nothing the legend is obliged to
-  /// disclose — which lifespans read which tradition, that reigns and
-  /// lifespans are different kinds of claim — is lost, only reached one
-  /// tap later.
+  /// The full legend lives behind this stable corner control at every
+  /// width. It used to cover the lower-left quadrant on smaller wheels;
+  /// the same disclosure remains one tap away without covering data.
   Widget _legendChip(
       BuildContext context, String locale, WbType t, WbColors wb) {
     // Square, not rounded — task #279's rule (`workbench_theme.dart`:
@@ -2185,11 +2167,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // became a design that shipped a silent 89% cut with the figure 491
     // printed in the hub two inches away.
     //
-    // Nothing is DROPPED now. Events that cannot each have a label are
-    // grouped, and the spoke that survives says how many it stands for
-    // and lists them when tapped — see [clusterByAngle]. The grouping
-    // rule is the old keep-rule read the other way round, so every
-    // label that used to be drawn is still drawn, at the same angle.
+    // Events that cannot each have a label are grouped. At overview
+    // a filled tick indicates the cluster; zooming exposes its +n
+    // badge. Tapping either opens all members, and the explorer lists
+    // the individual events in readable rows at every magnification.
     final onScreenPx = _kLabelPx * 1.35;
     // 2026-09-15: divided by a FIXED reference radius, not by the live
     // `rBands`.
@@ -2402,6 +2383,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       final occupied = <ArcSpan>[
         for (final s in spokes)
           if (s.title.isNotEmpty &&
+              wheelShowsEventText(
+                  zoom: _zoom, selected: s.event.id == _selectedId) &&
               s.label.rStart - 2 <= band.centre &&
               s.label.rEnd + 2 >= band.centre)
             (
@@ -3380,11 +3363,30 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       if (o != null) showOmission(context, o, locale);
       return;
     }
+    final event = hit.kind == WheelHitKind.event
+        ? find(data.events, (event) => event.id == hit.id)
+        : null;
     setState(() {
       _hidden.remove(hit.streamId);
       // A nation of Genesis 10 is not drawn on the axis — it is the
       // descent behind a band — so what gets selected is that band.
       _selectedId = hit.kind == WheelHitKind.nation ? hit.streamId : hit.id;
+      if (event != null) {
+        _cursorYear = event.year;
+        if (!_explorer.period.contains(event.year)) {
+          // Explorer reveals an out-of-range selection in the first
+          // matching navigation window. The painted sector must use
+          // that same shared list; calling _showRange here would clear
+          // the event selection and replace its year with a midpoint.
+          final period = chronologyPeriods.skip(1).firstWhere(
+                (period) => period.contains(event.year),
+                orElse: () => chronologyPeriods.first,
+              );
+          final full = period.id == chronologyPeriods.first.id;
+          _rangeStart = full ? null : period.start;
+          _rangeEnd = full ? null : period.end;
+        }
+      }
     });
     _panTo(hit, data);
     switch (hit.kind) {
@@ -3586,9 +3588,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     _Spoke? bestSpoke;
     var spokeScore = double.infinity;
     if (r >= rBands - 6 && r <= rRim + 8) {
-      final tol = r > 0 ? (9.0 / r) : 0.05;
+      final tol = r > 0 ? (9.0 / (_zoom * r)) : 0.05;
       for (final s in spokes) {
-        if (r < s.label.rStart - 6 || r > s.label.rEnd + 6) continue;
+        final atTick = (r - scriptureLabelBase(rBands)).abs() <= 9 / _zoom;
+        final atLabel =
+            r >= s.label.rStart - 6 / _zoom && r <= s.label.rEnd + 6 / _zoom;
+        if (!atTick && !atLabel) continue;
         // NORMALISED, not absolute: how far into its own target the
         // finger fell, 0 dead centre and 1 at the edge. That is what
         // makes it comparable with an arc's, whose target is a
@@ -3774,6 +3779,20 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   }
 }
 
+/// A cached single-line paragraph with the small interface the painter
+/// needs. Width is the shaped intrinsic width, because the paragraph is
+/// laid out without wrapping and its constraint width is infinite.
+class _WheelText {
+  _WheelText(String text, TextStyle style)
+      : paragraph = WheelTextMetrics.paragraphOf(text, style);
+
+  final ui.Paragraph paragraph;
+  double get width => paragraph.maxIntrinsicWidth;
+  double get height => paragraph.height;
+  void paint(Canvas canvas, Offset offset) =>
+      canvas.drawParagraph(paragraph, offset);
+}
+
 // ── the painter ──────────────────────────────────────────────────────
 
 class _WorldWheelPainter extends CustomPainter {
@@ -3786,6 +3805,8 @@ class _WorldWheelPainter extends CustomPainter {
     required this.rail,
     required this.locale,
     required this.selectedId,
+    required this.rangeStart,
+    required this.rangeEnd,
     required this.wb,
     required this.zoom,
     required this.rimFont,
@@ -3806,10 +3827,12 @@ class _WorldWheelPainter extends CustomPainter {
   final List<_Life> lives;
   final String locale;
   final String? selectedId;
+  final int? rangeStart;
+  final int? rangeEnd;
   final WbColors wb;
 
-  /// Everything textual is divided by this, so a letter keeps the same
-  /// size on the reader's screen however far in they zoom.
+  /// Passed through wheelLabelScale: screen type grows to twice its
+  /// resting size, then further zoom buys additional detail.
   final double zoom;
 
   final double rimFont;
@@ -3818,6 +3841,7 @@ class _WorldWheelPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    WheelRenderStats.paints++;
     if (streams.isEmpty) return;
     final side = math.min(size.width, size.height);
     final c = Offset(size.width / 2, size.height / 2);
@@ -3825,14 +3849,14 @@ class _WorldWheelPainter extends CustomPainter {
     final rBands = side * bandsFractionFor(side);
     final rRim = side * rimFractionFor(side);
 
+    _paintSurface(canvas, c, rHub, rRim);
     _paintCenturies(canvas, c, rHub, rRim);
     _paintGrooves(canvas, c, rHub, rBands);
     _paintArcs(canvas, c, rHub, rBands);
     _paintBandNames(canvas, c, rHub, rBands);
-    // BEFORE the spokes, deliberately. The lives are a tint the event
-    // text prints over, the way a printed chart sets its text over its
-    // bars — the wheel's own grooves are alpha 0.06 and its power arcs
-    // 0.78, and this sits between at 0.22.
+    // Lifespans remain a lighter layer than power bands. At overview
+    // the explorer carries event titles; zooming restores radial text
+    // over this same tint without changing its meaning.
     _paintLifespans(canvas, c, rBands, rRim);
     _paintRail(canvas, c);
     _paintSpokes(canvas, c, rBands);
@@ -3841,16 +3865,47 @@ class _WorldWheelPainter extends CustomPainter {
     _paintAxisEnds(canvas, c, rHub, rRim);
   }
 
+  void _paintSurface(Canvas canvas, Offset c, double rHub, double rRim) {
+    final surface = Rect.fromCircle(center: c, radius: rRim);
+    // One soft surface gives the rings a common ground without adding
+    // live 3D, image assets or an extra rendering dependency.
+    canvas.drawCircle(
+        c,
+        rRim,
+        Paint()
+          ..shader = ui.Gradient.radial(c, rRim, [
+            wb.paneBg,
+            Color.lerp(wb.paneBg, wb.paneAltBg, 0.65)!,
+          ]));
+    final from = rangeStart;
+    final to = rangeEnd;
+    if (from == null || to == null) return;
+    final a0 = angleForSpan(from, kMinYear, kMaxYear);
+    final a1 = angleForSpan(to, kMinYear, kMaxYear);
+    canvas.drawArc(surface, a0, a1 - a0, true,
+        Paint()..color = wb.accent.withValues(alpha: 0.09));
+    for (final angle in [a0, a1]) {
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      canvas.drawLine(
+          c + direction * rHub,
+          c + direction * rRim,
+          Paint()
+            ..color = wb.accent.withValues(alpha: 0.5)
+            ..strokeWidth = 1 / zoom);
+    }
+  }
+
   void _paintCenturies(Canvas canvas, Offset c, double rHub, double rRim) {
     final minor = Paint()
-      ..color = wb.border.withValues(alpha: 0.2)
-      ..strokeWidth = 0.5;
+      ..color = wb.border.withValues(alpha: 0.10)
+      ..strokeWidth = 0.5 / zoom;
     final major = Paint()
-      ..color = wb.border.withValues(alpha: 0.5)
-      ..strokeWidth = 0.9;
+      ..color = wb.border.withValues(alpha: 0.35)
+      ..strokeWidth = 0.8 / zoom;
     for (var y = kMinYear; y <= kMaxYear; y += 100) {
       if (y == kMinYear) continue;
       final isMajor = y % 500 == 0;
+      if (!isMajor && zoom < 1.6) continue;
       final a = angleForSpan(y, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
       canvas.drawLine(c + dir * rHub, c + dir * rRim, isMajor ? major : minor);
@@ -3887,14 +3942,17 @@ class _WorldWheelPainter extends CustomPainter {
       double innerEdge, Color color, double size) {
     if (text.isEmpty) return;
     final tp = _painter(text, color, size);
-    final r = ringLabelRadius(rRim: innerEdge, clearance: 0, height: tp.height);
-    // On the lower half the tangent would run the text upside down, so
-    // it is turned the other way — the same rule `_charsOnArc` uses, so
-    // every word outside the hub keeps its top pointing outward.
-    final flip = math.sin(angle) > 0;
+    final placement = placeWheelAxisLabel(
+      angle: angle,
+      width: tp.width,
+      height: tp.height,
+      rimRadius: innerEdge,
+      clearance: 0,
+      onRing: true,
+    );
     canvas.save();
-    canvas.translate(c.dx + math.cos(angle) * r, c.dy + math.sin(angle) * r);
-    canvas.rotate(angle + (flip ? -math.pi / 2 : math.pi / 2));
+    canvas.translate(c.dx + placement.centre.dx, c.dy + placement.centre.dy);
+    canvas.rotate(placement.rotation);
     tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
     canvas.restore();
   }
@@ -3922,7 +3980,7 @@ class _WorldWheelPainter extends CustomPainter {
   ///
   /// THE SAME ORDER SERVES TWO PURPOSES. Painted in the file's own data
   /// order, a long span painted after a short one buried it completely
-  /// — every one of these arcs is drawn at the same alpha 0.78, so
+  /// — every one of these arcs shared the same opacity, so
   /// whichever is drawn LAST wins the pixels underneath it, and the data
   /// is mostly containment: New Kingdom Egypt holds the Eighteenth
   /// Dynasty, Rome's empire holds its emperors. Painting longest-span
@@ -3951,11 +4009,11 @@ class _WorldWheelPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = band.width * 0.86
-          ..color = arc.color.withValues(alpha: 0.78 * dim),
+          ..color = arc.color.withValues(alpha: 0.64 * dim),
       );
       // Hairlines at the boundaries so adjacent spans read as separate.
       final edge = Paint()
-        ..strokeWidth = 0.7
+        ..strokeWidth = 0.7 / zoom
         ..color = wb.paneBg.withValues(alpha: 0.85);
       for (final a in [arc.a0, arc.a1]) {
         final dir = Offset(math.cos(a), math.sin(a));
@@ -3970,7 +4028,7 @@ class _WorldWheelPainter extends CustomPainter {
             false,
             Paint()
               ..style = PaintingStyle.stroke
-              ..strokeWidth = 1
+              ..strokeWidth = 1 / zoom
               ..color = wb.text.withValues(alpha: 0.85));
       }
       // Where the name goes, and at what size, was already decided in
@@ -4021,7 +4079,7 @@ class _WorldWheelPainter extends CustomPainter {
         c + dir * (r.centre - half),
         c + dir * (r.centre + half),
         Paint()
-          ..strokeWidth = sel ? 1.8 : 1.0
+          ..strokeWidth = (sel ? 1.8 : 1.0) / zoom
           ..color = lineageRailColor().withValues(alpha: alpha),
       );
     }
@@ -4048,7 +4106,7 @@ class _WorldWheelPainter extends CustomPainter {
           ..color = l.color.withValues(alpha: alpha),
       );
       final tick = Paint()
-        ..strokeWidth = sel ? 1.4 : 0.7
+        ..strokeWidth = (sel ? 1.4 : 0.7) / zoom
         ..color = l.color.withValues(alpha: (alpha * 2).clamp(0.0, 1.0));
       for (final a in [l.arc.a0, l.arc.a1]) {
         final dir = Offset(math.cos(a), math.sin(a));
@@ -4075,7 +4133,7 @@ class _WorldWheelPainter extends CustomPainter {
         final mid = l.arc.a0 + l.arc.sweep / 2;
         canvas.drawCircle(
           c + Offset(math.cos(mid), math.sin(mid)) * l.centre,
-          math.min(1.6, l.stroke * 0.28),
+          math.min(1.6 / zoom, l.stroke * 0.28),
           Paint()
             ..color = l.color.withValues(alpha: (alpha * 2.6).clamp(0.0, 1.0)),
         );
@@ -4084,7 +4142,7 @@ class _WorldWheelPainter extends CustomPainter {
     final chosen = _find(lives, (l) => l.id == selectedId);
     if (chosen == null) return;
     final rule = Paint()
-      ..strokeWidth = 0.9
+      ..strokeWidth = 0.9 / zoom
       ..color = wb.text.withValues(alpha: 0.5);
     for (final a in [chosen.arc.a0, chosen.arc.a1]) {
       final dir = Offset(math.cos(a), math.sin(a));
@@ -4105,18 +4163,15 @@ class _WorldWheelPainter extends CustomPainter {
   void _paintBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
     for (var i = 0; i < streams.length; i++) {
       final band = ringRadii(i, streams.length, rHub, rBands);
-      final tp = TextPainter(
-        text: TextSpan(
-          text: streams[i].nameFor(locale),
-          style: canvasTextStyle(
-            color: (colors[streams[i].id] ?? lineColor(streams[i].line))
-                .withValues(alpha: 0.98),
-            fontSize: math.min(bandFont / _labelScale(zoom), band.width * 1.05),
-            fontWeight: FontWeight.w600,
-          ),
+      final tp = _WheelText(
+        streams[i].nameFor(locale),
+        canvasTextStyle(
+          color: (colors[streams[i].id] ?? lineColor(streams[i].line))
+              .withValues(alpha: 0.98),
+          fontSize: math.min(bandFont / _labelScale(zoom), band.width * 1.05),
+          fontWeight: FontWeight.w600,
         ),
-        textDirection: TextDirection.ltr,
-      )..layout();
+      );
       canvas.save();
       canvas.translate(c.dx, c.dy - band.centre);
       tp.paint(canvas, Offset(-tp.width - 7, -tp.height / 2));
@@ -4144,13 +4199,19 @@ class _WorldWheelPainter extends CustomPainter {
       final a = s.label.angle;
       final dir = Offset(math.cos(a), math.sin(a));
       canvas.drawLine(
-        c + dir * (rTick - 5),
+        c + dir * (rTick - 5 / zoom),
         c + dir * rTick,
         Paint()
-          ..strokeWidth = sel ? 1.5 : 0.8
+          ..strokeWidth = (sel ? 1.5 : 0.8) / zoom
           ..color = s.color.withValues(alpha: 0.8 * dim),
       );
-      _radialLabel(canvas, c, s, dim, sel);
+      if (s.hidden > 0 && !wheelShowsEventText(zoom: zoom, selected: sel)) {
+        canvas.drawCircle(c + dir * (rTick - 2.5 / zoom), 2 / zoom,
+            Paint()..color = s.color.withValues(alpha: 0.8 * dim));
+      }
+      if (wheelShowsEventText(zoom: zoom, selected: sel)) {
+        _radialLabel(canvas, c, s, dim, sel);
+      }
     }
   }
 
@@ -4186,27 +4247,11 @@ class _WorldWheelPainter extends CustomPainter {
       color: wb.mutedText.withValues(alpha: 0.95 * dim),
       fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
     );
-    final tp = TextPainter(
-        text: TextSpan(text: s.title, style: style),
-        textDirection: TextDirection.ltr,
-        maxLines: 1)
-      ..layout();
-    final refTp = s.ref.isEmpty
-        ? null
-        : (TextPainter(
-            text: TextSpan(text: '  ${s.ref}', style: refStyle),
-            textDirection: TextDirection.ltr,
-            maxLines: 1)
-          ..layout());
+    final tp = _WheelText(s.title, style);
+    final refTp = s.ref.isEmpty ? null : _WheelText('  ${s.ref}', refStyle);
     final badgeTp = s.badge.isEmpty
         ? null
-        : (TextPainter(
-            text: TextSpan(
-                text: s.title.isEmpty ? s.badge : '  ${s.badge}',
-                style: badgeStyle),
-            textDirection: TextDirection.ltr,
-            maxLines: 1)
-          ..layout());
+        : _WheelText(s.title.isEmpty ? s.badge : '  ${s.badge}', badgeStyle);
 
     final a = s.label.angle;
     canvas.save();
@@ -4303,7 +4348,7 @@ class _WorldWheelPainter extends CustomPainter {
           false,
           Paint()
             ..style = PaintingStyle.stroke
-            ..strokeWidth = w
+            ..strokeWidth = w / zoom
             ..color = wb.border.withValues(alpha: alpha));
     }
   }
@@ -4315,14 +4360,14 @@ class _WorldWheelPainter extends CustomPainter {
         rHub,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
+          ..strokeWidth = 1 / zoom
           ..color = wb.border);
   }
 
   void _paintAxisEnds(Canvas canvas, Offset c, double rHub, double rRim) {
     final paint = Paint()
       ..color = wb.border
-      ..strokeWidth = 1;
+      ..strokeWidth = 1 / zoom;
     for (final l in _axisLabels().where((l) => !l.onRing)) {
       final a = angleForSpan(l.year, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
@@ -4335,64 +4380,41 @@ class _WorldWheelPainter extends CustomPainter {
       // the labels a reader goes to first, and at 53° and 37° off the
       // horizontal there is room for them to stay level. `rRim + 17`
       // was not enough — 主后2026 reached 3.9 units inside the rim.
-      final r = axialLabelRadius(
+      final placement = placeWheelAxisLabel(
         angle: la,
-        rRim: rRim,
         width: tp.width,
         height: tp.height,
+        rimRadius: rRim,
         clearance: kAxisLabelClearance,
+        onRing: false,
       );
       tp.paint(
-          canvas,
-          c +
-              Offset(math.cos(la), math.sin(la)) * r -
-              Offset(tp.width / 2, tp.height / 2));
+          canvas, c + placement.centre - Offset(tp.width / 2, tp.height / 2));
     }
   }
 
   /// A laid-out run. Everything outside the hub now needs the SIZE of
   /// its text before it can decide where the text goes, so measuring
   /// and painting are two steps rather than one.
-  TextPainter _painter(String text, Color color, double size) => TextPainter(
-        text: TextSpan(
-            text: text, style: canvasTextStyle(color: color, fontSize: size)),
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-      )..layout();
+  _WheelText _painter(String text, Color color, double size) =>
+      _WheelText(text, canvasTextStyle(color: color, fontSize: size));
 
-  /// EVERY FIELD ON THIS PAINTER MUST APPEAR BELOW.
-  ///
-  /// Three did not, and one of them was a live bug: `rail` was absent,
-  /// so toggling the genealogy layer repainted nothing. That switch is
-  /// the only one of the four whose effect is invisible to a length —
-  /// it takes `rail` from 107 marks to 0 and shifts every arc's ring by
-  /// one, while `streams`, `arcs`, `spokes` and `lives` all keep exactly
-  /// the counts they had. Every comparison returned equal, so the reader
-  /// pressed a checkbox and the wheel did not move. The other three
-  /// layer switches happen to change `lives.length`, which is why they
-  /// looked fine and this one did not.
-  ///
-  /// `wb` and `colors` were missing for the same reason and are latent
-  /// rather than live: a palette change while the page is open would
-  /// keep the old colours. Compared by identity, which repaints a little
-  /// more often than strictly needed and never less.
-  ///
-  /// Lists are compared by LENGTH, not by content. That is a deliberate
-  /// cheapness — there are 851 spokes — and it is exactly why a field
-  /// that changes shape without changing count has to be listed here
-  /// explicitly. `test/wheel_repaint_coverage_test.dart` reads this
-  /// class's field declarations out of the source and fails if one of
-  /// them is not named in this method.
+  /// Scene lists are reused until their inputs change. Identity catches
+  /// same-count stream swaps and costs one comparison per list; counting
+  /// entries alone once left the genealogy toggle visually unchanged.
+  /// Every field stays explicit for wheel_repaint_coverage_test.dart.
   @override
   bool shouldRepaint(_WorldWheelPainter old) =>
       old.selectedId != selectedId ||
       old.locale != locale ||
-      old.streams.length != streams.length ||
-      old.arcs.length != arcs.length ||
-      old.spokes.length != spokes.length ||
-      old.lives.length != lives.length ||
-      old.rail.length != rail.length ||
-      old.colors.length != colors.length ||
+      old.rangeStart != rangeStart ||
+      old.rangeEnd != rangeEnd ||
+      old.streams != streams ||
+      old.arcs != arcs ||
+      old.spokes != spokes ||
+      old.lives != lives ||
+      old.rail != rail ||
+      old.colors != colors ||
       old.wb != wb ||
       old.zoom != zoom ||
       old.rimFont != rimFont ||

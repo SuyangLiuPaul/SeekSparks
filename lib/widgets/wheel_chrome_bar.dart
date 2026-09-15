@@ -156,8 +156,7 @@ void _showOverflow({
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         ListTile(
           leading: Icon(Icons.search, color: wb.text),
-          title: Text(s('wheelFind', 'Find'),
-              style: TextStyle(color: wb.text)),
+          title: Text(s('wheelFind', 'Find'), style: TextStyle(color: wb.text)),
           onTap: () {
             Navigator.of(sheet).pop();
             onFind();
@@ -299,14 +298,16 @@ Widget wheelViewSwitch({
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           segments: narrow
-              ? const [
+              ? [
                   ButtonSegment(
                     value: 'wheel',
-                    icon: Icon(Icons.donut_large, size: 16),
+                    tooltip: ss('stripViewWheel', 'Wheel'),
+                    icon: const Icon(Icons.donut_large, size: 16),
                   ),
                   ButtonSegment(
                     value: 'strip',
-                    icon: Icon(Icons.view_week, size: 16),
+                    tooltip: ss('stripViewStrip', 'Strip'),
+                    icon: const Icon(Icons.view_week, size: 16),
                   ),
                 ]
               : [
@@ -325,41 +326,19 @@ Widget wheelViewSwitch({
       ),
     );
 
-/// The AppBar title for either page, and the `titleSpacing` that goes
-/// with it — narrow-aware, because the title is the one thing on this
-/// bar that answers "where am I" and it was the first thing the bar
-/// spent.
-///
-/// MEASURED, at 375 px, after Find/Filter/About/language/home had
-/// already gone into the overflow sheet: the strip's own name — the
-/// longer of the two, 世界历史时间条 at seven Han characters, and
-/// `World History Strip` in English — wanted 153.5 px and was given
-/// 119, so it still rendered clipped. Two levers, neither of which
-/// drops a word: `titleSpacing` 16 -> 4, since Material's default gap
-/// is generous for a bar this empty, and the title set at 17 px rather
-/// than the stock 22, which takes the same name from 153.5 px to 119
-/// and puts it inside the 139 the bar can now offer. That is the move
-/// a chart makes when a label will not fit its arc — except that here
-/// the TYPE shrinks and every word survives, which is the whole
-/// difference between this and the `世···` the bar rendered before.
-/// (A third lever, padding the switch's segments in, was tried and
-/// does nothing — see `wheelViewSwitch`.)
-///
-/// Below 375 px — an iPhone SE at 320 — the longer English name does
-/// not fit even so, and will ellipsize. That is stated rather than
-/// hidden: 375 is the narrowest width this app is actually reached on
-/// today, and buying 320 as well would cost either the view switch or
-/// the type a reader can still read.
+/// The narrow title drops the redundant “World” before shrinking any
+/// text. At 360 px, “World History Strip” was clipped despite the earlier
+/// 375 px fix. The complete name remains on wide screens; the narrow
+/// title still says both what the chart is and which form is open.
 Widget wheelChromeTitle(BuildContext context, String text, double paneWidth) {
   if (paneWidth >= kWheelNarrowPaneWidth) return Text(text);
-  // `scaledChrome`, not a bare 17: #315's rule is that a hardcoded
-  // fontSize is a size the reader's Font Size setting cannot move, and
-  // an AppBar title is frame furniture. 17 is the size at the default
-  // scale; a reader who has enlarged the app's type gets a larger title
-  // and, past some setting, an ellipsis — which is the correct order of
-  // sacrifice, since they asked for the larger type.
+  final compact = text
+      .replaceFirst('World History', 'History')
+      .replaceFirst('世界历史', '历史')
+      .replaceFirst('世界歷史', '歷史')
+      .replaceFirst('世界史', text.contains('輪') ? '歷史' : '历史');
   return Text(
-    text,
+    compact,
     style: TextStyle(
         fontSize: WbType.of(context).scaledChrome(17),
         fontWeight: FontWeight.w500),

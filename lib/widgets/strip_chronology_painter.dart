@@ -1,25 +1,15 @@
-/// The strip's three canvases — implements `docs/strip-painter-spec.md`
-/// against the geometry in `strip_chronology_layout.dart` and the lane
-/// model in `strip_lanes.dart`. See that spec for the paint order, the
-/// exact colour/alpha expressions and why three painters rather than
-/// one (`_StripLanesPainter`/`_StripRulerPainter`/
-/// `_StripLaneHeaderPainter` in the spec's own naming — PUBLIC here,
-/// unlike the wheel's `_WorldWheelPainter`, because the page that owns
-/// them lives in a different file and Dart's `_private` is file-scoped).
+/// The strip's three canvases share one time axis and lane geometry.
 ///
-/// Every span kind here traces to a wheel painter, and the spec names
-/// which one for each: kings, ministries and stream powers descend from
-/// `_paintArcs` (thick fill, edge hairlines, a selection outline);
-/// patriarch lifespans descend from `_paintLifespans` (thin stroke, a
-/// softer alpha ladder); events descend from `_paintSpokes` +
-/// `_radialLabel`. What the wheel actually draws them THROUGH — kings,
-/// ministries and patriarchs all share one annulus, painted by
-/// `_paintLifespans`, even though the wheel's own comments call king
-/// and ministry ids "arcs" — is not what the spec asks for; the spec
-/// is explicit that kings and ministries get the heavier arc-power
-/// treatment on the strip, and this file follows the spec's words
-/// rather than the wheel's paint-method boundaries. Flagged in the
-/// implementing agent's report, not silently resolved either way.
+/// The original paint specification is `docs/strip-painter-spec.md`.
+/// This redesign keeps its data, hit targets and label-fitting rules,
+/// while changing the visual hierarchy: neutral section backgrounds,
+/// lightly tinted duration bars, and names in the theme's text colour.
+///
+/// Every painter now rejects work outside its visible axes before
+/// laying out text. Event clustering still runs over the complete lane
+/// so a viewport change never changes the records behind a +n badge.
+/// Straight labels share immutable Paragraphs through
+/// `StripPaintTextCache`; moving a warm label costs no new layout.
 ///
 /// THE GENEALOGY RAIL is `_paintRail` below, §3.4 — a vertical tick per
 /// [StripLaneKind.rail] span, its height (not its width; every one of
@@ -51,6 +41,8 @@ import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
 import 'package:seeksparks/utils/radial_chronology_layout.dart'
     show selectionCovers;
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:seeksparks/utils/strip_paint_text.dart';
+import 'package:seeksparks/utils/strip_paint_visibility.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 
@@ -77,20 +69,15 @@ const double kStripRefSizeRatio = 0.86;
 /// badge counted. One constant is the only way to keep that true.
 const double kStripEventClusterEm = 1.35;
 
-/// Row height for one lane at the reader's Font Size, floored so a
-/// label's own line box never exceeds the row it sits in.
+/// A readable row keeps at least 32 logical pixels of vertical target.
 ///
-/// `docs/strip-painter-spec.md` §7.1 — the arithmetic, not a guess.
-/// `kLaneHeight` and a 12 px label both scale with `textScale`, so they
-/// stay proportional everywhere ABOVE the point where the label's own
-/// 11 px floor binds (`textScale < 0.917`); below that the label holds
-/// at 11 px (line box 14.52 px) while a bare `kLaneHeight * textScale`
-/// keeps shrinking, and two stops of the Font Size slider (12, 13 pt)
-/// would clip a label into its neighbour without this floor.
-double stripLaneHeightPx(double textScale) => math.max(
-      kLaneHeight * textScale,
-      WbMetrics.smallPrintFloor * WbMetrics.lineHeight,
-    );
+/// The previous 22 px row left only 6.16 px outside a 12 px label's
+/// 15.84 px line box. At 32 px that clearance is 16.16 px; the labels
+/// stop forming one dense texture and a finger can stay in its lane.
+/// Larger type expands the row, while smaller type does not shrink its
+/// target. Time positions and the lane assignment stay unchanged; this
+/// changes only the displayed row spacing.
+double stripLaneHeightPx(double textScale) => math.max(32, 32 * textScale);
 
 /// A lane-group heading's own row height — taller than a lane row so a
 /// reader scanning the sticky column sees hierarchy, not a flat list
@@ -192,14 +179,11 @@ class StripPalette {
   final Map<String, String> spanLabel;
 }
 
-double _measure(String text, double size, {FontWeight? weight}) => (TextPainter(
-      text: TextSpan(
-          text: text,
-          style: canvasTextStyle(fontSize: size, fontWeight: weight)),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout())
-        .width;
+double _measure(String text, double size, {FontWeight? weight}) =>
+    (StripPaintTextCache.layout(
+      text: text,
+      style: canvasTextStyle(fontSize: size, fontWeight: weight),
+    )).width;
 
 /// A span's fill/stroke colour — never invented, always traced to
 /// [WbColors]/[StripPalette] or the wheel's own family palette
@@ -266,11 +250,9 @@ String _streamIdFor(StripSpan span, StripLane lane, StripPalette palette) {
 
 /// Grooves, bars, lifespans, the genealogy rail, event ticks and the
 /// selection cross-hair — the whole scrolling content area.
-/// `docs/strip-painter-spec.md` §2's paint order, followed exactly
-/// except step 3's "before the spokes" ordering, which collapses here
-/// since nothing on the strip needs to dodge a spoke's text the way the
-/// wheel's arc names do (`fitBarLabel` truncates instead of searching
-/// for room — §7.4).
+/// Paint order keeps labels above their own quiet guides. `fitBarLabel`
+/// uses the same width contract as the previous renderer, so changing
+/// the surface does not change which records a tap can reach.
 class StripLanesPainter extends CustomPainter {
   StripLanesPainter({
     required this.rows,
@@ -282,6 +264,8 @@ class StripLanesPainter extends CustomPainter {
     required this.palette,
     required this.visibleX0,
     required this.visibleX1,
+    this.visibleY0 = 0,
+    this.visibleY1 = double.infinity,
   });
 
   final List<StripRow> rows;
@@ -297,12 +281,29 @@ class StripLanesPainter extends CustomPainter {
 
   final StripPalette palette;
 
-  /// The horizontal window currently on screen, in content px — what
-  /// [barLabelX] needs to keep a wide bar's name in view while it
-  /// scrolls, and what an event label's own edge-flip is measured
-  /// against.
+  /// The visible content window. Long bars pin their names to this
+  /// interval; events retain their fixed text origin and are culled
+  /// only after the whole space up to their next tick has left it.
   final double visibleX0;
   final double visibleX1;
+  final double visibleY0;
+  final double visibleY1;
+
+  bool _rowVisible(StripRow row) => stripPaintIntersects(
+        start: row.top,
+        end: row.top + row.height,
+        visibleStart: visibleY0,
+        visibleEnd: visibleY1,
+      );
+
+  bool _spanVisible(double x0, double x1, {double padding = 2}) =>
+      stripPaintIntersects(
+        start: x0,
+        end: x1,
+        visibleStart: visibleX0,
+        visibleEnd: visibleX1,
+        padding: padding,
+      );
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -316,31 +317,52 @@ class StripLanesPainter extends CustomPainter {
 
   double _rowFor(StripSpan span, StripRow row) => row.top + row.height / 2;
 
-  /// One faint fill per lane, the full content width — so an empty
-  /// stretch still reads as that lane rather than as blank paper. §3.1,
-  /// alpha 0.06 unchanged from the wheel's own `_paintGrooves`.
+  /// Group headings provide structure without colouring the entire
+  /// width of every lane. A quiet guide survives in an empty row; the
+  /// stronger colour belongs to the record, where it conveys identity.
   void _paintGrooves(Canvas canvas, double width) {
+    final x0 = math.max(0.0, visibleX0);
+    final x1 = math.min(width, visibleX1);
     for (final row in rows) {
-      if (row.isHeading) continue;
-      final lane = row.lane!;
-      final color = lane.kind == StripLaneKind.stream
-          ? (palette.streamColors[lane.ownerId] ?? lineColor('none'))
-          : (lane.spans.isEmpty
-              ? lineColor('none')
-              : _spanColor(lane.spans.first, lane, palette));
-      canvas.drawRect(
-        Rect.fromLTWH(0, row.top, width, row.height),
-        Paint()..color = color.withValues(alpha: 0.06),
+      if (!_rowVisible(row)) continue;
+      if (row.isHeading) {
+        canvas.drawRect(
+          Rect.fromLTRB(x0, row.top, x1, row.top + row.height),
+          Paint()..color = wb.paneAltBg,
+        );
+        continue;
+      }
+      if (row.lane!.spans.isEmpty) {
+        // The empty note has room in the chart, beside its named lane.
+        // Appending it to the sticky column clipped it on a phone.
+        final note = StripPaintTextCache.layout(
+          text: stripStrings['stripEmptyLane']?[locale] ??
+              stripStrings['stripEmptyLane']!['en']!,
+          style: canvasTextStyle(fontSize: laneFontPx, color: wb.mutedText),
+          maxWidth: math.max(0, x1 - x0 - 16),
+          ellipsis: '…',
+        );
+        note.paint(
+            canvas, Offset(x0 + 8, row.top + (row.height - note.height) / 2));
+        continue;
+      }
+      canvas.drawLine(
+        Offset(x0, row.top + row.height / 2),
+        Offset(x1, row.top + row.height / 2),
+        Paint()
+          ..strokeWidth = 0.5
+          ..color = wb.border.withValues(alpha: 0.36),
       );
     }
   }
 
-  /// Kings, ministries and stream powers — §3.2, descended from the
-  /// wheel's `_paintArcs`: 86% fill, edge hairlines, a selection
-  /// outline round the full row when this span is the selected one.
+  /// Duration keeps its exact x extent. The 68% fill leaves 32% of the
+  /// row as breathing room, while a pale interior lets the theme's own
+  /// text colour carry the name on both light and dark backgrounds.
+  /// A border retains the stream colour without a wall of saturated ink.
   void _paintFilledBars(Canvas canvas) {
     for (final row in rows) {
-      if (row.isHeading) continue;
+      if (!_rowVisible(row) || row.isHeading) continue;
       final lane = row.lane!;
       if (lane.kind != StripLaneKind.kings &&
           lane.kind != StripLaneKind.ministries &&
@@ -357,6 +379,7 @@ class StripLanesPainter extends CustomPainter {
       Canvas canvas, StripSpan span, StripLane lane, StripRow row) {
     final x0 = xForYear(span.startYear, pxPerYear);
     final x1 = xForYear(span.endYear, pxPerYear);
+    if (!_spanVisible(x0, x1)) return;
     final color = _spanColor(span, lane, palette);
     final sel = span.id == selectedId;
     final lit = selectionCovers(
@@ -365,7 +388,7 @@ class StripLanesPainter extends CustomPainter {
       streamId: _streamIdFor(span, lane, palette),
     );
     final dim = selectedId != null && !lit ? 0.35 : 1.0;
-    final fillHeight = row.height * 0.86;
+    final fillHeight = row.height * 0.68;
     final top = row.top + (row.height - fillHeight) / 2;
 
     if (x1 - x0 < 0.01) {
@@ -383,24 +406,22 @@ class StripLanesPainter extends CustomPainter {
       return;
     }
 
-    canvas.drawRect(
+    final shape = RRect.fromRectAndRadius(
       Rect.fromLTRB(x0, top, x1, top + fillHeight),
-      Paint()..color = color.withValues(alpha: 0.78 * dim),
+      Radius.circular(math.min(
+          WbMetrics.radiusControl, math.min((x1 - x0) / 2, fillHeight / 2))),
     );
-    final edge = Paint()
-      ..strokeWidth = 0.7
-      ..color = wb.paneBg.withValues(alpha: 0.85);
-    canvas.drawLine(Offset(x0, top), Offset(x0, top + fillHeight), edge);
-    canvas.drawLine(Offset(x1, top), Offset(x1, top + fillHeight), edge);
-    if (sel) {
-      canvas.drawRect(
-        Rect.fromLTRB(x0, row.top, x1, row.top + row.height),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = wb.text.withValues(alpha: 0.85),
-      );
-    }
+    canvas.drawRRect(
+      shape,
+      Paint()..color = color.withValues(alpha: (sel ? 0.24 : 0.12) * dim),
+    );
+    canvas.drawRRect(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = sel ? 1.5 : 0.8
+        ..color = color.withValues(alpha: (sel ? 0.95 : 0.55) * dim),
+    );
 
     final name = palette.spanLabel[span.id] ?? '';
     if (name.isEmpty) return;
@@ -417,15 +438,11 @@ class StripLanesPainter extends CustomPainter {
         labelW: labelW,
         viewX0: visibleX0,
         viewX1: visibleX1);
-    final tp = TextPainter(
-      text: TextSpan(
-          text: fit.text,
-          style: canvasTextStyle(
-              fontSize: laneFontPx,
-              color: wb.text.withValues(alpha: 0.98 * dim))),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout();
+    final tp = StripPaintTextCache.layout(
+      text: fit.text,
+      style: canvasTextStyle(
+          fontSize: laneFontPx, color: wb.text.withValues(alpha: 0.98 * dim)),
+    );
     tp.paint(canvas, Offset(labelX, _rowFor(span, row) - tp.height / 2));
   }
 
@@ -436,7 +453,11 @@ class StripLanesPainter extends CustomPainter {
   /// life on this axis).
   void _paintLifespans(Canvas canvas) {
     for (final row in rows) {
-      if (row.isHeading || row.lane!.kind != StripLaneKind.lives) continue;
+      if (!_rowVisible(row) ||
+          row.isHeading ||
+          row.lane!.kind != StripLaneKind.lives) {
+        continue;
+      }
       final lane = row.lane!;
       for (final span in lane.spans) {
         _paintOneLifespan(canvas, span, lane, row);
@@ -448,6 +469,7 @@ class StripLanesPainter extends CustomPainter {
       Canvas canvas, StripSpan span, StripLane lane, StripRow row) {
     final x0 = xForYear(span.startYear, pxPerYear);
     final x1 = xForYear(span.endYear, pxPerYear);
+    if (!_spanVisible(x0, x1)) return;
     final color = _spanColor(span, lane, palette);
     final sel = span.id == selectedId;
     final has = selectedId != null;
@@ -495,15 +517,12 @@ class StripLanesPainter extends CustomPainter {
         labelW: labelW,
         viewX0: visibleX0,
         viewX1: visibleX1);
-    final tp = TextPainter(
-      text: TextSpan(
-          text: fit.text,
-          style: canvasTextStyle(
-              fontSize: laneFontPx,
-              color: color.withValues(alpha: sel ? 1.0 : 0.75))),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout();
+    final tp = StripPaintTextCache.layout(
+      text: fit.text,
+      style: canvasTextStyle(
+          fontSize: laneFontPx,
+          color: wb.text.withValues(alpha: has && !sel ? 0.45 : 0.95)),
+    );
     tp.paint(canvas, Offset(labelX, y - tp.height / 2));
   }
 
@@ -513,7 +532,11 @@ class StripLanesPainter extends CustomPainter {
   /// same reason the wheel draws a mark rather than a span here.
   void _paintRail(Canvas canvas) {
     for (final row in rows) {
-      if (row.isHeading || row.lane!.kind != StripLaneKind.rail) continue;
+      if (!_rowVisible(row) ||
+          row.isHeading ||
+          row.lane!.kind != StripLaneKind.rail) {
+        continue;
+      }
       final lane = row.lane!;
       for (final span in lane.spans) {
         _paintOneRailTick(canvas, span, lane, row);
@@ -524,6 +547,7 @@ class StripLanesPainter extends CustomPainter {
   void _paintOneRailTick(
       Canvas canvas, StripSpan span, StripLane lane, StripRow row) {
     final x = xForYear(span.startYear, pxPerYear);
+    if (!_spanVisible(x, x)) return;
     final sel = span.id == selectedId;
     final has = selectedId != null;
     final alpha = sel ? 0.9 : (has ? 0.30 * 0.35 : 0.30);
@@ -555,7 +579,11 @@ class StripLanesPainter extends CustomPainter {
   /// stretch of row without this pass.
   void _paintEvents(Canvas canvas) {
     for (final row in rows) {
-      if (row.isHeading || row.lane!.kind != StripLaneKind.events) continue;
+      if (!_rowVisible(row) ||
+          row.isHeading ||
+          row.lane!.kind != StripLaneKind.events) {
+        continue;
+      }
       _paintOneEventRow(canvas, row);
     }
   }
@@ -602,6 +630,13 @@ class StripLanesPainter extends CustomPainter {
       final repSpan = lane.spans[repIdx];
       final event = palette.eventById[repSpan.id];
       final x = xs[repIdx];
+      final nextX = ci + 1 < clusters.length
+          ? xs[clusters[ci + 1].representative]
+          : xForYear(kStripMaxYear, pxPerYear);
+      // Keep the preceding label while any of its allotted interval
+      // remains visible. Culling only its tick would cut the label off
+      // the instant its start crossed the left edge during a drag.
+      if (!_spanVisible(x, nextX)) continue;
       final sel = repSpan.id == selectedId;
       final lit = selectionCovers(
         selectedId: selectedId,
@@ -636,9 +671,6 @@ class StripLanesPainter extends CustomPainter {
       // NEXT TICK IN THIS ROW, less a gap, and never more. That makes
       // the label unambiguous by construction: every name sits in the
       // clear stretch its own mark owns.
-      final nextX = ci + 1 < clusters.length
-          ? xs[clusters[ci + 1].representative]
-          : xForYear(kStripMaxYear, pxPerYear);
       final room = nextX - x - laneFontPx * 0.75;
 
       final badge =
@@ -647,8 +679,9 @@ class StripLanesPainter extends CustomPainter {
       // (`fitRadialLabel`): verse, then title, then badge. The badge is
       // the only mark saying other records are behind this tick, so it
       // is the last thing given up.
-      final badgeW =
-          badge.isEmpty ? 0.0 : _measure('  $badge', laneFontPx * kStripRefSizeRatio);
+      final badgeW = badge.isEmpty
+          ? 0.0
+          : _measure('  $badge', laneFontPx * kStripRefSizeRatio);
       final fit = fitBarLabel(
         text: event.titleFor(locale),
         roomPx: room - badgeW,
@@ -666,39 +699,29 @@ class StripLanesPainter extends CustomPainter {
 
       final titleTp = title.isEmpty
           ? null
-          : (TextPainter(
-              text: TextSpan(
-                  text: title,
-                  style: canvasTextStyle(
-                      fontSize: laneFontPx,
-                      color:
-                          sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
-                      fontWeight: sel ? FontWeight.w600 : FontWeight.w400)),
-              textDirection: TextDirection.ltr,
-              maxLines: 1)
-            ..layout());
+          : (StripPaintTextCache.layout(
+              text: title,
+              style: canvasTextStyle(
+                  fontSize: laneFontPx,
+                  color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
+                  fontWeight: sel ? FontWeight.w600 : FontWeight.w400),
+            ));
       final refTp = ref.isEmpty
           ? null
-          : (TextPainter(
-              text: TextSpan(
-                  text: '  $ref',
-                  style: canvasTextStyle(
-                      fontSize: laneFontPx * kStripRefSizeRatio,
-                      color: wb.link.withValues(alpha: 0.95 * dim))),
-              textDirection: TextDirection.ltr,
-              maxLines: 1)
-            ..layout());
+          : (StripPaintTextCache.layout(
+              text: '  $ref',
+              style: canvasTextStyle(
+                  fontSize: laneFontPx * kStripRefSizeRatio,
+                  color: wb.link.withValues(alpha: 0.95 * dim)),
+            ));
       final badgeTp = badge.isEmpty
           ? null
-          : (TextPainter(
-              text: TextSpan(
-                  text: title.isEmpty ? badge : '  $badge',
-                  style: canvasTextStyle(
-                      fontSize: laneFontPx * kStripRefSizeRatio,
-                      color: wb.mutedText.withValues(alpha: 0.95 * dim))),
-              textDirection: TextDirection.ltr,
-              maxLines: 1)
-            ..layout());
+          : (StripPaintTextCache.layout(
+              text: title.isEmpty ? badge : '  $badge',
+              style: canvasTextStyle(
+                  fontSize: laneFontPx * kStripRefSizeRatio,
+                  color: wb.mutedText.withValues(alpha: 0.95 * dim)),
+            ));
 
       // NO RIGHT-EDGE FLIP. An earlier cut pulled a label left so its
       // end stayed inside the viewport, and that is wrong here twice
@@ -748,13 +771,19 @@ class StripLanesPainter extends CustomPainter {
       ..color = wb.text.withValues(alpha: 0.5);
     for (final year in {found.startYear, found.endYear}) {
       final x = xForYear(year, pxPerYear);
-      canvas.drawLine(Offset(x, 0), Offset(x, totalHeight), paint);
+      if (!_spanVisible(x, x)) continue;
+      canvas.drawLine(Offset(x, math.max(0, visibleY0)),
+          Offset(x, math.min(totalHeight, visibleY1)), paint);
     }
   }
 
   @override
   bool shouldRepaint(StripLanesPainter old) =>
-      old.rows.length != rows.length ||
+      old.rows != rows ||
+      old.wb != wb ||
+      old.palette != palette ||
+      old.visibleY0 != visibleY0 ||
+      old.visibleY1 != visibleY1 ||
       old.pxPerYear != pxPerYear ||
       old.locale != locale ||
       old.selectedId != selectedId ||
@@ -773,6 +802,8 @@ class StripRulerPainter extends CustomPainter {
     required this.locale,
     required this.wb,
     required this.tickFontPx,
+    this.visibleX0 = 0,
+    this.visibleX1 = double.infinity,
   });
 
   final double pxPerYear;
@@ -783,44 +814,66 @@ class StripRulerPainter extends CustomPainter {
   /// scale, unlike lane content, because its own row height is not
   /// committed to `textScale` by anything.
   final double tickFontPx;
+  final double visibleX0;
+  final double visibleX1;
 
   @override
   void paint(Canvas canvas, Size size) {
     final step = rulerStep(pxPerYear);
+    // A tick label is at most the longer localized endpoint. An em per
+    // character deliberately overestimates Latin and retains labels
+    // whose centres have just left the viewport.
+    final labelPadding = math.max(yearLabel(kStripMinYear, locale).length,
+            yearLabel(kStripMaxYear, locale).length) *
+        tickFontPx;
+    bool visible(double x) => stripPaintIntersects(
+          start: x,
+          end: x,
+          visibleStart: visibleX0,
+          visibleEnd: visibleX1,
+          padding: labelPadding,
+        );
     final minor = Paint()
       ..color = wb.border.withValues(alpha: 0.2)
       ..strokeWidth = 0.5;
     final major = Paint()
       ..color = wb.border.withValues(alpha: 0.5)
       ..strokeWidth = 0.9;
+    var previousLabelEnd = double.negativeInfinity;
     for (final year in rulerTicks(step)) {
       final x = xForYear(year, pxPerYear);
+      if (!visible(x)) continue;
       final isMajor = year % 500 == 0;
       canvas.drawLine(Offset(x, size.height * 0.45), Offset(x, size.height),
           isMajor ? major : minor);
-      final tp = TextPainter(
-        text: TextSpan(
-            text: centuryTickLabel(year, locale),
-            style: canvasTextStyle(fontSize: tickFontPx, color: wb.mutedText)),
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-      )..layout();
-      tp.paint(canvas, Offset(x - tp.width / 2, 2));
+      final tp = StripPaintTextCache.layout(
+        text: centuryTickLabel(year, locale),
+        style: canvasTextStyle(fontSize: tickFontPx, color: wb.mutedText),
+      );
+      final labelX = x - tp.width / 2;
+      // The nice-step ladder is chosen before the locale and actual
+      // glyph widths are known. At whole-history fit or large type it
+      // can still crowd words, so keep every tick but skip a label
+      // that cannot clear the previous one. Both axis ends remain on
+      // their own lower row, and tapping any tick reads its exact year.
+      if (stripPaintLabelFits(
+        labelStart: labelX,
+        previousLabelEnd: previousLabelEnd,
+      )) {
+        tp.paint(canvas, Offset(labelX, 2));
+        previousLabelEnd = labelX + tp.width;
+      }
     }
 
     // The two axis ends, brighter — "these two say what the chart's
     // range IS," the wheel's own `_paintAxisEnds` reasoning, unchanged.
     void end(int year, double x, TextAlign align) {
-      final tp = TextPainter(
-        text: TextSpan(
-            text: yearLabel(year, locale),
-            style: canvasTextStyle(
-                fontSize: tickFontPx,
-                color: wb.text,
-                fontWeight: FontWeight.w600)),
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-      )..layout();
+      if (!visible(x)) return;
+      final tp = StripPaintTextCache.layout(
+        text: yearLabel(year, locale),
+        style: canvasTextStyle(
+            fontSize: tickFontPx, color: wb.text, fontWeight: FontWeight.w600),
+      );
       final dx = align == TextAlign.left ? x : x - tp.width;
       tp.paint(canvas, Offset(dx, size.height - tp.height - 1));
     }
@@ -831,7 +884,12 @@ class StripRulerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(StripRulerPainter old) =>
-      old.pxPerYear != pxPerYear || old.locale != locale;
+      old.pxPerYear != pxPerYear ||
+      old.locale != locale ||
+      old.wb != wb ||
+      old.tickFontPx != tickFontPx ||
+      old.visibleX0 != visibleX0 ||
+      old.visibleX1 != visibleX1;
 }
 
 /// The sticky lane-header column — §5. New: the wheel's nearest
@@ -847,6 +905,8 @@ class StripLaneHeaderPainter extends CustomPainter {
     required this.laneFontPx,
     required this.headingFontPx,
     required this.palette,
+    this.visibleY0 = 0,
+    this.visibleY1 = double.infinity,
   });
 
   final List<StripRow> rows;
@@ -855,13 +915,27 @@ class StripLaneHeaderPainter extends CustomPainter {
   final double laneFontPx;
   final double headingFontPx;
   final StripPalette palette;
+  final double visibleY0;
+  final double visibleY1;
 
   static const double _padding = 8;
 
   @override
   void paint(Canvas canvas, Size size) {
     for (final row in rows) {
+      if (!stripPaintIntersects(
+        start: row.top,
+        end: row.top + row.height,
+        visibleStart: visibleY0,
+        visibleEnd: visibleY1,
+      )) {
+        continue;
+      }
       if (row.isHeading) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, row.top, size.width, row.height),
+          Paint()..color = wb.paneAltBg,
+        );
         final text = stripStrings[row.headingKey]?[locale] ??
             stripStrings[row.headingKey]!['en']!;
         // `maxWidth` and an ellipsis, because `layout()` with neither
@@ -872,17 +946,15 @@ class StripLaneHeaderPainter extends CustomPainter {
         // is what actually makes the headings fit at 375; this is the
         // net under it, so no future heading, locale or font size can
         // put a half-drawn character on the screen again.
-        final tp = TextPainter(
-          text: TextSpan(
-              text: text,
-              style: canvasTextStyle(
-                  fontSize: headingFontPx,
-                  color: wb.text,
-                  fontWeight: FontWeight.w600)),
-          textDirection: TextDirection.ltr,
-          maxLines: 1,
+        final tp = StripPaintTextCache.layout(
+          text: text,
+          style: canvasTextStyle(
+              fontSize: headingFontPx,
+              color: wb.text,
+              fontWeight: FontWeight.w600),
           ellipsis: '…',
-        )..layout(maxWidth: math.max(0, size.width - _padding * 2));
+          maxWidth: math.max(0, size.width - _padding * 2),
+        );
         tp.paint(
             canvas, Offset(_padding, row.top + (row.height - tp.height) / 2));
         continue;
@@ -903,45 +975,28 @@ class StripLaneHeaderPainter extends CustomPainter {
       final name = palette.spanLabel[lane.ownerId] ?? lane.ownerId ?? '';
       final color = (palette.streamColors[lane.ownerId] ?? lineColor('none'))
           .withValues(alpha: 0.98);
-      final tp = TextPainter(
-        text: TextSpan(
-            text: name,
-            style: canvasTextStyle(
-                fontSize: laneFontPx,
-                color: color,
-                fontWeight: FontWeight.w600)),
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-      )..layout();
+      final tp = StripPaintTextCache.layout(
+        text: name,
+        style: canvasTextStyle(
+            fontSize: laneFontPx, color: wb.text, fontWeight: FontWeight.w500),
+        maxWidth: math.max(0, size.width - _padding * 2 - 8),
+        ellipsis: '…',
+      );
+      canvas.drawCircle(Offset(_padding + 2, row.top + row.height / 2), 2,
+          Paint()..color = color);
       tp.paint(
-          canvas, Offset(_padding, row.top + (row.height - tp.height) / 2));
-
-      if (lane.spans.isEmpty) {
-        // Rule 2, restated for a lane group: an empty stretch and an
-        // EMPTY GROUP look the same to a reader; only one of them is
-        // true, and this says which — `stripEmptyLane`.
-        final note = stripStrings['stripEmptyLane']?[locale] ??
-            stripStrings['stripEmptyLane']!['en']!;
-        final noteTp = TextPainter(
-          text: TextSpan(
-              text: note,
-              style:
-                  canvasTextStyle(fontSize: laneFontPx, color: wb.mutedText)),
-          textDirection: TextDirection.ltr,
-          maxLines: 1,
-        )..layout();
-        noteTp.paint(
-            canvas,
-            Offset(_padding + tp.width + 6,
-                row.top + (row.height - noteTp.height) / 2));
-      }
+          canvas, Offset(_padding + 8, row.top + (row.height - tp.height) / 2));
     }
   }
 
   @override
   bool shouldRepaint(StripLaneHeaderPainter old) =>
-      old.rows.length != rows.length ||
+      old.rows != rows ||
       old.locale != locale ||
+      old.wb != wb ||
+      old.palette != palette ||
+      old.visibleY0 != visibleY0 ||
+      old.visibleY1 != visibleY1 ||
       old.laneFontPx != laneFontPx ||
       old.headingFontPx != headingFontPx;
 }

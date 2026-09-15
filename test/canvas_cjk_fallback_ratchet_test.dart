@@ -17,7 +17,9 @@ void main() {
 
   test('canvasTextStyle passes colour and weight through', () {
     final st = canvasTextStyle(
-        color: const Color(0xFF123456), fontSize: 9, fontWeight: FontWeight.w600);
+        color: const Color(0xFF123456),
+        fontSize: 9,
+        fontWeight: FontWeight.w600);
     expect(st.color, const Color(0xFF123456));
     expect(st.fontWeight, FontWeight.w600);
     expect(st.fontFamilyFallback, kCjkFontFallback);
@@ -39,9 +41,8 @@ void main() {
       final lines = entity.readAsLinesSync();
       for (var i = 0; i < lines.length; i++) {
         if (!lines[i].contains('TextPainter(')) continue;
-        final window = lines
-            .sublist(max(0, i - 30), min(i + 20, lines.length))
-            .join('\n');
+        final window =
+            lines.sublist(max(0, i - 30), min(i + 20, lines.length)).join('\n');
         out['$path:${i + 1}'] = window;
       }
     }
@@ -73,44 +74,27 @@ void main() {
       final path = key.substring(0, key.lastIndexOf(':'));
       census[path] = (census[path] ?? 0) + 1;
     }
-    expect(census, {
-      'lib/pages/bible_timeline_page.dart': 1,
-      'lib/pages/chronology_page.dart': 3,
-      'lib/pages/lexicon_page.dart': 1,
-      // 2026-09-04: the tenth is `_hubCaption`'s `blockHeight`, off the
-      // canvas entirely — it measures a real `Text` widget's own height
-      // BEFORE the widget is built, so the hub caption can drop its
-      // cheapest lines when the four of them do not fit the hub (see
-      // that method's own doc). Not a painter, but still a
-      // `TextPainter(` and still Chinese, so it still needs a CJK face.
-      // 2026-09-15: 10 → 8, and the two that left went to
-      // `wheel_text_metrics.dart` below. `_tangentialLabel` built a
-      // TextPainter per character to MEASURE a curved run and
-      // `_charsOnArc` built one more per character to DRAW it — about
-      // 16,000 layouts a frame across this chart, every frame of every
-      // pan. Both are cached now, and the cache is a canvas painter in
-      // its own right, so it is censused here like any other.
-      'lib/pages/radial_chronology_page.dart': 8,
-      'lib/utils/wheel_text_metrics.dart': 1,
-      // 2026-09-04: the strip's own canvases. The page's one site is
-      // `_measureText`, its own `canvasTextStyle(` call in the same
-      // window as the wheel's `_measureLabel`; the painter's eleven are
-      // `StripLanesPainter`/`StripRulerPainter`/`StripLaneHeaderPainter`
-      // — see `docs/strip-painter-spec.md`.
-      'lib/pages/strip_chronology_page.dart': 1,
-      'lib/widgets/strip_chronology_painter.dart': 11,
-      'lib/utils/fitted_label_metrics.dart': 1,
-      'lib/widgets/analysis_tabs.dart': 1,
-      'lib/widgets/place_map.dart': 2,
-    },
+    expect(
+        census,
+        {
+          'lib/pages/bible_timeline_page.dart': 1,
+          'lib/pages/chronology_page.dart': 3,
+          'lib/pages/lexicon_page.dart': 1,
+          // The redesigned wheel measures and paints through its bounded
+          // cache. The strip uses Paragraphs (tested against TextPainter in
+          // strip_paint_cost_test), with CJK forced in StripPaintTextCache.
+          'lib/utils/wheel_text_metrics.dart': 1,
+          'lib/utils/fitted_label_metrics.dart': 1,
+          'lib/widgets/analysis_tabs.dart': 1,
+          'lib/widgets/place_map.dart': 2,
+        },
         reason:
             'a new canvas TextPainter appeared (or one vanished) without this '
             'ratchet being updated — read the rule above before raising the '
             'number');
   });
 
-  test('only two painters rely on the inherited chain, and they are named',
-      () {
+  test('only two painters rely on the inherited chain, and they are named', () {
     // `.merge(` removed from the accepted routes: this isolates the sites
     // that rely on it, so the escape hatch is enumerated rather than able
     // to spread silently. Both build their style as
@@ -133,8 +117,10 @@ void main() {
     // 136, when its header was corrected from 98 events to 105. That is
     // the ratchet working: it cannot tell a moved line from a new
     // painter, so it asks every time.
-    expect(fails,
-        ['lib/pages/bible_timeline_page.dart:136', 'lib/pages/lexicon_page.dart:698']);
+    expect(fails, [
+      'lib/pages/bible_timeline_page.dart:136',
+      'lib/pages/lexicon_page.dart:698'
+    ]);
   });
 
   testWidgets('the ambient DefaultTextStyle carries the bundled CJK face',
@@ -170,7 +156,8 @@ void main() {
   });
 
   test("the wheel's canvas styles all come from canvasTextStyle", () {
-    final src = File('lib/pages/radial_chronology_page.dart').readAsStringSync();
+    final src =
+        File('lib/pages/radial_chronology_page.dart').readAsStringSync();
     final count = 'canvasTextStyle('.allMatches(src).length;
     expect(count, 8,
         reason:

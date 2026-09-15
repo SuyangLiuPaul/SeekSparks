@@ -1,5 +1,7 @@
 # The strip's `CustomPainter` — a spec derived from the wheel
 
+> Historical specification: presentation and viewport-culling details are superseded by [the wheel/strip redesign](WHEEL-STRIP-REDESIGN.md). Coordinate, duration, source and hit-testing contracts remain in force.
+
 Written against `_WorldWheelPainter` (`lib/pages/radial_chronology_page.dart:4520`),
 `lib/utils/radial_chronology_layout.dart`, `lib/constants/workbench_theme.dart`
 and the (already-committed, unimplemented) `lib/utils/strip_chronology_layout.dart`.

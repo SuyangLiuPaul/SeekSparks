@@ -58,20 +58,10 @@ void main() {
     creationYear = TimelineService.instance.meta.creation!.year;
   });
 
-  /// The page's own row layout, rebuilt here from the same PUBLIC
-  /// functions the page calls (`buildStripLanes`, `stripLaneHeightPx`,
-  /// `stripHeadingHeightPx`) rather than duplicating a private method —
-  /// the same discipline `radial_chronology_page_test.dart` uses when
-  /// it restates the wheel's own geometry fractions because the real
-  /// ones are private to the page.
-  ///
-  /// [forData]/[forKings]/[forPatriarchs] default to the real, loaded
-  /// corpus; the filter test below passes a hand-filtered
-  /// [WheelHistoryData] through the SAME `buildStripLanes` call to
-  /// predict what hiding one stream must produce, rather than trusting
-  /// a number written into the test.
-  /// [data] reduced to the streams the strip opens on, matching
-  /// `_applyDefaultHidden`.
+  /// The expected filter delta still uses the public lane builder on
+  /// independently filtered data. Tap tests below read the actual painter
+  /// instead: the opening fit ratio belongs to the viewport, not to a
+  /// fixed rung, and its packed rows must be the ones a finger reaches.
   WheelHistoryData asOpened(WheelHistoryData d) {
     final keep = defaultVisibleStreams(d.streams.map((s) => s.id), 12).toSet();
     return WheelHistoryData(
@@ -125,10 +115,27 @@ void main() {
   double totalHeight(List<StripRow> rows) =>
       rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
 
-  /// Where one span's row sits, at the page's own starting zoom —
-  /// `kStripInitialPxPerYear`, which is what the page opens on. Named
-  /// rather than written out, so a change to the opening zoom moves the
-  /// test with the page instead of re-baselining a number here.
+  StripLanesPainter actualPainter(WidgetTester tester) => tester
+      .widgetList<CustomPaint>(find.byType(CustomPaint))
+      .map((widget) => widget.painter)
+      .whereType<StripLanesPainter>()
+      .single;
+
+  /// Drive the visible controls until the painter confirms the desired
+  /// scale. A viewport's fit ratio is not necessarily in the ladder, so
+  /// subtracting ladder indices can skip a rung or target an impossible
+  /// scale below fit on a wide pane.
+  Future<void> zoomTo(WidgetTester tester, double target) async {
+    for (var i = 0; i < kStripZoomSteps.length + 2; i++) {
+      final scale = actualPainter(tester).pxPerYear;
+      if ((scale - target).abs() < 0.000001) return;
+      await tester.tap(find.byTooltip(scale < target ? '放大' : '缩小'));
+      await tester.pump();
+    }
+    fail('the zoom controls never reached $target px/year');
+  }
+
+  /// One span's row in the exact layout the page handed to its painter.
   StripRow rowContaining(List<StripRow> rows, String spanId) {
     for (final row in rows) {
       if (row.isHeading) continue;
@@ -234,9 +241,9 @@ void main() {
             'reign to prove rule 1');
 
     await pump(tester, const Size(1440, 900));
-    final rows = rowsFor(kStripInitialPxPerYear);
-    final row = rowContaining(rows, '$kStripKingPrefix${zimri.id}');
-    final x = xForYear(zimri.reignStart, kStripInitialPxPerYear);
+    final painter = actualPainter(tester);
+    final row = rowContaining(painter.rows, '$kStripKingPrefix${zimri.id}');
+    final x = xForYear(zimri.reignStart, painter.pxPerYear);
 
     await tapContent(tester, x, row.top + row.height / 2);
     expect(tester.takeException(), isNull,
@@ -254,42 +261,22 @@ void main() {
   /// rendering decision, not a data one) — a span may land in a
   /// different SUB-LANE at each `pxPerYear`, and that is by design. What
   /// must not move is whether the span can still be found and opened:
-  /// this taps the same king at the FIRST and LAST rungs of
-  /// `kStripZoomSteps` and asks for the same sheet both times, which is
-  /// the strip's own version of "changing zoom does not change which
-  /// lane a span is in more than the geometry requires."
+  /// this taps the same king at the exact full-axis fit and at the
+  /// largest scale, asking for the same sheet both times. On a wide
+  /// viewport the fit can exceed the ladder's first rung, so that rung
+  /// is no longer an available lower limit.
   testWidgets('the same king opens at both ends of the zoom ladder',
       (tester) async {
     final zimri = kings.firstWhere((k) => k.id == 'zimri');
     await pump(tester, const Size(1440, 900));
 
-    var current = kStripInitialPxPerYear;
-    for (final zoom in [kStripZoomSteps.first, kStripZoomSteps.last]) {
-      final rows = rowsFor(zoom);
-      final row = rowContaining(rows, '$kStripKingPrefix${zimri.id}');
-      final x = xForYear(zimri.reignStart, zoom);
-
-      // Zoom the page itself to `zoom` via its own control, not by
-      // reaching into private state — the '+' button steps one rung of
-      // `kStripZoomSteps` per tap.
-      // Stepped from where the page ACTUALLY IS, not from where it
-      // opened. The first pass through this loop leaves the zoom at the
-      // ladder's low end, so a second pass computing its taps against
-      // the opening zoom would land four rungs short and then blame the
-      // hit test for the miss. (It did: the page used to open on the
-      // low end, so the first pass took no taps and the bug could not
-      // show. Moving the opening zoom is what exposed it.) Stepping
-      // down is a real direction now, so tap whichever control moves
-      // that way.
-      final steps = kStripZoomSteps.indexOf(zoom) -
-          kStripZoomSteps.indexOf(current);
-      final tip = steps >= 0 ? '放大' : '缩小';
-      for (var i = 0; i < steps.abs(); i++) {
-        await tester.tap(find.byTooltip(tip));
-        await tester.pump();
-      }
-      current = zoom;
+    final fit = actualPainter(tester).pxPerYear;
+    for (final zoom in [fit, kStripZoomSteps.last]) {
+      await zoomTo(tester, zoom);
       await tester.pump(const Duration(milliseconds: 200));
+      final painter = actualPainter(tester);
+      final row = rowContaining(painter.rows, '$kStripKingPrefix${zimri.id}');
+      final x = xForYear(zimri.reignStart, painter.pxPerYear);
 
       await tapContent(tester, x, row.top + row.height / 2);
       expect(tester.takeException(), isNull);
@@ -313,9 +300,10 @@ void main() {
   testWidgets('the sticky ruler tracks the content\'s own horizontal scroll',
       (tester) async {
     await pump(tester, const Size(900, 700));
+    await zoomTo(tester, 1.5);
     final content = scrollableFor(tester, const ValueKey('stripHScroll'));
     final ruler = scrollableFor(tester, const ValueKey('stripRulerHScroll'));
-
+    expect(content.position.maxScrollExtent, greaterThan(37));
     expect(content.position.pixels, ruler.position.pixels);
     content.position.jumpTo(37);
     await tester.pump();
@@ -444,7 +432,7 @@ void main() {
       'the find sheet teaches counts equal to the corpus\'s own drawn '
       'totals', (tester) async {
     await pump(tester, const Size(1440, 900));
-    await tester.tap(find.byIcon(Icons.search));
+    await tester.tap(find.byKey(const ValueKey('chronology-find')));
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -486,17 +474,9 @@ void main() {
       (tester) async {
     await pump(tester, const Size(900, 700));
 
-    // Derived from where the page opens, so the zoom this test asserts
-    // against is the zoom the page is actually at — not a ladder index
-    // that silently means something else once the opening zoom moves.
-    const zoom = 6.0;
-    final steps = kStripZoomSteps.indexOf(zoom) -
-        kStripZoomSteps.indexOf(kStripInitialPxPerYear);
-    for (var i = 0; i < steps.abs(); i++) {
-      await tester.tap(find.byTooltip(steps >= 0 ? '放大' : '缩小'));
-      await tester.pump();
-    }
+    await zoomTo(tester, 6);
     await tester.pump(const Duration(milliseconds: 200));
+    final zoom = actualPainter(tester).pxPerYear;
 
     final event = data.events.firstWhere((e) => e.id == 'magna_carta',
         orElse: () => data.events
@@ -504,7 +484,7 @@ void main() {
     final zh = event.titles['zh-Hans']!;
     expect(zh, isNotEmpty);
 
-    await tester.tap(find.byIcon(Icons.search));
+    await tester.tap(find.byKey(const ValueKey('chronology-find')));
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -513,7 +493,7 @@ void main() {
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    await tester.tap(find.text(zh).first);
+    await tester.tap(find.byKey(ValueKey('stripFindHit${event.id}')));
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -556,8 +536,9 @@ void main() {
     final opened = asOpened(data);
     final stream = opened.streams.first;
 
-    final baseRows = rowsFor(kStripInitialPxPerYear);
-    final beforeHeight = totalHeight(baseRows);
+    final painter = actualPainter(tester);
+    final scale = painter.pxPerYear;
+    final beforeHeight = totalHeight(rowsFor(scale));
 
     final visibleData = WheelHistoryData(
       streams: opened.streams.where((s) => s.id != stream.id).toList(),
@@ -568,8 +549,7 @@ void main() {
       events: opened.events.where((e) => e.stream != stream.id).toList(),
       meta: opened.meta,
     );
-    final predictedRows =
-        rowsFor(kStripInitialPxPerYear, forData: visibleData);
+    final predictedRows = rowsFor(scale, forData: visibleData);
     final removedHeight = beforeHeight - totalHeight(predictedRows);
     expect(removedHeight, greaterThan(0),
         reason: 'this test needs a stream whose own band and/or events '
@@ -578,7 +558,7 @@ void main() {
     final before =
         tester.getSize(find.byKey(const ValueKey('chronologyStrip')));
 
-    await tester.tap(find.byIcon(Icons.filter_list));
+    await tester.tap(find.byKey(const ValueKey('chronology-filter')));
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -590,6 +570,11 @@ void main() {
     expect(tester.takeException(), isNull);
 
     final after = tester.getSize(find.byKey(const ValueKey('chronologyStrip')));
+    final afterPainter = actualPainter(tester);
+    expect(afterPainter.rows.where((row) => row.lane?.ownerId == stream.id),
+        isEmpty,
+        reason: 'a hidden lane must not survive as a blank placeholder');
+    expect(after.height, totalHeight(afterPainter.rows));
     expect(before.height - after.height, closeTo(removedHeight, 0.5),
         reason: 'the content must shrink by exactly the hidden stream\'s '
             'own lanes, not merely get shorter, and not stay the same '

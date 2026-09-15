@@ -3,25 +3,13 @@
 /// 2026-09-15. 「一开始filter不要全部都有 这样loading很慢 一些主要的和圣经
 /// 里面有的就行 像中国日本这些可以user后面加进去filter」.
 ///
-/// THE GEOMETRY SAYS THE SAME THING. A ring has to be thick enough to
-/// tap — WCAG 2.5.8 puts the minimum target at 24 px — so the number of
-/// rings a wheel can hold is not a taste question, it is
-///
-///     rings = (radius − hub − axis) / (thickness + gap)
-///
-/// On a 360 dp phone that is about four. On a tablet, eleven. On a
-/// desktop pane, sixteen. Twenty-two rings is not a phone layout in any
-/// arrangement, and drawing them anyway is what makes the chart both
-/// slow and unreadable at once.
-///
-/// The colour literature lands on the same ceiling from the other side:
-/// a categorical palette holds six to eight hues before a reader stops
-/// being able to tell one from another (Atlassian's guidance, and
-/// Datawrapper's "no more than 6, 12 at the very most").
-///
-/// So the default is a COUNT derived from the viewport, and this file is
-/// the order in which streams claim the rings that exist.
+/// Capacity follows the band annulus and the viewport. Four streams fit
+/// on a 360 dp wheel; the remaining streams stay available in Filter.
+/// The chronology explorer also lists their events when the reader
+/// searches, so reducing the initial ring count does not discard data.
 library;
+
+import 'dart:math' as math;
 
 /// The canonical order. Earlier means kept longer when rings are scarce.
 ///
@@ -72,32 +60,22 @@ const List<String> kStreamPriority = <String>[
 /// [hubFraction] and [bandsFraction] are the page's own radii, passed in
 /// rather than duplicated, so this cannot drift from the layout.
 ///
-/// TWO CEILINGS, and the lower one wins.
-///
-/// **Geometry.** A band has to be thick enough to read, and the annulus
-/// is what there is. 14 px is the floor used here rather than WCAG's
-/// 24 px target minimum, because the binding dimension of a TAP on an
-/// arc is its angular length, which is hundreds of pixels — a 14 px band
-/// spanning a third of a circle is not a small target, it is a long thin
-/// one.
-///
-/// **The device.** Four rings on a phone, eight on a tablet, twelve on a
-/// desktop pane. This is the published guidance for exactly this chart:
-/// a categorical palette stops being discriminable past six to eight
-/// hues, and the controlled studies of radial timelines on phones put
-/// the usable ring count far below what the pixels would allow. Past
-/// twelve the wheel is a texture, not a chart.
+/// The geometry and the device each set a ceiling. A 360 dp canvas has
+/// 55.8 px between its hub and bands: four shares of 13.95 px, each
+/// painting 80% of its share. Eleven painted pixels and two pixels of
+/// separation express that budget without pretending it is a 24 px
+/// touch target. Full-size event rows provide the alternative on phones.
+/// The device ceiling prevents a large canvas becoming a wall of hues.
 int ringCapacity(
   double side, {
   required double hubFraction,
   required double bandsFraction,
-  double minThickness = 14,
+  double minThickness = 11,
   double gap = 2,
 }) {
   final annulus = side * (bandsFraction - hubFraction);
-  final byGeometry = annulus <= 0
-      ? 1
-      : (annulus / (minThickness + gap)).floor();
+  final byGeometry =
+      annulus <= 0 ? 1 : (annulus / (minThickness + gap)).floor();
   final byDevice = side < 600
       ? 4
       : side < 1024
@@ -106,38 +84,36 @@ int ringCapacity(
   return byGeometry.clamp(1, byDevice);
 }
 
-/// The share of the wheel's radius the BANDS get.
+/// Band radii as fractions of the SQUARE SIDE, not of the radius.
 ///
-/// 2026-09-15, and this is the heart of what was wrong. The wheel gave
-/// its bands the ring from 11.5% to 28.5% of the radius — seventeen per
-/// cent — and handed the whole outer two thirds to event titles. With
-/// twenty-two streams in that annulus each band was under three pixels
-/// thick on a phone: the data was a hairline and the annotation had the
-/// chart.
-///
-/// The bands are the data. On a narrow viewport they take most of the
-/// radius and the event annulus shrinks to a margin; on a wide one there
-/// is room for both and the original proportion is close to right.
+/// The previous phone bands used 0.44 and added a 0.16 outer annulus:
+/// a 360 px square therefore painted its rim at radius 216, 36 px past
+/// the edge. Keeping the lifespan annulus intact and reclaiming band
+/// space fixes the fit while preserving every independent arc layer.
+/// The axis reservation below also includes its text and hairlines.
 double bandsFractionFor(double side, {double hubFraction = 0.115}) {
   if (side < 600) return kBandsFracNarrow;
   if (side < 1024) return kBandsFracMedium;
   return kBandsFracWide;
 }
 
-/// Named so the page and the layout tests can reach the same figures.
-const double kBandsFracNarrow = 0.44;
-const double kBandsFracMedium = 0.36;
+const double kBandsFracNarrow = 0.27;
+const double kBandsFracMedium = 0.28;
 const double kBandsFracWide = 0.30;
 
-/// The annulus between the bands and the rim, where the Genesis
-/// lifespans are drawn. A fixed share of the side, so widening the
-/// bands moves this ring OUTWARD rather than squeezing it — the room
-/// comes from the event-label field beyond the rim, which had 55% of
-/// the radius while the data had 17%.
+/// Shared space for events, lifespans, reigns, ministries and genealogy.
+/// The full 0.16 annulus is preserved on tablet and desktop. A phone
+/// trades some of it for the fixed-size axis text outside the rim.
 const double kRimAnnulus = 0.16;
 
-/// The rim radius, as a fraction of the side.
-double rimFractionFor(double side) => bandsFractionFor(side) + kRimAnnulus;
+double rimFractionFor(double side) {
+  if (side <= 0) return 0;
+  final bands = bandsFractionFor(side);
+  // The old fit test stopped at the circle. At least 32 px outside it
+  // now belongs to axis text, checked in the bundled Latin/CJK faces.
+  final axisRoom = 0.5 - 32 / side;
+  return math.max(bands + 0.02, math.min(bands + kRimAnnulus, axisRoom));
+}
 
 /// The streams to show when the reader has not chosen, given the room.
 ///
@@ -152,5 +128,6 @@ List<String> defaultVisibleStreams(Iterable<String> available, int capacity) {
       if (have.remove(id)) id,
     ...have,
   ];
+  if (ordered.isEmpty) return const [];
   return ordered.take(capacity.clamp(1, ordered.length)).toList();
 }

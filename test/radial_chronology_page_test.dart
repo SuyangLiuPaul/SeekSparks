@@ -351,7 +351,7 @@ void main() {
   }
 
   Future<void> openFind(WidgetTester tester) async {
-    await tester.tap(find.byIcon(Icons.search));
+    await tester.tap(find.byKey(const ValueKey('chronology-find')));
     await settle(tester);
   }
 

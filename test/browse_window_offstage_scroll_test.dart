@@ -51,7 +51,8 @@ import 'package:seeksparks/main.dart' show appGenerateRoute, appUnknownRoute;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart' show kWheelUrlPath;
+import 'package:seeksparks/pages/radial_chronology_page.dart'
+    show kWheelUrlPath;
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
@@ -145,11 +146,16 @@ void main() {
     expect(find.byType(BrowseWindow, skipOffstage: false), findsOneWidget,
         reason: 'the app root under the wheel is still built');
     expect(
-        find.byType(ScrollablePositionedList, skipOffstage: false),
+        find.descendant(
+          of: find.byType(BrowseWindow, skipOffstage: false),
+          matching: find.byType(ScrollablePositionedList, skipOffstage: false),
+          skipOffstage: false,
+        ),
         findsOneWidget,
         reason: 'and it built its list after the load, while offstage');
-    expect(find.textContaining('Genesis 1:', findRichText: true,
-            skipOffstage: false),
+    expect(
+        find.textContaining('Genesis 1:',
+            findRichText: true, skipOffstage: false),
         findsNothing,
         reason: 'but not one row was ever laid out — a list builds its '
             'children during layout — so there is no scroll position for '
@@ -213,14 +219,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
-    expect(find.textContaining('Genesis 1:25', findRichText: true),
-        findsWidgets,
+    expect(
+        find.textContaining('Genesis 1:25', findRichText: true), findsWidgets,
         reason: 'the focused verse was scrolled into view — a list only '
             'builds the rows near its viewport, so finding it at all is '
             'the proof the scroll went ahead');
     // `1:5` and not `1:1`, which is a prefix of `1:10` … `1:19`.
-    expect(find.textContaining('Genesis 1:5', findRichText: true),
-        findsNothing,
+    expect(find.textContaining('Genesis 1:5', findRichText: true), findsNothing,
         reason: 'and the pane really did MOVE: the top of the chapter is '
             'behind it now');
     expect(tester.takeException(), isNull);

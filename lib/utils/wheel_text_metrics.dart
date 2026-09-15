@@ -3,43 +3,15 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-/// Character widths for the chronology wheel, laid out once and kept.
+/// Shaped runs and curved-label glyphs reused by the chronology wheel.
 ///
-/// 2026-09-15, from 「performance也要快」.
-///
-/// THE COST THIS REMOVES. The wheel sets its power names and event
-/// titles along an arc, which means placing each character individually
-/// — there is no way to draw a curved run of text in one call. The way
-/// that was written, `_tangentialLabel` built and laid out a
-/// `TextPainter` per character to MEASURE the run, and `_charsOnArc`
-/// then built and laid out one more per character to DRAW it. A
-/// six-character Chinese power name is twelve `TextPainter.layout()`
-/// calls; there are 231 powers and 745 events on the chart, and every
-/// one of those layouts was repeated on every single frame of a pan or
-/// a pinch.
-///
-/// None of it depends on the frame. 「羅」 at 11 px is the same width
-/// this frame that it was last frame, and the chart's vocabulary is
-/// small and deeply repetitive — 王, 國, 朝, 帝 recur across dozens of
-/// names. So the width is computed once per (character, size, weight)
-/// and kept.
-///
-/// WHY NOT A CACHED `TextPainter`. Caching the laid-out `TextPainter`
-/// would save the draw pass too, and is wrong: a `TextPainter` is
-/// mutable, carries its own paint state, and is not safe to hand to two
-/// canvases — the wheel and the strip are on screen together in a split
-/// view. What IS safe is a `ui.Paragraph`: immutable once laid out, and
-/// drawable any number of times on any canvas with `drawParagraph`. So
-/// both halves are cached — [widthOf] for the measuring pass and
-/// [glyphOf] for the drawing pass — and a warm frame lays out nothing
-/// at all.
-///
-/// THE BOUND. The wheel divides its font size by a continuous zoom, so
-/// the size key is a float that changes on every pinch frame. Without a
-/// cap this would be a leak with extra steps. [maxEntries] is a plain
-/// LRU bound; sizes are quantised to a tenth of a pixel first, which is
-/// far finer than any visible difference and collapses a pinch's worth
-/// of near-identical sizes onto one entry.
+/// Both planning and painting use this cache. A width-only cache in the
+/// painter left every arc fitting pass laying out the same characters
+/// again, and radial titles and axis labels still built fresh painters.
+/// Immutable paragraphs can be drawn repeatedly and are disposed on LRU
+/// eviction. Exact text/style keys avoid hash collisions and preserve
+/// small canvas sizes: a tenth of a canvas pixel becomes 12 screen
+/// pixels at the wheel's 120x zoom, so size rounding is not harmless.
 class WheelTextMetrics {
   WheelTextMetrics._();
 
@@ -48,17 +20,17 @@ class WheelTextMetrics {
   /// locales.
   static const int maxEntries = 20000;
 
-  static final LinkedHashMap<int, double> _widths = LinkedHashMap<int, double>();
+  static final LinkedHashMap<(String, TextStyle), double> _widths =
+      LinkedHashMap<(String, TextStyle), double>();
 
-  /// One laid-out glyph, ready to draw. Keyed like [_widths] plus the
-  /// colour, because colour is baked into a Paragraph and cannot be
-  /// changed after the fact the way a Paint can.
-  static final LinkedHashMap<int, ui.Paragraph> _glyphs =
-      LinkedHashMap<int, ui.Paragraph>();
+  /// A paragraph owns its paint colour as well as its shaped metrics.
+  /// The complete style therefore participates in its cache key.
+  static final LinkedHashMap<(String, TextStyle), ui.Paragraph> _glyphs =
+      LinkedHashMap<(String, TextStyle), ui.Paragraph>();
 
   static int _layouts = 0;
 
-  /// How many `TextPainter.layout()` calls this cache has actually made.
+  /// How many text layouts (TextPainter or Paragraph) the cache made.
   /// Read by `test/wheel_paint_cost_test.dart`; the wheel never uses it.
   static int get layoutsForTest => _layouts;
   static int get entriesForTest => _widths.length;
@@ -77,12 +49,10 @@ class WheelTextMetrics {
 
   /// The advance width of one character in [style].
   ///
-  /// [style] is read for size and weight only — the wheel draws all of
-  /// this text in one family, and colour and alpha do not move a glyph.
+  /// Text and the complete style form the key, including the CJK fallback.
+  /// This also accepts a whole shaped run for radial and axis labels.
   static double widthOf(String character, TextStyle style) {
-    final size = ((style.fontSize ?? 14) * 10).round();
-    final weightValue = (style.fontWeight ?? FontWeight.normal).value;
-    final key = Object.hash(character, size, weightValue);
+    final key = (character, style);
 
     final hit = _widths.remove(key);
     if (hit != null) {
@@ -124,6 +94,14 @@ class WheelTextMetrics {
     return total;
   }
 
+  /// The kerning-aware width of a horizontal or radial text run.
+  static double shapedWidth(String text, TextStyle style) =>
+      widthOf(text, style);
+
+  /// A whole line uses the same paragraph cache as a curved-label glyph.
+  static ui.Paragraph paragraphOf(String text, TextStyle style) =>
+      glyphOf(text, style);
+
   /// One character, laid out and ready for `canvas.drawParagraph`.
   ///
   /// The draw half of the saving. `_charsOnArc` places a curved run one
@@ -135,10 +113,7 @@ class WheelTextMetrics {
   /// Returned Paragraphs are owned by this cache and must NOT be
   /// disposed by the caller; they are disposed on eviction.
   static ui.Paragraph glyphOf(String character, TextStyle style) {
-    final size = ((style.fontSize ?? 14) * 10).round();
-    final weight = (style.fontWeight ?? FontWeight.normal).value;
-    final colour = (style.color ?? const Color(0xFF000000)).toARGB32();
-    final key = Object.hash(character, size, weight, colour, style.fontFamily);
+    final key = (character, style);
 
     final hit = _glyphs.remove(key);
     if (hit != null) {

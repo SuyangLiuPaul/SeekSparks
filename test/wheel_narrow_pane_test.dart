@@ -78,8 +78,8 @@ void main() {
   /// first action begins.
   double naturalWidth(WidgetTester tester, Finder title) {
     final widget = tester.widget<Text>(title);
-    final style = DefaultTextStyle.of(tester.element(title)).style
-        .merge(widget.style);
+    final style =
+        DefaultTextStyle.of(tester.element(title)).style.merge(widget.style);
     return (TextPainter(
       text: TextSpan(text: widget.data, style: style),
       textDirection: TextDirection.ltr,
@@ -93,6 +93,20 @@ void main() {
   }
 
   group('the wheel at 375 px', () {
+    testWidgets('the title stays whole at 360 px', (tester) async {
+      await pump(tester, const RadialChronologyPage(), const Size(360, 800));
+      final title =
+          find.byWidget(tester.widget<AppBar>(find.byType(AppBar)).title!);
+      expect(tester.getSize(title).width,
+          greaterThanOrEqualTo(naturalWidth(tester, title) - 0.5));
+      expect(
+          tester.getTopRight(title).dx,
+          lessThanOrEqualTo(
+              tester.getTopLeft(find.byIcon(Icons.more_vert)).dx));
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    });
+
     testWidgets('the AppBar title is actually on screen', (tester) async {
       await pump(tester, const RadialChronologyPage(), const Size(375, 812));
       expect(tester.takeException(), isNull);
@@ -101,8 +115,8 @@ void main() {
       // language switcher, the home button) spent the whole toolbar
       // before the title got a pixel — measured at
       // `Size(0.0, 28.0)`.
-      final title = find.descendant(
-          of: find.byType(AppBar), matching: find.text('世界史轮盘'));
+      final title =
+          find.byWidget(tester.widget<AppBar>(find.byType(AppBar)).title!);
       expect(title, findsOneWidget);
       expect(tester.getSize(title).width,
           greaterThanOrEqualTo(naturalWidth(tester, title) - 0.5),
@@ -199,8 +213,8 @@ void main() {
       await pump(tester, const StripChronologyPage(), const Size(500, 800));
       expect(find.byIcon(Icons.more_vert), findsOneWidget,
           reason: '500 px cannot afford the wide bar');
-      final title = find.descendant(
-          of: find.byType(AppBar), matching: find.text('世界历史时间条'));
+      final title =
+          find.byWidget(tester.widget<AppBar>(find.byType(AppBar)).title!);
       expect(tester.getSize(title).width,
           greaterThanOrEqualTo(naturalWidth(tester, title) - 0.5));
       await unmount(tester);
@@ -209,13 +223,21 @@ void main() {
     testWidgets('nothing regresses at a desktop width', (tester) async {
       await pump(tester, const RadialChronologyPage(), const Size(1440, 900));
       expect(tester.takeException(), isNull);
-      // The full legend is directly on screen, as before — no chip.
-      expect(find.text('闪族'), findsOneWidget);
-      expect(find.byIcon(Icons.legend_toggle), findsNothing);
+      // The chart now reserves its whole area for the rings. The same
+      // full legend opens from a chip at desktop and phone widths.
+      expect(find.text('闪族'), findsNothing);
+      expect(find.byIcon(Icons.legend_toggle), findsOneWidget);
       // All three icon actions are direct, and the view-switch carries
       // its words, as before.
-      expect(find.byIcon(Icons.search), findsOneWidget);
-      expect(find.byIcon(Icons.filter_list), findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(AppBar), matching: find.byIcon(Icons.search)),
+          findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(AppBar),
+              matching: find.byIcon(Icons.filter_list)),
+          findsOneWidget);
       expect(find.byIcon(Icons.info_outline), findsOneWidget);
       expect(find.byIcon(Icons.more_vert), findsNothing);
       await unmount(tester);
@@ -226,8 +248,8 @@ void main() {
     testWidgets('the AppBar title is actually on screen', (tester) async {
       await pump(tester, const StripChronologyPage(), const Size(375, 812));
       expect(tester.takeException(), isNull);
-      final title = find.descendant(
-          of: find.byType(AppBar), matching: find.text('世界历史时间条'));
+      final title =
+          find.byWidget(tester.widget<AppBar>(find.byType(AppBar)).title!);
       expect(title, findsOneWidget);
       // The strip's own name is the LONGER of the two — seven Han
       // characters against the wheel's five, and 'World History Strip'
@@ -255,8 +277,15 @@ void main() {
     testWidgets('nothing regresses at a desktop width', (tester) async {
       await pump(tester, const StripChronologyPage(), const Size(1440, 900));
       expect(tester.takeException(), isNull);
-      expect(find.byIcon(Icons.search), findsOneWidget);
-      expect(find.byIcon(Icons.filter_list), findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(AppBar), matching: find.byIcon(Icons.search)),
+          findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(AppBar),
+              matching: find.byIcon(Icons.filter_list)),
+          findsOneWidget);
       expect(find.byIcon(Icons.info_outline), findsOneWidget);
       expect(find.byIcon(Icons.more_vert), findsNothing);
       await unmount(tester);
