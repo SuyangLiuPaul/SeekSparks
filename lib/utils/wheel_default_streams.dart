@@ -189,11 +189,33 @@ const double kRimAnnulus = 0.16;
 /// a mark.
 const double kAxisTextRoomPx = 56;
 
+/// The least of [kRimAnnulus] the year scale may take.
+///
+/// 2026-09-15, reported from a phone: 「另外没有家谱寿命了」.
+///
+/// The margin for the upright year labels is a FIXED number of pixels,
+/// so on a small canvas it is a large fraction — and the way the rim
+/// was capped, it came out of the annulus. Measured: a 360 px wheel
+/// went from 50.8 px of annulus to 26.8. Sixteen sub-rings share that
+/// annulus (lifespans, the two reign lines, ministries and the
+/// genealogy rail), so it went from about 3.2 px each to 1.7, and the
+/// layers stopped being visible at all. Desktop was untouched, which is
+/// why every render I had looked at was fine.
+///
+/// The priority was inverted and this is the correction: THE MARGIN MAY
+/// NOT EAT THE DATA. A canvas too small to stand its year labels up
+/// drops the labels — their ticks stay, and the hub and the cursor
+/// still read any year — rather than deleting four layers to make room
+/// for words. `retainSeparatedWheelAxisLabels` already drops what will
+/// not fit; this just stops the rim from paying for it first.
+const double kMinRimAnnulus = 0.14;
+
 double rimFractionFor(double side) {
   if (side <= 0) return 0;
   final bands = bandsFractionFor(side);
   final axisRoom = 0.5 - kAxisTextRoomPx / side;
-  return math.max(bands + 0.02, math.min(bands + kRimAnnulus, axisRoom));
+  return math.max(bands + kMinRimAnnulus,
+      math.min(bands + kRimAnnulus, axisRoom));
 }
 
 /// The streams to show when the reader has not chosen, given the room.

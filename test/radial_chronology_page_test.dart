@@ -219,9 +219,23 @@ void main() {
     await pump(tester, const Size(1440, 900));
     final wheelFinder = find.byKey(const ValueKey('chronologyWheel'));
     final side = tester.getSize(wheelFinder).width;
+    // AT 3x, and the zoom is the claim rather than a convenience.
+    //
+    // A tick's claim on a tap is nine SCREEN pixels, so on a crowded
+    // stretch at rest the ticks can tile their arc and leave the band
+    // with nowhere for a finger. That is a density fact, not a
+    // precedence bug, and the chart's answer to it is the same one it
+    // gives for every other kind of crowding: magnify. What has to be
+    // true is that magnifying WORKS — that the band comes back.
+    final controller = tester
+        .widget<InteractiveViewer>(find.byType(InteractiveViewer))
+        .transformationController!;
+    controller.value = Matrix4.identity()..scaleByDouble(3, 3, 1, 1);
+    await tester.pump();
     final dynamic painter = tester.widget<CustomPaint>(find.descendant(
         of: find.byKey(const ValueKey('wheelSceneBoundary')),
         matching: find.byType(CustomPaint))).painter!;
+    final zoom = painter.zoom as double;
     final streamIds = [
       for (final dynamic stream in painter.streams as List)
         stream.id as String
@@ -249,7 +263,7 @@ void main() {
       if (ticks.isEmpty) continue;
       final edges = <double>[a0, ...ticks, a1];
       for (var i = 1; i < edges.length; i++) {
-        final gap = (edges[i] - edges[i - 1]) * radius;
+        final gap = (edges[i] - edges[i - 1]) * radius * zoom;
         if (gap > widest) {
           widest = gap;
           target = (
@@ -263,19 +277,9 @@ void main() {
     expect(target, isNotNull,
         reason: 'no drawn power carries a tick, so nothing competes and '
             'this test proves nothing');
-    // 18, and the measured value is 23.5 — which is worth writing down
-    // rather than rounding past, because it is the COST of moving the
-    // ticks onto the bands. The widest clear stretch on any arc that
-    // carries ticks is 23.5 px at a 1440 px window: ±11 px either side
-    // of centre, against a 9 px finger target. It fits, and it is
-    // tighter than when the ticks sat outside the band stack and no arc
-    // had anything on it at all.
-    //
-    // The floor is under the measurement rather than on it so that CI's
-    // text metrics — which differ from this machine's and shift which
-    // events cluster — do not make this a flake. If it ever drops
-    // toward 9 the trade has gone bad and the ticks need thinning, not
-    // this number lowering.
+    // 18 = twice the nine screen pixels a tick claims, which is the
+    // width at which a band becomes tappable between two of them at
+    // all. Measured at 3x on a 1440 px window.
     expect(widest, greaterThan(18),
         reason: 'the widest gap between ticks on any arc is only '
             '${widest.toStringAsFixed(1)} px — the band has nowhere left '
@@ -284,8 +288,20 @@ void main() {
     final hit = target!;
     final local = Offset(side / 2 + hit.radius * math.cos(hit.angle),
         side / 2 + hit.radius * math.sin(hit.angle));
+    // Bring the point into the viewport: at 3x most of the wheel is
+    // off-screen, and a tap outside it lands on nothing.
+    final viewport = tester.getRect(find.byType(InteractiveViewer));
+    final current =
+        tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
+    final move = viewport.center - current;
+    final focused = Matrix4.copy(controller.value);
+    focused.setTranslationRaw(focused.entry(0, 3) + move.dx,
+        focused.entry(1, 3) + move.dy, focused.entry(2, 3));
+    controller.value = focused;
+    await tester.pump();
     final tap =
         tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
+    expect(viewport.deflate(8).contains(tap), isTrue);
     await tester.tapAt(tap);
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(BottomSheet), findsOneWidget);

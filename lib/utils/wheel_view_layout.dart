@@ -70,6 +70,7 @@ WheelAxisLabelPlacement placeWheelAxisLabel({
   required double clearance,
   required bool onRing,
   double endpointGap = 4,
+  double? canvasHalf,
 }) {
   // UPRIGHT, both kinds. 2026-09-15.
   //
@@ -90,12 +91,29 @@ WheelAxisLabelPlacement placeWheelAxisLabel({
   // measures the box that is actually painted. A label that still
   // cannot clear its neighbours is dropped and its tick stays — the
   // reader loses a number they can read off the cursor, not a mark.
-  final radius = axialLabelRadius(
-      angle: angle,
-      rRim: rimRadius,
-      width: width,
-      height: height,
-      clearance: clearance);
+  // The outward placement, and how far past the rim its ink reaches.
+  final reach = (width / 2) * math.cos(angle).abs() +
+      (height / 2) * math.sin(angle).abs();
+  final outward = rimRadius + clearance + reach;
+  // OUTSIDE WHEN THERE IS ROOM, JUST INSIDE WHEN THERE IS NOT, AND
+  // NEVER ROTATED. 2026-09-15.
+  //
+  // The margin outside the rim is a fixed number of pixels and the
+  // canvas is not, so a small wheel runs out of it: a 360 px phone
+  // leaves 32 px outside the rim and `3000 BC` needs about 55. Letting
+  // the rim shrink to make room is what deleted the lifespan annulus
+  // 「另外没有家谱寿命了」, and dropping every label leaves a chronology
+  // with no year scale at all — which is worse than the curved labels
+  // this replaced.
+  //
+  // So the label steps INWARD instead, onto the outer edge of the
+  // annulus, still level. It costs a little of the layer beneath it and
+  // the painter gives it a plate; what it does not cost is the reader's
+  // neck, which is the whole point of the change.
+  final inward = rimRadius - clearance - reach;
+  final radius = canvasHalf == null || outward + reach <= canvasHalf
+      ? outward
+      : math.max(inward, rimRadius * 0.5);
   const rotation = 0.0;
   var centre = Offset(math.cos(angle), math.sin(angle)) * radius;
   if (!onRing) {
@@ -130,28 +148,79 @@ WheelAxisLabelPlacement placeWheelAxisLabel({
 /// 500-year label against the opening year. Only the colliding words are
 /// omitted: their tick lines remain, and the cursor still reads any year.
 /// [gap] is in canvas units; callers divide the screen gap by their zoom.
+/// How many century labels a wheel of this size should carry words on.
+///
+/// 2026-09-15, and it is a COUNT rather than a size or a position,
+/// because that is what the problem turned out to be.
+///
+/// A 360 px phone has no room outside its rim for an upright year
+/// label, so the labels step inward onto the annulus — and eight of
+/// them, each on its own plate, buried the very layers that had just
+/// been rescued from the same squeeze. Making them smaller would undo
+/// 「字体感觉太小」; pushing the rim in to make room outside is what
+/// deleted the lifespans 「另外没有家谱寿命了」. Neither was the problem.
+/// Eight labels is simply too many words for a 360 px circle.
+///
+/// One per 120 px of side: three on a phone, seven at 900, eleven at
+/// 1400 — and the TICK LINES are unaffected, so the scale keeps its
+/// resolution and loses only some of its numbers. The cursor and the
+/// hub read any year exactly.
+int axisLabelBudget(double side) => math.max(2, (side / 120).round());
+
 List<AxisLabel> retainSeparatedWheelAxisLabels({
   required List<AxisLabel> labels,
   required Rect Function(AxisLabel label) boundsOf,
   double gap = 4,
   Rect? canvasBounds,
+  int? maxOnRing,
 }) {
-  final retained = labels.where((label) => !label.onRing).toSet();
+  // THE RANGE ENDS ARE NO LONGER EXEMPT FROM THE CANVAS.
+  //
+  // They used to be admitted unconditionally, and the reason was good:
+  // they are what the chart's range IS, and a chronology that will not
+  // say where it starts and stops is not much of one.
+  //
+  // That reason expired on 2026-09-15, when the hub stopped repeating
+  // the page title and started printing the range itself. The range is
+  // now stated inside the circle, in full, at every canvas size — so an
+  // end label that cannot fit on a 360 px phone is a duplicate that
+  // does not fit, and pushing the rim inward to make room for it is
+  // what cost the lifespans their annulus 「另外没有家谱寿命了」.
+  //
+  // Its RAY is drawn either way (`_paintAxisEnds` draws the line before
+  // it places the text), so what a dropped end costs is a word, not the
+  // mark. They still take precedence over the century ticks.
+  bool fits(AxisLabel label) {
+    if (canvasBounds == null) return true;
+    final ink = boundsOf(label);
+    return ink.left >= canvasBounds.left &&
+        ink.right <= canvasBounds.right &&
+        ink.top >= canvasBounds.top &&
+        ink.bottom <= canvasBounds.bottom;
+  }
+
+  final retained =
+      labels.where((label) => !label.onRing && fits(label)).toSet();
   final occupied = [
     for (final label in retained) boundsOf(label).inflate(gap / 2),
   ];
-  for (final label in labels.where((label) => label.onRing)) {
+  // Thinned to the budget BEFORE the collision pass, and spread across
+  // the range rather than taken from the front: keeping the first N
+  // would put every word in the chart's oldest quarter and leave the
+  // modern end unlabelled.
+  var onRing = labels.where((label) => label.onRing).toList();
+  if (maxOnRing != null && onRing.length > maxOnRing) {
+    final step = onRing.length / maxOnRing;
+    onRing = [
+      for (var i = 0; i < maxOnRing; i++) onRing[(i * step).floor()],
+    ];
+  }
+  for (final label in onRing) {
     final ink = boundsOf(label);
     // The shared mode row leaves a 131 px wheel in the short landscape
     // case. Even separated Chinese tick labels can cross that boundary;
     // their ticks and the year cursor remain when the words cannot fit.
-    if (canvasBounds != null &&
-        (ink.left < canvasBounds.left ||
-            ink.right > canvasBounds.right ||
-            ink.top < canvasBounds.top ||
-            ink.bottom > canvasBounds.bottom)) {
-      continue;
-    }
+    if (!fits(label)) continue;
     final bounds = ink.inflate(gap / 2);
     if (occupied.any(bounds.overlaps)) continue;
     retained.add(label);

@@ -2582,11 +2582,59 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     final angles = [
       for (final e in all) angleForSpan(e.year, kMinYear, kMaxYear)
     ];
+    // ── THINNED PER RING, NOT ACROSS THE WHOLE CHART ───────────────
+    //
+    // Every event used to be clustered together against one reference
+    // radius, and while all 291 ticks shared a single circle that was
+    // right — two marks on that circle really could collide however far
+    // apart their streams were.
+    //
+    // Since the ticks moved onto their own streams' rings (2026-09-15)
+    // it is wrong twice over:
+    //
+    //   * ACROSS STREAMS. A church event and an Israel event five years
+    //     apart were merged into one spoke, so tapping opened a cluster
+    //     mixing two streams — for marks that are no longer anywhere
+    //     near each other, being a whole ring apart.
+    //   * AT THE WRONG RADIUS. The gap was computed at the OUTER band
+    //     radius for every ring. An inner ring has less arc per degree,
+    //     so the same angle there is a shorter run of pixels, and its
+    //     marks were being thinned as though they had the outermost
+    //     ring's room.
+    //
+    // Each ring is now thinned against its own radius, which is also
+    // what finally answers the density complaint honestly: the church
+    // ring carries 188 of the corpus's records and gets thinned on its
+    // own crowding, not on the average of four rings.
+    //
     // Selection always survives the thinning: hiding the thing the
-    // reader just tapped would be indefensible. It now represents its
+    // reader just tapped would be indefensible. It represents its
     // cluster instead of being added beside it.
-    final clusters = clusterByAngle(angles, minGap,
-        pinned: all.indexWhere((e) => e.id == _selectedId));
+    final rings = ringOf.length;
+    final rHub = _side * _kHubFrac;
+    final byRing = <int, List<int>>{};
+    for (var i = 0; i < all.length; i++) {
+      byRing.putIfAbsent(ringOf[all[i].stream]!, () => []).add(i);
+    }
+    final clusters = <SpokeCluster>[];
+    for (final entry in byRing.entries) {
+      final radius = math.max(
+          ringRadii(entry.key, rings, rHub, rBands).centre, 1.0);
+      final gap = (onScreenPx / _labelScale(_zoom)) / radius;
+      final idx = entry.value;
+      final pinned = idx.indexWhere((i) => all[i].id == _selectedId);
+      for (final c in clusterByAngle(
+          [for (final i in idx) angles[i]], gap,
+          pinned: pinned)) {
+        clusters.add(SpokeCluster(
+          members: [for (final m in c.members) idx[m]],
+          representative: idx[c.representative],
+        ));
+      }
+    }
+    // `planRadialSpokes` needs its requests in ascending angle.
+    clusters.sort((a, b) =>
+        angles[a.representative].compareTo(angles[b.representative]));
     final kept = [for (final c in clusters) all[c.representative]];
 
     // ── THE SCRIPTURE BASELINE ────────────────────────────────────
@@ -2625,6 +2673,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       titleSize: titleSize,
       refSize: titleSize * _kRefSizeRatio,
       measure: _measureLabel,
+      // ITS OTHER PRECONDITION NO LONGER HOLDS GLOBALLY, and that is a
+      // deliberate consequence rather than an oversight.
+      //
+      // `planRadialSpokes` asks that no two requests be closer than
+      // this, and the page's declutter used to guarantee it across the
+      // whole chart. Thinning per ring guarantees it only WITHIN a
+      // ring, so two requests from different rings can now arrive
+      // closer than `minGap`.
+      //
+      // What that precondition buys is labels that cannot collide — and
+      // at most one label is drawn now, the selected record's. Two
+      // labels cannot overlap when there is never a second one. The
+      // radii it hands back are still used, and those are per-request.
       minGap: minGap,
       lineHeight: titleSize * 1.35,
     );
@@ -4031,17 +4092,29 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         // which means a finger inside a power's arc can also be inside
         // one of that power's ticks.
         //
-        // Scored rather than ruled, the same way the lifespan and rail
-        // branches do it, because a precedence written down is exactly
-        // what sent the arcs' taps to the labels in September and drew
-        // 「我要按那个环而不是字」. The arc's target is its own sweep, with
-        // a finger's floor so a three-year span stays reachable; the
-        // tick's is the nine pixels of arc it was given above. Whichever
-        // the finger fell further INTO loses.
-        final sweep = arc.a1 - arc.a0;
-        final tolerance = math.max(sweep / 2, r > 0 ? 9 / (_zoom * r) : 0.05);
-        final into = (a - (arc.a0 + arc.a1) / 2).abs() / tolerance;
-        if (bestSpoke case final s? when spokeScore < into) {
+        // NESTED TARGETS, so the smaller one wins inside itself.
+        //
+        // Not the "whichever the finger fell further into" comparison
+        // the lifespan and rail branches use, and the difference is
+        // structural rather than a preference. Those compare targets at
+        // DIFFERENT RADII — a mark on one sub-ring against an arc on
+        // another — where asking which the finger is deeper inside is
+        // the only fair question, and where a written-down precedence
+        // was what sent the arcs' taps to the labels 「我要按那个环而不是
+        // 字」.
+        //
+        // A tick and its band are not like that. The tick sits ON the
+        // arc, at the same radius, strictly inside it. Scoring the arc
+        // by distance from its own angular centre — the first thing
+        // tried here — reads a tap near the end of a long span as
+        // barely on target at all, and handed the Hospitallers' band to
+        // a Wycliffe tick three hundred years away.
+        //
+        // The band stays reachable because a tick's claim is only the
+        // nine pixels around it, and because that claim is measured in
+        // SCREEN pixels: zooming pulls the ticks apart and opens the
+        // band between them.
+        if (bestSpoke case final s? when spokeScore <= 1) {
           openSpoke(s);
           return;
         }
@@ -4212,8 +4285,8 @@ class _WorldWheelPainter extends CustomPainter {
     // that cannot clear them. The actual tick lines above remain intact.
     for (final l
         in _axisLabels(rRim, math.min(c.dx, c.dy)).where((l) => l.onRing)) {
-      _ringLabel(canvas, c, l.text, l.angle, rRim + kAxisLabelClearance,
-          wb.mutedText, rimFont / _labelScale(zoom));
+      _ringLabel(canvas, c, l.text, l.angle, rRim, wb.mutedText,
+          rimFont / _labelScale(zoom), math.min(c.dx, c.dy));
     }
   }
 
@@ -4228,6 +4301,7 @@ class _WorldWheelPainter extends CustomPainter {
             endSwing: kAxisEndSwing,
           ),
           gap: 4 / zoom,
+          maxOnRing: axisLabelBudget(halfSide * 2),
           boundsOf: (label) {
             final tp = _painter(
                 label.text,
@@ -4240,6 +4314,7 @@ class _WorldWheelPainter extends CustomPainter {
               rimRadius: rRim,
               clearance: kAxisLabelClearance,
               onRing: label.onRing,
+              canvasHalf: halfSide,
               endpointGap: 4 / zoom,
             ).bounds;
           });
@@ -4253,7 +4328,7 @@ class _WorldWheelPainter extends CustomPainter {
   /// would buy 0.6 canvas units of fidelity and cost every kerning pair
   /// in the string.
   void _ringLabel(Canvas canvas, Offset c, String text, double angle,
-      double innerEdge, Color color, double size) {
+      double innerEdge, Color color, double size, double canvasHalf) {
     if (text.isEmpty) return;
     final tp = _painter(text, color, size);
     final placement = placeWheelAxisLabel(
@@ -4261,14 +4336,29 @@ class _WorldWheelPainter extends CustomPainter {
       width: tp.width,
       height: tp.height,
       rimRadius: innerEdge,
-      clearance: 0,
+      // The SAME clearance `_axisLabels` measured with. It used to pass
+      // the clearance baked into `innerEdge` and 0 here; splitting them
+      // meant the painter and the bounds check could disagree about
+      // where a label is, which is how a label gets admitted at one
+      // radius and drawn at another.
+      clearance: kAxisLabelClearance,
       onRing: true,
+      canvasHalf: canvasHalf,
     );
-    canvas.save();
-    canvas.translate(c.dx + placement.centre.dx, c.dy + placement.centre.dy);
-    canvas.rotate(placement.rotation);
-    tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
-    canvas.restore();
+    final at = c + placement.centre;
+    // A plate, because on a small wheel this label steps INSIDE the rim
+    // and lands on the annulus rather than on clear paper. Only then —
+    // outside the rim there is nothing under it to win against, and a
+    // plate would be a box drawn for no reason.
+    final box = Rect.fromCenter(
+        center: at, width: tp.width + 6 / zoom, height: tp.height + 1 / zoom);
+    if (placement.centre.distance < innerEdge) {
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              box, Radius.circular(WbMetrics.radiusControl / zoom)),
+          Paint()..color = wb.paneBg.withValues(alpha: 0.86));
+    }
+    tp.paint(canvas, box.center - Offset(tp.width / 2, tp.height / 2));
   }
 
   /// A faint groove per band, so an empty stretch still reads as that
@@ -4877,6 +4967,7 @@ class _WorldWheelPainter extends CustomPainter {
         clearance: kAxisLabelClearance,
         onRing: false,
         endpointGap: 4 / zoom,
+        canvasHalf: math.min(c.dx, c.dy),
       );
       tp.paint(
           canvas, c + placement.centre - Offset(tp.width / 2, tp.height / 2));

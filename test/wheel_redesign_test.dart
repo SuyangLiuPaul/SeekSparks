@@ -76,6 +76,7 @@ void main() {
             rimRadius: side * rimFractionFor(side),
             clearance: kAxisLabelClearance,
             onRing: label.onRing,
+            canvasHalf: side / 2,
           );
           final box = placement.bounds;
           final outside = math.max(math.max(box.left.abs(), box.right.abs()),
@@ -142,6 +143,7 @@ void main() {
         rimRadius: side * rimFractionFor(side),
         clearance: kAxisLabelClearance,
         onRing: label.onRing,
+        canvasHalf: side / 2,
       ).bounds;
     }
 
@@ -149,8 +151,28 @@ void main() {
         labels: candidates,
         boundsOf: boundsOf,
         canvasBounds: Rect.fromLTRB(-side / 2, -side / 2, side / 2, side / 2));
-    expect(labels.where((label) => !label.onRing).map((label) => label.year),
-        [kMinYear, kMaxYear]);
+    // The two range ends, WHEREVER THEY FIT — and where one does not,
+    // the reason must be that it does not fit, not that something
+    // quietly stopped admitting it.
+    //
+    // They used to be asserted unconditionally, because they were the
+    // only statement of the chart's range. Since 2026-09-15 the hub
+    // prints that range itself, at every size, so an end label a 360 px
+    // phone cannot hold is a duplicate that does not fit — and the rim
+    // is no longer pushed inward to make room for it, which is what had
+    // cost the lifespan annulus half its depth.
+    final ends = candidates.where((label) => !label.onRing).toList();
+    for (final end in ends) {
+      final ink = boundsOf(end);
+      final inside = ink.left >= -side / 2 &&
+          ink.right <= side / 2 &&
+          ink.top >= -side / 2 &&
+          ink.bottom <= side / 2;
+      expect(labels.contains(end), inside,
+          reason: '$locale, $side px: ${end.text} '
+              '${inside ? 'fits and was dropped' : 'does not fit and was '
+                  'drawn anyway'}');
+    }
     expect(labels.where((label) => label.onRing), isNotEmpty);
     for (final label in labels) {
       final bounds = boundsOf(label);
