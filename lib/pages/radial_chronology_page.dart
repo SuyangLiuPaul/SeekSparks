@@ -2239,9 +2239,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // touch it. That line used to sit in small grey type above the
     // chart; it is the same fact, in the place the eye already is.
     final year = _cursorYear;
-    final hint = year == null
-        ? s('wheelHubCovers', 'this chart covers', locale)
-        : s('wheelHubYear', 'the year you tapped', locale);
+    // A 390 px phone gives this circle about 83 px across, and at that
+    // size the range plus its caption clipped to 「主前4200 − 主后20…」.
+    // The hub is a readout, so a readout that cannot finish its own
+    // sentence is worse than a shorter one: below the threshold the
+    // caption goes and the range breaks onto its own two lines.
+    final roomy = hubD >= 110;
+    final hint = !roomy
+        ? ''
+        : year == null
+            ? s('wheelHubCovers', 'this chart covers', locale)
+            : s('wheelHubYear', 'the year you tapped', locale);
     return SizedBox(
       key: const ValueKey('wheelHubCaption'),
       width: hubD * 0.82,
@@ -2250,7 +2258,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         children: [
           Text(
             year == null
-                ? '${yearLabel(_rangeStart ?? kMinYear, locale)} — '
+                ? '${yearLabel(_rangeStart ?? kMinYear, locale)}'
+                    '${roomy ? ' — ' : '\n'}'
                     '${yearLabel(_rangeEnd ?? kMaxYear, locale)}'
                 : yearLabel(year, locale),
             textAlign: TextAlign.center,
@@ -2258,7 +2267,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: year == null ? wb.mutedText : wb.text,
-              fontSize: t.scaledChrome(year == null ? 11 : 16),
+              fontSize: math.max(
+                  t.scaledChrome(year == null ? 11 : (roomy ? 16 : 13)),
+                  WbMetrics.smallPrintFloor),
               fontWeight: FontWeight.w600,
               height: 1.2,
             ),
@@ -4137,7 +4148,7 @@ class _WorldWheelPainter extends CustomPainter {
     _paintCenturies(canvas, c, rHub, rRim);
     _paintGrooves(canvas, c, rHub, rBands);
     _paintArcs(canvas, c, rHub, rBands);
-    _paintBandNames(canvas, c, rHub, rBands);
+    _paintBandNames(canvas, c, rHub, rBands, rRim);
     _paintStreamSymbols(canvas, c, rHub, rBands);
     // Lifespans remain a lighter layer than power bands. At overview
     // the explorer carries event titles; zooming restores radial text
@@ -4521,8 +4532,17 @@ class _WorldWheelPainter extends CustomPainter {
   /// are then pushed apart to a readable pitch. Pushed UPWARD, away
   /// from the data: the leader stretches instead, which is exactly what
   /// a leader is for.
-  void _paintBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
+  void _paintBandNames(
+      Canvas canvas, Offset c, double rHub, double rBands, double rRim) {
     if (streams.isEmpty) return;
+    // The disc's own left edge. A 390 px phone puts the outer ring's
+    // anchor at about `c.dx - 85` and 以色列 is 38 px wide, so the plate
+    // started 13 px OUTSIDE the rim — the labels were hanging off the
+    // chart. Clamped here rather than by shrinking the type: the type
+    // was just raised because it was too small, and a label that has to
+    // shrink to fit is the defect coming back in another form. The
+    // leader stretches instead, which is what a leader is for.
+    final leftEdge = c.dx - rRim + 2 / zoom;
     final dir =
         Offset(math.cos(_kBandNameBearing), math.sin(_kBandNameBearing));
     final gap = 3 / zoom;
@@ -4547,7 +4567,8 @@ class _WorldWheelPainter extends CustomPainter {
       final pitch = tp.height + 4 / zoom;
       if (ceiling.isFinite && y > ceiling - pitch) y = ceiling - pitch;
       ceiling = y;
-      final right = anchor.dx - 9 / zoom;
+      final right =
+          math.max(anchor.dx - 9 / zoom, leftEdge + tp.width);
       final box = Rect.fromLTWH(
           right - tp.width, y - tp.height / 2, tp.width, tp.height);
       // A plate, for the same reason the selected callout has one: a
