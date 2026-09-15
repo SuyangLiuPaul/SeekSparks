@@ -78,10 +78,17 @@ const List<String> kStreamPriority = <String>[
 /// chart and not a smaller dataset. That distinction is the reason the
 /// cap is defensible at all.
 ///
-/// The strip chart does not share this ceiling. Its lanes stack
-/// vertically and each carries its own printed name, so a reader there
-/// is reading labels rather than matching hues, and twelve lanes are
-/// legible in a way twelve rings are not.
+/// The STRIP shares this ceiling too, since 2026-09-15 「filter limit
+/// 应该apply strip 和 wheel上面吧一起」.
+///
+/// It did not at first, on my argument that a strip lane stacks
+/// vertically and prints its own name — a reader there reads labels
+/// rather than matching hues, and twelve lanes stay legible where
+/// twelve rings do not. The owner overruled it, and on the better
+/// ground: the two charts are one product, and a limit that means
+/// different things depending on which of them you are looking at is a
+/// limit a reader has to learn twice. The legibility argument was about
+/// the drawing; this one is about the person.
 const int kMaxVisibleStreams = 5;
 
 /// How many rings the wheel opens with, leaving exactly one slot free.

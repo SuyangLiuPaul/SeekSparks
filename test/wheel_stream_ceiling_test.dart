@@ -229,19 +229,39 @@ void main() {
         reason: 'All must not drop the spine to make room');
   });
 
-  testWidgets('the strip keeps every lane — this ceiling is the wheel’s',
+  testWidgets('the strip is held to the same ceiling as the wheel',
       (tester) async {
-    // Its lanes stack vertically and each prints its own name, so a
-    // reader there reads labels instead of matching hues. Passing no
-    // ceiling has to leave the sheet exactly as it was.
+    // 2026-09-15, and this says the opposite of what it said this
+    // morning. It used to assert that passing no ceiling left the sheet
+    // exactly as it was, on my argument that a strip lane stacks
+    // vertically and prints its own name — labels being read rather
+    // than hues being matched.
+    //
+    // 「filter limit应该apply strip 和 wheel上面吧一起」. The owner's
+    // ground is better than mine: the two charts are one product, and a
+    // limit that means five here and twelve there is one a reader has
+    // to learn twice. Mine was an argument about the drawing; this is
+    // an argument about the person using it.
+    //
+    // The sheet still TAKES a ceiling rather than assuming one, so that
+    // a chart which genuinely does not need one has to say so — and the
+    // second half below keeps that path honest.
+    await pumpSheet(tester, hidden: hiddenExcept([...spine, 'egypt']));
+    expect(find.text('Streams 5 of 5'), findsOneWidget);
+    expect(enabled(tester, row('rome')), isFalse,
+        reason: 'the strip let a sixth lane on');
+  });
+
+  testWidgets('a sheet given no ceiling still behaves as it always did',
+      (tester) async {
+    // The other half of the decision above. Both charts pass a ceiling
+    // today, so this path has no caller — which is exactly why it is
+    // worth a test: a chart that genuinely does not need a limit should
+    // be able to say so, and "no ceiling" must keep meaning no ceiling
+    // rather than quietly becoming five because nothing checked.
     await pumpSheet(tester, hidden: hiddenExcept(spine), ceiling: null);
     expect(find.byKey(const ValueKey('chronologyFilterStreamCount')),
         findsNothing);
     expect(enabled(tester, row('rome')), isTrue);
-    await tester.tap(find.byKey(const ValueKey('chronologyFilterAll')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
-    await tester.pumpAndSettle();
-    expect(applied, isEmpty, reason: 'All still means all without a ceiling');
   });
 }

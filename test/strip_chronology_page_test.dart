@@ -54,7 +54,12 @@ void main() {
   /// Use the same opening stream choice, then compare surviving event
   /// ids independently of whichever card rows the painter needs.
   WheelHistoryData asOpened(WheelHistoryData d) {
-    final keep = defaultVisibleStreams(d.streams.map((s) => s.id), 12).toSet();
+    // 12 → kOpeningStreams, 2026-09-15: the strip now opens with the
+    // same four lanes the wheel opens with 「filter limit应该apply strip
+    // 和 wheel上面吧一起」.
+    final keep = defaultVisibleStreams(
+            d.streams.map((s) => s.id), kOpeningStreams)
+        .toSet();
     return WheelHistoryData(
       streams: d.streams.where((s) => keep.contains(s.id)).toList(),
       nations: d.nations,

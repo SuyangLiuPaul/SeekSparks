@@ -231,8 +231,21 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   void _applyDefaultHidden(WheelHistoryData data) {
     if (_defaultsApplied) return;
     _defaultsApplied = true;
-    final keep =
-        defaultVisibleStreams(data.streams.map((s) => s.id), 12).toSet();
+    // 12 → [kOpeningStreams], 2026-09-15. 「filter limit应该apply strip
+    // 和 wheel上面吧一起」.
+    //
+    // I argued against this and was overruled, which is worth recording
+    // accurately: the case I made was that a strip lane stacks
+    // vertically and prints its own name, so a reader here is reading
+    // labels rather than matching hues, and twelve lanes stay legible
+    // where twelve rings do not. The owner's answer is that the two
+    // charts are one product and a limit that means different things on
+    // each is a limit a reader has to learn twice. That is the stronger
+    // argument about the thing that actually matters, so the ceiling is
+    // shared — and the count is still what is DRAWN, never what exists.
+    final keep = defaultVisibleStreams(
+            data.streams.map((s) => s.id), kOpeningStreams)
+        .toSet();
     for (final s in data.streams) {
       if (!keep.contains(s.id)) _hidden.add(s.id);
     }
@@ -1337,6 +1350,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       },
       text: (key, fallback) => s(key, fallback, locale),
       keyPrefix: 'stripFilter',
+      streamCeiling: kMaxVisibleStreams,
     );
     if (!mounted || result == null) return;
     setState(() => _hidden
