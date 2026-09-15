@@ -296,13 +296,18 @@ void main() {
     });
 
     test('the ministries have their own hue, not one of Shem\'s three', () {
-      final ministry = HSLColor.fromColor(ministryArcColor()).hue;
+      // Hue is the channel that carries the MEANING here, so it is the
+      // one the ground may not move — asserted on both to say so.
+      for (final dark in [false, true]) {
+        final ministry =
+            HSLColor.fromColor(ministryArcColor(dark: dark)).hue;
       // Shem's arc is 10..64; the lifespans sit at its middle and the
       // two kingdoms at its ends. A ministry is a third kind of claim
       // and must not land inside that family.
-      expect(ministry < 5 || ministry > 70, isTrue,
-          reason: 'the ministries were given a Semitic hue, which says '
-              'their years are the same sort of number as the reigns');
+        expect(ministry < 5 || ministry > 70, isTrue,
+            reason: 'the ministries were given a Semitic hue, which says '
+                'their years are the same sort of number as the reigns');
+      }
     });
   });
 }

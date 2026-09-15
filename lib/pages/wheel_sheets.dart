@@ -178,7 +178,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
 
   /// Per-band colours, computed from the FULL stream list rather than
   /// the visible one — hiding a band must not recolour the rest.
-  Map<String, Color> colorsFor(WheelHistoryData data) {
+  Map<String, Color> colorsFor(WheelHistoryData data,
+      {required bool dark}) {
     final byLine = <String, List<String>>{};
     for (final s in data.streams) {
       byLine.putIfAbsent(s.line, () => []).add(s.id);
@@ -186,7 +187,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     final out = <String, Color>{};
     for (final s in data.streams) {
       final family = byLine[s.line]!;
-      out[s.id] = streamColor(s.line, family.indexOf(s.id), family.length);
+      out[s.id] = streamColor(s.line, family.indexOf(s.id), family.length,
+          dark: dark);
     }
     return out;
   }
@@ -425,7 +427,10 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
         final t = WbType.of(sheet);
         return buildSheet(sheet, [
           Row(children: [
-            swatch(t, colorsFor(data)[stream.id] ?? lineColor(stream.line)),
+            swatch(
+                t,
+                colorsFor(data, dark: wb.isDark)[stream.id] ??
+                    lineColor(stream.line, dark: wb.isDark)),
             SizedBox(width: t.scaled(8)),
             Expanded(
               child: Text(e.titleFor(locale),
@@ -1194,7 +1199,10 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
         return buildSheet(sheet, [
           Row(children: [
             swatch(
-                t, man.line == 'seth' ? lineColor('none') : lineColor('shem')),
+                t,
+                man.line == 'seth'
+                    ? lineColor('none', dark: wb.isDark)
+                    : lineColor('shem', dark: wb.isDark)),
             SizedBox(width: t.scaled(8)),
             Expanded(
               child: Text(man.nameFor(locale),
@@ -1338,7 +1346,7 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
   void showCluster(BuildContext context, List<WheelHistoryEvent> events,
       WheelHistoryData data, String locale, void Function(String) select) {
     final wb = WbColors.of(context);
-    final colors = colorsFor(data);
+    final colors = colorsFor(data, dark: wb.isDark);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
@@ -1378,7 +1386,10 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: t.scaled(4)),
                 child: Row(children: [
-                  swatch(t, colors[e.stream] ?? lineColor('none')),
+                  swatch(
+                      t,
+                      colors[e.stream] ??
+                          lineColor('none', dark: wb.isDark)),
                   SizedBox(width: t.scaled(8)),
                   Expanded(
                     child: Text(e.titleFor(locale),
@@ -1410,7 +1421,10 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
         final t = WbType.of(sheet);
         return buildSheet(sheet, [
           Row(children: [
-            swatch(t, colorsFor(data)[stream.id] ?? lineColor(stream.line)),
+            swatch(
+                t,
+                colorsFor(data, dark: wb.isDark)[stream.id] ??
+                    lineColor(stream.line, dark: wb.isDark)),
             SizedBox(width: t.scaled(8)),
             Expanded(
               child: Text(p.nameFor(locale),
@@ -1616,7 +1630,10 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
         final t = WbType.of(sheet);
         return buildSheet(sheet, [
           Row(children: [
-            swatch(t, colorsFor(data)[stream.id] ?? lineColor(stream.line)),
+            swatch(
+                t,
+                colorsFor(data, dark: wb.isDark)[stream.id] ??
+                    lineColor(stream.line, dark: wb.isDark)),
             SizedBox(width: t.scaled(8)),
             Expanded(
               child: Text(stream.nameFor(locale),

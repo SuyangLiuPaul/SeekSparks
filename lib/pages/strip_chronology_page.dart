@@ -429,6 +429,11 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   Widget build(BuildContext context) {
     final locale = context.watch<AppSettings>().locale;
     final wb = WbColors.of(context);
+    // The ground, read once and remembered, because the scene and the
+    // palette below are cached: a cache keyed on everything EXCEPT the
+    // ground is how a reader who switches to dark mode keeps the light
+    // palette until something unrelated happens to invalidate it.
+    _dark = wb.isDark;
 
     return Scaffold(
       backgroundColor: wb.paneBg,
@@ -483,7 +488,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
             data: data,
             locale: locale,
             hiddenStreams: Set.of(_hidden),
-            streamColors: colorsFor(data),
+            streamColors: colorsFor(data, dark: _dark),
             selectedId: _selectedId,
             onFind: () => _showSearch(context, locale),
             onFilter: () => _showFilter(context, locale),
@@ -882,11 +887,15 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   Object? _paletteKey;
   StripPalette? _paletteCache;
 
+  /// Which ground this chart is painted on; see the wheel page's own
+  /// field for why it is remembered rather than looked up per call.
+  bool _dark = false;
+
   StripPalette _paletteFor(WheelHistoryData data, List<HebrewKing> kings,
       List<Patriarch> patriarchs, String locale) {
-    final key = (data, kings, patriarchs, locale);
+    final key = (data, kings, patriarchs, locale, _dark);
     if (_paletteKey == key && _paletteCache != null) return _paletteCache!;
-    final streamColors = colorsFor(data);
+    final streamColors = colorsFor(data, dark: _dark);
     final eventById = {for (final e in data.events) e.id: e};
     final spanLabel = <String, String>{
       for (final k in kings) '$kStripKingPrefix${k.id}': k.nameFor(locale),
@@ -897,7 +906,10 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       for (final s in data.streams) s.id: s.nameFor(locale),
     };
     final palette = StripPalette(
-        streamColors: streamColors, eventById: eventById, spanLabel: spanLabel);
+        streamColors: streamColors,
+        eventById: eventById,
+        spanLabel: spanLabel,
+        dark: _dark);
 
     _paletteKey = key;
     return _paletteCache = palette;
@@ -1316,12 +1328,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       locale: locale,
       data: data,
       hidden: _hidden,
-      streamColors: colorsFor(data),
+      streamColors: colorsFor(data, dark: _dark),
       layerColors: {
-        kLifespanLayerId: lineColor('shem'),
-        kReignLayerId: kingdomArcColor(Kingdom.judah),
-        kMinistryLayerId: ministryArcColor(),
-        kLineageLayerId: lineageRailColor(),
+        kLifespanLayerId: lineColor('shem', dark: _dark),
+        kReignLayerId: kingdomArcColor(Kingdom.judah, dark: _dark),
+        kMinistryLayerId: ministryArcColor(dark: _dark),
+        kLineageLayerId: lineageRailColor(dark: _dark),
       },
       text: (key, fallback) => s(key, fallback, locale),
       keyPrefix: 'stripFilter',
@@ -1496,7 +1508,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           final data = snap.data;
           if (data == null) return const SizedBox(height: 120);
           final t = WbType.of(c);
-          final colors = colorsFor(data);
+          final colors = colorsFor(data, dark: _dark);
           final kings = HebrewKingsService.instance.cached?.kings ?? const [];
           final patriarchs =
               ChronologyService.instance.cached?.patriarchs ?? const [];
@@ -1593,7 +1605,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                                   child: swatch(
                                       t,
                                       colors[hit.streamId] ??
-                                          lineColor('none')),
+                                          lineColor('none', dark: _dark)),
                                 ),
                                 SizedBox(width: t.scaled(8)),
                                 Expanded(

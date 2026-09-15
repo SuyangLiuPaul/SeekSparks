@@ -38,6 +38,7 @@ import 'package:seeksparks/utils/year_digest.dart'
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
 import 'package:seeksparks/utils/wheel_text_metrics.dart';
+import 'package:seeksparks/utils/chronology_palette.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
@@ -227,67 +228,23 @@ const double kAxisLabelClearance = kRimOuterRing + 3.0;
 /// empty by construction, so the room costs nothing.
 const double kAxisEndSwing = 0.10;
 
-/// The arc of the colour wheel each Genesis 10 family occupies.
+/// The chronology's hues now live in `utils/chronology_palette.dart`.
 ///
-/// (start hue, end hue) in degrees. A family's bands spread across its
-/// own arc, so no two bands share a colour, while the arcs stay far
-/// enough apart that a family still reads as one.
+/// They were moved there on 2026-09-15 so that they could take the
+/// GROUND they are painted on as an input 「可以跟着变吧 dark ligjt
+/// mode」. The arcs, the family assignment and the lightness zigzag are
+/// unchanged and carry their original reasoning with them; what is new
+/// is that every one of these entry points now demands a `dark`, so a
+/// call site that has not thought about the ground does not compile.
 ///
-/// The first attempt kept every family inside a narrow swing around a
-/// single hue. That was faithful to the idea and useless in practice:
-/// ten Japhethite bands came out as ten near-identical blues and a
-/// reader could not tell Rome from Japan. The bands are ALREADY
-/// contiguous by family on the wheel — Israel through the Islamic
-/// world sit together, Persia through India sit together — so
-/// adjacency is already saying "these belong together", which frees
-/// hue to spend itself on telling them apart. Japheth gets the widest
-/// arc because it carries ten of the twenty-two.
-///
-/// Kept literal: a reader learns what a colour means, and that must
-/// hold whatever accent the app is themed with.
-const Map<String, (double, double)> _lineHueArcs = {
-  'shem': (10, 64), // red through amber to olive
-  'ham': (88, 150), // yellow-green through green
-  'japheth': (178, 300), // teal, cyan, blue, indigo, violet
-  'institution': (312, 342), // magenta through rose
-  'none': (0, 0), // grey: belongs to no descent
-};
-
-const Color _noDescentColor = Color(0xFF828282);
-
-/// A colour for ONE band: its family's arc, at position [t] (0..1),
-/// with [index] deciding which way its lightness steps.
-///
-/// Three things had to be true at once, and each was learned by a test
-/// failing rather than by eye:
-///
-///  * NEIGHBOURS MUST DIFFER. Hue alone was not enough — six Semitic
-///    bands inside a 34° swing left Arabia and the Islamic world 35
-///    apart, which reads as the same colour. So lightness ZIGZAGS with
-///    the index: two adjacent bands differ in hue AND in lightness,
-///    never in one channel only.
-///  * NOTHING MAY GO NEAR BLACK OR WHITE. A smooth lightness ramp
-///    across a ten-band family drove its ends to #612218 and #E69DE6 —
-///    separable, and unreadable on the page. The zigzag keeps every
-///    band between 0.37 and 0.57.
-///  * FAMILIES MUST NOT TOUCH. Ham's arc ended at 165° where Japheth's
-///    began, so Philistia and Persia came out the SAME colour; the
-///    test measured 0.0 between them. The arcs now leave a gap.
-Color _bandColor(String line, double t, int index) {
-  final arc = _lineHueArcs[line];
-  if (arc == null || line == 'none') return _noDescentColor;
-  final (h0, h1) = arc;
-  return HSLColor.fromAHSL(
-    1,
-    (h0 + (h1 - h0) * t) % 360,
-    // Saturation peaks mid-arc so the ends do not turn to mud.
-    (0.60 + 0.12 * math.sin(math.pi * t)).clamp(0.0, 1.0),
-    (0.47 + (index.isEven ? -0.10 : 0.10)).clamp(0.0, 1.0),
-  ).toColor();
-}
+/// Why `required` rather than a default: the failure a default hides is
+/// invisible in the light mode the work is done in. It only shows up on
+/// a reader's night screen, as a band at 2:1 against #0B1320.
 
 /// The family's own colour, for the legend — the middle of its arc.
-Color lineColor(String line) => _bandColor(line, 0.5, 0);
+Color lineColor(String line, {required bool dark}) =>
+    familyColor(line, dark: dark);
+
 
 /// Arc ids for the reign band carry this, because [buildSpanArcs] packs
 /// every span in ONE id space and a king and a patriarch could
@@ -306,12 +263,13 @@ const String kKingArcPrefix = 'king:';
 /// held to — and the patriarch arcs sit at the middle of the same arc,
 /// so the three read as three shades of one family rather than three
 /// families.
-Color kingdomArcColor(Kingdom kingdom) => switch (kingdom) {
-      Kingdom.israel => _bandColor('shem', 1, 1),
+Color kingdomArcColor(Kingdom kingdom, {required bool dark}) =>
+    switch (kingdom) {
+      Kingdom.israel => bandColor('shem', 1, 1, dark: dark),
       // Saul, David and Solomon reigned over both houses; they are
       // drawn in Judah's shade because the throne they held is the one
       // Judah kept, not because the united monarchy was Judah.
-      Kingdom.judah || Kingdom.united => _bandColor('shem', 0, 0),
+      Kingdom.judah || Kingdom.united => bandColor('shem', 0, 0, dark: dark),
     };
 
 /// Arc ids for the ministry band, for the same reason as
@@ -326,7 +284,8 @@ const String kMinistryArcPrefix = 'ministry:';
 /// (the kings), but the window a text places a man's work in. Giving it
 /// a Semitic shade would have said it was the same sort of number as
 /// the two beside it.
-Color ministryArcColor() => lineColor('institution');
+Color ministryArcColor({required bool dark}) =>
+    lineColor('institution', dark: dark);
 
 /// The ministries as spans for the arc band.
 List<SpanInput> ministrySpans(List<WheelMinistry> ministries) => [
@@ -396,7 +355,7 @@ const String kLineageArcPrefix = 'lineage:';
 
 /// The genealogy rail's own shade: the no-descent grey, because a
 /// conventional placement belongs to no claim the chart makes.
-Color lineageRailColor() => _noDescentColor;
+Color lineageRailColor({required bool dark}) => noDescentColor(dark: dark);
 
 /// The tradition the arc band is drawn on. Top-level because
 /// [packWheelBand] defaults to it and the tests read it.
@@ -493,8 +452,9 @@ List<SpanInput> kingReignSpans(List<HebrewKing> kings) => [
     ];
 
 /// The colour of one band, given its position among its own family.
-Color streamColor(String line, int index, int count) =>
-    _bandColor(line, count <= 1 ? 0.5 : index / (count - 1), index);
+Color streamColor(String line, int index, int count,
+        {required bool dark}) =>
+    streamBandColor(line, index, count, dark: dark);
 
 /// Strings this page owns. Kept local rather than appended to
 /// ui_strings.dart because the unattended loop shares this checkout and
@@ -1330,6 +1290,15 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   Object? _stackGroupsKey;
   List<StackedChronologyGroup> _stackGroups = const [];
 
+  /// Which ground the chart is being painted on, read once per build.
+  ///
+  /// A field rather than a lookup at each call site because the scene
+  /// and the stack groups are CACHED, and a cache keyed on everything
+  /// except the ground is how a reader who switches to dark mode keeps
+  /// the light palette until something else happens to invalidate it.
+  /// Both cache keys below carry this value for that reason.
+  bool _dark = false;
+
   /// Streams the reader has switched off.
   ///
   /// 2026-09-15: this is no longer empty on arrival. 「一开始filter不要
@@ -1381,6 +1350,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       locale,
       labelSize,
       _zoom,
+      // The ground. Every arc, life and spoke in this scene carries a
+      // colour chosen for it, so a scene built on paper is wrong at
+      // night even though nothing else about it changed.
+      _dark,
       hiddenKey,
       _selectedId,
       ChronologyService.instance.cached,
@@ -1390,7 +1363,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     if (_sceneKey == key && _scene != null) return _scene!;
     final streams = _visible(data);
     final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
-    final colors = colorsFor(data);
+    final colors = colorsFor(data, dark: _dark);
     final rHub = side * _kHubFrac;
     final rBands = side * bandsFractionFor(side);
     final rRim = side * rimFractionFor(side);
@@ -1707,6 +1680,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   Widget build(BuildContext context) {
     final locale = context.watch<AppSettings>().locale;
     final wb = WbColors.of(context);
+    // The ground, read once and remembered, because the scene and the
+    // palette below are cached: a cache keyed on everything EXCEPT the
+    // ground is how a reader who switches to dark mode keeps the light
+    // palette until something unrelated happens to invalidate it.
+    _dark = wb.isDark;
 
     return Scaffold(
       backgroundColor: wb.paneBg,
@@ -1808,7 +1786,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
               data: data,
               locale: locale,
               hiddenStreams: _hidden,
-              streamColors: colorsFor(data),
+              streamColors: colorsFor(data, dark: _dark),
               selectedId: _selectedId,
               onEvent: (event) =>
                   _openExplorerEvent(context, event, data, locale),
@@ -1831,10 +1809,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   List<StackedChronologyGroup> _stackGroupsFor(
       WheelHistoryData data, String locale) {
     final lanes = _lanesFor(data);
-    final key = (lanes, locale);
+    final key = (lanes, locale, _dark);
     if (_stackGroupsKey == key) return _stackGroups;
     _stackGroupsKey = key;
-    final colors = colorsFor(data);
+    final colors = colorsFor(data, dark: _dark);
     final grouped = <String, List<YearDigestItem>>{};
     for (final lane in lanes) {
       final id = switch (lane.kind) {
@@ -1868,10 +1846,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       'events': s('wheelEvents', 'Events', locale),
     };
     colors.addAll({
-      kLifespanLayerId: lineColor('shem'),
-      kReignLayerId: kingdomArcColor(Kingdom.judah),
-      kMinistryLayerId: ministryArcColor(),
-      kLineageLayerId: lineageRailColor(),
+      kLifespanLayerId: lineColor('shem', dark: _dark),
+      kReignLayerId: kingdomArcColor(Kingdom.judah, dark: _dark),
+      kMinistryLayerId: ministryArcColor(dark: _dark),
+      kLineageLayerId: lineageRailColor(dark: _dark),
       'events': const Color(0xFFA64E72),
     });
     return _stackGroups = [
@@ -2423,7 +2401,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           geo[i].ring,
           geo[i].a0,
           geo[i].a1,
-          colors[geo[i].power.stream] ?? lineColor('none'),
+          colors[geo[i].power.stream] ?? lineColor('none', dark: _dark),
           name: planned[i].name,
           nameA0: planned[i].a0,
           nameSweep: planned[i].sweep,
@@ -2556,7 +2534,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           [for (final m in clusters[p.index].members) all[m]],
           kept[p.index],
           p.label,
-          colors[kept[p.index].stream] ?? lineColor('none'),
+          colors[kept[p.index].stream] ?? lineColor('none', dark: _dark),
           p.title,
           p.ref,
           badge: p.badge,
@@ -2756,11 +2734,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         // the two reign lines the same way, from the `line` that
         // `kingReignSpans` derived from the king's own `kingdom`.
         color: switch (arc.line) {
-          'seth' => lineColor('none'),
-          'judah' => kingdomArcColor(Kingdom.judah),
-          'israel' => kingdomArcColor(Kingdom.israel),
-          'ministry' => ministryArcColor(),
-          _ => lineColor('shem'),
+          'seth' => lineColor('none', dark: _dark),
+          'judah' => kingdomArcColor(Kingdom.judah, dark: _dark),
+          'israel' => kingdomArcColor(Kingdom.israel, dark: _dark),
+          'ministry' => ministryArcColor(dark: _dark),
+          _ => lineColor('shem', dark: _dark),
         },
         name: drawn,
         nameA0: a0,
@@ -2780,7 +2758,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             Container(
                 width: t.scaled(10),
                 height: t.scaled(10),
-                color: lineColor(line)),
+                color: lineColor(line, dark: wb.isDark)),
             SizedBox(width: t.scaled(6)),
             Text(s(key, fallback, locale),
                 style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
@@ -2811,7 +2789,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
               Container(
                   width: t.scaled(10),
                   height: t.scaled(4),
-                  color: lineColor('shem').withValues(alpha: 0.5)),
+                  color: lineColor('shem', dark: wb.isDark)
+                      .withValues(alpha: 0.5)),
               SizedBox(width: t.scaled(6)),
               Text(
                 '${s('wheelLifespans', 'Genesis lifespans', locale)} · '
@@ -2834,7 +2813,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                     Container(
                         width: t.scaled(10),
                         height: t.scaled(4),
-                        color: kingdomArcColor(kingdom).withValues(alpha: 0.5)),
+                        color: kingdomArcColor(kingdom, dark: wb.isDark)
+                            .withValues(alpha: 0.5)),
                     SizedBox(width: t.scaled(6)),
                     Text(
                       '${kingdomLabel(locale, kingdom)} · '
@@ -2858,7 +2838,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                   Container(
                       width: t.scaled(10),
                       height: t.scaled(4),
-                      color: ministryArcColor().withValues(alpha: 0.5)),
+                      color: ministryArcColor(dark: wb.isDark)
+                          .withValues(alpha: 0.5)),
                   SizedBox(width: t.scaled(6)),
                   Text(
                     s('wheelMinistries', 'Prophets & apostles', locale),
@@ -2880,7 +2861,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                   Container(
                       width: t.scaled(2),
                       height: t.scaled(9),
-                      color: lineageRailColor().withValues(alpha: 0.6)),
+                      color: lineageRailColor(dark: wb.isDark)
+                          .withValues(alpha: 0.6)),
                   SizedBox(width: t.scaled(14)),
                   Text(
                     s('wheelLineage', 'Genealogy (approximate)', locale),
@@ -2908,12 +2890,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       locale: locale,
       data: data,
       hidden: _hidden,
-      streamColors: colorsFor(data),
+      streamColors: colorsFor(data, dark: _dark),
       layerColors: {
-        kLifespanLayerId: lineColor('shem'),
-        kReignLayerId: kingdomArcColor(Kingdom.judah),
-        kMinistryLayerId: ministryArcColor(),
-        kLineageLayerId: lineageRailColor()
+        kLifespanLayerId: lineColor('shem', dark: _dark),
+        kReignLayerId: kingdomArcColor(Kingdom.judah, dark: _dark),
+        kMinistryLayerId: ministryArcColor(dark: _dark),
+        kLineageLayerId: lineageRailColor(dark: _dark)
       },
       text: (key, fallback) => s(key, fallback, locale),
       keyPrefix: 'wheelFilter',
@@ -3057,7 +3039,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           final data = snap.data;
           if (data == null) return const SizedBox(height: 120);
           final t = WbType.of(c);
-          final colors = colorsFor(data);
+          final colors = colorsFor(data, dark: _dark);
           return StatefulBuilder(builder: (c, setSheet) {
             final query = _findCtl.text;
             final result = searchWheel(
@@ -3245,7 +3227,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                                   child: swatch(
                                       t,
                                       colors[hit.streamId] ??
-                                          lineColor('none')),
+                                          lineColor('none', dark: _dark)),
                                 ),
                                 SizedBox(width: t.scaled(8)),
                                 Expanded(
@@ -4147,7 +4129,8 @@ class _WorldWheelPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = band.width
-            ..color = (colors[streams[i].id] ?? lineColor(streams[i].line))
+            ..color = (colors[streams[i].id] ??
+                    lineColor(streams[i].line, dark: wb.isDark))
                 .withValues(alpha: 0.06));
     }
   }
@@ -4257,7 +4240,8 @@ class _WorldWheelPainter extends CustomPainter {
         c + dir * (r.centre + half),
         Paint()
           ..strokeWidth = (sel ? 1.8 : 1.0) / zoom
-          ..color = lineageRailColor().withValues(alpha: alpha),
+          ..color = lineageRailColor(dark: wb.isDark)
+              .withValues(alpha: alpha),
       );
     }
   }
@@ -4349,7 +4333,8 @@ class _WorldWheelPainter extends CustomPainter {
       final tp = _WheelText(
         streams[i].nameFor(locale),
         canvasTextStyle(
-          color: (colors[streams[i].id] ?? lineColor(streams[i].line))
+          color: (colors[streams[i].id] ??
+                  lineColor(streams[i].line, dark: wb.isDark))
               .withValues(alpha: 0.98),
           fontSize: math.min(bandFont / _labelScale(zoom), band.width * 1.05),
           fontWeight: FontWeight.w600,

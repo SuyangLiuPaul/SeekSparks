@@ -201,28 +201,43 @@ void main() {
   group('the two kingdoms are told apart', () {
     double hue(Color c) => HSLColor.fromColor(c).hue;
 
-    test('Judah and Israel are far apart in hue', () {
-      final j = kingdomArcColor(Kingdom.judah);
-      final i = kingdomArcColor(Kingdom.israel);
-      expect((hue(i) - hue(j)).abs(), greaterThan(30),
-          reason: 'the two kingdoms read as one colour');
-    });
+    // Both grounds, since 2026-09-15: the two kingdoms are told apart
+    // by hue, which the ground does not move, but the WEIGHT each is
+    // given does move, and a version of this that only checked paper
+    // would have said nothing about the night palette.
+    for (final dark in [false, true]) {
+      final ground = dark ? 'night' : 'paper';
 
-    test('neither is the patriarchs\' shade', () {
-      // The lifespan arcs sit at the MIDDLE of Shem's hue arc; these two
-      // at its ends. Three shades of one family is the intent — three
-      // families would have been a claim about descent that Genesis 10
-      // does not make — so what has to hold is that they separate, not
-      // that they differ in kind.
-      final patriarch = HSLColor.fromColor(kingdomArcColor(Kingdom.judah));
-      final israel = HSLColor.fromColor(kingdomArcColor(Kingdom.israel));
-      expect(patriarch.hue, isNot(israel.hue));
-      for (final k in const [Kingdom.judah, Kingdom.israel]) {
-        final l = HSLColor.fromColor(kingdomArcColor(k)).lightness;
-        // The same floor and ceiling the stream bands are held to.
-        expect(l, greaterThan(0.30));
-        expect(l, lessThan(0.70));
-      }
-    });
+      test('Judah and Israel are far apart in hue ($ground)', () {
+        final j = kingdomArcColor(Kingdom.judah, dark: dark);
+        final i = kingdomArcColor(Kingdom.israel, dark: dark);
+        expect((hue(i) - hue(j)).abs(), greaterThan(30),
+            reason: 'the two kingdoms read as one colour');
+      });
+
+      test('neither is the patriarchs\' shade ($ground)', () {
+        // The lifespan arcs sit at the MIDDLE of Shem's hue arc; these
+        // two at its ends. Three shades of one family is the intent —
+        // three families would have been a claim about descent that
+        // Genesis 10 does not make — so what has to hold is that they
+        // separate, not that they differ in kind.
+        final patriarch =
+            HSLColor.fromColor(kingdomArcColor(Kingdom.judah, dark: dark));
+        final israel =
+            HSLColor.fromColor(kingdomArcColor(Kingdom.israel, dark: dark));
+        expect(patriarch.hue, isNot(israel.hue));
+        for (final k in const [Kingdom.judah, Kingdom.israel]) {
+          final l =
+              HSLColor.fromColor(kingdomArcColor(k, dark: dark)).lightness;
+          // Nowhere near black or white. The bounds are wider than the
+          // old 0.30/0.70 because the palette now aims at LUMINANCE:
+          // hitting one luminance across the hue circle means HSL
+          // lightness has to vary, and a deep blue reaching the same
+          // weight as a yellow legitimately sits higher.
+          expect(l, greaterThan(0.12));
+          expect(l, lessThan(0.88));
+        }
+      });
+    }
   });
 }

@@ -265,6 +265,7 @@ void main() {
       streamColors: const {},
       spanLabel: const {},
       eventById: {for (final event in events) event.id: event},
+      dark: false,
     );
     final width = stripContentWidth(zoom);
     final height = rowTop;

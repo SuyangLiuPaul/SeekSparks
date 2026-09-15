@@ -173,11 +173,21 @@ class StripPalette {
     required this.streamColors,
     required this.eventById,
     required this.spanLabel,
+    required this.dark,
   });
 
   final Map<String, Color> streamColors;
   final Map<String, WheelHistoryEvent> eventById;
   final Map<String, String> spanLabel;
+
+  /// The ground these colours are for.
+  ///
+  /// It rides with the palette rather than being looked up here because
+  /// this file is a painter: it has no `BuildContext`, and the fallback
+  /// shades below (`lineColor('none')` and friends) are chosen for a
+  /// span whose stream is missing — exactly the case a reader is least
+  /// likely to forgive being invisible.
+  final bool dark;
 }
 
 double _measure(String text, double size, {FontWeight? weight}) =>
@@ -204,30 +214,33 @@ double measureStripEventTextHeight(
 Color _spanColor(StripSpan span, StripLane lane, StripPalette palette) {
   switch (span.kind) {
     case StripLaneKind.stream:
-      return palette.streamColors[lane.ownerId] ?? lineColor('none');
+      return palette.streamColors[lane.ownerId] ??
+          lineColor('none', dark: palette.dark);
     case StripLaneKind.events:
       final event = palette.eventById[span.id];
       return event == null
-          ? lineColor(span.line ?? 'none')
-          : (palette.streamColors[event.stream] ?? lineColor('none'));
+          ? lineColor(span.line ?? 'none', dark: palette.dark)
+          : (palette.streamColors[event.stream] ??
+              lineColor('none', dark: palette.dark));
     case StripLaneKind.kings:
       return kingdomArcColor(
-          span.line == 'israel' ? Kingdom.israel : Kingdom.judah);
+          span.line == 'israel' ? Kingdom.israel : Kingdom.judah,
+          dark: palette.dark);
     case StripLaneKind.ministries:
-      return ministryArcColor();
+      return ministryArcColor(dark: palette.dark);
     case StripLaneKind.lives:
-      return lineColor(span.line ?? 'none');
+      return lineColor(span.line ?? 'none', dark: palette.dark);
     case StripLaneKind.rail:
       // One fixed shade for every cohort, never `span.line` — see
       // `strip_lanes.dart`'s `stripLineageCohorts` doc: none of these
       // years rest on a verse, so there is no "more confident" cohort
       // to give a stronger colour, and inventing one would print a
       // distinction the data does not support.
-      return lineageRailColor();
+      return lineageRailColor(dark: palette.dark);
     case StripLaneKind.ruler:
       // Never produced by `buildStripLanes` — see that file's own doc
       // on why the enum value exists at all.
-      return lineColor('none');
+      return lineColor('none', dark: palette.dark);
   }
 }
 
@@ -1032,7 +1045,8 @@ class StripLaneHeaderPainter extends CustomPainter {
       if (lane.kind != StripLaneKind.stream || lane.subLane != 0) continue;
 
       final name = palette.spanLabel[lane.ownerId] ?? lane.ownerId ?? '';
-      final color = (palette.streamColors[lane.ownerId] ?? lineColor('none'))
+      final color = (palette.streamColors[lane.ownerId] ??
+              lineColor('none', dark: palette.dark))
           .withValues(alpha: 0.98);
       final tp = StripPaintTextCache.layout(
         text: name,
