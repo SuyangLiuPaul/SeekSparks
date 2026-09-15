@@ -355,8 +355,13 @@ void main() {
     await settle(tester);
   }
 
+  // The event browser remains mounted behind the sheet. Its hidden
+  // record count can equal a forbidden date (540), so testing every
+  // paragraph on the page would mistake that count for Jabal's year.
   String sheetText(WidgetTester tester) => tester
-      .renderObjectList<RenderParagraph>(find.byType(RichText))
+      .renderObjectList<RenderParagraph>(find.descendant(
+          of: find.byType(BottomSheet).last,
+          matching: find.byType(RichText)))
       .map((p) => p.text.toPlainText())
       .join('\n');
 
