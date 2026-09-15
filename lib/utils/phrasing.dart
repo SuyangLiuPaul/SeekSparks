@@ -56,6 +56,8 @@
 /// This file is Flutter-free on purpose so the whole model is testable.
 library;
 
+import 'package:seeksparks/constants/text_patterns.dart'
+    show sanitizeForSearch;
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/related_verses.dart'
     show isCjkChar, isWordChar;
@@ -275,6 +277,63 @@ bool isRtlText(String s) {
     }
   }
   return false;
+}
+
+/// Which way a VERSE should be laid out.
+///
+/// 2026-09-15, reported from the reader: 「Sword全部right aligned了」 —
+/// 罗马书 8 in 梁简 was set flush right, every line of it, while the
+/// paragraph below it was normal.
+///
+/// TWO THINGS WERE WRONG, and [isRtlText] was right about neither.
+///
+/// **It was asked about the markup.** `verse.text` is the raw record —
+/// `<note:…>` and all — and a translator's note is apparatus, not
+/// scripture. 梁简 carries 109 verses whose notes cite a Hebrew word;
+/// 罗马书 8:9 and 8:11 are two of them, which is why that paragraph and
+/// not the next one flipped. The note is not on screen as scripture and
+/// must not decide how the scripture around it is laid out.
+///
+/// **It was asked the wrong question.** [isRtlText] answers *is there
+/// any Hebrew here*, and `paragraph_group_widget.dart` compounded that
+/// with `group.any(...)` — so ONE Hebrew character anywhere in a
+/// paragraph turned the whole block right to left. The comment in
+/// `verse_widget.dart` defended this as the rule that "survives a
+/// Hebrew quotation inside an English verse", but that is backwards: a
+/// Chinese verse quoting one Hebrew word is still a Chinese verse, and
+/// setting it right-aligned is not surviving the quotation, it is being
+/// overthrown by it.
+///
+/// So the question here is *which script is this passage MOSTLY in*.
+/// The Masoretic text is Hebrew throughout and still lays out right to
+/// left; everything that merely mentions Hebrew does not.
+///
+/// Answers a BOOL rather than a `TextDirection`, because this file is
+/// Flutter-free on purpose (see the library doc) so the whole model
+/// stays testable on the plain VM. The two widgets map it to a
+/// direction — and to NULL for the false case, so a passage that is not
+/// Hebrew inherits the app's own Directionality exactly as it did
+/// before any of this existed.
+bool scriptIsRtl(Iterable<String> texts) {
+  var rtl = 0;
+  var ltr = 0;
+  for (final raw in texts) {
+    for (final c in sanitizeForSearch(raw).runes) {
+      if ((c >= 0x0590 && c <= 0x05FF) || (c >= 0xFB1D && c <= 0xFB4F)) {
+        rtl++;
+      } else if ((c >= 0x0041 && c <= 0x005A) || // A-Z
+          (c >= 0x0061 && c <= 0x007A) || // a-z
+          (c >= 0x0370 && c <= 0x03FF) || // Greek
+          (c >= 0x3040 && c <= 0x30FF) || // kana
+          (c >= 0x4E00 && c <= 0x9FFF)) {
+        // CJK
+        ltr++;
+      }
+      // Everything else — digits, spaces, punctuation, the markers the
+      // sanitiser leaves behind — is neutral and votes for nothing.
+    }
+  }
+  return rtl > ltr;
 }
 
 /// True when the passage is Chinese and should be drawn without the gap

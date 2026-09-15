@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/utils/phrasing.dart' show isRtlText;
+import 'package:seeksparks/utils/phrasing.dart' show scriptIsRtl;
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
@@ -275,14 +275,21 @@ class _VerseWidgetState extends State<VerseWidget> {
                         // layout fault but an unreadable verse.
                         //
                         // Decided by the SCRIPT of the text, not by the
-                        // edition code, which is the rule `isRtlText`'s
-                        // own doc states and the one that survives a
-                        // Hebrew quotation inside an English verse.
-                        // Null where there is no Hebrew, so every
-                        // existing verse keeps the Directionality it
-                        // has always had.
-                        textDirection:
-                            isRtlText(verse.text) ? TextDirection.rtl : null,
+                        // edition code. Null where the verse is not
+                        // Hebrew, so every existing verse keeps the
+                        // Directionality it has always had.
+                        //
+                        // 2026-09-15: this used to say the rule
+                        // "survives a Hebrew quotation inside an English
+                        // verse". It did the opposite — one quoted word
+                        // flipped the whole verse — and in a Chinese
+                        // edition whose notes cite Hebrew, that is a
+                        // right-aligned chapter. `scriptIsRtl` asks
+                        // which script the SCRIPTURE is mostly in, and
+                        // does not count the apparatus at all.
+                        textDirection: scriptIsRtl([verse.text])
+                            ? TextDirection.rtl
+                            : null,
                         text: TextSpan(
                           style: settings.boldVerseText
                               ? const TextStyle(fontWeight: FontWeight.w600)

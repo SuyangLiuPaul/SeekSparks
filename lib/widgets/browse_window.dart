@@ -53,7 +53,7 @@ import 'package:seeksparks/utils/version_diff.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
 import 'package:seeksparks/widgets/verse_notes_block.dart'
-    show superscriptNumber;
+    show superscriptNumber, VerseNotesBlock, notesInReadingOrder;
 
 /// The one word gap in the Browse pane.
 ///
@@ -1171,10 +1171,48 @@ class _TranslationLine extends StatelessWidget {
     // denser than the reader, so it scales RELATIVE to the reader's
     // setting (20 is the default) rather than adopting it outright.
     //
-    // 2026-08-17: the reference used to be the first span of this very
-    // paragraph, which is why an untagged edition's second line began
-    // underneath it instead of beside it. It is [BrowseVerseRow]'s now,
-    // and this is the verse and nothing else.
+    // 2026-09-15: 「我要对照组好像 阅读模式一样有那个胶囊展开」.
+    //
+    // The circled numbers landed here on the same day the letter `n`
+    // was removed, and they were half a fix: a reader could see WHICH
+    // note was which and still had no way to read one, short of finding
+    // and holding a 10 px glyph to raise a tooltip. The reader beside
+    // this pane folds the same notes behind a 「译者注 ▾」 pill; this is
+    // that pill, the same widget, so a note is the same object in both
+    // views and there is one place that decides how notes look.
+    //
+    // A Column only when there are notes — the overwhelming majority of
+    // rows have none, and wrapping every one of them in a Column would
+    // add a layout node per verse to the densest surface in the app.
+    // The verse's own notes, and only those: a `_BrowseRow` carries no
+    // `blockNotes`, so unlike the reader this pill does not show the
+    // edition's block-level apparatus. That is what the row HAS rather
+    // than a judgement about what belongs — said out loud so nobody
+    // later reads the difference as a decision.
+    final notes = notesInReadingOrder(row.text ?? '');
+    final body = _body(context, wb, t);
+    if (notes.isEmpty) return body;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        body,
+        VerseNotesBlock(
+          notes: notes,
+          settings: settings,
+          locale: settings.locale,
+        ),
+      ],
+    );
+  }
+
+  /// The verse itself.
+  ///
+  /// 2026-08-17: the reference used to be the first span of this very
+  /// paragraph, which is why an untagged edition's second line began
+  /// underneath it instead of beside it. It is [BrowseVerseRow]'s now,
+  /// and this is the verse and nothing else.
+  Widget _body(BuildContext context, WbColors wb, WbType t) {
     return Text.rich(
       TextSpan(
         children: [

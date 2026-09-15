@@ -148,11 +148,34 @@ void main() {
         'lib/widgets/verse_widget.dart',
         'lib/widgets/paragraph_group_widget.dart',
       ]) {
-        final src = File(f).readAsStringSync();
+        // Comments stripped first. These files EXPLAIN the old rule by
+        // quoting it, and a grep that cannot tell a call from a
+        // paragraph about a call would forbid the explanation — which
+        // is the part most worth keeping.
+        final src = File(f)
+            .readAsLinesSync()
+            .where((l) => !l.trimLeft().startsWith('//'))
+            .join('\n');
         expect(src.contains('TextDirection.rtl'), isTrue, reason: f);
-        expect(src.contains('isRtlText('), isTrue,
-            reason: '$f must ask the text, not the version code — a '
-                'Hebrew quotation inside an English verse is still Hebrew');
+        // 2026-09-15: this used to demand `isRtlText(` here, with the
+        // reason 「a Hebrew quotation inside an English verse is still
+        // Hebrew」. That reason was WRONG, and it was reported from the
+        // reader: 「Sword全部right aligned了」. 梁简 carries 109 verses
+        // whose translator's notes cite a Hebrew word, and `isRtlText`
+        // — asked of the raw record, markup included — set every
+        // paragraph containing one flush right.
+        //
+        // A Chinese verse quoting one Hebrew word is a Chinese verse.
+        // The painters now ask `scriptIsRtl`, which ignores the
+        // apparatus and goes by which script the scripture is MOSTLY
+        // in; `rtl_only_for_hebrew_scripture_test.dart` holds that rule
+        // to the actual editions.
+        expect(src.contains('scriptIsRtl('), isTrue,
+            reason: '$f must ask the SCRIPT of the scripture, not the '
+                'version code and not the presence of one character');
+        expect(src.contains('isRtlText('), isFalse,
+            reason: '$f went back to "any Hebrew character anywhere", '
+                'which is what right-aligned 罗马书 8');
       }
     });
 

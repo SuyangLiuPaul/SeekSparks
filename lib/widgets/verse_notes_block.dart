@@ -4,6 +4,8 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/scripture_markup.dart'
+    show ScriptureSpanKind, parseScripture;
 
 /// Every note a verse carries, set as one numbered block under it.
 ///
@@ -73,6 +75,21 @@ class VerseNotesBlock extends StatefulWidget {
   @override
   State<VerseNotesBlock> createState() => _VerseNotesBlockState();
 }
+
+/// The inline `<note: …>` texts of [raw], in the order they appear.
+///
+/// 2026-09-15, added for the Browse pane's 对照 rows, which have only
+/// the verse string — they carry no `blockNotes`, so what they can fold
+/// is what is written inside the verse. The two readers do not call
+/// this: they collect notes into a sink while they build the spans,
+/// because they need each one's POSITION as well to draw its marker.
+///
+/// It exists so the pane and its test agree on what "this verse's
+/// notes" means without either re-implementing the parse.
+List<String> notesInReadingOrder(String raw) => [
+      for (final span in parseScripture(raw))
+        if (span.kind == ScriptureSpanKind.note) span.text,
+    ];
 
 /// 160, which is the 雅偉的話 app's own figure. Long enough that a
 /// one-line note is never folded and the reader sees it whole; short
