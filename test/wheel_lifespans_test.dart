@@ -39,12 +39,13 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
-import 'package:seeksparks/utils/wheel_view_layout.dart'
-    show wheelShowsEventText;
 
 // The page's own geometry, restated because the fractions are private
 // to it. `wheel_arc_label_behaviour_test.dart` does the same.
-const double _rimFontPx = 10.5;
+// 12.5, not 10.5: the canvas type was raised on 2026-09-15 「字体感觉
+// 太小不是很responsive」 and this file has to measure the wheel that
+// ships, not the one it used to.
+const double _rimFontPx = 12.5;
 
 /// The tradition the ARCS are drawn on. The Septuagint is printed on
 /// every sheet and never drawn — see §5 of the ruling.
@@ -553,12 +554,36 @@ void main() {
   // or three characters where 「Abraham」 is seven, so they were never
   // the ones competing for the room, which is a small confirmation that
   // the cause is width and not something structural.
+  //
+  // `700 en` 20 → 19, 2026-09-15, and the cause is the type going from
+  // 10.5 px to 12.5 「字体感觉太小」. A wider name needs more arc, and
+  // Moses — seven characters in the crowded Ur-to-Exodus centuries — no
+  // longer gets it. One name, bought with two points on every label on
+  // the chart, and the trade is the right way round: the 25 lives are
+  // all still in the stream's sheet and all still tappable.
+  //
+  // What this table now measures has also narrowed, and honestly it
+  // should be read that way. Only the SELECTED life prints its name on
+  // the canvas since the same day; these floors measure the CAPACITY
+  // the planner still has to find that one label a size and a place.
+  // They are kept because that capacity is real and can still be spent
+  // by accident — not because 19 names are on screen.
   const floors = <String, int>{
-    '700 en': 20,
-    '700 zh-Hans': 22,
+    '700 en': 19,
+    // 22 → 20 on the same day and for the same reason as `700 en`:
+    // wider type. Note this is still the FALSIFIER's value — the
+    // ruling below withdraws the layer's "named at rest" claim under
+    // 20 of 25 here — so the two numbers now meet, and the next loss
+    // at this cell is a decision rather than an edit.
+    '700 zh-Hans': 20,
     '900 en': 20,
     '900 zh-Hans': 20,
-    '1400 en': 21,
+    // 21 → 19, same cause as the two 700 cells: 12.5 px type. The
+    // widest canvas keeps losing the most, which this table already
+    // recorded as the counter-intuitive fact it is — a wider view
+    // plans MORE event spokes, and a planned spoke is exactly what a
+    // Genesis name has to dodge.
+    '1400 en': 19,
     '1400 zh-Hans': 23,
   };
   test('every life can be named at rest, at every canvas the wheel gets', () {
@@ -959,102 +984,44 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('a long label crossing an arc no longer takes the arc\'s tap',
-      (tester) async {
-    // The rule that was WRONG until 2026-09-02, and the test I got wrong
-    // three times before it said anything.
+  test('a spoke only claims the radius of a name it actually draws', () {
+    // WHAT THIS REPLACES, and why it is a ratchet now.
     //
-    // `_handleTap` gave every spoke in radial range precedence over
-    // every arc, justified by the spoke being the smaller target — nine
-    // pixels of arc against a 9.73 px sub-ring. The reigns, the
-    // ministries and the genealogy rail took the band to sixteen
-    // sub-rings and a sub-ring to 8.69 px at this canvas, so the ARC
-    // became the smaller target and the fixed precedence pointed the
-    // wrong way. The owner reported it from the screen:
-    // 「我要按那个环而不是字」.
+    // Until 2026-09-15 this was a widget test: it hunted for a drawn
+    // event title whose radial run crossed a life arc within a finger
+    // of the arc's midpoint, tapped there, and asserted the LIFE sheet
+    // opened rather than the event's. It was defending the owner's
+    // report 「我要按那个环而不是字」 — labels were taking the arcs' taps.
     //
-    // WHAT THE FIRST THREE ATTEMPTS TAUGHT, since each looked right:
-    //   * tapping the point furthest from every spoke proves nothing —
-    //     no spoke is in range there, so the old rule passes too;
-    //   * a spoke only competes over the radial extent of its OWN TEXT,
-    //     so a short label near the base never reaches ring 8 and is
-    //     not a tie either;
-    //   * asserting the NAME is not enough — the spoke nearest the
-    //     start of Methuselah's arc is `methuselah_born`, whose title is
-    //     「玛土撒拉出生」, so a name check passes whichever sheet opens.
+    // That scenario can no longer be built, and the reason is the
+    // change this file was updated for: unselected records stopped
+    // printing names on the canvas, so there is no drawn title left to
+    // cross anything. Instrumented before rewriting rather than
+    // assumed — the hunt found zero candidate pairs at every zoom it
+    // tried.
     //
-    // Read the actual painter after zooming: overview now suppresses
-    // event text, and a second plan built from every unfiltered event
-    // no longer describes the page. The tap is at a real arc's angular
-    // midpoint, with a visible label inside its competing finger target.
-    // 「创世后」 is the Anno Mundi line only the life sheet prints.
-    await pump(tester, const Size(900, 900));
-    final wheelFinder = find.byKey(const ValueKey('chronologyWheel'));
-    final viewerFinder = find.byType(InteractiveViewer);
-    final controller = tester.widget<InteractiveViewer>(viewerFinder)
-        .transformationController!;
-    ({String id, double radius, double angle, double spokeDistancePx,
-      String spokeTitle, double zoom})? found;
-    for (final zoom in [1.6, 2.0, 3.0, 4.0, 6.0, 8.0]) {
-      controller.value = Matrix4.identity()..scaleByDouble(zoom, zoom, 1, 1);
-      await tester.pump();
-      final dynamic painter = tester.widget<CustomPaint>(find.descendant(
-          of: find.byKey(const ValueKey('wheelSceneBoundary')),
-          matching: find.byType(CustomPaint))).painter!;
-      final paintedZoom = painter.zoom as double;
-      if (!wheelShowsEventText(zoom: paintedZoom, selected: false)) continue;
-      for (final dynamic life in painter.lives as List) {
-        if (life.man == null) continue;
-        final arc = life.arc as LifeArc;
-        final radius = life.centre as double;
-        final at = (arc.a0 + arc.a1) / 2;
-        for (final dynamic spoke in painter.spokes as List) {
-          final title = spoke.title as String;
-          final label = spoke.label as RadialLabel;
-          if (title.isEmpty || label.rStart > radius || label.rEnd < radius) {
-            continue;
-          }
-          if (label.angle <= arc.a0 || label.angle >= arc.a1) continue;
-          final distance = (at - label.angle).abs() * radius * paintedZoom;
-          if (distance >= 9) continue;
-          found = (id: life.id as String, radius: radius, angle: at,
-              spokeDistancePx: distance, spokeTitle: title, zoom: paintedZoom);
-          break;
-        }
-        if (found != null) break;
-      }
-      if (found != null) break;
-    }
-    expect(found, isNotNull,
-        reason: 'no currently drawn label crosses a life arc and competes '
-            'at its midpoint; the regression needs a real overlapping target');
-
-    final hit = found!;
-    expect(hit.spokeTitle, isNotEmpty);
-    expect(hit.spokeDistancePx, lessThan(9),
-        reason: 'the visible spoke must compete for the same tap');
-    final side = tester.getSize(wheelFinder).width;
-    final local = Offset(side / 2 + hit.radius * math.cos(hit.angle),
-        side / 2 + hit.radius * math.sin(hit.angle));
-    final viewport = tester.getRect(viewerFinder);
-    final current = tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
-    final move = viewport.center - current;
-    final focused = Matrix4.copy(controller.value);
-    focused.setTranslationRaw(focused.entry(0, 3) + move.dx,
-        focused.entry(1, 3) + move.dy, focused.entry(2, 3));
-    controller.value = focused;
-    await tester.pump();
-    final tap = tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
-    expect(viewport.deflate(12).contains(tap), isTrue,
-        reason: 'the real intersection must be inside the visible hit area');
-    expect(controller.value.getMaxScaleOnAxis(), closeTo(hit.zoom, .000001));
-    await tester.tapAt(tap);
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(sheetText(tester), contains('创世后'),
-        reason: 'a label crossing the band took a tap that landed dead on '
-            'the band — the labels are taking the arcs\' taps again');
-    expect(sheetText(tester), contains(chron.byId(hit.id)!.nameFor('zh-Hans')));
-    await unmount(tester);
+    // A test that cannot construct its scenario proves nothing, so it
+    // must not be left passing vacuously. What replaced it is the
+    // invariant that makes the scenario impossible, and it is worth
+    // pinning because removing it is a ONE-LINE, INVISIBLE regression:
+    // `_handleTap` reserves `label.rStart..rEnd` for every spoke, and
+    // on the day the names came off the canvas that line became an
+    // invisible bar across the annulus, still taking taps from the arcs
+    // underneath it for text nobody could see. It was live for about
+    // twenty minutes.
+    //
+    // The rule: the tap follows the ink.
+    final src = File('lib/pages/radial_chronology_page.dart').readAsStringSync();
+    expect(src, contains('final drawsName = wheelShowsEventText('),
+        reason: 'the spoke tap rule stopped asking whether the name is '
+            'drawn — every spoke is claiming its label extent again, '
+            'visible or not');
+    final atLabel = RegExp(r'final atLabel = ([A-Za-z]+) &&').firstMatch(src);
+    expect(atLabel, isNotNull,
+        reason: 'atLabel is no longer guarded by anything');
+    expect(atLabel!.group(1), 'drawsName',
+        reason: 'atLabel is guarded by ${atLabel.group(1)}, which is not '
+            'the question "is this name on screen"');
   });
 
   testWidgets('the layer switch hides all 25 and brings them back',

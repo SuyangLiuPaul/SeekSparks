@@ -1,3 +1,24 @@
+/// WHAT THIS FILE STILL MEASURES, AS OF 2026-09-15.
+///
+/// `fitArcLabel` / `planArcNames` no longer decide anything a reader
+/// sees. Until this date every power printed its name along its own
+/// arc, and this file's floors were the guard on that. The names came
+/// off the canvas that day — each was laid along its own tangent, which
+/// is how a circle ends up with text pointing in every direction — and
+/// only the SELECTED arc is labelled now: level, on a plate, sized at
+/// the canvas type rather than squeezed inside its own sweep.
+///
+/// So this is now a UNIT TEST OF A PLANNER THE PAINTER DOES NOT CALL,
+/// and that is worth saying out loud rather than leaving for someone to
+/// discover. The floors below are real measurements of a real function;
+/// they no longer protect anything on screen. The file is kept because
+/// `planArcNames` is still in `_buildArcs`, and retiring it should be a
+/// decision rather than something that happens by letting its tests rot.
+///
+/// The floors fell sharply on the same day, for two intended reasons:
+/// the ring count was capped at five, so this measures five rings of
+/// powers instead of a counterfactual twenty-two; and the canvas type
+/// went from 10.5 px to 12.5 「字体感觉太小」, so each name needs more arc.
 /// The wheel's arc labels — the power names set along their own bands.
 ///
 /// Canvas text leaves no widget and no semantics node, so a widget test
@@ -30,7 +51,8 @@ const _fallback = ['NotoSansSC-Sub'];
 // radial_chronology_page.dart: _kHubFrac, _kBandsFrac, _kLabelPx,
 // kMinYear, kMaxYear, and _labelScale.
 const double _hubFrac = 0.115;
-const double _rimFont = 10.5;
+// 12.5 since 2026-09-15 — the canvas type the wheel actually ships.
+const double _rimFont = 12.5;
 // -4200 since the creation anchor was derived (`_meta.creation`, 4114
 // BC) and the axis moved to hold it. This copy went on saying -4000
 // after the page's did not, which measured every power's arc against a
@@ -121,8 +143,20 @@ Iterable<({WheelPower power, double radius, double sweep})> _arcs(
   double side,
 ) sync* {
   final rHub = side * _hubFrac, rBands = side * bandsFractionFor(side);
-  final n = data.streams.length;
-  final ringOf = {for (var i = 0; i < n; i++) data.streams[i].id: i};
+  // THE RINGS THE WHEEL ACTUALLY DRAWS, not all twenty-two.
+  //
+  // 2026-09-15: this read `data.streams.length`, and on the day the
+  // ring count was capped at five that stopped being a measurement of
+  // anything. Twenty-two rings in the band annulus give a 5.9 px pitch
+  // at 900 px, which is under `kArcLabelFloorPx`, so `fitArcLabel`
+  // correctly returned 0 for every power and this file reported the
+  // chart as having lost all its names — a configuration no reader can
+  // reach. Five rings is what ships, and five rings is what the floors
+  // below are measured against.
+  final shown = defaultVisibleStreams(
+      data.streams.map((s) => s.id), kMaxVisibleStreams);
+  final n = shown.length;
+  final ringOf = {for (var i = 0; i < n; i++) shown[i]: i};
   for (final p in data.powers) {
     final ring = ringOf[p.stream];
     if (ring == null) continue;
@@ -133,8 +167,12 @@ Iterable<({WheelPower power, double radius, double sweep})> _arcs(
   }
 }
 
-double _maxEm(WheelHistoryData data, double side) =>
-    ringPitch(data.streams.length, side * _hubFrac, side * bandsFractionFor(side)) *
+double _maxEm(WheelHistoryData data, double side) => ringPitch(
+      defaultVisibleStreams(data.streams.map((s) => s.id), kMaxVisibleStreams)
+          .length,
+      side * _hubFrac,
+      side * bandsFractionFor(side),
+    ) *
     kArcLabelPitchFraction;
 
 /// The size the page would hand `fitArcLabel` for each arc, and what it
@@ -239,7 +277,12 @@ void main() {
           final at1 = _sizesAt(data, side, locale, 1).fold(0.0, math.max);
           final at8 =
               _sizesAt(data, side, locale, 8).fold(0.0, math.max) * 8;
-          expect(at8, lessThan(31),
+          // 31 → 37 on 2026-09-15. The resting size went from 10.5 px
+          // to 12.5 「字体感觉太小」 and this ceiling is that size carried
+          // through the same zoom curve, so it moves with it by the
+          // same ratio. What the test still forbids is unchanged: type
+          // that keeps growing in proportion to the zoom.
+          expect(at8, lessThan(37),
               reason: 'side=$side $locale: 800% put ${at8.toStringAsFixed(1)} '
                   'px on screen');
           if (at1 > 0) {
@@ -292,12 +335,24 @@ void main() {
       // "same set at every zoom" bug would undercount by far more than
       // this, so the guard still does its job.
       const slack = _kPlatformTextMetricSlack;
-      expect(_drawnAt(data, 900, 'en', 1), greaterThanOrEqualTo(26 - slack));
+      // 26/39/38/43 → 2/7/6/11, and the collapse is the finding rather
+      // than the failure. Two things moved: this now measures the five
+      // rings the wheel draws instead of a counterfactual twenty-two,
+      // and the type is 12.5 px instead of 10.5, so a name needs about
+      // a fifth more arc than it used to.
+      //
+      // The number that matters is `2`. At 900 px in English, two of
+      // the drawn powers can carry their name inside their own sweep.
+      // That is why the selected arc's callout does NOT use this
+      // planner any more — sized this way, tapping almost any arc would
+      // have highlighted it and told the reader nothing. See
+      // `_paintArcs`.
+      expect(_drawnAt(data, 900, 'en', 1), greaterThanOrEqualTo(2 - slack));
       expect(_drawnAt(data, 900, 'zh-Hans', 1),
-          greaterThanOrEqualTo(39 - slack));
-      expect(_drawnAt(data, 1200, 'en', 1), greaterThanOrEqualTo(38 - slack));
+          greaterThanOrEqualTo(7 - slack));
+      expect(_drawnAt(data, 1200, 'en', 1), greaterThanOrEqualTo(6 - slack));
       expect(_drawnAt(data, 1200, 'zh-Hans', 1),
-          greaterThanOrEqualTo(43 - slack));
+          greaterThanOrEqualTo(11 - slack));
     });
 
     test('a name that is drawn fits the arc it names', () {
@@ -309,8 +364,13 @@ void main() {
             for (var i = 0; i < arcs.length; i++) {
               if (sizes[i] == 0) continue;
               final w = _measureChars(arcs[i].power.nameFor(locale), sizes[i]);
+              // 1e-9 → 1e-6: the overrun measured is 1.2e-7 of a
+              // radian, which is a text-measurement rounding artefact
+              // and not ink crossing a boundary. A real overrun is
+              // orders of magnitude larger — the defect this caught
+              // originally was 5.9 units of ink in a 5.4 unit pitch.
               expect(w / arcs[i].radius,
-                  lessThanOrEqualTo(arcs[i].sweep * 0.92 + 1e-9),
+                  lessThanOrEqualTo(arcs[i].sweep * 0.92 + 1e-6),
                   reason: '${arcs[i].power.nameFor(locale)} at side=$side '
                       '$locale zoom=$zoom overruns its arc');
             }
@@ -328,8 +388,17 @@ void main() {
     // guards it.
     test('no drawn label reaches the neighbouring stream', () async {
       for (final side in [700.0, 900.0]) {
+        // The pitch of the rings the wheel DRAWS. `data.streams.length`
+        // was twenty-two, which since the ring cap is a pitch no reader
+        // ever gets — and a label measured against a pitch four times
+        // too small fails a test about crossing rows that it is not
+        // actually crossing.
         final pitch = ringPitch(
-            data.streams.length, side * _hubFrac, side * bandsFractionFor(side));
+            defaultVisibleStreams(
+                    data.streams.map((s) => s.id), kMaxVisibleStreams)
+                .length,
+            side * _hubFrac,
+            side * bandsFractionFor(side));
         for (final locale in _locales) {
           for (final zoom in [1.0, 2.0]) {
             final arcs = _arcs(data, side).toList();

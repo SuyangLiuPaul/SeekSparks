@@ -89,18 +89,39 @@ void main() {
   });
 
   test('type enlarges through 4x and stays bounded through 120x', () {
-    double onScreen(double zoom) => 10.5 * zoom / wheelLabelScale(zoom);
-    expect(onScreen(1), 10.5);
+    // 12.5 at rest, not 10.5. 「字体感觉太小不是很responsive」 — and the
+    // canvas was also asking `scaledChrome`, which multiplies without a
+    // floor, so a reader below the default Menu Size was getting 8.4 px
+    // where every other small label in the app is floored at 11.
+    const restingPx = 12.5;
+    double onScreen(double zoom) => restingPx * zoom / wheelLabelScale(zoom);
+    expect(onScreen(1), restingPx);
     expect(onScreen(2), greaterThan(onScreen(1)));
-    expect(onScreen(4), 21);
+    expect(onScreen(4), restingPx * 2);
     for (final zoom in [4.0, 8.0, 40.0, 120.0]) {
-      expect(onScreen(zoom), closeTo(21, 0.001));
+      expect(onScreen(zoom), closeTo(restingPx * 2, 0.001));
     }
-    expect(wheelShowsEventText(zoom: 1, selected: false), isFalse);
-    expect(wheelShowsEventText(zoom: 1, selected: true), isTrue);
-    expect(wheelShowsEventText(zoom: 1.59, selected: false), isFalse);
-    expect(wheelShowsEventText(zoom: 1.6, selected: false), isTrue);
-    expect(wheelShowsEventText(zoom: 2, selected: false), isTrue);
+  });
+
+  test('zoom no longer turns names on; only selection does', () {
+    // This used to read `1.6 → true`, and the owner photographed what
+    // that bought: at 381% a fan of rotated `+9 +1 +3 +4 +8 +8` badges
+    // with a truncated `The…` among them, and at 2474% six titles
+    // running across each other in four directions.
+    //
+    // Zoom was never the right switch. Magnifying a circle does not
+    // make text laid along its tangents point the same way — it makes
+    // MORE of it, bigger, still pointing every way. The mark stays at
+    // every zoom; the name is read from the list beside the chart,
+    // which is sorted by year and scrolls with the cursor; and the one
+    // question the list cannot answer — "which mark did I just tap" —
+    // is answered by drawing that one name, level.
+    for (final zoom in [0.5, 1.0, 1.59, 1.6, 2.0, 12.0, 120.0]) {
+      expect(wheelShowsEventText(zoom: zoom, selected: false), isFalse,
+          reason: 'zoom $zoom turned canvas names back on');
+      expect(wheelShowsEventText(zoom: zoom, selected: true), isTrue,
+          reason: 'the selected record lost its name at zoom $zoom');
+    }
   });
 
   void expectSeparatedAxis(double side, String locale) {

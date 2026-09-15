@@ -19,11 +19,37 @@ double wheelLabelScale(double zoom) {
   return safeZoom / math.min(math.sqrt(safeZoom), 2.0);
 }
 
-/// Radial names have enough room to accompany their marks once the wheel
-/// is magnified. At fit size, the explorer and year digest supply readable
-/// names and evidence; selected records keep their canvas label too.
+/// Which records put their name on the canvas: the selected one, and
+/// nothing else.
+///
+/// 2026-09-15. This used to read `selected || zoom >= 1.6`, and the
+/// owner photographed what that produced — at 381% a fan of `+9 +1 +3
+/// +4 +8 +8` rotated badges with a truncated `The…` among them, and at
+/// 2474% six event titles running in four different directions across
+/// each other.
+///
+/// The names were never the problem; their ORIENTATION was. Each one
+/// was laid along its own bearing, so a chart that is a circle ends up
+/// with text at every angle on it, and the reader has to turn their
+/// head or their phone to read half of it. The dataviz literature is
+/// unusually blunt about this — Sheffield's guide says rotated or
+/// overlapping text "is never justified under any circumstances", and
+/// the standing advice when labels will not fit horizontally is to
+/// change the chart rather than to tilt the words.
+///
+/// So this chart changes. Every record keeps a MARK on its own ring at
+/// its own year, which is the claim the wheel actually makes; the names
+/// are read from the list beside it, which is already sorted by year
+/// and already scrolls with the cursor. One name is drawn on the
+/// canvas — the selected one — because "which mark did I just tap" is
+/// the one question the list cannot answer.
+///
+/// This is the overview-plus-detail split the research recommends for
+/// dense radial charts, and it is also the largest paint saving
+/// available here: the per-character arc layout in `_charsOnArc` ran
+/// about 8,000 times a frame.
 bool wheelShowsEventText({required double zoom, required bool selected}) =>
-    selected || zoom >= 1.6;
+    selected;
 
 class WheelAxisLabelPlacement {
   const WheelAxisLabelPlacement(this.centre, this.rotation, this.bounds);
@@ -45,16 +71,32 @@ WheelAxisLabelPlacement placeWheelAxisLabel({
   required bool onRing,
   double endpointGap = 4,
 }) {
-  final radius = onRing
-      ? ringLabelRadius(rRim: rimRadius, clearance: clearance, height: height)
-      : axialLabelRadius(
-          angle: angle,
-          rRim: rimRadius,
-          width: width,
-          height: height,
-          clearance: clearance);
-  final rotation =
-      onRing ? angle + (math.sin(angle) > 0 ? -math.pi / 2 : math.pi / 2) : 0.0;
+  // UPRIGHT, both kinds. 2026-09-15.
+  //
+  // The century labels used to run ALONG the ring, and
+  // `ringLabelRadius`'s own doc explains why: horizontal did not fit.
+  // `rRim` was 0.445 of the canvas side against a 0.5 clip, so there
+  // were only `side x 0.055` units outside the rim — 49.5 at a 900 px
+  // pane — while a horizontal 主后1000 needs about 54.
+  //
+  // That arithmetic was right, and the conclusion drawn from it was
+  // wrong. It says the DISC IS TOO BIG FOR ITS FRAME, not that the
+  // words should be bent around it; the fix is the margin, not the
+  // type. `bandsFractionFor` and `rimFractionFor` now leave that
+  // margin, so the labels stand up.
+  //
+  // Rotation is gone rather than parameterised, so the bounds this
+  // returns are axis-aligned and `retainSeparatedWheelAxisLabels`
+  // measures the box that is actually painted. A label that still
+  // cannot clear its neighbours is dropped and its tick stays — the
+  // reader loses a number they can read off the cursor, not a mark.
+  final radius = axialLabelRadius(
+      angle: angle,
+      rRim: rimRadius,
+      width: width,
+      height: height,
+      clearance: clearance);
+  const rotation = 0.0;
   var centre = Offset(math.cos(angle), math.sin(angle)) * radius;
   if (!onRing) {
     // At the measured 179 px landscape wheel, the two real-font end

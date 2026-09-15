@@ -133,21 +133,59 @@ double bandsFractionFor(double side, {double hubFraction = 0.115}) {
   return kBandsFracWide;
 }
 
+/// 2026-09-15: each of these came down by 0.04, and the rim with them.
+///
+/// The disc was too big for its own frame. At the old 0.445 rim against
+/// a 0.5 clip there were `side x 0.055` units outside the circle, which
+/// is not enough to stand a year label up in — so the year labels were
+/// bent around the ring instead, and a reader had to tilt their head to
+/// read half the scale. The words were the symptom; the margin was the
+/// defect.
+///
+/// The disc gives up about a seventh of its radius and gets a real
+/// margin. Nothing in it gets thinner in practice, because the same
+/// change capped the ring count at five: four rings in the reduced
+/// annulus are still far thicker than twelve were in the full one.
 const double kBandsFracNarrow = 0.27;
-const double kBandsFracMedium = 0.28;
-const double kBandsFracWide = 0.30;
+const double kBandsFracMedium = 0.26;
+const double kBandsFracWide = 0.27;
 
 /// Shared space for events, lifespans, reigns, ministries and genealogy.
-/// The full 0.16 annulus is preserved on tablet and desktop. A phone
-/// trades some of it for the fixed-size axis text outside the rim.
+///
+/// Held at 0.16 while the bands came down. Taking the margin for the
+/// year scale out of THIS was tried first and measured wrong: the
+/// twenty-five Genesis lifespans pack into sub-rings of this annulus,
+/// and at 0.14 their pitch fell to 5.81 px against the 6.6 px floor
+/// `wheel_lifespans_test.dart` holds them to, with the ministries at
+/// 8.45 against 9.0. The margin comes out of the BANDS, which is where
+/// the room actually was once the ring count was capped at five.
 const double kRimAnnulus = 0.16;
+
+/// How much room outside the rim the year scale needs, in logical px.
+///
+/// Measured, and the first measurement was wrong in an instructive way.
+/// `axialLabelRadius` already pushes the label's CENTRE out far enough
+/// for its near edge to clear the rim, so the label then extends
+/// another half-width beyond that centre: the room a horizontal label
+/// needs is `clearance + full width`, not `clearance + half`. Reserving
+/// the half put `2500 BC` 8.7 px outside a 300 px canvas.
+///
+/// 56 = a 9 px clearance (`kAxisLabelClearance`) plus the widest label
+/// the axis prints, which is about 46 px for `2500 BC` at the axis size
+/// in the bundled faces.
+///
+/// This is a CAP on the rim, not a floor under the margin: on a canvas
+/// too small to honour it the rim falls back to `bands + 0.02` and the
+/// bounds check in `retainSeparatedWheelAxisLabels` drops the labels
+/// that still cannot fit. The ticks stay, and the cursor still reads
+/// any year — the reader loses a number they can get another way, not
+/// a mark.
+const double kAxisTextRoomPx = 56;
 
 double rimFractionFor(double side) {
   if (side <= 0) return 0;
   final bands = bandsFractionFor(side);
-  // The old fit test stopped at the circle. At least 32 px outside it
-  // now belongs to axis text, checked in the bundled Latin/CJK faces.
-  final axisRoom = 0.5 - 32 / side;
+  final axisRoom = 0.5 - kAxisTextRoomPx / side;
   return math.max(bands + 0.02, math.min(bands + kRimAnnulus, axisRoom));
 }
 

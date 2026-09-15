@@ -1035,7 +1035,25 @@ const Map<String, Map<String, String>> wheelStrings = {
 };
 
 /// Type size ON SCREEN at rest, in logical pixels.
-const double _kLabelPx = 10.5;
+/// The wheel's canvas type, at the reader's default scale.
+///
+/// 2026-09-15: 10.5 → 12.5, and every call site below now takes a
+/// floor. 「字体感觉太小不是很responsive」, and both halves of that were
+/// true. `WbType.scaledChrome` multiplies and does not clamp, so a
+/// reader whose Menu Size sits below the default was getting 8.4 px of
+/// canvas text — under this app's own [WbMetrics.smallPrintFloor],
+/// which every other small label in the app is held to. The wheel was
+/// simply not asking for the floor.
+///
+/// The extra two points are affordable now for a reason that is part of
+/// the same change: with the ring count capped and the disc given a
+/// margin, there is somewhere for larger type to go.
+const double _kLabelPx = 12.5;
+
+/// The wheel's canvas type on the reader's scale, never under the
+/// app's own small-print floor.
+double _wheelFont(WbType t, double atDefault) =>
+    math.max(t.scaledChrome(atDefault), WbMetrics.smallPrintFloor);
 
 /// The verse beside a label is set smaller than the label itself.
 const double _kRefSizeRatio = 0.86;
@@ -2030,7 +2048,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           _restoreFlatCamera(_viewportSize!, rRim);
 
           final scene =
-              _sceneFor(data, side, locale, t.scaledChrome(_kLabelPx));
+              _sceneFor(data, side, locale, _wheelFont(t, _kLabelPx));
           final streams = scene.streams;
           final colors = scene.colors;
           final arcs = scene.arcs;
@@ -2096,9 +2114,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                                 rangeEnd: _rangeEnd,
                                 wb: wb,
                                 zoom: _zoom,
-                                rimFont: t.scaledChrome(_kLabelPx),
-                                endFont: t.scaledChrome(11),
-                                bandFont: t.scaledChrome(10),
+                                rimFont: _wheelFont(t, _kLabelPx),
+                                endFont: _wheelFont(t, 13),
+                                bandFont: _wheelFont(t, 12),
                               ),
                             ),
                           ),
@@ -3732,8 +3750,21 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       final tol = r > 0 ? (9.0 / (_zoom * r)) : 0.05;
       for (final s in spokes) {
         final atTick = (r - scriptureLabelBase(rBands)).abs() <= 9 / _zoom;
-        final atLabel =
-            r >= s.label.rStart - 6 / _zoom && r <= s.label.rEnd + 6 / _zoom;
+        // THE TAP FOLLOWS THE INK. `s.label.rStart..rEnd` is the radial
+        // run a spoke's TEXT occupies, and claiming it was right while
+        // that text was on screen: the reader was aiming at a word.
+        //
+        // Once the names came off the canvas (2026-09-15) this became a
+        // live defect rather than a stale line — an invisible bar
+        // across the annulus, taking taps from the arcs under it, for a
+        // label nobody can see. The arcs were already the smaller
+        // target; that is the complaint 「我要按那个环而不是字」 that set
+        // the precedence rule in the first place.
+        final drawsName = wheelShowsEventText(
+            zoom: _zoom, selected: s.event.id == _selectedId);
+        final atLabel = drawsName &&
+            r >= s.label.rStart - 6 / _zoom &&
+            r <= s.label.rEnd + 6 / _zoom;
         if (!atTick && !atLabel) continue;
         // NORMALISED, not absolute: how far into its own target the
         // finger fell, 0 dead centre and 1 at the edge. That is what
@@ -4191,13 +4222,36 @@ class _WorldWheelPainter extends CustomPainter {
               ..strokeWidth = 1 / zoom
               ..color = wb.text.withValues(alpha: 0.85));
       }
-      // Where the name goes, and at what size, was already decided in
-      // `_buildArcs` — against every other power sharing this ring, not
-      // just this one arc's own sweep. Deciding it again here, blind to
-      // the neighbours, is the defect this whole pass exists to close.
-      if (arc.name.isNotEmpty && arc.nameSize > 0) {
-        _tangentialLabel(canvas, c, band.centre, arc.name, arc.nameA0,
-            arc.nameSweep, arc.nameSize, dim);
+      // THE SELECTED POWER, AND NO OTHER. Every power used to print its
+      // name along its own arc, which put text at every angle on a
+      // circle: the owner's screenshot of `The Judges of Israel` bent
+      // around the rim beside a fan of rotated `+N` badges is what that
+      // looked like in practice. The names are all in the list beside
+      // the chart; the one the list cannot answer for is "which arc did
+      // I just tap", so that one is drawn — upright.
+      if (sel) {
+        // THE POWER'S OWN NAME, AT THE CANVAS SIZE — not `arc.name` at
+        // `arc.nameSize`. Those two come from `planArcNames`, which
+        // sizes a name to fit INSIDE its own arc without touching its
+        // neighbours', and returns nothing when it cannot. That was the
+        // right rule while every power printed its name at once; for a
+        // single selected callout it is the wrong one, and measurably
+        // so — at 900 px only 2 of the drawn powers in English clear
+        // that fit, so tapping almost any arc would have lit it up and
+        // told the reader nothing.
+        //
+        // A callout is allowed to be longer than the thing it points
+        // at. There is exactly one on screen, so it cannot collide with
+        // another, and it carries its own plate.
+        _uprightArcLabel(
+            canvas,
+            c,
+            band.centre,
+            arc.power.nameFor(locale),
+            arc.a0,
+            arc.a1 - arc.a0,
+            rimFont / _labelScale(zoom),
+            dim);
       }
     }
   }
@@ -4281,7 +4335,7 @@ class _WorldWheelPainter extends CustomPainter {
       if (l.name.isNotEmpty &&
           l.nameSize > 0 &&
           wheelShowsEventText(zoom: zoom, selected: sel)) {
-        _tangentialLabel(canvas, c, l.centre, l.name, l.nameA0, l.nameSweep,
+        _uprightArcLabel(canvas, c, l.centre, l.name, l.nameA0, l.nameSweep,
             l.nameSize, sel ? 1.0 : 0.75);
       } else {
         // A NAMELESS ARC STILL SAYS IT IS SOMETHING. Reported with a
@@ -4451,58 +4505,6 @@ class _WorldWheelPainter extends CustomPainter {
   /// this wheel was set at exactly 6 canvas units whatever the canvas
   /// size, the locale or the zoom, which is 6 px on screen at rest and
   /// 48 px at 800%. The decision now lives in a function a test can read.
-  void _tangentialLabel(Canvas canvas, Offset c, double radius, String text,
-      double a0, double sweep, double fontSize, double dim) {
-    if (sweep <= 0 || fontSize <= 0) return;
-    final style = canvasTextStyle(
-        color: wb.text.withValues(alpha: 0.98 * dim), fontSize: fontSize);
-    // Measured through the cache. This loop used to build and lay out a
-    // TextPainter per character on every frame; the widths do not
-    // change between frames and the chart's vocabulary repeats heavily.
-    // See `lib/utils/wheel_text_metrics.dart`.
-    final widths = <double>[];
-    var total = 0.0;
-    for (final ch in text.characters) {
-      final w = WheelTextMetrics.widthOf(ch, style);
-      widths.add(w);
-      total += w;
-    }
-    final angular = total / radius;
-    _charsOnArc(canvas, c, radius, text, widths, style,
-        a0 + (sweep - angular) / 2, angular);
-  }
-
-  void _charsOnArc(Canvas canvas, Offset c, double radius, String text,
-      List<double> widths, TextStyle style, double a0, double angular) {
-    final flip = math.sin(a0 + angular / 2) > 0;
-    var pen = flip ? a0 + angular : a0;
-    final chars = text.characters.toList();
-    for (var i = 0; i < chars.length; i++) {
-      final da = widths[i] / radius;
-      final th = flip ? pen - da / 2 : pen + da / 2;
-      // A cached `ui.Paragraph`, not a fresh `TextPainter`. A Paragraph
-      // is immutable once laid out and safe to draw any number of times
-      // on any canvas, which a TextPainter is not — and this runs about
-      // 8,000 times a frame across the chart's labels.
-      final g = WheelTextMetrics.glyphOf(chars[i], style);
-      canvas.save();
-      canvas.translate(
-          c.dx + math.cos(th) * radius, c.dy + math.sin(th) * radius);
-      canvas.rotate(th + (flip ? -math.pi / 2 : math.pi / 2));
-      canvas.drawParagraph(g, Offset(-widths[i] / 2, -g.height / 2));
-      canvas.restore();
-      pen += flip ? -da : da;
-    }
-  }
-
-  // A hairline used to be drawn at 44% of the annulus, marking where
-  // scripture-dated labels stopped and conventionally-dated ones began.
-  // There is no such boundary now — see `planRadialSpokes`, which gives
-  // both the whole radius and distinguishes them by which ring they are
-  // flush against. The line is gone rather than left pointing at
-  // nothing; the two edges it would mark are the band ring and the rim
-  // ring, and both are already drawn.
-
   void _paintRim(Canvas canvas, Offset c, double rBands, double rRim) {
     for (final (r, w, alpha) in [
       (rBands + 1.0, 0.6, 0.45),
@@ -4520,6 +4522,39 @@ class _WorldWheelPainter extends CustomPainter {
             ..color = wb.border.withValues(alpha: alpha));
     }
   }
+
+  /// The name of ONE arc, set level, centred on the arc it belongs to.
+  ///
+  /// What this replaces: `_charsOnArc`, which laid every name out one
+  /// character at a time around the ring, each glyph rotated to its own
+  /// tangent. That is why the chart had words running in four
+  /// directions at once, and it is also where its frames went — the
+  /// per-character path ran on the order of 8,000 times a frame across
+  /// the powers, the lifespans and the reigns.
+  ///
+  /// Only the SELECTED arc reaches here now, so one level line of text
+  /// replaces thousands of rotated glyphs. It is drawn on a soft plate
+  /// of the pane's own colour, because a level label crosses its band
+  /// rather than following it and has to win against the fill beneath.
+  void _uprightArcLabel(Canvas canvas, Offset c, double radius, String text,
+      double a0, double sweep, double fontSize, double dim) {
+    if (sweep <= 0 || fontSize <= 0 || text.isEmpty) return;
+    final tp = _painter(text, wb.text.withValues(alpha: 0.98 * dim), fontSize);
+    final mid = a0 + sweep / 2;
+    final centre =
+        c + Offset(math.cos(mid), math.sin(mid)) * radius;
+    final box = Rect.fromCenter(
+        center: centre, width: tp.width + 8 / zoom, height: tp.height + 3 / zoom);
+    canvas.drawRRect(
+        // The app's own control radius, divided by the zoom for the same
+        // reason every stroke width on this canvas is: a 5-unit corner
+        // at 4000% would be a 200 px bubble.
+        RRect.fromRectAndRadius(
+            box, Radius.circular(WbMetrics.radiusControl / zoom)),
+        Paint()..color = wb.paneBg.withValues(alpha: 0.86 * dim));
+    tp.paint(canvas, box.center - Offset(tp.width / 2, tp.height / 2));
+  }
+
 
   void _paintHub(Canvas canvas, Offset c, double rHub) {
     canvas.drawCircle(c, rHub, Paint()..color = wb.paneAltBg);

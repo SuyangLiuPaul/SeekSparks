@@ -53,7 +53,21 @@ const _fallback = ['NotoSansSC-Sub'];
 // kMinYear, kMaxYear, and _labelScale. See that file's own comment on
 // why -4200 and not -4000.
 const double _hubFrac = 0.115;
-const double _rimFont = 10.5;
+// 12.5 since 2026-09-15 — the canvas type the wheel actually ships
+// 「字体感觉太小不是很responsive」.
+const double _rimFont = 12.5;
+
+/// The canvas type as it stood when the overlap defect was photographed.
+///
+/// `_placeOld` is an exhibit, not a claim about today, so it is pinned
+/// to the geometry AND the type of the day it reproduces. At 12.5 px in
+/// a twenty-two-ring band the planner returns nothing at all, so the
+/// exhibit would come back empty and the test would quietly stop
+/// demonstrating anything.
+const double _rimFontThen = 10.5;
+
+/// And the band annulus as it stood that day, for the same reason.
+const double _bandsFracThen = 0.28;
 const int _minYear = -4200;
 const int _maxYear = 2026;
 double _labelScale(double zoom) => math.sqrt(zoom);
@@ -104,10 +118,27 @@ List<_Placed> _placeOld(
   String locale,
   double zoom,
 ) {
-  final rHub = side * _hubFrac, rBands = side * bandsFractionFor(side);
+  // THE GEOMETRY OF THE DAY, not today's. `bandsFractionFor` came down
+  // on 2026-09-15 to make room outside the rim for an upright year
+  // scale, and with the band annulus narrower the twenty-two-ring pitch
+  // falls under the label floor — so the old algorithm places nothing,
+  // and an exhibit of a defect turns into an empty list that passes for
+  // nothing being wrong.
+  final rHub = side * _hubFrac, rBands = side * _bandsFracThen;
+  // ALL TWENTY-TWO, deliberately, and only here.
+  //
+  // This function reconstructs the algorithm as it stood before
+  // `planArcNames`, so that the defect the owner photographed can be
+  // shown rather than described. That defect happened on a chart with
+  // twenty-two rings, and it is a fact about that chart. Re-measuring
+  // it against today's five-ring geometry finds no overlaps and proves
+  // nothing — the bug did not stop existing, the exhibit did.
+  //
+  // `_placeShipped` below uses the real ring count, because that one is
+  // a claim about what ships.
   final n = data.streams.length;
   final ringOf = {for (var i = 0; i < n; i++) data.streams[i].id: i};
-  final titleSize = _rimFont / _labelScale(zoom);
+  final titleSize = _rimFontThen / _labelScale(zoom);
   final maxEm = ringPitch(n, rHub, rBands) * kArcLabelPitchFraction;
 
   final out = <_Placed>[];
@@ -156,7 +187,13 @@ List<_Placed> _placeShipped(
   double zoom,
 ) {
   final rHub = side * _hubFrac, rBands = side * bandsFractionFor(side);
-  final n = data.streams.length;
+  // The rings the wheel DRAWS, capped at five since 2026-09-15. Twenty-
+  // two rings put the band pitch under the label floor, so every name
+  // measured zero and this file reported a chart that draws nothing —
+  // a configuration no reader can reach.
+  final n = defaultVisibleStreams(
+          data.streams.map((s) => s.id), kMaxVisibleStreams)
+      .length;
   final ringOf = {for (var i = 0; i < n; i++) data.streams[i].id: i};
   final titleSize = _rimFont / _labelScale(zoom);
 

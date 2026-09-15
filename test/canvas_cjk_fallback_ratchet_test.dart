@@ -162,11 +162,19 @@ void main() {
     final src =
         File('lib/pages/radial_chronology_page.dart').readAsStringSync();
     final count = 'canvasTextStyle('.allMatches(src).length;
-    expect(count, 8,
+    expect(count, 7,
         reason:
-            'expected 8 canvasTextStyle( call sites (measure, measure-chars, '
-            'band name, spoke title, spoke ref, spoke badge, arc text, shared '
-            'painter) — a genuine new canvas label should raise this number '
-            'in the same commit that adds it');
+            'expected 7 canvasTextStyle( call sites (measure, band name, '
+            'spoke title, spoke ref, spoke badge, arc text, shared painter) '
+            '— a genuine new canvas label should raise this number in the '
+            'same commit that adds it.\n'
+            '\n'
+            '2026-09-15: 8 → 7. The eighth was measure-chars, which fed '
+            '`_charsOnArc` — the per-character arc layout that set every '
+            'name along its own tangent. It is gone, so the chart no '
+            'longer has text at every angle on it, and one level label is '
+            'drawn for the selected arc instead. A number going DOWN here '
+            'is the only direction that needs explaining, and this is the '
+            'explanation.');
   });
 }
