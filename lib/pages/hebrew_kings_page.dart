@@ -711,12 +711,34 @@ class _EpochMarker extends StatelessWidget {
           Container(height: WbMetrics.hairline, color: wb.accent),
           Padding(
             padding: const EdgeInsets.only(left: 4, top: 1),
-            child: Text(
-              '${-epoch.year} · ${epoch.nameFor(locale)}',
-              style: TextStyle(
-                fontSize: type.chrome,
-                color: wb.accent,
-                fontWeight: FontWeight.w600,
+            // ON A PLATE. 2026-09-16, from a phone screenshot: 「841 ·
+            // Jehu pays tribute to Shalmaneser III」 was printed straight
+            // over 「Ahaziah 841 BC」, and the two read as one tangle of
+            // words in two colours.
+            //
+            // A synchronism is drawn ACROSS both columns on purpose —
+            // Israel's column simply stopping at 722 is the point of
+            // that line — so it necessarily crosses whatever names lie
+            // at its year. Crossing them is fine; being illegible where
+            // it crosses is not, and a ground of the pane's own colour
+            // is what the rest of this app's level labels use for
+            // exactly this.
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: wb.paneBg.withValues(alpha: 0.92),
+                borderRadius:
+                    BorderRadius.circular(WbMetrics.radiusControl / 2),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                child: Text(
+                  '${-epoch.year} · ${epoch.nameFor(locale)}',
+                  style: TextStyle(
+                    fontSize: type.chrome,
+                    color: wb.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ),

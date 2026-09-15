@@ -720,6 +720,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                               laneFontPx: laneFontPx,
                               headingFontPx: headingFontPx,
                               palette: palette,
+                              symbols: ChartSymbolService.instance.cached,
                               visibleY0: visibleY0,
                               visibleY1: visibleY1,
                             ),

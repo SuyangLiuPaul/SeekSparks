@@ -24,6 +24,7 @@
 library;
 
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -31,6 +32,7 @@ import 'package:seeksparks/constants/strip_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/hebrew_king.dart' show Kingdom;
 import 'package:seeksparks/models/strip_lanes.dart';
+import 'package:seeksparks/utils/chronology_symbols.dart';
 import 'package:seeksparks/models/wheel_history.dart' show WheelHistoryEvent;
 import 'package:seeksparks/pages/radial_chronology_page.dart'
     show
@@ -971,6 +973,7 @@ class StripLaneHeaderPainter extends CustomPainter {
     required this.laneFontPx,
     required this.headingFontPx,
     required this.palette,
+    required this.symbols,
     this.visibleY0 = 0,
     this.visibleY1 = double.infinity,
   });
@@ -981,6 +984,9 @@ class StripLaneHeaderPainter extends CustomPainter {
   final double laneFontPx;
   final double headingFontPx;
   final StripPalette palette;
+
+  /// The stream silhouettes, empty until they decode.
+  final Map<String, ui.Image> symbols;
   final double visibleY0;
   final double visibleY1;
 
@@ -1055,10 +1061,36 @@ class StripLaneHeaderPainter extends CustomPainter {
         maxWidth: math.max(0, size.width - _padding * 2 - 8),
         ellipsis: '…',
       );
-      canvas.drawCircle(Offset(_padding + 2, row.top + row.height / 2), 2,
-          Paint()..color = color);
+      // THE SAME MARK THE WHEEL DRAWS, where the wheel puts it on the
+      // ring. 「包括strip 加label」 — and the point is that the two charts
+      // identify a stream the same way, so a reader who learned the
+      // crown on one does not have to learn a dot on the other.
+      //
+      // A stream with no symbol keeps the dot, exactly as it keeps the
+      // plain chip in the filter: three of them are left out of the
+      // table on purpose.
+      final symbol = symbols[symbolForStream(lane.ownerId ?? '')];
+      final mid = row.top + row.height / 2;
+      if (symbol == null) {
+        canvas.drawCircle(Offset(_padding + 2, mid), 2, Paint()..color = color);
+      } else {
+        final box = Rect.fromCenter(
+            center: Offset(_padding + 3, mid),
+            width: laneFontPx * 1.1,
+            height: laneFontPx * 1.1);
+        canvas.drawImageRect(
+          symbol,
+          Rect.fromLTWH(
+              0, 0, symbol.width.toDouble(), symbol.height.toDouble()),
+          box,
+          Paint()
+            ..isAntiAlias = true
+            ..filterQuality = FilterQuality.medium
+            ..colorFilter = ColorFilter.mode(color, BlendMode.srcIn),
+        );
+      }
       tp.paint(
-          canvas, Offset(_padding + 8, row.top + (row.height - tp.height) / 2));
+          canvas, Offset(_padding + 10, row.top + (row.height - tp.height) / 2));
     }
   }
 
@@ -1067,6 +1099,7 @@ class StripLaneHeaderPainter extends CustomPainter {
       old.rows != rows ||
       old.locale != locale ||
       old.wb != wb ||
+      old.symbols != symbols ||
       old.palette != palette ||
       old.visibleY0 != visibleY0 ||
       old.visibleY1 != visibleY1 ||
