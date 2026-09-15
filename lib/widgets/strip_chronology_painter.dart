@@ -268,6 +268,8 @@ class StripLanesPainter extends CustomPainter {
     required this.visibleX1,
     this.visibleY0 = 0,
     this.visibleY1 = double.infinity,
+    required this.contentWidth,
+    required this.contentHeight,
   });
 
   final List<StripRow> rows;
@@ -291,6 +293,31 @@ class StripLanesPainter extends CustomPainter {
   final double visibleY0;
   final double visibleY1;
 
+  /// The size of the WHOLE strip, which since 2026-09-15 is no longer
+  /// the size of the canvas.
+  ///
+  /// THE CANVAS IS THE VIEWPORT NOW. This painter used to sit inside the
+  /// scroll views, on a canvas as wide as the entire timeline — at the
+  /// top of the zoom ladder, 96 px/year across 6,226 years, that is
+  /// **597,696 px**. Skia cannot record a picture that size: it aborts,
+  /// and CanvasKit reports `RuntimeError: Aborted()` from inside
+  /// `PictureRecorder`, with a `RenderBox was not laid out` beside it.
+  /// Both arrived from a reader's browser on 1.6.285.
+  ///
+  /// Culling the DRAW CALLS — which this painter already did, and which
+  /// is what `visibleX0`/`visibleX1` are for — does not help, because
+  /// the picture's bounds are the canvas, not the marks. The canvas
+  /// itself had to shrink.
+  ///
+  /// So the painter is now a sibling of the scroll view rather than its
+  /// child: its canvas is the visible rectangle, and it translates by
+  /// [visibleX0] / [visibleY0] so every coordinate below stays in
+  /// CONTENT space and none of the drawing code had to change. What did
+  /// have to change is the two places that read `size` as the extent of
+  /// the strip — they read these instead.
+  final double contentWidth;
+  final double contentHeight;
+
   bool _rowVisible(StripRow row) => stripPaintIntersects(
         start: row.top,
         end: row.top + row.height,
@@ -309,11 +336,14 @@ class StripLanesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _paintGrooves(canvas, size.width);
+    // Content space, on a viewport-sized canvas. Everything below this
+    // line is written in the coordinates the strip has always used.
+    canvas.translate(-visibleX0, -visibleY0);
+    _paintGrooves(canvas, contentWidth);
     _paintFilledBars(canvas);
     _paintLifespans(canvas);
     _paintRail(canvas);
-    _paintCrosshair(canvas, size.height);
+    _paintCrosshair(canvas, contentHeight);
     _paintEvents(canvas);
   }
 
@@ -702,7 +732,9 @@ class StripLanesPainter extends CustomPainter {
       old.selectedId != selectedId ||
       old.laneFontPx != laneFontPx ||
       old.visibleX0 != visibleX0 ||
-      old.visibleX1 != visibleX1;
+      old.visibleX1 != visibleX1 ||
+      old.contentWidth != contentWidth ||
+      old.contentHeight != contentHeight;
 }
 
 /// The sticky ruler — §4, descended from `_paintCenturies` +
@@ -727,11 +759,19 @@ class StripRulerPainter extends CustomPainter {
   /// scale, unlike lane content, because its own row height is not
   /// committed to `textScale` by anything.
   final double tickFontPx;
+
+  /// The visible content window. Since 2026-09-15 the canvas is the
+  /// VIEWPORT rather than the whole timeline (see [StripLanesPainter.
+  /// contentWidth] for why), so [visibleX0] is also the origin this
+  /// painter translates by. Its HEIGHT is unaffected — the ruler was
+  /// always exactly one row tall — which is why there is no
+  /// `contentHeight` here.
   final double visibleX0;
   final double visibleX1;
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.translate(-visibleX0, 0);
     final step = rulerStep(pxPerYear);
     // A tick label is at most the longer localized endpoint. An em per
     // character deliberately overestimates Latin and retains labels
@@ -792,7 +832,14 @@ class StripRulerPainter extends CustomPainter {
     }
 
     end(kStripMinYear, 0, TextAlign.left);
-    end(kStripMaxYear, size.width, TextAlign.right);
+    // `stripContentWidth`, not `size.width`. They were the same number
+    // while this painter's canvas WAS the whole timeline; since
+    // 2026-09-15 the canvas is the viewport, and the last year belongs
+    // at the end of the strip rather than at the right edge of whatever
+    // happens to be on screen. The two are the same function —
+    // `stripContentWidth` is defined as `xForYear(kStripMaxYear)` — so
+    // this is the identity that was always meant, spelled out.
+    end(kStripMaxYear, stripContentWidth(pxPerYear), TextAlign.right);
   }
 
   @override
@@ -835,6 +882,12 @@ class StripLaneHeaderPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Content space on a viewport-sized canvas — see
+    // [StripLanesPainter.contentWidth]. This column is only as tall as
+    // the strip, never as wide, so it is the vertical axis that had to
+    // stop being the canvas; `size.width` below is still the column's
+    // real width and stays as it is.
+    canvas.translate(0, -visibleY0);
     for (final row in rows) {
       if (!stripPaintIntersects(
         start: row.top,

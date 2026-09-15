@@ -560,52 +560,65 @@ class _StripChronologyPageState extends State<StripChronologyPage>
               SizedBox(width: headerW, height: rulerH),
               Expanded(
                 child: ClipRect(
-                  child: SingleChildScrollView(
-                    controller: _rulerHCtl,
-                    scrollDirection: Axis.horizontal,
-                    physics: const NeverScrollableScrollPhysics(),
-                    key: const ValueKey('stripRulerHScroll'),
-                    // The ruler answers a press too. It is the one row on
-                    // the page that is ONLY about the year, so it is where
-                    // a reader who wants "which year is this" points
-                    // first, and a ruler that ignored the press would be
-                    // the odd one out.
-                    child: Listener(
-                      onPointerDown: (e) => _pressOrigin = e.position,
-                      onPointerUp: (e) => _commitPress(e, () {
-                        _placeCursorAtX(e.localPosition.dx);
-                      }),
-                      onPointerCancel: (_) => _pressOrigin = null,
-                      child: SizedBox(
-                        width: contentW,
-                        height: rulerH,
-                        child: Stack(children: [
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: StripRulerPainter(
-                                pxPerYear: _pxPerYear,
-                                locale: locale,
-                                wb: wb,
-                                tickFontPx: tickFontPx,
-                                visibleX0: visibleX0,
-                                visibleX1: visibleX1,
-                              ),
-                            ),
+                  // THE PAINTER IS A SIBLING OF THE SCROLL VIEW, not its
+                  // child — see `strip_chronology_painter.dart`'s
+                  // `contentWidth` doc. The scroll view still owns the
+                  // extent and the press; it simply has nothing in it
+                  // that paints.
+                  child: Stack(children: [
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: StripRulerPainter(
+                            pxPerYear: _pxPerYear,
+                            locale: locale,
+                            wb: wb,
+                            tickFontPx: tickFontPx,
+                            visibleX0: visibleX0,
+                            visibleX1: visibleX1,
                           ),
-                          if (_cursorYear case final int y)
-                            Positioned(
-                              left: xForYear(y, _pxPerYear) - _kCursorHalfWidth,
-                              top: 0,
-                              bottom: 0,
-                              width: _kCursorHalfWidth * 2,
-                              child: IgnorePointer(
-                                child: ColoredBox(color: wb.accent),
-                              ),
-                            ),
-                        ]),
+                        ),
                       ),
                     ),
-                  ),
+                    // In viewport coordinates now, because it is no
+                    // longer inside the thing that scrolls.
+                    if (_cursorYear case final int y)
+                      Positioned(
+                        left: xForYear(y, _pxPerYear) -
+                            visibleX0 -
+                            _kCursorHalfWidth,
+                        top: 0,
+                        bottom: 0,
+                        width: _kCursorHalfWidth * 2,
+                        child: IgnorePointer(
+                          child: ColoredBox(color: wb.accent),
+                        ),
+                      ),
+                    SingleChildScrollView(
+                      controller: _rulerHCtl,
+                      scrollDirection: Axis.horizontal,
+                      physics: const NeverScrollableScrollPhysics(),
+                      key: const ValueKey('stripRulerHScroll'),
+                      // The ruler answers a press too. It is the one row
+                      // on the page that is ONLY about the year, so it
+                      // is where a reader who wants "which year is this"
+                      // points first, and a ruler that ignored the press
+                      // would be the odd one out.
+                      //
+                      // `opaque`, because the box it wraps is empty now:
+                      // a Listener defers to its child by default, and
+                      // an empty SizedBox hit-tests nothing.
+                      child: Listener(
+                        behavior: HitTestBehavior.opaque,
+                        onPointerDown: (e) => _pressOrigin = e.position,
+                        onPointerUp: (e) => _commitPress(e, () {
+                          _placeCursorAtX(e.localPosition.dx);
+                        }),
+                        onPointerCancel: (_) => _pressOrigin = null,
+                        child: SizedBox(width: contentW, height: rulerH),
+                      ),
+                    ),
+                  ]),
                 ),
               ),
             ]),
@@ -614,24 +627,36 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                 SizedBox(
                   width: headerW,
                   child: ClipRect(
-                    child: SingleChildScrollView(
-                      controller: _headerVCtl,
-                      physics: const NeverScrollableScrollPhysics(),
-                      key: const ValueKey('stripHeaderVScroll'),
-                      child: CustomPaint(
-                        size: Size(headerW, contentH),
-                        painter: StripLaneHeaderPainter(
-                          rows: rows,
-                          locale: locale,
-                          wb: wb,
-                          laneFontPx: laneFontPx,
-                          headingFontPx: headingFontPx,
-                          palette: palette,
-                          visibleY0: visibleY0,
-                          visibleY1: visibleY1,
+                    child: Stack(children: [
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: StripLaneHeaderPainter(
+                              rows: rows,
+                              locale: locale,
+                              wb: wb,
+                              laneFontPx: laneFontPx,
+                              headingFontPx: headingFontPx,
+                              palette: palette,
+                              visibleY0: visibleY0,
+                              visibleY1: visibleY1,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      // Extent only. This column is never wider than a
+                      // phone, so its canvas was never the problem — it
+                      // moves out with the other two because a column
+                      // that scrolls by repainting and a chart that
+                      // scrolls by translating would drift apart on
+                      // every future change to either.
+                      SingleChildScrollView(
+                        controller: _headerVCtl,
+                        physics: const NeverScrollableScrollPhysics(),
+                        key: const ValueKey('stripHeaderVScroll'),
+                        child: SizedBox(width: headerW, height: contentH),
+                      ),
+                    ]),
                   ),
                 ),
                 Expanded(
@@ -646,7 +671,53 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                     cursor: SystemMouseCursors.grab,
                     child: ScrollConfiguration(
                       behavior: const _PanByMouseScrollBehavior(),
-                      child: SingleChildScrollView(
+                      // THE CHART IS PAINTED HERE, beside the scroll
+                      // views rather than inside them — see
+                      // `strip_chronology_painter.dart`'s `contentWidth`
+                      // doc for the 597,696 px canvas this replaces.
+                      // The scroll views below keep the extent, the
+                      // gestures and the hit testing; what they no
+                      // longer keep is a picture the size of history.
+                      child: Stack(children: [
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: StripLanesPainter(
+                              rows: rows,
+                              pxPerYear: _pxPerYear,
+                              locale: locale,
+                              selectedId: _selectedId,
+                              wb: wb,
+                              laneFontPx: laneFontPx,
+                              palette: palette,
+                              visibleX0: visibleX0,
+                              visibleX1: visibleX1,
+                              visibleY0: visibleY0,
+                              visibleY1: visibleY1,
+                              contentWidth: contentW,
+                              contentHeight: contentH,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Keep the year rule visible through the data
+                      // lanes, but below opaque callouts: a selection
+                      // must not strike through the words the reader
+                      // just chose. In viewport coordinates now.
+                      if (_cursorYear case final int y)
+                        Positioned(
+                          key: const ValueKey('stripYearCursor'),
+                          left: xForYear(y, _pxPerYear) -
+                              visibleX0 -
+                              _kCursorHalfWidth,
+                          top: 0,
+                          bottom: 0,
+                          width: _kCursorHalfWidth * 2,
+                          child: IgnorePointer(
+                            child: ColoredBox(color: wb.accent),
+                          ),
+                        ),
+                      SingleChildScrollView(
                         controller: _hCtl,
                         scrollDirection: Axis.horizontal,
                         key: const ValueKey('stripHScroll'),
@@ -701,46 +772,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                               child: SizedBox(
                                 width: contentW,
                                 height: contentH,
-                                child: Stack(children: [
-                                  // Keep the year rule visible through the
-                                  // data lanes, but below opaque callouts:
-                                  // a selection must not strike through the
-                                  // words the reader just chose.
-                                  if (_cursorYear case final int y)
-                                    Positioned(
-                                      key: const ValueKey('stripYearCursor'),
-                                      left: xForYear(y, _pxPerYear) -
-                                          _kCursorHalfWidth,
-                                      top: 0,
-                                      bottom: 0,
-                                      width: _kCursorHalfWidth * 2,
-                                      child: IgnorePointer(
-                                        child: ColoredBox(color: wb.accent),
-                                      ),
-                                    ),
-                                  Positioned.fill(
-                                    child: CustomPaint(
-                                      painter: StripLanesPainter(
-                                        rows: rows,
-                                        pxPerYear: _pxPerYear,
-                                        locale: locale,
-                                        selectedId: _selectedId,
-                                        wb: wb,
-                                        laneFontPx: laneFontPx,
-                                        palette: palette,
-                                        visibleX0: visibleX0,
-                                        visibleX1: visibleX1,
-                                        visibleY0: visibleY0,
-                                        visibleY1: visibleY1,
-                                      ),
-                                    ),
-                                  ),
-                                ]),
                               ),
                             ),
                           ),
                         ),
                       ),
+                      ]),
                     ),
                   ),
                 ),

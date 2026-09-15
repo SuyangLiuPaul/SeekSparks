@@ -1201,6 +1201,11 @@ class _TranslationLine extends StatelessWidget {
           notes: notes,
           settings: settings,
           locale: settings.locale,
+          // The PANE's size, not the reader's. This surface is
+          // deliberately denser and scales relative to Font Size
+          // through `WbType`; a note set at reader size here would be
+          // the only thing on the page that ignores the page.
+          fontSize: t.text,
         ),
       ],
     );

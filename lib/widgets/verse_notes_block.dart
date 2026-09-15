@@ -60,6 +60,7 @@ class VerseNotesBlock extends StatefulWidget {
     required this.settings,
     required this.locale,
     this.preview = kNotePreviewChars,
+    this.fontSize,
   });
 
   /// In reading order: the `<note: …>` markers as they appear in the
@@ -67,6 +68,18 @@ class VerseNotesBlock extends StatefulWidget {
   final List<String> notes;
   final AppSettings settings;
   final String locale;
+
+  /// The size the note text is set at, before the apparatus ratio.
+  ///
+  /// 2026-09-15: 「这个和里面内容好像并没有字体大小是根据字体responsive的」.
+  /// This block read `settings.fontSize` outright, which is right in the
+  /// reader — it IS the reader's size — and wrong in the Browse pane,
+  /// which is deliberately denser and scales RELATIVE to that setting
+  /// through `WbType`. A note set at reader size inside a workbench row
+  /// is the only thing on the surface that ignores the surface.
+  ///
+  /// Null means the reader's own size, so the two readers are unchanged.
+  final double? fontSize;
 
   /// Characters of the block to show before folding the rest. 0 never
   /// folds.
@@ -90,6 +103,38 @@ List<String> notesInReadingOrder(String raw) => [
       for (final span in parseScripture(raw))
         if (span.kind == ScriptureSpanKind.note) span.text,
     ];
+
+/// The notes, with anything already listed dropped.
+///
+/// 2026-09-15, photographed from the reader with the whole block
+/// circled: 羅馬書 8:1-11 in 梁家鏗 listed thirteen notes, of which five
+/// were the first eight over again — ⑨ was ①, ⑩ was ③, ⑪ was ⑥, ⑫ was
+/// ⑧, ⑬ was ④.
+///
+/// The edition carries them twice. Every 「N節註」 appears inline at its
+/// own position AND again in the `blockNotes` of the paragraph's last
+/// verse, and the reader concatenates the two — 911 of the edition's
+/// 1,042 `blockNotes` are a note that is already inline in the same
+/// chapter. The remaining 131 are genuine block-only apparatus and must
+/// survive, so the answer is not to drop `blockNotes`.
+///
+/// WHITESPACE IS IGNORED when comparing, because that is the only thing
+/// that differs: the two copies disagree about the spaces around Latin
+/// and Hebrew words (「τὸ πνεῦμα 。」 against 「τὸ πνεῦμα。」), so a
+/// byte comparison finds none of them.
+///
+/// The FIRST wins, which keeps reading order — that copy is the one the
+/// marker in the verse points at.
+List<String> dedupeNotes(Iterable<String> notes) {
+  final seen = <String>{};
+  final out = <String>[];
+  for (final note in notes) {
+    final text = note.trim();
+    if (text.isEmpty) continue;
+    if (seen.add(text.replaceAll(RegExp(r'\s+'), ''))) out.add(text);
+  }
+  return out;
+}
 
 /// 160, which is the 雅偉的話 app's own figure. Long enough that a
 /// one-line note is never folded and the reader sees it whole; short
@@ -156,8 +201,9 @@ class _VerseNotesBlockState extends State<VerseNotesBlock> {
   @override
   Widget build(BuildContext context) {
     if (widget.notes.isEmpty) return const SizedBox.shrink();
+    final notes = dedupeNotes(widget.notes);
     final scheme = Theme.of(context).colorScheme;
-    final fs = widget.settings.fontSize;
+    final fs = widget.fontSize ?? widget.settings.fontSize;
 
     // One ROW per note: the number hangs in its own column and the
     // note's continuation lines align under its first character rather
@@ -176,14 +222,14 @@ class _VerseNotesBlockState extends State<VerseNotesBlock> {
       color: scheme.onSurfaceVariant,
     );
     final all = [
-      for (var i = 0; i < widget.notes.length; i++)
-        '${superscriptNumber(i + 1)}$_nbsp${widget.notes[i].trim()}',
+      for (var i = 0; i < notes.length; i++)
+        '${superscriptNumber(i + 1)}$_nbsp${notes[i]}',
     ].join('\n');
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (var i = 0; i < widget.notes.length; i++)
+        for (var i = 0; i < notes.length; i++)
           Padding(
             padding: EdgeInsets.only(bottom: fs * 0.12),
             child: Row(
@@ -196,7 +242,7 @@ class _VerseNotesBlockState extends State<VerseNotesBlock> {
                     style: style.copyWith(color: scheme.primary),
                   ),
                 ),
-                Expanded(child: Text(widget.notes[i].trim(), style: style)),
+                Expanded(child: Text(notes[i], style: style)),
               ],
             ),
           ),
@@ -209,8 +255,15 @@ class _VerseNotesBlockState extends State<VerseNotesBlock> {
     // edge to edge while the verse above it sat inside a margin, so the
     // apparatus looked like a different document rather than a note on
     // this one.
+    //
+    // 2026-09-15: 「感觉到最左右两边靠的太近了」 — 0.6 em was not enough
+    // to read as a margin. A note is subordinate to the verse it hangs
+    // off, and the way a printed page says so is to set it NARROWER
+    // than the text above it, not merely to shift it a little. An em
+    // and a quarter each side is about a character of Chinese, which is
+    // the smallest inset that reads as deliberate.
     final inset = EdgeInsets.fromLTRB(
-        fs * 0.6, fs * 0.3, fs * 0.6, fs * 0.15);
+        fs * 1.25, fs * 0.35, fs * 1.25, fs * 0.2);
 
     if (!folds) {
       return Padding(padding: inset, child: body);

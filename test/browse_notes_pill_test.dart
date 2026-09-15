@@ -105,6 +105,43 @@ void main() {
     expect(notes.last, contains('28节注五'));
   });
 
+  group('the edition lists every note twice, and the block does not', () {
+    // 2026-09-15, photographed with the whole block circled: 羅馬書
+    // 8:1-11 in 梁家鏗 listed thirteen notes, five of which were the
+    // first eight over again. The edition carries each 「N節註」 inline
+    // at its own position AND again in the `blockNotes` of the
+    // paragraph's last verse.
+    test('whitespace is what hides the duplicate', () {
+      // The two copies differ only in the spaces around Latin and
+      // Hebrew words, so a byte comparison finds nothing. That is the
+      // whole reason `dedupeNotes` normalises.
+      const inline = '2节注：“灵”字译自 τὸ πνεῦμα。参同章4、5、6节。';
+      const block = '2节注：“灵”字译自 τὸ πνεῦμα 。参同章4、5、6节。';
+      expect(inline == block, isFalse,
+          reason: 'the fixture stopped being a near-miss');
+      expect(dedupeNotes([inline, block]), hasLength(1));
+    });
+
+    test('the first copy wins, so reading order survives', () {
+      // The inline copy comes first and is the one the marker in the
+      // verse points at.
+      const first = '9节注：“神的灵”通称圣灵。';
+      const second = '9节注：“神的灵”通称圣灵 。';
+      expect(dedupeNotes([first, second]).single, first);
+    });
+
+    test('genuine block-only apparatus survives', () {
+      // 131 of the edition's 1,042 `blockNotes` are NOT inline
+      // anywhere. Dropping `blockNotes` wholesale would lose them,
+      // which is why the fix is a dedupe and not a deletion.
+      expect(dedupeNotes(['参6.6。', '一条只在段末出现的注。']), hasLength(2));
+    });
+
+    test('empties are not notes', () {
+      expect(dedupeNotes(['', '   ', '参6.6。']), ['参6.6。']);
+    });
+  });
+
   test('a verse with no notes hands over nothing', () {
     // The pane only builds a Column when this is non-empty — the
     // overwhelming majority of rows have no notes, and the densest

@@ -188,6 +188,8 @@ void main() {
           visibleX1: x1,
           visibleY0: y0,
           visibleY1: y1,
+          contentWidth: width,
+          contentHeight: height,
         );
     expect(events.length, greaterThan(500));
     _paint(painter(0, width), Size(width, height));
