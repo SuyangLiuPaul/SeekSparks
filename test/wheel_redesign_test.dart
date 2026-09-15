@@ -207,13 +207,27 @@ void main() {
         tester.widget<ChronologyExplorer>(find.byType(ChronologyExplorer));
     final expected = defaultVisibleStreams(
         explorer.data.streams.map((s) => s.id),
-        ringCapacity(side,
-            hubFraction: 0.115, bandsFraction: bandsFractionFor(side)));
+        math.min(
+          ringCapacity(side,
+              hubFraction: 0.115, bandsFraction: bandsFractionFor(side)),
+          kOpeningStreams,
+        ));
     final visible = explorer.data.streams
         .where((stream) => !explorer.hiddenStreams.contains(stream.id))
         .map((stream) => stream.id)
         .toSet();
     expect(visible, expected.toSet());
+    // Said as a range too, not only as "whatever the helper returns" —
+    // the mirror above would agree with the page if BOTH drifted.
+    //
+    // Three, not four, at this size: 360 dp of window is not 360 dp of
+    // wheel, and the band annulus left of the page's chrome carries
+    // three readable rings. That is inside the range the owner asked
+    // for 「一次别超过3~5个」, and the floor is asserted because two
+    // rings is not a comparison chart any more.
+    expect(visible.length, lessThanOrEqualTo(kOpeningStreams));
+    expect(visible.length, greaterThanOrEqualTo(3),
+        reason: 'the wheel opened with ${visible.length} rings on a phone');
     final digest = find.byType(YearDigestBar);
     final digestContext = tester.element(digest);
     // This assertion runs outside build, so read the rendered page's

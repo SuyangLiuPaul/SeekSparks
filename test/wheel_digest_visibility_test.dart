@@ -72,6 +72,11 @@ void main() {
     final scrolling = find.descendant(
         of: find.byType(BottomSheet), matching: find.byType(Scrollable));
     await tester.scrollUntilVisible(row, 250, scrollable: scrolling.first);
+    // scrollUntilVisible stops as soon as the row is BUILT, which can
+    // leave it straddling the footer; the tap then lands on the footer
+    // and silently does nothing. Bring it properly into view first.
+    await tester.ensureVisible(row);
+    await tester.pumpAndSettle();
     await tester.tap(row);
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
@@ -80,7 +85,18 @@ void main() {
 
   testWidgets('hidden stream powers and events stay out of the year readout',
       (tester) async {
-    const hidden = {'japan', 'china', 'india', 'americas'};
+    // 2026-09-15: this used to hide four streams and leave eighteen on.
+    // The wheel now draws at most five rings, so that is a state no
+    // reader can reach, and from it the sheet would rightly refuse to
+    // turn Japan on — the toggle below would have gone through a
+    // disabled checkbox and proved nothing. Hide everything but the
+    // spine instead, which is what a reader actually has in front of
+    // them, and Japan goes on into the free fifth slot.
+    final hidden = data.streams
+        .map((stream) => stream.id)
+        .where((id) => !const ['scripture', 'israel', 'judah', 'church']
+            .contains(id))
+        .toSet();
     await mount(tester, hidden);
     await year(tester, -450);
     final absentPowers = data.powers

@@ -4,6 +4,8 @@ import 'package:seeksparks/constants/chronology_filter_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/wheel_default_streams.dart'
+    show defaultVisibleStreams;
 import 'package:seeksparks/utils/wheel_search.dart'
     show kLifespanLayerId, kReignLayerId, kMinistryLayerId, kLineageLayerId;
 
@@ -19,6 +21,7 @@ Future<Set<String>?> showChronologyFilterSheet({
   required Map<String, Color> layerColors,
   required String Function(String key, String fallback) text,
   required String keyPrefix,
+  int? streamCeiling,
 }) {
   final initialHidden = Set<String>.of(hidden);
   return showModalBottomSheet<Set<String>>(
@@ -37,6 +40,7 @@ Future<Set<String>?> showChronologyFilterSheet({
         layerColors: layerColors,
         text: text,
         keyPrefix: keyPrefix,
+        streamCeiling: streamCeiling,
       ),
     ),
   );
@@ -52,6 +56,7 @@ class ChronologyFilterSheet extends StatefulWidget {
     required this.layerColors,
     required this.text,
     required this.keyPrefix,
+    this.streamCeiling,
   });
 
   final String locale;
@@ -61,6 +66,13 @@ class ChronologyFilterSheet extends StatefulWidget {
   final Map<String, Color> layerColors;
   final String Function(String key, String fallback) text;
   final String keyPrefix;
+
+  /// The most streams this chart draws at once, or null for no limit.
+  ///
+  /// The wheel passes [kMaxVisibleStreams]; the strip passes nothing,
+  /// because its lanes carry printed names and stack vertically, so
+  /// twelve of them are read rather than colour-matched.
+  final int? streamCeiling;
 
   @override
   State<ChronologyFilterSheet> createState() => _ChronologyFilterSheetState();
@@ -74,6 +86,7 @@ class _FilterOption {
     required this.subtitle,
     this.color,
     this.narrowSwatch = false,
+    this.isStream = false,
   });
 
   final String id;
@@ -82,6 +95,11 @@ class _FilterOption {
   final String subtitle;
   final Color? color;
   final bool narrowSwatch;
+
+  /// Whether this row counts against [ChronologyFilterSheet.streamCeiling].
+  /// The four layers do not: they are depth inside the spine, not
+  /// another nation competing for a ring.
+  final bool isStream;
 }
 
 class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
@@ -90,6 +108,24 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
   bool _finished = false;
 
   String _s(String key) => chronologyFilterText(key, widget.locale);
+
+  Iterable<String> get _streamIds =>
+      _options.where((option) => option.isStream).map((option) => option.id);
+
+  int get _shownStreams =>
+      _streamIds.where((id) => !_draft.contains(id)).length;
+
+  /// At the ceiling the sheet REFUSES rather than swaps.
+  ///
+  /// A swap has to guess which ring the reader is finished with, and
+  /// every rule for guessing has a bad case: evict their oldest pick and
+  /// Egypt vanishes while they are still comparing it; evict the lowest
+  /// priority and the church vanishes while they are reading Rome. A
+  /// ring disappearing on its own while the reader looks at it is a
+  /// worse failure than one extra tap, so the unticked rows go quiet and
+  /// say why, and the reader chooses what leaves.
+  bool get _atCeiling =>
+      widget.streamCeiling != null && _shownStreams >= widget.streamCeiling!;
 
   @override
   void initState() {
@@ -145,6 +181,7 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
           subtitle: '${s('wheelPowers', 'Powers')} ${powers[stream.id] ?? 0} · '
               '${s('wheelEvents', 'Events')} ${events[stream.id] ?? 0}',
           color: widget.streamColors[stream.id],
+          isStream: true,
         ),
     ];
   }
@@ -191,6 +228,22 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
                 const SizedBox(height: 4),
                 Text(_s('draftHint'),
                     style: buttonText.copyWith(color: wb.mutedText)),
+                if (widget.streamCeiling != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    chronologyFilterCount(
+                        widget.locale, _shownStreams, widget.streamCeiling!),
+                    key: const ValueKey('chronologyFilterStreamCount'),
+                    style: buttonText.copyWith(
+                      color: _atCeiling ? wb.accent : wb.mutedText,
+                      fontWeight: _atCeiling ? FontWeight.w600 : null,
+                    ),
+                  ),
+                  if (_atCeiling)
+                    Text(_s('ceilingHint'),
+                        key: const ValueKey('chronologyFilterCeilingHint'),
+                        style: buttonText.copyWith(color: wb.accent)),
+                ],
               ],
             ),
           ),
@@ -209,7 +262,20 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
                       children: [
                         TextButton(
                           key: const ValueKey('chronologyFilterAll'),
-                          onPressed: () => setState(_draft.clear),
+                          onPressed: () => setState(() {
+                            _draft.clear();
+                            final ceiling = widget.streamCeiling;
+                            if (ceiling == null) return;
+                            // All cannot mean all when the chart holds
+                            // five. Here it means every layer, plus the
+                            // first five streams in priority order.
+                            final keep =
+                                defaultVisibleStreams(_streamIds, ceiling)
+                                    .toSet();
+                            for (final id in _streamIds) {
+                              if (!keep.contains(id)) _draft.add(id);
+                            }
+                          }),
                           style: TextButton.styleFrom(
                             minimumSize: const Size(44, 44),
                             textStyle: buttonText,
@@ -233,16 +299,21 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
                   );
                 }
                 final option = _options[index - 1];
+                final blocked =
+                    option.isStream && _atCeiling && _draft.contains(option.id);
                 return CheckboxListTile(
                   key: ValueKey('${widget.keyPrefix}${option.keySuffix}'),
                   value: !_draft.contains(option.id),
-                  onChanged: (visible) => setState(() {
-                    if (visible == true) {
-                      _draft.remove(option.id);
-                    } else {
-                      _draft.add(option.id);
-                    }
-                  }),
+                  enabled: !blocked,
+                  onChanged: blocked
+                      ? null
+                      : (visible) => setState(() {
+                            if (visible == true) {
+                              _draft.remove(option.id);
+                            } else {
+                              _draft.add(option.id);
+                            }
+                          }),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   title: Text(option.title,

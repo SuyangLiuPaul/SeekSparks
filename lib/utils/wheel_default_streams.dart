@@ -54,18 +54,59 @@ const List<String> kStreamPriority = <String>[
   'americas',
 ];
 
+/// The most rings a reader may show at once, on ANY canvas.
+///
+/// 2026-09-15. 「filter in的时候我建议一次别超过3~5个 因为那么多在一起
+/// 都没有用其实」 — and 「一次不要load太多」.
+///
+/// Five is the ceiling and [kOpeningStreams] is what the wheel opens
+/// with. The gap between them is the whole point, and it is an argument
+/// rather than a rounding of the owner's range:
+///
+///   • The opening four are the SPINE — scripture, Israel, Judah, the
+///     church. That is the line this application exists to follow, and
+///     it is never the thing a reader has to go and switch on.
+///   • The fifth slot is THE COMPARISON the reader came to make: what
+///     Egypt was doing then, where Babylon falls against the kings. A
+///     chart with no free slot is a fixed poster. A chart with six or
+///     more asks the reader to tell one muted hue from another around a
+///     circle, which is the failure the owner described.
+///
+/// What this caps is what gets DRAWN, never what exists. All 22 streams
+/// and all 1,039 records stay reachable through Find and through the
+/// event list beside the chart, so a ring that is off is a quieter
+/// chart and not a smaller dataset. That distinction is the reason the
+/// cap is defensible at all.
+///
+/// The strip chart does not share this ceiling. Its lanes stack
+/// vertically and each carries its own printed name, so a reader there
+/// is reading labels rather than matching hues, and twelve lanes are
+/// legible in a way twelve rings are not.
+const int kMaxVisibleStreams = 5;
+
+/// How many rings the wheel opens with, leaving exactly one slot free.
+const int kOpeningStreams = 4;
+
 /// How many rings a wheel of this size can hold and still be read.
 ///
 /// [side] is the shorter edge of the square the wheel is drawn in.
 /// [hubFraction] and [bandsFraction] are the page's own radii, passed in
 /// rather than duplicated, so this cannot drift from the layout.
 ///
-/// The geometry and the device each set a ceiling. A 360 dp canvas has
+/// The geometry and the ceiling each set a bound. A 360 dp canvas has
 /// 55.8 px between its hub and bands: four shares of 13.95 px, each
 /// painting 80% of its share. Eleven painted pixels and two pixels of
 /// separation express that budget without pretending it is a 24 px
 /// touch target. Full-size event rows provide the alternative on phones.
-/// The device ceiling prevents a large canvas becoming a wall of hues.
+///
+/// 2026-09-15: the device arm used to READ 4 / 8 / 12 — more room, more
+/// rings. That is now gone, and its absence is the point. Room was
+/// never the binding constraint: at 1400 px even twenty-two rings clear
+/// this app's 9 px finger target, and the chart was still unreadable,
+/// because the limit on a ring chart is how many muted hues a reader
+/// can tell apart around a circle, and that number does not grow with
+/// the window. A desktop and a phone therefore get the same ceiling and
+/// the desktop simply draws its five rings thicker.
 int ringCapacity(
   double side, {
   required double hubFraction,
@@ -76,12 +117,7 @@ int ringCapacity(
   final annulus = side * (bandsFraction - hubFraction);
   final byGeometry =
       annulus <= 0 ? 1 : (annulus / (minThickness + gap)).floor();
-  final byDevice = side < 600
-      ? 4
-      : side < 1024
-          ? 8
-          : 12;
-  return byGeometry.clamp(1, byDevice);
+  return byGeometry.clamp(1, kMaxVisibleStreams);
 }
 
 /// Band radii as fractions of the SQUARE SIDE, not of the radius.

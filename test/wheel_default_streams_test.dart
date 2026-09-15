@@ -46,19 +46,36 @@ void main() {
         reason: 'a duplicate in the priority list');
   });
 
-  test('the ring count follows the viewport, not a preference', () {
-    // A 360 dp phone, a 768 dp tablet, a 1280 dp desktop pane. The
-    // numbers are what the arithmetic gives; they are asserted so a
-    // change to the radii has to come back through here.
+  test('the ring count follows the viewport DOWN, and never past the '
+      'ceiling', () {
+    // 2026-09-15: this test used to read
+    //
+    //     expect(capacity(768), greaterThan(capacity(360)));
+    //     expect(capacity(1280), greaterThan(capacity(768)));
+    //
+    // — more room, more rings, 4 / 8 / 12 — and that belief is what the
+    // owner rejected: 「那么多在一起都没有用其实」. It was never true that
+    // room was the binding constraint. `wheel_band_target_test.dart`
+    // measures twenty-two rings clearing this app's 9 px finger target
+    // at 1400 px, and the chart was still unreadable there, because
+    // what runs out first is muted hues a reader can tell apart around
+    // a circle — and a wider window does not supply more of those.
+    //
+    // So the viewport now only ever takes rings AWAY. A large canvas
+    // spends its room on thickness instead, which the pitch assertions
+    // in `wheel_band_target_test.dart` still hold it to.
     int capacity(double side) => ringCapacity(side,
         hubFraction: _hubFrac, bandsFraction: bandsFractionFor(side));
 
-    expect(capacity(360), lessThanOrEqualTo(4),
+    expect(capacity(360), lessThanOrEqualTo(kOpeningStreams),
         reason: 'a phone cannot hold more than about four tappable rings');
-    expect(capacity(768), greaterThan(capacity(360)));
-    expect(capacity(1280), greaterThan(capacity(768)));
-    expect(capacity(4000), lessThanOrEqualTo(22),
-        reason: 'a wall display still only has twenty-two streams');
+    for (final side in [360.0, 768.0, 1280.0, 4000.0]) {
+      expect(capacity(side), lessThanOrEqualTo(kMaxVisibleStreams),
+          reason: '$side px went past the ceiling');
+    }
+    expect(capacity(1280), greaterThanOrEqualTo(capacity(360)),
+        reason: 'a desktop may still hold more than a phone; what it may '
+            'not do is hold more than five');
     expect(capacity(10), greaterThanOrEqualTo(1),
         reason: 'a degenerate size must still draw something');
   });

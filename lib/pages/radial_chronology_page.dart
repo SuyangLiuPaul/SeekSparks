@@ -1349,8 +1349,16 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   void _applyDefaultHidden(WheelHistoryData data, double side) {
     if (_defaultsApplied) return;
     _defaultsApplied = true;
-    final capacity = ringCapacity(side,
-        hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side));
+    // Two bounds, and the smaller wins. The geometry says how many
+    // rings this canvas can draw at a readable thickness; the opening
+    // count says how many the reader should meet, which is four on
+    // every canvas so that the fifth slot is always free for the
+    // comparison they came to make.
+    final capacity = math.min(
+      ringCapacity(side,
+          hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side)),
+      kOpeningStreams,
+    );
     final keep =
         defaultVisibleStreams(data.streams.map((s) => s.id), capacity).toSet();
     for (final s in data.streams) {
@@ -2909,6 +2917,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       },
       text: (key, fallback) => s(key, fallback, locale),
       keyPrefix: 'wheelFilter',
+      streamCeiling: kMaxVisibleStreams,
     );
     if (result == null || !mounted) return;
     setState(() {
