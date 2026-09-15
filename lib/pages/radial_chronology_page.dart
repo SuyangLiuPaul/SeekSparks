@@ -3817,10 +3817,27 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // spoke within it wins.
     _Spoke? bestSpoke;
     var spokeScore = double.infinity;
-    if (r >= rBands - 6 && r <= rRim + 8) {
+    // From the hub outward, not from the bands outward. The gate used
+    // to start at `rBands - 6` because every tick was outside the band
+    // stack; with the ticks moved onto their own rings, that gate
+    // excluded the exact radii they now occupy and the spoke loop
+    // never ran for them.
+    if (r >= rHub - 6 && r <= rRim + 8) {
       final tol = r > 0 ? (9.0 / (_zoom * r)) : 0.05;
+      final ringOf = {
+        for (var i = 0; i < streams.length; i++) streams[i].id: i
+      };
       for (final s in spokes) {
-        final atTick = (r - scriptureLabelBase(rBands)).abs() <= 9 / _zoom;
+        // The same radius the painter used. A tap rule that still
+        // looked for every tick on one circle would have gone on
+        // answering for marks that moved onto the rings — and the arcs
+        // under those marks would have kept losing taps to a target
+        // nothing is drawn at.
+        final ring = ringOf[s.event.stream];
+        final rOwn = ring == null
+            ? scriptureLabelBase(rBands)
+            : ringRadii(ring, streams.length, rHub, rBands).centre;
+        final atTick = (r - rOwn).abs() <= 9 / _zoom;
         // THE TAP FOLLOWS THE INK. `s.label.rStart..rEnd` is the radial
         // run a spoke's TEXT occupies, and claiming it was right while
         // that text was on screen: the reader was aiming at a word.
@@ -3995,11 +4012,31 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           a, r, [for (final arc in inBand) (a0: arc.a0, a1: arc.a1)]);
       if (pick != null) {
         final arc = inBand[pick.index];
-        {
-          _select(arc.power.id);
-          showPower(context, arc.power, data, locale, _select);
+        // A TICK ON THIS BAND IS A SMALLER TARGET THAN THE BAND.
+        //
+        // A conflict that could not exist until 2026-09-15: event ticks
+        // sat at one radius outside the whole band stack, so nothing
+        // was ever under one. They are on their own stream's ring now,
+        // which means a finger inside a power's arc can also be inside
+        // one of that power's ticks.
+        //
+        // Scored rather than ruled, the same way the lifespan and rail
+        // branches do it, because a precedence written down is exactly
+        // what sent the arcs' taps to the labels in September and drew
+        // 「我要按那个环而不是字」. The arc's target is its own sweep, with
+        // a finger's floor so a three-year span stays reachable; the
+        // tick's is the nine pixels of arc it was given above. Whichever
+        // the finger fell further INTO loses.
+        final sweep = arc.a1 - arc.a0;
+        final tolerance = math.max(sweep / 2, r > 0 ? 9 / (_zoom * r) : 0.05);
+        final into = (a - (arc.a0 + arc.a1) / 2).abs() / tolerance;
+        if (bestSpoke case final s? when spokeScore < into) {
+          openSpoke(s);
           return;
         }
+        _select(arc.power.id);
+        showPower(context, arc.power, data, locale, _select);
+        return;
       }
       // Nearest band centre, so the outermost and innermost edges of
       // the annulus round INTO their band rather than falling through.
@@ -4107,7 +4144,7 @@ class _WorldWheelPainter extends CustomPainter {
     // over this same tint without changing its meaning.
     _paintLifespans(canvas, c, rBands, rRim);
     _paintRail(canvas, c);
-    _paintSpokes(canvas, c, rBands);
+    _paintSpokes(canvas, c, rHub, rBands);
     _paintRim(canvas, c, rBands, rRim);
     _paintHub(canvas, c, rHub);
     _paintAxisEnds(canvas, c, rHub, rRim);
@@ -4595,16 +4632,39 @@ class _WorldWheelPainter extends CustomPainter {
     }
   }
 
-  void _paintSpokes(Canvas canvas, Offset c, double rBands) {
+  void _paintSpokes(Canvas canvas, Offset c, double rHub, double rBands) {
     final has = selectedId != null;
+    final ringOf = {
+      for (var i = 0; i < streams.length; i++) streams[i].id: i
+    };
     // The tick sits ON THE BAND, for every event, whichever end of the
     // annulus its words are flush with. That is what it is for — the
     // year's mark on its own stream — and it is now the only thing
     // drawn for an event whose title could not be set legibly at this
     // size, so it must be where the event belongs rather than where its
     // text happens to start.
-    final rTick = scriptureLabelBase(rBands);
+    // A record's mark belongs ON THE STREAM IT BELONGS TO.
+    //
+    // Every event tick used to sit at `scriptureLabelBase(rBands)` —
+    // one radius, just outside the whole band stack — so 291 of them
+    // were threaded onto a single circle and the only thing saying
+    // which stream a mark came from was its colour. That is the
+    // colour-matching problem the ring cap was meant to reduce, being
+    // reintroduced by the densest element on the chart.
+    //
+    // On its own ring, POSITION carries the stream and colour only
+    // confirms it, and the marks spread across four rings instead of
+    // crowding one circle.
+    //
+    // The fallback is for a spoke whose stream is not drawn — a
+    // clustered event borrowed from a hidden layer. It keeps the old
+    // radius rather than guessing a ring.
+    final fallbackTick = scriptureLabelBase(rBands);
     for (final s in spokes) {
+      final ring = ringOf[s.event.stream];
+      final band =
+          ring == null ? null : ringRadii(ring, streams.length, rHub, rBands);
+      final rTick = band?.centre ?? fallbackTick;
       final sel = s.event.id == selectedId;
       final lit = selectionCovers(
         selectedId: selectedId,
@@ -4614,16 +4674,26 @@ class _WorldWheelPainter extends CustomPainter {
       final dim = has && !lit ? 0.28 : 1.0;
       final a = s.label.angle;
       final dir = Offset(math.cos(a), math.sin(a));
+      // A NOTCH ACROSS ITS OWN BAND, not a stub beside it. On its own
+      // ring the tick now sits on a fill of its own hue, so the old
+      // `s.color at 0.8` had almost nothing to carry against — the
+      // band is that colour at 0.64. Pulling the tick toward the
+      // page's ink gives it a darker edge on a lighter band, which is
+      // the same device the selected arc's outline uses.
+      final half = (band?.width ?? 10) * 0.42;
       canvas.drawLine(
-        c + dir * (rTick - 5 / zoom),
-        c + dir * rTick,
+        c + dir * (rTick - half),
+        c + dir * (rTick + half),
         Paint()
-          ..strokeWidth = (sel ? 1.5 : 0.8) / zoom
-          ..color = s.color.withValues(alpha: 0.8 * dim),
+          ..strokeWidth = (sel ? 1.8 : 0.9) / zoom
+          ..color = Color.lerp(s.color, wb.text, sel ? 0.7 : 0.45)!
+              .withValues(alpha: (sel ? 1.0 : 0.85) * dim),
       );
       if (s.hidden > 0 && !wheelShowsEventText(zoom: zoom, selected: sel)) {
-        canvas.drawCircle(c + dir * (rTick - 2.5 / zoom), 2 / zoom,
-            Paint()..color = s.color.withValues(alpha: 0.8 * dim));
+        // The "and more here" dot, moved out past its own band so it
+        // reads as a count beside the mark rather than as another mark.
+        canvas.drawCircle(c + dir * (rTick + half + 3 / zoom), 2 / zoom,
+            Paint()..color = s.color.withValues(alpha: 0.85 * dim));
       }
       if (wheelShowsEventText(zoom: zoom, selected: sel)) {
         _radialLabel(canvas, c, s, dim, sel);

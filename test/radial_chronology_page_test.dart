@@ -44,7 +44,7 @@ import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart'
-    show RadialLabel, scriptureLabelBase;
+    show RadialLabel, ringRadii;
 import 'package:seeksparks/utils/wheel_default_streams.dart'
     show bandsFractionFor;
 import 'package:seeksparks/utils/version_mapper.dart'
@@ -200,6 +200,107 @@ void main() {
   /// the list, and that the number in its header is the number of rows
   /// under it. A header that says 66 over 12 rows would be the old
   /// silent narrowing wearing a count.
+  testWidgets('the band is still reachable between its own ticks',
+      (tester) async {
+    // THE COMPLAINT THIS EXISTS FOR: 「我要按那个环而不是字」. Marks kept
+    // taking taps meant for the arc under them.
+    //
+    // It came back in a new form on 2026-09-15. Event ticks used to sit
+    // at one radius outside the whole band stack, so nothing was ever
+    // under one; moving each tick onto its own stream's ring put marks
+    // and arcs at the same radius for the first time, and a rule that
+    // simply preferred ticks would have handed every tap in the
+    // Genesis stretch back to the marks.
+    //
+    // So the arc has to stay reachable wherever a tick is not, and that
+    // is what this taps: the widest gap between consecutive ticks on a
+    // real power's arc, which is where a reader aiming at the band
+    // actually puts their finger.
+    await pump(tester, const Size(1440, 900));
+    final wheelFinder = find.byKey(const ValueKey('chronologyWheel'));
+    final side = tester.getSize(wheelFinder).width;
+    final dynamic painter = tester.widget<CustomPaint>(find.descendant(
+        of: find.byKey(const ValueKey('wheelSceneBoundary')),
+        matching: find.byType(CustomPaint))).painter!;
+    final streamIds = [
+      for (final dynamic stream in painter.streams as List)
+        stream.id as String
+    ];
+
+    // The longest arc that has at least one tick on it — the case where
+    // marks and band genuinely compete.
+    ({dynamic arc, double angle, double radius})? target;
+    var widest = 0.0;
+    for (final dynamic arc in painter.arcs as List) {
+      final ring = arc.ring as int;
+      final radius = ringRadii(ring, streamIds.length, side * 0.115,
+              side * bandsFractionFor(side))
+          .centre;
+      final a0 = arc.a0 as double, a1 = arc.a1 as double;
+      final ticks = <double>[
+        for (final dynamic spoke in painter.spokes as List)
+          if (streamIds.indexOf(
+                      (spoke.event as WheelHistoryEvent).stream) ==
+                  ring &&
+              (spoke.label as RadialLabel).angle > a0 &&
+              (spoke.label as RadialLabel).angle < a1)
+            (spoke.label as RadialLabel).angle
+      ]..sort();
+      if (ticks.isEmpty) continue;
+      final edges = <double>[a0, ...ticks, a1];
+      for (var i = 1; i < edges.length; i++) {
+        final gap = (edges[i] - edges[i - 1]) * radius;
+        if (gap > widest) {
+          widest = gap;
+          target = (
+            arc: arc,
+            angle: (edges[i] + edges[i - 1]) / 2,
+            radius: radius
+          );
+        }
+      }
+    }
+    expect(target, isNotNull,
+        reason: 'no drawn power carries a tick, so nothing competes and '
+            'this test proves nothing');
+    // 18, and the measured value is 23.5 — which is worth writing down
+    // rather than rounding past, because it is the COST of moving the
+    // ticks onto the bands. The widest clear stretch on any arc that
+    // carries ticks is 23.5 px at a 1440 px window: ±11 px either side
+    // of centre, against a 9 px finger target. It fits, and it is
+    // tighter than when the ticks sat outside the band stack and no arc
+    // had anything on it at all.
+    //
+    // The floor is under the measurement rather than on it so that CI's
+    // text metrics — which differ from this machine's and shift which
+    // events cluster — do not make this a flake. If it ever drops
+    // toward 9 the trade has gone bad and the ticks need thinning, not
+    // this number lowering.
+    expect(widest, greaterThan(18),
+        reason: 'the widest gap between ticks on any arc is only '
+            '${widest.toStringAsFixed(1)} px — the band has nowhere left '
+            'for a finger, which is the defect and not the test');
+
+    final hit = target!;
+    final local = Offset(side / 2 + hit.radius * math.cos(hit.angle),
+        side / 2 + hit.radius * math.sin(hit.angle));
+    final tap =
+        tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
+    await tester.tapAt(tap);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.text(
+                (hit.arc.power as WheelPower).nameFor('zh-Hans'))),
+        findsOneWidget,
+        reason: 'a tap in the clear band opened something other than the '
+            'power whose arc it landed on — the marks are taking the '
+            "arcs' taps again");
+    await unmount(tester);
+  });
+
   testWidgets('a spoke standing for several events lists all of them',
       (tester) async {
     await pump(tester, const Size(1440, 900));
@@ -227,10 +328,28 @@ void main() {
       final members = List<WheelHistoryEvent>.of(
           (spoke.members as List).cast<WheelHistoryEvent>());
       final label = spoke.label as RadialLabel;
-      final zoom = painter.zoom as double;
-      // The tick is painted immediately inside the shared scripture
-      // baseline. At this radius the label's arc cannot take its tap.
-      final radius = scriptureLabelBase(side * bandsFractionFor(side)) - 2.5 / zoom;
+      // THE TICK IS ON ITS OWN STREAM'S RING, since 2026-09-15.
+      //
+      // This used to tap `scriptureLabelBase(rBands)` — the one radius
+      // every event tick shared, just outside the whole band stack.
+      // 291 marks on a single circle meant the only thing saying which
+      // stream a mark belonged to was its colour, which is the
+      // colour-matching problem the ring cap exists to reduce, brought
+      // back by the densest element on the chart. Each tick now sits on
+      // the ring of its own stream, and this reads the radius the
+      // painter used rather than a copy of the old constant.
+      final streamIds = [
+        for (final dynamic stream in painter.streams as List)
+          stream.id as String
+      ];
+      final ring =
+          streamIds.indexOf((spoke.event as WheelHistoryEvent).stream);
+      expect(ring, isNot(-1),
+          reason: 'the clustered spoke is on a stream the wheel is not '
+              'drawing, so it has no ring to be tapped on');
+      final radius = ringRadii(ring, streamIds.length, side * 0.115,
+              side * bandsFractionFor(side))
+          .centre;
       final local = Offset(side / 2 + radius * math.cos(label.angle),
           side / 2 + radius * math.sin(label.angle));
       final tap = tester.renderObject<RenderBox>(wheelFinder).localToGlobal(local);
