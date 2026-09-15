@@ -56,6 +56,26 @@ const List<String> kStreamPriority = <String>[
 
 /// The most rings a reader may show at once, on ANY canvas.
 ///
+/// 2026-09-16: 5 → 12, and the reason is that the cap was answering the
+/// wrong half of the complaint.
+///
+/// 「之前有一个版本是包含很多传说4000年都有的 中国 埃及 日本全部有
+/// 为什么现在全部缺失了」 and, of the strip, 「中间全部缺失了」. Both are
+/// this constant. At five, a reader who wants Egypt beside the spine
+/// can have it; a reader who wants Egypt AND China AND Japan is
+/// refused, and the refusal reads as the data having been deleted.
+///
+/// Reading the original instruction again, it was about what the chart
+/// OPENS with: 「一开始filter不要全部都有 这样loading很慢」 — at the start,
+/// not for ever. [kOpeningStreams] is what answers that, and it is
+/// unchanged at four: the chart still meets a reader calm, with the
+/// spine and one free slot.
+///
+/// So the low number stays where it was asked for — the opening — and
+/// the ceiling goes back to what the geometry can actually carry. What
+/// a reader adds deliberately is their business; the chart's job is to
+/// not start out shouting.
+///
 /// 2026-09-15. 「filter in的时候我建议一次别超过3~5个 因为那么多在一起
 /// 都没有用其实」 — and 「一次不要load太多」.
 ///
@@ -89,7 +109,7 @@ const List<String> kStreamPriority = <String>[
 /// different things depending on which of them you are looking at is a
 /// limit a reader has to learn twice. The legibility argument was about
 /// the drawing; this one is about the person.
-const int kMaxVisibleStreams = 5;
+const int kMaxVisibleStreams = 12;
 
 /// How many rings the wheel opens with, leaving exactly one slot free.
 const int kOpeningStreams = 4;

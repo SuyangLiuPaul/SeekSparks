@@ -178,14 +178,27 @@ void main() {
     }
   });
 
-  test('the opening set leaves exactly one slot free', () {
+  test('the chart opens on the spine, and the ceiling is far above it',
+      () {
     // Not "four is a nice number". Four IS the spine — the line this
     // application follows — and the free slot is the comparison the
     // reader opened the chart to make. Collapse the gap and the wheel
     // becomes a poster: you cannot add Egypt without first deleting
     // something you did not choose to delete.
+    // 2026-09-16: this asserted a gap of exactly ONE, which was the
+    // 「一次别超过3~5个」 reading. The owner found what a hard five costs
+    // 「中国 埃及 日本全部有 为什么现在全部缺失了」 — a reader who wants three
+    // of the ancient civilisations beside the spine is refused, and the
+    // refusal reads as the data having been deleted.
+    //
+    // Re-read, the instruction was about the OPENING: 「一开始filter不要
+    // 全部都有」. So the low number stays where it was asked for and the
+    // ceiling goes back to what the rings can carry. What the reader
+    // adds deliberately is their business.
     expect(kOpeningStreams, lessThan(kMaxVisibleStreams));
-    expect(kMaxVisibleStreams - kOpeningStreams, 1);
+    expect(kOpeningStreams, 4);
+    expect(kMaxVisibleStreams, greaterThanOrEqualTo(12),
+        reason: 'the ancient world has to fit beside the spine');
     expect(defaultVisibleStreams(data.streams.map((s) => s.id), kOpeningStreams),
         spine,
         reason: 'the opening rings are meant to BE the spine, in order');
@@ -210,19 +223,20 @@ void main() {
             'not twelve thin ones');
   });
 
-  testWidgets('at five, the sixth stream goes quiet and the sheet says why',
+  testWidgets('at the ceiling, the next stream goes quiet and the sheet '
+      'says why',
       (tester) async {
     await pumpSheet(tester,
-        hidden: hiddenExcept([...spine, 'egypt']));
+        hidden: hiddenExcept([...spine, ...kStreamPriority.skip(4).take(8)]));
 
     expect(find.byKey(const ValueKey('chronologyFilterStreamCount')),
         findsOneWidget);
-    expect(find.text('Streams 5 of 5'), findsOneWidget);
+    expect(find.text('Streams 12 of 12'), findsOneWidget);
     expect(find.byKey(const ValueKey('chronologyFilterCeilingHint')),
         findsOneWidget);
 
     // A stream that is OFF cannot be turned on...
-    expect(enabled(tester, row('rome')), isFalse);
+    expect(enabled(tester, row('china')), isFalse);
     // ...but one that is ON can still be turned off, or the reader is
     // trapped at the ceiling with no way down.
     expect(enabled(tester, row('egypt')), isTrue);
@@ -235,26 +249,26 @@ void main() {
     // ever swallowed them, turning on five streams would silently cost
     // the reader the kings of Judah.
     await pumpSheet(tester,
-        hidden: {...hiddenExcept([...spine, 'egypt']), kLifespanLayerId});
+        hidden: {...hiddenExcept([...spine, ...kStreamPriority.skip(4).take(8)]), kLifespanLayerId});
     final lifespans = find.byKey(const ValueKey('wheelFilterLifespans'));
     expect(enabled(tester, lifespans), isTrue);
   });
 
   testWidgets('taking one off makes room, and the count follows',
       (tester) async {
-    await pumpSheet(tester, hidden: hiddenExcept([...spine, 'egypt']));
+    await pumpSheet(tester, hidden: hiddenExcept([...spine, ...kStreamPriority.skip(4).take(8)]));
     await tester.tap(row('egypt'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Streams 4 of 5'), findsOneWidget);
+    expect(find.text('Streams 11 of 12'), findsOneWidget);
     expect(find.byKey(const ValueKey('chronologyFilterCeilingHint')),
         findsNothing);
-    final rome = row('rome');
-    expect(enabled(tester, rome), isTrue);
+    final china = row('china');
+    expect(enabled(tester, china), isTrue);
 
-    await tester.tap(rome);
+    await tester.tap(china);
     await tester.pumpAndSettle();
-    expect(find.text('Streams 5 of 5'), findsOneWidget);
+    expect(find.text('Streams 12 of 12'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
     await tester.pumpAndSettle();
@@ -262,7 +276,10 @@ void main() {
         .map((s) => s.id)
         .where((id) => !applied!.contains(id))
         .toSet();
-    expect(shown, {...spine, 'rome'});
+    // Egypt off, China on — the rest of the twelve untouched.
+    expect(shown,
+        {...spine, ...kStreamPriority.skip(4).take(8), 'china'}
+          ..remove('egypt'));
   });
 
   testWidgets('All stops meaning all, and stops at the ceiling',
@@ -273,7 +290,7 @@ void main() {
     await pumpSheet(tester, hidden: hiddenExcept(spine));
     await tester.tap(find.byKey(const ValueKey('chronologyFilterAll')));
     await tester.pumpAndSettle();
-    expect(find.text('Streams 5 of 5'), findsOneWidget);
+    expect(find.text('Streams 12 of 12'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
     await tester.pumpAndSettle();
@@ -303,10 +320,10 @@ void main() {
     // The sheet still TAKES a ceiling rather than assuming one, so that
     // a chart which genuinely does not need one has to say so — and the
     // second half below keeps that path honest.
-    await pumpSheet(tester, hidden: hiddenExcept([...spine, 'egypt']));
-    expect(find.text('Streams 5 of 5'), findsOneWidget);
-    expect(enabled(tester, row('rome')), isFalse,
-        reason: 'the strip let a sixth lane on');
+    await pumpSheet(tester, hidden: hiddenExcept([...spine, ...kStreamPriority.skip(4).take(8)]));
+    expect(find.text('Streams 12 of 12'), findsOneWidget);
+    expect(enabled(tester, row('china')), isFalse,
+        reason: 'the strip let a thirteenth lane on');
   });
 
   testWidgets('a sheet given no ceiling still behaves as it always did',
@@ -319,6 +336,6 @@ void main() {
     await pumpSheet(tester, hidden: hiddenExcept(spine), ceiling: null);
     expect(find.byKey(const ValueKey('chronologyFilterStreamCount')),
         findsNothing);
-    expect(enabled(tester, row('rome')), isTrue);
+    expect(enabled(tester, row('china')), isTrue);
   });
 }
