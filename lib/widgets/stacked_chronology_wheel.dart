@@ -1027,7 +1027,15 @@ class _StackedWheelPainter extends CustomPainter {
   }
 
   void _callouts(Canvas canvas, TextStyle style, List<Rect> occupied) {
-    final bankWidth = math.min(120 / zoom, visible.width * .19);
+    // A wider bank, and fewer names in it on a narrow canvas.
+    //
+    // 2026-09-15, from a phone render: seven callouts down both sides
+    // squeezed the chart into the middle third, and two of them
+    // ('以色列王后…', '西奈山…') were ellipsised — a callout that cannot
+    // show the whole name is printing a word that is not the record's
+    // name, with a leader line pointing at the record to confirm it.
+    final bankWidth = math.min(140 / zoom, visible.width * .26);
+    final perSide = visible.width < 520 ? 2 : 4;
     if (bankWidth < fontSize * 2) return;
     // Bounded candidates keep rotate frames cheap. The complete prism list
     // still supplies occlusion; excluded names do not make a wall vanish.
@@ -1047,26 +1055,20 @@ class _StackedWheelPainter extends CustomPainter {
       perGroup[group] = (perGroup[group] ?? 0) + 1;
       candidates.add(prism.id);
     }
+    // WHOLE NAME OR NO NAME. This used to binary-search for the longest
+    // prefix that fitted and add an ellipsis, which is how 以色列王后耶洗别
+    // became 「以色列王后…」 — a leader line pointing confidently at a
+    // record whose name it is not showing. A name that will not fit
+    // yields its slot to one that will; the record keeps its block, its
+    // symbol, its tap and its row in the list below.
     final paragraphs = <String, ui.Paragraph>{};
+    final tooWide = <String>{};
     for (final id in candidates) {
-      final text = label(scene.records[id]!);
-      var paragraph = WheelTextMetrics.paragraphOf(text, style);
+      final paragraph =
+          WheelTextMetrics.paragraphOf(label(scene.records[id]!), style);
       if (paragraph.maxIntrinsicWidth > bankWidth) {
-        final chars = text.characters.toList();
-        var lo = 0;
-        var hi = chars.length;
-        while (lo < hi) {
-          final mid = (lo + hi + 1) ~/ 2;
-          if (WheelTextMetrics.paragraphOf('${chars.take(mid).join()}…', style)
-                  .maxIntrinsicWidth <=
-              bankWidth) {
-            lo = mid;
-          } else {
-            hi = mid - 1;
-          }
-        }
-        paragraph =
-            WheelTextMetrics.paragraphOf('${chars.take(lo).join()}…', style);
+        tooWide.add(id);
+        continue;
       }
       paragraphs[id] = paragraph;
     }
@@ -1077,13 +1079,14 @@ class _StackedWheelPainter extends CustomPainter {
       gap: 7 / zoom,
       leaderGap: 5 / zoom,
       pointRadius: 3 / zoom,
-      maxPerSide: 4,
+      maxPerSide: perSide,
       measure: (id) =>
           Size(paragraphs[id]!.maxIntrinsicWidth, paragraphs[id]!.height),
       occupied: occupied,
       excludedIds: {
         for (final prism in scene.prisms)
           if (!candidates.contains(prism.id) ||
+              tooWide.contains(prism.id) ||
               paintedRecordIds.contains(prism.id))
             prism.id
       },
