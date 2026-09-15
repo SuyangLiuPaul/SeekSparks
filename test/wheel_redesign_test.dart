@@ -49,6 +49,13 @@ void main() {
     WheelRenderStats.reset();
   });
 
+  // Loading Roboto does not replace Flutter test's default Ahem face.
+  // Select it explicitly while retaining the production CJK fallback;
+  // otherwise every Latin glyph becomes a square and overstates bounds.
+  TextStyle axisStyle(AxisLabel label) =>
+      canvasTextStyle(fontSize: label.onRing ? 10.5 : 11)
+          .copyWith(fontFamily: 'Roboto');
+
   test('all axis text fits the resting wheel in all three locales', () {
     for (final side in [300.0, 320.0, 360.0, 390.0, 600.0, 768.0, 1280.0]) {
       for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
@@ -60,8 +67,8 @@ void main() {
           endSwing: kAxisEndSwing,
         );
         for (final label in labels) {
-          final paragraph = WheelTextMetrics.paragraphOf(
-              label.text, canvasTextStyle(fontSize: label.onRing ? 10.5 : 11));
+          final paragraph =
+              WheelTextMetrics.paragraphOf(label.text, axisStyle(label));
           final placement = placeWheelAxisLabel(
             angle: label.angle,
             width: paragraph.maxIntrinsicWidth,
@@ -91,7 +98,53 @@ void main() {
     }
     expect(wheelShowsEventText(zoom: 1, selected: false), isFalse);
     expect(wheelShowsEventText(zoom: 1, selected: true), isTrue);
+    expect(wheelShowsEventText(zoom: 1.59, selected: false), isFalse);
+    expect(wheelShowsEventText(zoom: 1.6, selected: false), isTrue);
     expect(wheelShowsEventText(zoom: 2, selected: false), isTrue);
+  });
+
+  test('phone axis keeps both ends and separates actual label bounds', () {
+    for (final side in [300.0, 320.0, 360.0]) {
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        final candidates = planAxisLabels(
+          minYear: kMinYear,
+          maxYear: kMaxYear,
+          tickLabel: (year) => centuryTickLabel(year, locale),
+          endLabel: (year) => yearLabel(year, locale),
+          endSwing: kAxisEndSwing,
+        );
+        Rect boundsOf(AxisLabel label) {
+          final paragraph =
+              WheelTextMetrics.paragraphOf(label.text, axisStyle(label));
+          return placeWheelAxisLabel(
+            angle: label.angle,
+            width: paragraph.maxIntrinsicWidth,
+            height: paragraph.height,
+            rimRadius: side * rimFractionFor(side),
+            clearance: kAxisLabelClearance,
+            onRing: label.onRing,
+          ).bounds;
+        }
+
+        final labels = retainSeparatedWheelAxisLabels(
+            labels: candidates, boundsOf: boundsOf);
+        expect(
+            labels.where((label) => !label.onRing).map((label) => label.year),
+            [kMinYear, kMaxYear]);
+        expect(labels.where((label) => label.onRing), isNotEmpty);
+        for (var i = 0; i < labels.length; i++) {
+          for (var j = i + 1; j < labels.length; j++) {
+            expect(
+                boundsOf(labels[i])
+                    .inflate(2)
+                    .overlaps(boundsOf(labels[j]).inflate(2)),
+                isFalse,
+                reason: '$locale, $side px: ${labels[i].text} and '
+                    '${labels[j].text} must leave a 4 px gap');
+          }
+        }
+      }
+    }
   });
 
   test('tiny canvas type retains its exact size in the cache', () {
@@ -164,6 +217,60 @@ void main() {
                 chartSize.height - tester.getSize(digest).height),
             0.01));
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('phone corner controls are named and have separate touch areas',
+      (tester) async {
+    await mount(tester, const Size(360, 800));
+    final semantics = tester.ensureSemantics();
+    try {
+      final settings =
+          tester.element(find.byType(RadialChronologyPage)).read<AppSettings>();
+      for (final (locale, legendLabel) in [
+        ('en', 'Legend'),
+        ('zh-Hans', '图例'),
+        ('zh-Hant', '圖例'),
+      ]) {
+        await settings.setLocale(locale);
+        for (final scale in [1.0, kMenuScaleMax]) {
+          await settings.setMenuScale(scale);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          final legend = find.byKey(const ValueKey('wheelLegendControl'));
+          final controls = find.byKey(const ValueKey('wheelZoomControls'));
+          final legendBox = tester.getRect(legend);
+          final controlsBox = tester.getRect(controls);
+          expect(legendBox.height, greaterThanOrEqualTo(44));
+          expect(legendBox.width, greaterThanOrEqualTo(44));
+          expect(legendBox.left, greaterThanOrEqualTo(0));
+          expect(controlsBox.right, lessThanOrEqualTo(360));
+          expect(legendBox.right + 4, lessThanOrEqualTo(controlsBox.left),
+              reason: '$locale at menu scale $scale must leave room between '
+                  'the legend and zoom controls');
+          final label =
+              find.descendant(of: legend, matching: find.text(legendLabel));
+          expect(label, findsOneWidget);
+          expect(legendBox.contains(tester.getRect(label).topLeft), isTrue);
+          expect(legendBox.contains(tester.getRect(label).bottomRight), isTrue);
+          expect(tester.getSemantics(legend).label, legendLabel);
+          for (final key in [
+            'wheelZoomOutControl',
+            'wheelZoomInControl',
+            'wheelResetControl',
+          ]) {
+            final target = find.byKey(ValueKey(key));
+            final box = tester.getRect(target);
+            expect(box.width, greaterThanOrEqualTo(44));
+            expect(box.height, greaterThanOrEqualTo(44));
+            expect(tester.getSemantics(target).label, isNotEmpty);
+          }
+        }
+      }
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pumpWidget(const SizedBox.shrink());
+    } finally {
+      semantics.dispose();
+    }
   });
 
   testWidgets('real wheel drawing is warm and cursor/pan reuse the scene',

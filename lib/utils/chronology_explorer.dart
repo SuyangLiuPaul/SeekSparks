@@ -30,7 +30,12 @@ const double chronologyExplorerControlsHeight = 108;
 const double chronologyExplorerSideWidth = 320;
 const double chronologyExplorerCompactListHeight = 48;
 
-bool chronologyExplorerUsesSidePanel(Size available) => available.width >= 1000;
+bool chronologyExplorerUsesCompactSidePanel(Size available) =>
+    available.width >= 720 && available.height < 620;
+
+bool chronologyExplorerUsesSidePanel(Size available) =>
+    available.width >= 1000 ||
+    chronologyExplorerUsesCompactSidePanel(available);
 
 bool chronologyExplorerUsesCompactList(Size available) =>
     !chronologyExplorerUsesSidePanel(available) && available.height < 620;
@@ -42,8 +47,9 @@ double chronologyExplorerListHeight(Size available) =>
 
 /// The chart and its stream-capacity calculation must receive the same
 /// rectangle. At a 360 × 744 body this leaves 435.12 px for the chart;
-/// in landscape the list becomes a 48 px sheet opener, so it cannot
-/// consume the wheel's remaining radius. The list remains one tap away.
+/// at 800 × 304 the controls and list share a side panel, returning the
+/// 108 + 48 px previously spent above and below the chart. Narrower
+/// short panes retain the 48 px sheet opener.
 Size chronologyExplorerChartSize(Size available) => Size(
       math.max(
           0,
@@ -53,11 +59,13 @@ Size chronologyExplorerChartSize(Size available) => Size(
                   : 0)),
       math.max(
           0,
-          available.height -
-              chronologyExplorerControlsHeight -
-              (chronologyExplorerUsesSidePanel(available)
-                  ? 0
-                  : chronologyExplorerListHeight(available))),
+          chronologyExplorerUsesCompactSidePanel(available)
+              ? available.height
+              : available.height -
+                  chronologyExplorerControlsHeight -
+                  (chronologyExplorerUsesSidePanel(available)
+                      ? 0
+                      : chronologyExplorerListHeight(available))),
     );
 
 /// Sorted once when the corpus changes. Pan and zoom can rebuild the

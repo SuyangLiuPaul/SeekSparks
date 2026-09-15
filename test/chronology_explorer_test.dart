@@ -194,6 +194,26 @@ void main() {
       expect(chart.bottom, lessThanOrEqualTo(size.height));
       expect(find.byKey(const ValueKey('chronology-find')), findsOneWidget);
       expect(find.byKey(const ValueKey('chronology-filter')), findsOneWidget);
+      if (chronologyExplorerUsesCompactSidePanel(size)) {
+        final panel = tester.getRect(
+            find.byKey(const ValueKey('chronology-compact-side-panel')));
+        expect(chart.top, 0);
+        expect(chart.height, size.height);
+        expect(panel.width, chronologyExplorerSideWidth);
+        expect(chart.right, panel.left);
+        expect(chart.overlaps(panel), isFalse);
+        for (final key in [
+          'chronology-find',
+          'chronology-period',
+          'chronology-event-list'
+        ]) {
+          final control = tester.getRect(find.byKey(ValueKey(key)));
+          expect(control.left, greaterThanOrEqualTo(panel.left));
+          expect(control.right, lessThanOrEqualTo(panel.right));
+          expect(control.bottom, lessThanOrEqualTo(panel.bottom));
+          expect(chart.overlaps(control), isFalse);
+        }
+      }
       if (chronologyExplorerUsesCompactList(size)) {
         await tester.tap(find.byKey(const ValueKey('chronology-open-events')));
         await tester.pumpAndSettle();
@@ -402,6 +422,20 @@ void main() {
         final available = Size(size.width, size.height - kToolbarHeight);
         expect(chart.size, chronologyExplorerChartSize(available));
         expect(chart.height, greaterThan(0));
+        if (chronologyExplorerUsesCompactSidePanel(available)) {
+          final panel = tester.getRect(
+              find.byKey(const ValueKey('chronology-compact-side-panel')));
+          expect(chart.top, kToolbarHeight);
+          expect(chart.height, available.height);
+          expect(chart.overlaps(panel), isFalse);
+          expect(tester.getRect(findButton).left,
+              greaterThanOrEqualTo(chart.right));
+          expect(
+              tester
+                  .getRect(find.byKey(const ValueKey('chronology-event-list')))
+                  .left,
+              greaterThanOrEqualTo(chart.right));
+        }
         await tester.tap(findButton);
         await tester.tap(filterButton);
         expect(finds, 1);

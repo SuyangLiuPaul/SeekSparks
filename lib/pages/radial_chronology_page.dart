@@ -1957,18 +1957,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// the same disclosure remains one tap away without covering data.
   Widget _legendChip(
       BuildContext context, String locale, WbType t, WbColors wb) {
-    // Square, not rounded — task #279's rule (`workbench_theme.dart`:
-    // "square corners and 1px hairline borders, no shadows, no cards")
-    // and `page_chrome_pass_test.dart`'s own ratchet catch a rounded
-    // corner appearing in a file the pass had left clean, which a
-    // `BorderRadius.circular(...)` here was. `_legend` and
-    // `_zoomControls`, the two widgets already sharing this page's
-    // bottom corners, are both bare rectangles for the same reason.
-    return Material(
-      color: wb.paneBg.withValues(alpha: 0.92),
-      shape: RoundedRectangleBorder(side: BorderSide(color: wb.border)),
-      child: InkWell(
-        onTap: () => showModalBottomSheet<void>(
+    final label = switch (locale) {
+      'zh-Hans' => '图例',
+      'zh-Hant' => '圖例',
+      _ => 'Legend',
+    };
+    void openLegend() => showModalBottomSheet<void>(
           context: context,
           backgroundColor: wb.paneBg,
           isScrollControlled: true,
@@ -1983,10 +1977,42 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
               ),
             ),
           ),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(t.scaled(8)),
-          child: Icon(Icons.legend_toggle, size: t.scaled(20), color: wb.text),
+        );
+    // Square, not rounded — task #279's rule (`workbench_theme.dart`:
+    // "square corners and 1px hairline borders, no shadows, no cards")
+    // and `page_chrome_pass_test.dart`'s own ratchet catch a rounded
+    // corner appearing in a file the pass had left clean, which a
+    // `BorderRadius.circular(...)` here was. `_legend` and
+    // `_zoomControls`, the two widgets already sharing this page's
+    // bottom corners, are both bare rectangles for the same reason.
+    return Semantics(
+      key: const ValueKey('wheelLegendControl'),
+      label: label,
+      button: true,
+      onTap: openLegend,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          color: wb.paneBg.withValues(alpha: 0.92),
+          shape: RoundedRectangleBorder(side: BorderSide(color: wb.border)),
+          child: InkWell(
+            onTap: openLegend,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.legend_toggle,
+                      size: t.scaledChrome(18), color: wb.text),
+                  const SizedBox(width: 6),
+                  Text(label,
+                      style: TextStyle(
+                          color: wb.text, fontSize: t.scaledChrome(11))),
+                ]),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -2000,35 +2026,55 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// unreadable rather than merely dense. The percentage is shown
   /// because at 300% the reader should know why more labels appeared.
   Widget _zoomControls(String locale, WbType t, WbColors wb) {
-    Widget btn(IconData icon, String tip, VoidCallback go) => InkWell(
+    final (zoomOut, zoomIn) = switch (locale) {
+      'zh-Hans' => ('缩小', '放大'),
+      'zh-Hant' => ('縮小', '放大'),
+      _ => ('Zoom out', 'Zoom in'),
+    };
+    Widget btn(String key, IconData icon, String tip, VoidCallback go) =>
+        Semantics(
+          key: ValueKey(key),
+          label: tip,
+          button: true,
           onTap: go,
-          child: Padding(
-            padding: EdgeInsets.all(t.scaled(6)),
-            child: Tooltip(
-              message: tip,
-              child: Icon(icon, size: t.scaled(17), color: wb.text),
+          excludeSemantics: true,
+          child: Tooltip(
+            message: tip,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: InkWell(
+                onTap: go,
+                child: Icon(icon, size: t.scaledChrome(18), color: wb.text),
+              ),
             ),
           ),
         );
     return Container(
+      key: const ValueKey('wheelZoomControls'),
       decoration: BoxDecoration(
         color: wb.paneBg.withValues(alpha: 0.94),
         border: Border.all(color: wb.border),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        btn(Icons.remove, '−', () => _zoomBy(1 / 1.4)),
-        Container(width: 1, height: t.scaled(18), color: wb.border),
+        btn('wheelZoomOutControl', Icons.remove, zoomOut,
+            () => _zoomBy(1 / 1.4)),
+        Container(width: 1, height: t.scaledChrome(18), color: wb.border),
         SizedBox(
-          width: t.scaled(46),
+          // Three 44 px targets plus this percentage stay beside the
+          // named legend at 360 px. Menu scaling enlarges their contents,
+          // while these touch areas never fall below the finger target.
+          width: 64,
           child: Text('${(_zoom * 100).round()}%',
               textAlign: TextAlign.center,
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
+              style:
+                  TextStyle(color: wb.mutedText, fontSize: t.scaledChrome(11))),
         ),
-        Container(width: 1, height: t.scaled(18), color: wb.border),
-        btn(Icons.add, '+', () => _zoomBy(1.4)),
-        Container(width: 1, height: t.scaled(18), color: wb.border),
-        btn(Icons.center_focus_strong, s('wheelReset', 'Reset', locale),
-            _resetZoom),
+        Container(width: 1, height: t.scaledChrome(18), color: wb.border),
+        btn('wheelZoomInControl', Icons.add, zoomIn, () => _zoomBy(1.4)),
+        Container(width: 1, height: t.scaledChrome(18), color: wb.border),
+        btn('wheelResetControl', Icons.center_focus_strong,
+            s('wheelReset', 'Reset', locale), _resetZoom),
       ]),
     );
   }
@@ -2401,8 +2447,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         radius: band.centre,
         sweep: room,
         // The sub-ring's own pitch, not the stream bands' — these
-        // rings are wider, which is exactly why the names survive at
-        // rest here and would not survive on a band.
+        // rings are wider, which determines the space their names can
+        // use once selection or zoom makes the text visible.
         maxEm: ringPitch(rings, inner, rRim) * kArcLabelPitchFraction,
         desiredSize: titleSize,
         zoom: _zoom,
@@ -3910,25 +3956,37 @@ class _WorldWheelPainter extends CustomPainter {
       final dir = Offset(math.cos(a), math.sin(a));
       canvas.drawLine(c + dir * rHub, c + dir * rRim, isMajor ? major : minor);
     }
-    // The stagger this replaces — 11 units, then 22, alternating — was
-    // there "so adjacent labels clear each other", and adjacent 500-year
-    // labels are 26.5° and about 190 canvas units apart: they were never
-    // in any danger from one another. What it did achieve was to put
-    // half the scale INSIDE the rim, on top of the event titles that end
-    // there. See `ringLabelRadius`.
-    for (final l in _axisLabels().where((l) => l.onRing)) {
+    // Tick labels remain outside the rim. On a phone the first one can
+    // meet the opening-year label, even when both fit inside the canvas;
+    // the shared bounds check keeps the range ends and drops only words
+    // that cannot clear them. The actual tick lines above remain intact.
+    for (final l in _axisLabels(rRim).where((l) => l.onRing)) {
       _ringLabel(canvas, c, l.text, l.angle, rRim + kAxisLabelClearance,
           wb.mutedText, rimFont / _labelScale(zoom));
     }
   }
 
-  List<AxisLabel> _axisLabels() => planAxisLabels(
+  List<AxisLabel> _axisLabels(double rRim) => retainSeparatedWheelAxisLabels(
+      labels: planAxisLabels(
         minYear: kMinYear,
         maxYear: kMaxYear,
         tickLabel: (y) => centuryTickLabel(y, locale),
         endLabel: (y) => yearLabel(y, locale),
         endSwing: kAxisEndSwing,
-      );
+      ),
+      gap: 4 / zoom,
+      boundsOf: (label) {
+        final tp = _painter(label.text, label.onRing ? wb.mutedText : wb.text,
+            (label.onRing ? rimFont : endFont) / _labelScale(zoom));
+        return placeWheelAxisLabel(
+          angle: label.angle,
+          width: tp.width,
+          height: tp.height,
+          rimRadius: rRim,
+          clearance: kAxisLabelClearance,
+          onRing: label.onRing,
+        ).bounds;
+      });
 
   /// A label lying along the ring outside the rim, centred on [angle],
   /// its inner edge on [innerEdge].
@@ -4113,7 +4171,13 @@ class _WorldWheelPainter extends CustomPainter {
         canvas.drawLine(c + dir * (l.centre - l.stroke * 0.62),
             c + dir * (l.centre + l.stroke * 0.62), tick);
       }
-      if (l.name.isNotEmpty && l.nameSize > 0) {
+      // At fit size these short names read as texture around the rim.
+      // As with events, selection or 1.6x zoom reveals the canvas name;
+      // tap/search and the year digest keep the record and evidence
+      // reachable at fit size, alongside its true duration and dot.
+      if (l.name.isNotEmpty &&
+          l.nameSize > 0 &&
+          wheelShowsEventText(zoom: zoom, selected: sel)) {
         _tangentialLabel(canvas, c, l.centre, l.name, l.nameA0, l.nameSweep,
             l.nameSize, sel ? 1.0 : 0.75);
       } else {
@@ -4368,7 +4432,7 @@ class _WorldWheelPainter extends CustomPainter {
     final paint = Paint()
       ..color = wb.border
       ..strokeWidth = 1 / zoom;
-    for (final l in _axisLabels().where((l) => !l.onRing)) {
+    for (final l in _axisLabels(rRim).where((l) => !l.onRing)) {
       final a = angleForSpan(l.year, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
       canvas.drawLine(c + dir * rHub, c + dir * (rRim + kRimOuterRing), paint);

@@ -365,6 +365,31 @@ class _ChronologyExplorerState extends State<ChronologyExplorer> {
     return LayoutBuilder(builder: (context, constraints) {
       final size = constraints.biggest;
       final sidePanel = chronologyExplorerUsesSidePanel(size);
+      if (chronologyExplorerUsesCompactSidePanel(size)) {
+        return ColoredBox(
+          color: wb.groundBg,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: widget.chart),
+              Container(
+                key: const ValueKey('chronology-compact-side-panel'),
+                width: chronologyExplorerSideWidth,
+                decoration: BoxDecoration(
+                  border: Border(left: BorderSide(color: wb.border)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _controls(context, chronologyExplorerSideWidth),
+                    Expanded(child: _eventList()),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
       return ColoredBox(
         color: wb.groundBg,
         child: Column(

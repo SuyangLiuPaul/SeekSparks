@@ -14,9 +14,9 @@ double wheelLabelScale(double zoom) {
   return safeZoom / math.min(math.sqrt(safeZoom), 2.0);
 }
 
-/// Radial event labels have enough room to accompany their ticks once
-/// the wheel is magnified. At fit size, the explorer supplies horizontal
-/// titles and evidence; selected events keep their canvas label too.
+/// Radial names have enough room to accompany their marks once the wheel
+/// is magnified. At fit size, the explorer and year digest supply readable
+/// names and evidence; selected records keep their canvas label too.
 bool wheelShowsEventText({required double zoom, required bool selected}) =>
     selected || zoom >= 1.6;
 
@@ -61,6 +61,32 @@ WheelAxisLabelPlacement placeWheelAxisLabel({
       rotation,
       Rect.fromLTRB(centre.dx - halfWidth, centre.dy - halfHeight,
           centre.dx + halfWidth, centre.dy + halfHeight));
+}
+
+/// Keep both range ends before admitting secondary tick labels. Small
+/// wheels can fit every word inside their bounds yet still put the first
+/// 500-year label against the opening year. Only the colliding words are
+/// omitted: their tick lines remain, and the cursor still reads any year.
+/// [gap] is in canvas units; callers divide the screen gap by their zoom.
+List<AxisLabel> retainSeparatedWheelAxisLabels({
+  required List<AxisLabel> labels,
+  required Rect Function(AxisLabel label) boundsOf,
+  double gap = 4,
+}) {
+  final retained = labels.where((label) => !label.onRing).toSet();
+  final occupied = [
+    for (final label in retained) boundsOf(label).inflate(gap / 2),
+  ];
+  for (final label in labels.where((label) => label.onRing)) {
+    final bounds = boundsOf(label).inflate(gap / 2);
+    if (occupied.any(bounds.overlaps)) continue;
+    retained.add(label);
+    occupied.add(bounds);
+  }
+  return [
+    for (final label in labels)
+      if (retained.contains(label)) label
+  ];
 }
 
 /// Deterministic work counters for the real page, independent of device

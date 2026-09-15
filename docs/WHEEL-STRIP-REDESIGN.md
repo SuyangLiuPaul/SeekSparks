@@ -10,7 +10,9 @@ records, their dates, or their provenance.
 Both views now have an ordinary readable event browser, a visible full-corpus
 search entry, layer controls, and numerical time windows. At wide widths the
 browser sits beside the chart; on a portrait phone it sits underneath. Short
-landscape windows open the same list in a sheet. Canvas labels that cannot
+landscape windows at least 720 px wide put both controls and the event list
+in the side panel, leaving the chart the body's full height. Narrower short
+windows open the same list in a sheet. Canvas labels that cannot
 fit are recoverable in the browser and the existing search/detail sheets.
 Date qualifications and the distinction between a scripture reference and a
 source for the date remain visible. Switching forms carries the selected
@@ -24,11 +26,16 @@ range and layers. Fit/reset synchronizes the chart, range menu and list.
   from the site's own origin through `release_web.sh`.
 - At rest, the wheel shows its streams and time structure. Event titles are
   read horizontally in the browser; selecting an event or zooming in reveals
-  canvas titles. The full legend is behind its visible legend button rather
-  than laid over the chart.
+  canvas titles. Person, reign and ministry names follow the same rule,
+  with names recoverable through the year digest, search and arc details.
+  The full legend is behind a named button; it and all three wheel zoom
+  buttons have at least 44 px touch targets.
 - The wheel's radii now fit its square. At 360 px, the old rim radius was
   `360 × .60 = 216 px`, beyond the 180 px half-width before any axis text.
   The new rim is capped at 148 px, reserving 32 px for the outer axis.
+  Fitting within the screen is only half the check: secondary axis labels
+  also yield to the range endpoints whenever their actual text boxes
+  cannot keep a 4 px gap. The year ticks and cursor remain available.
 - Wheel text grows through 4× zoom, then stays at twice its resting size.
   The old square-root rule made a 10.5 px label about 115 px on screen at
   120×. The new cap is 21 px for that same base size.
