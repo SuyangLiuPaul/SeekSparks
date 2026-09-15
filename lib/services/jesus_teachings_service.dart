@@ -96,14 +96,33 @@ class TeachingSermon {
       '';
 }
 
+/// One illustration plate, with the name a reader should see.
+class TeachingPlate {
+  const TeachingPlate({required this.id, required this.title});
+
+  factory TeachingPlate.fromJson(Map<String, dynamic> j) => TeachingPlate(
+        id: j['id'] as String,
+        title: Map<String, String>.from(
+            (j['title'] as Map).map((k, v) => MapEntry('$k', '$v'))),
+      );
+
+  final String id;
+  final Map<String, String> title;
+
+  String titleFor(String locale) =>
+      title[locale] ?? title['en'] ?? id;
+}
+
 class JesusTeaching {
   const JesusTeaching({
     required this.id,
     required this.title,
+    required this.note,
     required this.refs,
     required this.label,
     required this.origins,
     required this.partOf,
+    required this.kind,
     required this.sermons,
     required this.oldTestament,
     required this.apostles,
@@ -114,6 +133,7 @@ class JesusTeaching {
         id: j['id'] as String,
         title: Map<String, String>.from(
             (j['title'] as Map).map((k, v) => MapEntry('$k', '$v'))),
+        note: j['note'] as String?,
         refs: [
           for (final r in (j['refs'] as List))
             TeachingRef.fromJson(r as Map<String, dynamic>)
@@ -121,6 +141,7 @@ class JesusTeaching {
         label: j['label'] as String? ?? '',
         origins: [for (final o in (j['origins'] as List? ?? [])) '$o'],
         partOf: j['partOf'] as String?,
+        kind: j['kind'] as String? ?? 'teaching',
         sermons: [
           for (final s in (j['sermons'] as List? ?? []))
             TeachingSermon.fromJson(s as Map<String, dynamic>)
@@ -130,11 +151,18 @@ class JesusTeaching {
           for (final a in (j['apostles'] as List? ?? []))
             TeachingLink.fromJson(a as Map<String, dynamic>)
         ],
-        plates: [for (final p in (j['plates'] as List? ?? [])) '$p'],
+        plates: [
+          for (final p in (j['plates'] as List? ?? []))
+            TeachingPlate.fromJson(p as Map<String, dynamic>)
+        ],
       );
 
   final String id;
   final Map<String, String> title;
+
+  /// Nave's own sentence, where the app's section heading replaced it as
+  /// the title. Null when the title is already the source's own.
+  final String? note;
   final List<TeachingRef> refs;
 
   /// The refs as one printable string, built once by the generator so
@@ -151,10 +179,16 @@ class JesusTeaching {
   /// this is what lets the page show that rather than flatten it.
   final String? partOf;
 
+  /// `discourse`, `parable` or `teaching`. Decided by the sources — the
+  /// owner's own sermon series says which sermons are on parables, Nave
+  /// says "parable" in the line itself, and the discourses are the
+  /// text's own divisions. Nothing is forced into a category.
+  final String kind;
+
   final List<TeachingSermon> sermons;
   final List<String> oldTestament;
   final List<TeachingLink> apostles;
-  final List<String> plates;
+  final List<TeachingPlate> plates;
 
   bool get isDiscourse => origins.contains('structure');
 

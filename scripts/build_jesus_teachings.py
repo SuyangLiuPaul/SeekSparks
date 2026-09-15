@@ -159,6 +159,43 @@ _STRUCTURAL = [
 ]
 
 
+# The eleven Nave lines the app's own section headings do not cover,
+# translated. 2026-09-16 「这些也没用根据语言翻译好」.
+#
+# Translating a DESCRIPTIVE HEADING is localisation, not exegesis — the
+# passage it names is printed beside it and can be checked in one tap,
+# and nothing here interprets the passage. They are kept literal and
+# close to Nave's English, including his parenthetical locations, so
+# that what a Chinese reader sees is the same claim an English reader
+# sees. Every other title on the page comes from a source that is
+# already trilingual.
+_NAVE_ZH = {
+    'Preaches throughout Galilee': ('在加利利各处传道', '在加利利各處傳道'),
+    'Goes up onto a mountain, and calls and commissions twelve disciples '
+    '(in Galilee)':
+        ('上山呼召并差派十二使徒（在加利利）', '上山呼召並差派十二使徒（在加利利）'),
+    'Cautions his disciples against, the leaven (teachings) of hypocrisy '
+    '(on Lake Galilee)':
+        ('警戒门徒防备假冒为善的酵（教训）（在加利利海上）',
+         '警戒門徒防備假冒為善的酵（教訓）（在加利利海上）'),
+    'Foretells his own death and resurrection (in Galilee)':
+        ('预言自己的死与复活（在加利利）', '預言自己的死與復活（在加利利）'),
+    'The parable of the two sons (in Jerusalem)':
+        ('两个儿子的比喻（在耶路撒冷）', '兩個兒子的比喻（在耶路撒冷）'),
+    'Foretells his betrayal (in Jerusalem)':
+        ('预言自己被卖（在耶路撒冷）', '預言自己被賣（在耶路撒冷）'),
+    'Teaches the multitude the conditions of discipleship (in Peraea)':
+        ('教导众人作门徒的条件（在比利亚）', '教導眾人作門徒的條件（在比利亞）'),
+    'Enunciates the parable of the rich man and Lazarus (in Peraea)':
+        ('讲财主和拉撒路的比喻（在比利亚）', '講財主和拉撒路的比喻（在比利亞）'),
+    'Teaches the Pharisees concerning the coming of his kingdom (in Peraea)':
+        ('教导法利赛人论神国的降临（在比利亚）', '教導法利賽人論神國的降臨（在比利亞）'),
+    'Teaches daily in the temple courtyard (in Jerusalem)':
+        ('天天在殿院里教训人（在耶路撒冷）', '天天在殿院裡教訓人（在耶路撒冷）'),
+    'Teaches people (in Jerusalem)': ('教导众人（在耶路撒冷）', '教導眾人（在耶路撒冷）'),
+}
+
+
 def parse_passage(text):
     """`Mt 13:1-9`, `Lk 8:4-8, 11-15`, `Luke 4:5-13` -> spans."""
     out = []
@@ -283,8 +320,56 @@ def overlaps(x, y):
     return False
 
 
+SECTION_SETS = {'zh-Hans': 'cuv', 'zh-Hant': 'cuv-tr', 'en': 'english-classic'}
+
+
+def load_sections():
+    """The app's own trilingual section headings, by book and chapter.
+
+    Nave's outline is English in this dataset, so an entry taken from it
+    showed an English sentence to a Chinese reader — 27 of the 87 did.
+    Rather than translate Nave myself, the app's OWN section headings
+    are used where they cover the passage: they are bundled, trilingual,
+    keyed to the verse, and already what this reader sees at the top of
+    that passage in the reading pane. Nave's line is kept underneath as
+    a note, because it carries what a heading does not — which journey
+    it happened on, whether it is the second telling.
+    """
+    doc = json.load(open(asset('section_titles.json')))
+    out = {}
+    for locale, name in SECTION_SETS.items():
+        for book, chapters in doc['sets'][name].items():
+            for ch, entries in chapters.items():
+                for e in entries:
+                    out.setdefault((book, int(ch)), {}).setdefault(
+                        int(e['verse']), {})[locale] = e['title']
+    return out
+
+
+def section_title(sections, spans):
+    """A heading that BEGINS inside the teaching, if there is one.
+
+    Not "the nearest heading at or before the first verse", which was
+    tried first and is wrong: the heading covering Matthew 4:23 begins
+    at 4:18 and is 呼召四个门徒 — the calling of the four — so
+    `Preaches throughout Galilee` came out titled as a different event
+    entirely. A heading only names this teaching if this teaching is
+    where it starts.
+    """
+    if not spans:
+        return None
+    book, ch, start, end = spans[0]
+    marks = sections.get((book, ch)) or {}
+    for verse in sorted(marks):
+        if start <= verse <= end:
+            got = marks[verse]
+            return got if len(got) == len(SECTION_SETS) else None
+    return None
+
+
 def main():
     sermons = json.load(open(asset('sermons', 'index.json')))
+    sections = load_sections()
     refs = json.load(open(asset('sermons', 'refs.json')))
     by_verse = refs['byVerse']
     xr = json.load(open(asset('cross_references.json')))
@@ -358,10 +443,23 @@ def main():
             lens = load_chapter_lengths()
             whole = all(a == 1 and z == lens.get((b, c), z)
                         for b, c, a, z in spans)
+            # IS THIS LINE A PARALLEL SET? Nave lists the synoptic
+            # parallels of one teaching on one line — the sower is
+            # Mt 13:1-23, Mk 4:1-25, Lk 8:4-18 — and those belong
+            # together on the page 「有平行经文的也要放在一起」.
+            #
+            # But he also lumps unrelated passages onto a line, and that
+            # is where the Mark 15 defect came from: `Teaches in
+            # Galilee` cites Mt 4:17, Mk 1:14, Mk 15, Lk 4:14,
+            # Lk 15:1-32 and Jn 4:43-45. The two shapes are told apart
+            # by a fact about the citation, not by reading it — a true
+            # parallel set names AT MOST ONE passage per gospel.
+            per_book = collections.Counter(b for b, _, _, _ in spans)
             entries.append({
                 'id': 'nave-' + re.sub(r'[^a-z0-9]+', '-', title.lower())[:44],
                 'title': {'en': title, 'zh-Hans': title, 'zh-Hant': title},
                 'spans': spans,
+                'parallel': max(per_book.values()) == 1 and len(spans) > 1,
                 'origin': 'structure' if whole else 'nave',
             })
         break
@@ -416,6 +514,13 @@ def main():
                 # them. Without this, the beatitude on Matthew 5:3 came
                 # out spanning Matthew 5:1-48.
                 lens = load_chapter_lengths()
+                # A parallel set contributes the books the anchor does
+                # not have — that is the whole point of merging it.
+                if e.get('parallel'):
+                    have = {b for b, _, _, _ in m['spans']}
+                    for sp in e['spans']:
+                        if sp[0] not in have:
+                            m['spans'].append(sp)
                 grown = []
                 for b, c, a, z in m['spans']:
                     for b2, c2, a2, z2 in e['spans']:
@@ -430,6 +535,20 @@ def main():
         else:
             e['origins'] = [e['origin']]
             merged.append(e)
+
+    # WHAT KIND OF TEACHING, decided by the sources rather than by me:
+    # the owner's own sermon series says which sermons are on parables,
+    # Nave says `parable` in the line itself, and the structural entries
+    # are discourses by construction. Anything else is left as a plain
+    # teaching rather than being forced into a category.
+    for e in merged:
+        if e['origin'] == 'structure':
+            e['kind'] = 'discourse'
+        elif e.get('topic') == 'The Parables of Jesus' or \
+                re.search(r'parable', e['title']['en'], re.I):
+            e['kind'] = 'parable'
+        else:
+            e['kind'] = 'teaching'
 
     order = {b: i for i, b in enumerate(BOOKS)}
     merged.sort(key=lambda e: (order[e['spans'][0][0]], e['spans'][0][1],
@@ -480,6 +599,25 @@ def main():
         return [t for t, _ in sorted(
             hits.items(), key=lambda kv: (-kv[1], rank[kv[0]], kv[0]))]
 
+    # Give the English-only entries the app's own heading, in all three
+    # locales, and demote Nave's sentence to a note.
+    filled = 0
+    translated = 0
+    for e in merged:
+        if re.search(r'[\u4e00-\u9fff]', e['title']['zh-Hans']):
+            continue
+        got = section_title(sections, e['spans'])
+        if got:
+            e['note'] = e['title']['en']
+            e['title'] = dict(got)
+            filled += 1
+            continue
+        zh = _NAVE_ZH.get(re.sub(r'\s+', ' ', e['title']['en']).strip())
+        if zh:
+            e['title'] = {'en': e['title']['en'],
+                          'zh-Hans': zh[0], 'zh-Hant': zh[1]}
+            translated += 1
+
     out = []
     for e in merged:
         vs = verses(e['spans'])
@@ -508,8 +646,10 @@ def main():
         out.append({
             'id': e['id'],
             'title': e['title'],
+            'note': e.get('note'),
             'origins': sorted(set(e['origins'])),
             'partOf': e['partOf'],
+            'kind': e['kind'],
             'refs': [{'book': b, 'chapter': c, 'start': a, 'end': z}
                      for b, c, a, z in e['spans']],
             'label': span_label(e['spans']),
@@ -522,7 +662,11 @@ def main():
                 {'ref': r,
                  'lordsWord': _LORDS_WORD.get(r.split('-')[0].strip())}
                 for r in apostles[:12]],
-            'plates': [p['id'] for p in pls[:8]],
+            # The plate's own NAME, not its asset id. The first build
+            # printed `illus_tissot_healing_of_the_lepers_at_capernaum`
+            # at the reader, which is a filename wearing a chip.
+            'plates': [
+                {'id': p['id'], 'title': p['title']} for p in pls[:8]],
         })
 
     doc = {
@@ -558,6 +702,14 @@ def main():
         json.dump(doc, f, ensure_ascii=False, indent=1)
 
     print(f'{len(entries)} raw -> {len(out)} teachings')
+    print(f'section headings filled in: {filled}, translated: {translated}')
+    print('kinds:', collections.Counter(e['kind'] for e in out))
+    print('with parallels in 2+ gospels:',
+          sum(1 for e in out
+              if len({r['book'] for r in e['refs']}) > 1))
+    left = sum(1 for e in out
+               if not re.search(r'[\u4e00-\u9fff]', e['title']['zh-Hans']))
+    print(f'still English-only in a Chinese UI: {left}')
     print(collections.Counter(o for e in out for o in e['origins']))
     print(f"with a sermon: {sum(1 for e in out if e['sermons'])}")
     print(f"with OT links: {sum(1 for e in out if e['oldTestament'])}")

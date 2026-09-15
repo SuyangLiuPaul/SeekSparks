@@ -92,6 +92,53 @@ void main() {
             'the spine');
   });
 
+  test('every entry has a Chinese title', () {
+    // 「这些也没用根据语言翻译好」. Nave's outline is English in this
+    // dataset, so 27 of the 87 showed an English sentence to a Chinese
+    // reader. 16 take the app's own section heading, which is already
+    // trilingual; the remaining 11 are translated in the generator and
+    // kept literal, because translating a heading is localisation and
+    // the passage it names is printed beside it.
+    for (final t in data.teachings) {
+      expect(RegExp(r'[\u4e00-\u9fff]').hasMatch(t.titleFor('zh-Hans')),
+          isTrue,
+          reason: '${t.id} shows "${t.titleFor('zh-Hans')}" in a Chinese UI');
+      expect(RegExp(r'[\u4e00-\u9fff]').hasMatch(t.titleFor('zh-Hant')),
+          isTrue, reason: '${t.id} has no traditional title');
+    }
+  });
+
+  test('a plate chip shows a name, not a filename', () {
+    // The first build printed `illus_tissot_healing_of_the_lepers_at_
+    // capernaum` at the reader — an asset id wearing a chip.
+    for (final t in data.teachings) {
+      for (final p in t.plates) {
+        expect(p.titleFor('zh-Hans'), isNot(p.id));
+        expect(p.titleFor('zh-Hans'), isNotEmpty);
+      }
+    }
+  });
+
+  test('parallel passages are one teaching, not three', () {
+    // 「有平行经文的也要放在一起」. Nave lists the synoptic parallels of a
+    // teaching on one line, so the sower is Mt 13, Mk 4 and Lk 8 — one
+    // entry carrying three references rather than three entries.
+    final multi = data.teachings
+        .where((t) => t.refs.map((r) => r.book).toSet().length > 1)
+        .toList();
+    expect(multi.length, greaterThan(10),
+        reason: 'only ${multi.length} teachings carry parallels');
+    // The parable, not the discourse that contains it: Matthew 13:1-52
+    // is 天国的比喻 as a whole and also begins at 13:1.
+    final sower = data.teachings.firstWhere((t) =>
+        t.kind == 'parable' &&
+        t.refs.any((r) =>
+            r.book == 'Matthew' && r.chapter == 13 && r.start == 1));
+    expect(sower.refs.map((r) => r.book).toSet(),
+        containsAll(<String>{'Matthew', 'Mark', 'Luke'}),
+        reason: 'the sower lost its parallels: ${sower.label}');
+  });
+
   test('the discourses contain their parts, and nothing contains itself', () {
     final byId = {for (final t in data.teachings) t.id: t};
     var nested = 0;
@@ -139,6 +186,18 @@ void main() {
     expect(find.textContaining('RELATED'), findsOneWidget,
         reason: 'the page must state what a cross-reference does and does '
             'not claim');
+
+    // 「类似于比喻可以放在一起」 — the parables in one tap, and still in
+    // the order the gospels put them.
+    await tester.tap(find.byKey(const ValueKey('teachingKind-parable')));
+    await tester.pumpAndSettle();
+    final parables = data.teachings.where((t) => t.kind == 'parable');
+    expect(parables.length, greaterThan(20),
+        reason: 'only ${parables.length} parables were classified; the '
+            'sermon corpus alone has 34 on them');
+    expect(find.text(parables.first.titleFor('zh-Hans')), findsWidgets);
+    await tester.tap(find.byKey(const ValueKey('teachingKind-all')));
+    await tester.pumpAndSettle();
 
     // And a teaching opens.
     final first = data.topLevel.first;

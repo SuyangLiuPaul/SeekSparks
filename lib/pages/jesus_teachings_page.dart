@@ -81,6 +81,10 @@ const Map<String, Map<String, String>> _s = {
     'en': 'the apostle says this is the Lord\'s own word',
   },
   'count': {'zh-Hans': '项教导', 'zh-Hant': '項教導', 'en': 'teachings'},
+  'all': {'zh-Hans': '全部', 'zh-Hant': '全部', 'en': 'All'},
+  'discourse': {'zh-Hans': '讲论', 'zh-Hant': '講論', 'en': 'Discourses'},
+  'parable': {'zh-Hans': '比喻', 'zh-Hant': '比喻', 'en': 'Parables'},
+  'teaching': {'zh-Hans': '其他教导', 'zh-Hant': '其他教導', 'en': 'Other'},
 };
 
 String _t(String key, String locale) =>
@@ -96,6 +100,12 @@ class JesusTeachingsPage extends StatefulWidget {
 class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
   Future<JesusTeachingsData>? _future;
   final Set<String> _open = {};
+
+  /// null = everything, in canonical order with the discourses holding
+  /// their parts. A kind flattens the list to just that kind
+  /// 「类似于比喻可以放在一起」 — the parables in one place, still in the
+  /// order the gospels put them.
+  String? _kind;
 
   @override
   void initState() {
@@ -149,7 +159,9 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
           if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          final top = data.topLevel;
+          final top = _kind == null
+              ? data.topLevel
+              : [for (final t in data.teachings) if (t.kind == _kind) t];
           return ListView.builder(
             key: const ValueKey('jesusTeachingsList'),
             padding: const EdgeInsets.only(bottom: 24),
@@ -157,7 +169,11 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
             itemBuilder: (context, i) {
               if (i == 0) return _preface(data, locale, wb, t);
               final teaching = top[i - 1];
-              final parts = data.partsOf(teaching.id);
+              // Only the unfiltered view nests: a reader who asked for
+              // the parables wants the parables, not a discourse that
+              // happens to contain some.
+              final parts =
+                  _kind == null ? data.partsOf(teaching.id) : const [];
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -191,7 +207,12 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
                 fontSize: t.scaled(12.5),
                 height: 1.5,
               )),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            for (final kind in [null, 'discourse', 'parable', 'teaching'])
+              _kindChip(kind, data, locale, wb, t),
+          ]),
+          const SizedBox(height: 10),
           // The page's own limits, carried out of the dataset rather
           // than retyped here so the two cannot drift apart.
           Text('${data.teachings.length} ${_t('count', locale)} · '
@@ -204,6 +225,34 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
                 height: 1.45,
               )),
         ],
+      ),
+    );
+  }
+
+  Widget _kindChip(String? kind, JesusTeachingsData data, String locale,
+      WbColors wb, WbType t) {
+    final n = kind == null
+        ? data.teachings.length
+        : data.teachings.where((x) => x.kind == kind).length;
+    final on = _kind == kind;
+    return InkWell(
+      key: ValueKey('teachingKind-${kind ?? 'all'}'),
+      onTap: () => setState(() => _kind = kind),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+          color: on ? wb.selectionBg : null,
+          border: Border.all(color: on ? wb.accent : wb.border),
+        ),
+        child: Text('${_t(kind ?? 'all', locale)} $n',
+            style: TextStyle(
+              color: on ? wb.text : wb.mutedText,
+              fontFamily: t.fontFamily,
+              fontFamilyFallback: kCjkFontFallback,
+              fontSize: _atLeast(t.scaledSmall(11.5),
+                  WbMetrics.smallPrintFloor),
+              fontWeight: on ? FontWeight.w600 : FontWeight.w400,
+            )),
       ),
     );
   }
@@ -243,6 +292,22 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
                           height: 1.35,
                         ),
                       ),
+                      if (teaching.note case final note?) ...[
+                        const SizedBox(height: 2),
+                        // Nave's own sentence, kept under the app's
+                        // heading because it carries what a heading
+                        // does not: which journey it happened on,
+                        // whether this is the second telling.
+                        Text(note,
+                            style: TextStyle(
+                              color: wb.mutedText,
+                              fontFamily: t.fontFamily,
+                              fontFamilyFallback: kCjkFontFallback,
+                              fontSize: _atLeast(t.scaledSmall(11),
+                                  WbMetrics.smallPrintFloor),
+                              height: 1.35,
+                            )),
+                      ],
                       const SizedBox(height: 2),
                       Text(teaching.label,
                           style: TextStyle(
@@ -357,7 +422,7 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
           ]),
           section('plates', [
             for (final p in teaching.plates)
-              chip(p, () => _openPlate(p, locale)),
+              chip(p.titleFor(locale), () => _openPlate(p.id, locale)),
           ]),
         ],
       ),
