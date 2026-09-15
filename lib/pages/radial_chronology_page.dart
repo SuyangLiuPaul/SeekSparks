@@ -4260,9 +4260,25 @@ class _WorldWheelPainter extends CustomPainter {
   final double endFont;
   final double bandFont;
 
+  /// Every level label already inked, this frame.
+  ///
+  /// ONE list for the arc names, the ring names and the record names,
+  /// because they are all rectangles on the same canvas and the reader
+  /// does not care which method drew which. Keeping three separate
+  /// declutters would let a power's name land squarely on a record's.
+  final List<Rect> _inked = [];
+
+  bool _claim(Rect box) {
+    final claim = box.inflate(2 / zoom);
+    if (_inked.any(claim.overlaps)) return false;
+    _inked.add(claim);
+    return true;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     WheelRenderStats.paints++;
+    _inked.clear();
     if (streams.isEmpty) return;
     final side = math.min(size.width, size.height);
     final c = Offset(size.width / 2, size.height / 2);
@@ -4496,7 +4512,7 @@ class _WorldWheelPainter extends CustomPainter {
       // looked like in practice. The names are all in the list beside
       // the chart; the one the list cannot answer for is "which arc did
       // I just tap", so that one is drawn — upright.
-      if (sel) {
+      if (wheelShowsEventText(zoom: zoom, selected: sel)) {
         // THE POWER'S OWN NAME, AT THE CANVAS SIZE — not `arc.name` at
         // `arc.nameSize`. Those two come from `planArcNames`, which
         // sizes a name to fit INSIDE its own arc without touching its
@@ -4717,6 +4733,7 @@ class _WorldWheelPainter extends CustomPainter {
       // A plate, for the same reason the selected callout has one: a
       // level label crosses whatever it is over instead of following
       // it, and the quadrant is usually but not always empty.
+      if (!_claim(box.inflate(gap))) continue;
       canvas.drawRRect(
           RRect.fromRectAndRadius(box.inflate(gap),
               Radius.circular(WbMetrics.radiusControl / zoom)),
@@ -4824,7 +4841,15 @@ class _WorldWheelPainter extends CustomPainter {
     // clustered event borrowed from a hidden layer. It keeps the old
     // radius rather than guessing a ring.
     final fallbackTick = scriptureLabelBase(rBands);
-    for (final s in spokes) {
+    // The selected record first, so it is never the one that loses a
+    // collision with a neighbour the reader did not choose.
+    final ordered = [
+      for (final s in spokes)
+        if (s.event.id == selectedId) s,
+      for (final s in spokes)
+        if (s.event.id != selectedId) s,
+    ];
+    for (final s in ordered) {
       final ring = ringOf[s.event.stream];
       final band =
           ring == null ? null : ringRadii(ring, streams.length, rHub, rBands);
@@ -4860,7 +4885,7 @@ class _WorldWheelPainter extends CustomPainter {
             Paint()..color = s.color.withValues(alpha: 0.85 * dim));
       }
       if (wheelShowsEventText(zoom: zoom, selected: sel)) {
-        _radialLabel(canvas, c, s, dim, sel);
+        _uprightSpokeLabel(canvas, c, s, dim, sel, rTick + half);
       }
     }
   }
@@ -4877,51 +4902,82 @@ class _WorldWheelPainter extends CustomPainter {
   /// painter used to fit the text itself, which put the one decision
   /// nothing can test — is this label legible? — inside the one place
   /// no test can read. An empty [_Spoke.title] means the tick alone.
-  void _radialLabel(Canvas canvas, Offset c, _Spoke s, double dim, bool sel) {
+  /// One record's name, LEVEL, just outside its tick.
+  ///
+  /// 2026-09-16. What this replaces rotated every label to its own
+  /// bearing, so a circle ended up with words pointing in every
+  /// direction — the thing the owner photographed at 381% and 2474%.
+  /// My first answer was to stop drawing them at all except for the
+  /// selection, and the owner found what that costs within a day:
+  /// 「你label没有的时候我都看不了对比了」, at 888% zoom, on a chart with no
+  /// text on it anywhere. Zooming in is how a reader asks "what is
+  /// this one", and the list beside the chart cannot answer it because
+  /// it does not know where the finger is.
+  ///
+  /// So: the words are back, and they stand up.
+  ///
+  /// Placed the same way the year scale is — the box's near edge clears
+  /// the tick, and its half-extent ALONG THE BEARING is what decides
+  /// the radius, so a label at nine o'clock is pushed out by half its
+  /// width and one at twelve by half its height. A plate, because a
+  /// level label crosses the rings it is over instead of following one.
+  ///
+  /// And it may be refused. Level labels claim rectangles, and two
+  /// rectangles can overlap at angles where two radial runs never
+  /// would, so the last word on what gets ink is [occupied] — first
+  /// come, selection first.
+  void _uprightSpokeLabel(Canvas canvas, Offset c, _Spoke s, double dim,
+      bool sel, double fromRadius) {
     if (s.title.isEmpty && s.badge.isEmpty) return;
+    final size = rimFont / _labelScale(zoom);
     final style = canvasTextStyle(
       color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
-      fontSize: rimFont / _labelScale(zoom),
+      fontSize: size,
       fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
     );
     final refStyle = canvasTextStyle(
       color: wb.link.withValues(alpha: 0.95 * dim),
-      fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
+      fontSize: size * _kRefSizeRatio,
     );
     // Muted ink and the verse's size, so it reads as a count of things
     // rather than as part of the name it follows: `+65` after *Boxer
-    // Uprising Martyrdoms* must not look like a title. The size must
-    // match what `fitRadialLabel` reserved for it, or the fitting is
-    // measuring a string nobody draws.
+    // Uprising Martyrdoms* must not look like a title.
     final badgeStyle = canvasTextStyle(
       color: wb.mutedText.withValues(alpha: 0.95 * dim),
-      fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
+      fontSize: size * _kRefSizeRatio,
     );
-    final tp = _WheelText(s.title, style);
-    final refTp = s.ref.isEmpty ? null : _WheelText('  ${s.ref}', refStyle);
-    final badgeTp = s.badge.isEmpty
-        ? null
-        : _WheelText(s.title.isEmpty ? s.badge : '  ${s.badge}', badgeStyle);
+    final tp = s.title.isEmpty ? null : _WheelText(s.title, style);
+    final refTp = s.ref.isEmpty ? null : _WheelText(' ${s.ref}', refStyle);
+    final badgeTp =
+        s.badge.isEmpty ? null : _WheelText(' ${s.badge}', badgeStyle);
+    final width = (tp?.width ?? 0) + (refTp?.width ?? 0) + (badgeTp?.width ?? 0);
+    final height = math.max(tp?.height ?? 0,
+        math.max(refTp?.height ?? 0, badgeTp?.height ?? 0));
+    if (width <= 0 || height <= 0) return;
 
     final a = s.label.angle;
-    canvas.save();
-    if (s.label.flipped) {
-      // On the left half, run the text from the outer end inward so it
-      // still reads left to right instead of upside down.
-      canvas.translate(
-          c.dx + math.cos(a) * s.label.rEnd, c.dy + math.sin(a) * s.label.rEnd);
-      canvas.rotate(a + math.pi);
-    } else {
-      canvas.translate(c.dx + math.cos(a) * s.label.rStart,
-          c.dy + math.sin(a) * s.label.rStart);
-      canvas.rotate(a);
+    final dir = Offset(math.cos(a), math.sin(a));
+    final reach = (width / 2) * dir.dx.abs() + (height / 2) * dir.dy.abs();
+    final centre = c + dir * (fromRadius + 5 / zoom + reach);
+    final box = Rect.fromCenter(
+        center: centre, width: width + 6 / zoom, height: height + 2 / zoom);
+    if (!_claim(box)) return;
+
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            box, Radius.circular(WbMetrics.radiusControl / zoom)),
+        Paint()..color = wb.paneBg.withValues(alpha: sel ? 0.94 : 0.86));
+    var x = centre.dx - width / 2;
+    final top = centre.dy;
+    if (tp != null) {
+      tp.paint(canvas, Offset(x, top - tp.height / 2));
+      x += tp.width;
     }
-    if (s.title.isNotEmpty) tp.paint(canvas, Offset(0, -tp.height / 2));
-    final afterTitle = s.title.isEmpty ? 0.0 : tp.width;
-    refTp?.paint(canvas, Offset(afterTitle, -refTp.height / 2));
-    badgeTp?.paint(
-        canvas, Offset(afterTitle + (refTp?.width ?? 0), -badgeTp.height / 2));
-    canvas.restore();
+    if (refTp != null) {
+      refTp.paint(canvas, Offset(x, top - refTp.height / 2));
+      x += refTp.width;
+    }
+    badgeTp?.paint(canvas, Offset(x, top - badgeTp.height / 2));
   }
 
   /// A label along the arc, centred in the span, at the size
@@ -4973,6 +5029,7 @@ class _WorldWheelPainter extends CustomPainter {
         c + Offset(math.cos(mid), math.sin(mid)) * radius;
     final box = Rect.fromCenter(
         center: centre, width: tp.width + 8 / zoom, height: tp.height + 3 / zoom);
+    if (!_claim(box)) return;
     canvas.drawRRect(
         // The app's own control radius, divided by the zoom for the same
         // reason every stroke width on this canvas is: a 5-unit corner

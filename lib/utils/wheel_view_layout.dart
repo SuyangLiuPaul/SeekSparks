@@ -44,12 +44,25 @@ double wheelLabelScale(double zoom) {
 /// canvas — the selected one — because "which mark did I just tap" is
 /// the one question the list cannot answer.
 ///
-/// This is the overview-plus-detail split the research recommends for
-/// dense radial charts, and it is also the largest paint saving
-/// available here: the per-character arc layout in `_charsOnArc` ran
-/// about 8,000 times a frame.
+/// 2026-09-16, AND THIS IS A CORRECTION OF THE ABOVE. It read
+/// `=> selected` for one day, and the owner found what that costs:
+/// 「你label没有的时候我都看不了对比了」, with screenshots at 888% and 789%
+/// showing coloured bands and grey arcs carrying no text at all.
+///
+/// The argument above is right about ROTATION and wrong about what
+/// follows from it. Zooming really does not fix text laid along a
+/// tangent — it makes more of it, bigger, still pointing every way. But
+/// the remedy for that is to stand the words up, not to delete them,
+/// and I deleted them. Magnifying a chart is how a reader asks "what is
+/// this one"; a list beside the chart cannot answer that, because it
+/// does not know where the finger is.
+///
+/// So the names come back at 1.6x, drawn LEVEL, on plates, and
+/// decluttered against what is already painted. The selected record
+/// keeps its name at every zoom, because that is the one question the
+/// list can never answer.
 bool wheelShowsEventText({required double zoom, required bool selected}) =>
-    selected;
+    selected || zoom >= 1.6;
 
 class WheelAxisLabelPlacement {
   const WheelAxisLabelPlacement(this.centre, this.rotation, this.bounds);

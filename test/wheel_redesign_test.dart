@@ -104,24 +104,39 @@ void main() {
     }
   });
 
-  test('zoom no longer turns names on; only selection does', () {
-    // This used to read `1.6 → true`, and the owner photographed what
-    // that bought: at 381% a fan of rotated `+9 +1 +3 +4 +8 +8` badges
-    // with a truncated `The…` among them, and at 2474% six titles
-    // running across each other in four directions.
+  test('zoom brings the names back, and selection keeps them at any zoom',
+      () {
+    // THIS TEST SAID THE OPPOSITE YESTERDAY, and the reversal is the
+    // point rather than an embarrassment to be hidden.
     //
-    // Zoom was never the right switch. Magnifying a circle does not
-    // make text laid along its tangents point the same way — it makes
-    // MORE of it, bigger, still pointing every way. The mark stays at
-    // every zoom; the name is read from the list beside the chart,
-    // which is sorted by year and scrolls with the cursor; and the one
-    // question the list cannot answer — "which mark did I just tap" —
-    // is answered by drawing that one name, level.
-    for (final zoom in [0.5, 1.0, 1.59, 1.6, 2.0, 12.0, 120.0]) {
+    // The owner photographed rotated labels at 381% and 2474% — a fan of
+    // `+9 +1 +3` badges and six titles running across each other in four
+    // directions. I concluded that zoom was the wrong switch and made
+    // the names selection-only. Within a day, with screenshots at 888%
+    // and 789% of a chart carrying no text at all:
+    // 「你label没有的时候我都看不了对比了」.
+    //
+    // Both halves were right about different things. Zoom really does
+    // not fix text laid along a tangent; it makes more of it, bigger,
+    // still pointing every way. But the remedy for that is to stand the
+    // words UP, which is what `_uprightSpokeLabel` does now — and
+    // magnifying is precisely how a reader asks "what is this one",
+    // which the list beside the chart cannot answer because it does not
+    // know where the finger is.
+    for (final zoom in [0.5, 1.0, 1.59]) {
       expect(wheelShowsEventText(zoom: zoom, selected: false), isFalse,
-          reason: 'zoom $zoom turned canvas names back on');
+          reason: 'at rest the marks carry the chart and the list carries '
+              'the names; zoom $zoom should not have turned them on');
+    }
+    for (final zoom in [1.6, 2.0, 12.0, 120.0]) {
+      expect(wheelShowsEventText(zoom: zoom, selected: false), isTrue,
+          reason: 'zoomed to $zoom the reader is asking what these are, '
+              'and the chart answers with nothing');
+    }
+    for (final zoom in [0.5, 1.0, 1.6, 120.0]) {
       expect(wheelShowsEventText(zoom: zoom, selected: true), isTrue,
-          reason: 'the selected record lost its name at zoom $zoom');
+          reason: 'the selected record lost its name at zoom $zoom — that '
+              'is the one question the list can never answer');
     }
   });
 
