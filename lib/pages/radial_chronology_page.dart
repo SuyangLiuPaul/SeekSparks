@@ -2934,6 +2934,59 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // THE RINGS THAT ARE ACTUALLY ON THE CHART, first.
+          //
+          // This sheet is what a reader opens when they want to know
+          // what they are looking at, and until now it answered a
+          // question they had not asked: which Genesis 10 family each
+          // HUE belongs to. That is real and it stays below — but the
+          // thing on screen is four named rings carrying four symbols,
+          // and the legend said nothing about either.
+          //
+          // The symbol is drawn here at the size and in the colour the
+          // canvas draws it, from the same map, so this row is a
+          // specimen of the mark rather than a description of it.
+          if (_scene case final scene?) ...[
+            for (var i = 0; i < scene.streams.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  SizedBox(
+                    width: t.scaled(16),
+                    height: t.scaled(16),
+                    child: () {
+                      final colour = scene.colors[scene.streams[i].id] ??
+                          lineColor(scene.streams[i].line, dark: wb.isDark);
+                      final image = ChartSymbolService.instance
+                          .cached[symbolForStream(scene.streams[i].id)];
+                      return image == null
+                          ? Center(
+                              child: Container(
+                                  width: t.scaled(10),
+                                  height: t.scaled(10),
+                                  color: colour))
+                          : RawImage(
+                              image: image,
+                              color: colour,
+                              colorBlendMode: BlendMode.srcIn,
+                              fit: BoxFit.contain);
+                    }(),
+                  ),
+                  SizedBox(width: t.scaled(6)),
+                  Text(scene.streams[i].nameFor(locale),
+                      style: TextStyle(
+                          color: wb.text,
+                          fontSize: t.scaled(11.5),
+                          fontWeight: FontWeight.w600)),
+                ]),
+              ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: t.scaled(4)),
+              child: SizedBox(
+                  width: t.scaled(150),
+                  child: Divider(height: 1, color: wb.border)),
+            ),
+          ],
           row('shem', 'wheelLineShem', 'Shem'),
           row('ham', 'wheelLineHam', 'Ham'),
           row('japheth', 'wheelLineJapheth', 'Japheth'),
