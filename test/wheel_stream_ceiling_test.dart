@@ -23,6 +23,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/services/chart_symbol_service.dart';
+import 'package:seeksparks/utils/chronology_palette.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart' show wheelStrings;
 import 'package:seeksparks/utils/wheel_default_streams.dart';
@@ -55,6 +57,23 @@ void main() {
     return {
       for (final stream in data.streams)
         if (!keep.contains(stream.id)) stream.id,
+    };
+  }
+
+  /// The real palette, built the way `colorsFor` builds it. The sheet
+  /// used to be pumped with an empty map, which made every chip the
+  /// muted grey — fine while they were plain squares and useless the
+  /// moment the test is about which colour a symbol comes out in.
+  Map<String, Color> streamColours() {
+    final byLine = <String, List<String>>{};
+    for (final stream in data.streams) {
+      byLine.putIfAbsent(stream.line, () => []).add(stream.id);
+    }
+    return {
+      for (final stream in data.streams)
+        stream.id: streamBandColor(stream.line,
+            byLine[stream.line]!.indexOf(stream.id), byLine[stream.line]!.length,
+            dark: false)
     };
   }
 
@@ -91,7 +110,7 @@ void main() {
                     locale: locale,
                     data: data,
                     hidden: hidden,
-                    streamColors: const {},
+                    streamColors: streamColours(),
                     layerColors: const {},
                     text: (key, fallback) => text(key, fallback, locale),
                     keyPrefix: 'wheelFilter',
@@ -120,6 +139,44 @@ void main() {
       tester.widget<CheckboxListTile>(finder).onChanged != null;
 
   const spine = ['scripture', 'israel', 'judah', 'church'];
+
+  testWidgets('a stream with a symbol shows it in the filter, in its own '
+      'colour', (tester) async {
+    // WHERE THE SYMBOLS BECOME LEARNABLE. The chart draws a crown on
+    // the Judah ring with 犹大 beside it, which is enough to guess from
+    // and not enough to look up. This list is the only place all
+    // nineteen appear at once next to the names they stand for.
+    //
+    // The tint is asserted too, and not for neatness: the sheet and the
+    // canvas read the same palette, so a symbol that meant one colour
+    // here and another on the chart would be worse than no symbol.
+    await tester.runAsync(() => ChartSymbolService.instance.load());
+    addTearDown(ChartSymbolService.instance.resetForTest);
+    await pumpSheet(tester, hidden: hiddenExcept(spine));
+
+    RawImage imageIn(Finder row) => tester.widget<RawImage>(
+        find.descendant(of: row, matching: find.byType(RawImage)));
+
+    for (final id in ['judah', 'israel', 'egypt', 'china']) {
+      final image = imageIn(row(id));
+      expect(image.image, isNotNull, reason: '$id drew no symbol');
+      expect(image.colorBlendMode, BlendMode.srcIn,
+          reason: '$id is not tinted through the palette');
+      expect(image.color, isNotNull);
+    }
+
+    // Judah and Israel are two shades of Shem's arc and must not come
+    // out as one colour here any more than they do on the chart.
+    expect(imageIn(row('judah')).color, isNot(imageIn(row('israel')).color));
+
+    // And the three with no symbol keep a plain chip rather than
+    // borrowing someone else's mark.
+    for (final id in ['anatolia', 'philistia', 'arabia']) {
+      expect(find.descendant(of: row(id), matching: find.byType(RawImage)),
+          findsNothing,
+          reason: '$id was given a symbol the table does not name');
+    }
+  });
 
   test('the opening set leaves exactly one slot free', () {
     // Not "four is a nice number". Four IS the spine — the line this

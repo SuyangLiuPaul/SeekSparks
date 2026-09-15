@@ -1,8 +1,12 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/chronology_filter_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/services/chart_symbol_service.dart';
+import 'package:seeksparks/utils/chronology_symbols.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/wheel_default_streams.dart'
     show defaultVisibleStreams;
@@ -186,6 +190,44 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
     ];
   }
 
+  /// The colour chip, or the stream's own symbol in that colour.
+  ///
+  /// WHERE THE SYMBOLS ARE LEARNED. The chart draws a crown on the
+  /// Judah ring and a menorah on Israel's, and a reader meets them
+  /// there with the ring's name beside them — which is enough to guess
+  /// but not enough to look up. This list is the only place all
+  /// nineteen appear at once, next to the names they stand for, so it
+  /// is where the set becomes learnable rather than guessable.
+  ///
+  /// Tinted the same way the canvas tints them, from the same map, so a
+  /// symbol cannot mean one colour here and another on the chart.
+  /// Streams with no symbol keep the plain chip: [kStreamSymbols] leaves
+  /// three of them out on purpose and inventing a mark for the sheet
+  /// would undo that.
+  Widget _swatch(_FilterOption option, WbColors wb) {
+    final colour = option.color ?? wb.mutedText;
+    final ui.Image? symbol = option.isStream
+        ? ChartSymbolService.instance.cached[symbolForStream(option.id)]
+        : null;
+    if (symbol == null) {
+      return Container(
+        width: option.narrowSwatch ? 3 : 12,
+        height: 12,
+        color: colour,
+      );
+    }
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: RawImage(
+        image: symbol,
+        color: colour,
+        colorBlendMode: BlendMode.srcIn,
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
   void _finish(Set<String>? value) {
     // A rapid second tap while the sheet animates away must not pop
     // the chart route underneath it or return a second application.
@@ -334,11 +376,7 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
                             fontSize: t.scaledSmall(11),
                             height: 1.35,
                           )),
-                  secondary: Container(
-                    width: option.narrowSwatch ? 3 : 12,
-                    height: 12,
-                    color: option.color ?? wb.mutedText,
-                  ),
+                  secondary: _swatch(option, wb),
                 );
               },
             ),

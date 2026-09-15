@@ -129,6 +129,7 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
         ministryArcColor,
         yearLabel;
 import 'package:seeksparks/pages/wheel_sheets.dart';
+import 'package:seeksparks/services/chart_symbol_service.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
@@ -302,6 +303,15 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     if (widget.initialHiddenStreams case final hidden?) {
       _hidden.addAll(hidden);
       _defaultsApplied = true;
+    }
+    // The strip does not draw the symbols, but it opens the same filter
+    // sheet, and that sheet is where the set is learned. Without this a
+    // reader who reached Filter from the strip would get plain colour
+    // chips while the same sheet from the wheel showed the marks.
+    if (ChartSymbolService.instance.cached.isEmpty) {
+      ChartSymbolService.instance.load().then((_) {
+        if (mounted) setState(() {});
+      });
     }
 
     _future = WheelHistoryService.instance.load();
