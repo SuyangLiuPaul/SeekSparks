@@ -85,6 +85,9 @@ void main() {
           // strip_paint_cost_test), with CJK forced in StripPaintTextCache.
           'lib/utils/wheel_text_metrics.dart': 1,
           'lib/utils/fitted_label_metrics.dart': 1,
+          // The shared mode control measures both complete labels before
+          // sizing its touch targets, using the same explicit CJK chain.
+          'lib/widgets/chronology_depth_toggle.dart': 1,
           'lib/widgets/analysis_tabs.dart': 1,
           'lib/widgets/place_map.dart': 2,
         },

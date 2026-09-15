@@ -16,14 +16,18 @@ import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
+import 'package:seeksparks/pages/strip_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
+import 'package:seeksparks/utils/chronology_depth_view.dart';
+import 'package:seeksparks/utils/wheel_stack_layout.dart';
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
+import 'package:seeksparks/widgets/chronology_depth_toggle.dart';
 import 'package:seeksparks/widgets/stacked_chronology_wheel.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
 
@@ -71,6 +75,71 @@ void main() {
 
   StackedChronologyWheel chart(WidgetTester tester) => tester
       .widget<StackedChronologyWheel>(find.byType(StackedChronologyWheel));
+
+  Finder paintFinder() => find.descendant(
+      of: find.byKey(const ValueKey('stackedChronologyWheel')),
+      matching: find.byType(CustomPaint));
+
+  dynamic painter(WidgetTester tester) =>
+      tester.widget<CustomPaint>(paintFinder()).painter!;
+
+  ChronologyDepthCamera camera(WidgetTester tester) {
+    final matrix = tester
+        .widget<InteractiveViewer>(find.byType(InteractiveViewer))
+        .transformationController!
+        .value;
+    return ChronologyDepthCamera.capture(
+      view: painter(tester).scene.view as ChronologyDepthView,
+      viewport: Offset.zero & tester.getSize(find.byType(InteractiveViewer)),
+      scale: matrix.getMaxScaleOnAxis(),
+      translation: Offset(matrix.storage[12], matrix.storage[13]),
+    );
+  }
+
+  void expectAllCountries(WidgetTester tester) {
+    final projected = chart(tester);
+    final ids = {
+      for (final group in projected.groups)
+        for (final record in group.records)
+          if (record.endYear >= projected.startYear &&
+              record.startYear <= projected.endYear)
+            record.id,
+    };
+    expect((painter(tester).scene.records as Map).keys.toSet(), ids);
+    expect(
+        (painter(tester).scene.rings as List).map((dynamic r) => r.id).toSet(),
+        projected.groups.map((g) => g.id).toSet());
+    expect(projected.groups.length, greaterThan(1));
+  }
+
+  void expectRecordCentred(WidgetTester tester, String id) {
+    final scenePrisms =
+        (painter(tester).scene.prisms as List).cast<WheelStackPrism>();
+    final prism = scenePrisms.singleWhere((p) => p.id == id);
+    final top = prism.projection
+        .polar(prism.middleRadius, prism.middleAngle, height: prism.topHeight);
+    final viewer = find.byType(InteractiveViewer);
+    final matrix = tester
+        .widget<InteractiveViewer>(viewer)
+        .transformationController!
+        .value;
+    final actual = MatrixUtils.transformPoint(matrix, top);
+    expect((actual - tester.getSize(viewer).center(Offset.zero)).distance,
+        lessThan(.01),
+        reason: 'Search centres the actual raised record, keeping it visible.');
+    expect(camera(tester).zoom, greaterThanOrEqualTo(2));
+  }
+
+  Future<void> switchForm(WidgetTester tester, String value) async {
+    final control = find.byType(SegmentedButton<String>);
+    final segment = tester
+        .widget<SegmentedButton<String>>(control)
+        .segments
+        .singleWhere((segment) => segment.value == value);
+    await tester.tap(find.descendant(
+        of: control, matching: find.text((segment.label! as Text).data!)));
+    await settle(tester);
+  }
 
   Finder bottomText(String text) =>
       find.descendant(of: find.byType(BottomSheet), matching: find.text(text));
@@ -136,12 +205,8 @@ void main() {
               .records
               .any((r) => r.id == selected),
           isTrue);
-      expect(
-          tester
-              .widget<DropdownButton<String>>(
-                  find.byKey(const ValueKey('stackedWheelGroup')))
-              .value,
-          hit.streamId);
+      expectAllCountries(tester);
+      expectRecordCentred(tester, selected);
       final explorer =
           tester.widget<ChronologyExplorer>(find.byType(ChronologyExplorer));
       expect(explorer.controller!.period.id, expected.id);
@@ -171,11 +236,10 @@ void main() {
           reason: 'the selected result must exist in the projected range');
       tester.state<NavigatorState>(find.byType(Navigator).first).pop();
       await settle(tester);
-      await tester.tap(find.byKey(const ValueKey('stackedWheelFlat')));
+      await tester.tap(find.byKey(const ValueKey('wheelDepth-flat')));
       await settle(tester);
-      // The projected chart has its own record rail; the year digest
-      // belongs to the flat form. Switching through the visible control
-      // verifies that search retained the exact cursor behind both forms.
+      // The shared mode row keeps the same selected record and cursor
+      // while its chart projection changes.
       expect(
           tester.widget<YearDigestBar>(find.byType(YearDigestBar)).digest!.year,
           hit.year);
@@ -193,11 +257,10 @@ void main() {
   }
 
   testWidgets(
-      'repeating the same search restores its group and resets the view',
+      'repeating the same search recentres its record without hiding countries',
       (tester) async {
     final song = data.powers.singleWhere((power) => power.id == 'song-dynasty');
     await pump(tester, hidden: {});
-    final groupFinder = find.byKey(const ValueKey('stackedWheelGroup'));
     Future<void> searchSong() async {
       await tester.tap(find.byKey(const ValueKey('chronology-find')));
       await settle(tester);
@@ -216,19 +279,12 @@ void main() {
 
     await searchSong();
     expect(chart(tester).selectedId, song.id);
-    expect(
-        tester.widget<DropdownButton<String>>(groupFinder).value, song.stream);
+    expectAllCountries(tester);
+    expectRecordCentred(tester, song.id);
     final range = (chart(tester).startYear, chart(tester).endYear);
     tester.state<NavigatorState>(find.byType(Navigator).first).pop();
     await settle(tester);
 
-    final groupMenu = tester.widget<DropdownButton<String>>(groupFinder);
-    expect(groupMenu.items!.any((item) => item.value == 'egypt'), isTrue);
-    groupMenu.onChanged!('egypt');
-    await settle(tester);
-    expect(tester.widget<DropdownButton<String>>(groupFinder).value, 'egypt');
-    expect(chart(tester).selectedId, song.id,
-        reason: 'changing the visible layer leaves the previous selection id');
     final viewer =
         tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
     viewer.transformationController!.value = Matrix4.identity()
@@ -242,11 +298,9 @@ void main() {
     expect(chart(tester).selectedId, song.id);
     expect((chart(tester).startYear, chart(tester).endYear), range,
         reason: 'the reset must come from a new reveal, not a range change');
-    expect(
-        tester.widget<DropdownButton<String>>(groupFinder).value, song.stream);
-    expect(viewer.transformationController!.value.storage,
-        orderedEquals(Matrix4.identity().storage),
-        reason: 'a repeated search must undo the intervening zoom and pan');
+    expectAllCountries(tester);
+    expectRecordCentred(tester, song.id);
+    expectRecordCentred(tester, song.id);
     final dynamic painter = tester
         .widget<CustomPaint>(find.descendant(
             of: find.byKey(const ValueKey('stackedChronologyWheel')),
@@ -257,6 +311,138 @@ void main() {
             .any((dynamic prism) => prism.id == song.id),
         isTrue,
         reason: 'the same selected record is actually visible again');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('depth round-trip keeps camera, selection, period and filters',
+      (tester) async {
+    final period = chronologyPeriods.singleWhere((p) => p.id == 'late');
+    final hidden = {'europe'};
+    await pump(tester, hidden: hidden, period: period);
+    final song = data.powers.singleWhere((p) => p.id == 'song-dynasty');
+    final record = chart(tester)
+        .groups
+        .expand((g) => g.records)
+        .singleWhere((r) => r.id == song.id);
+    chart(tester).onOpen(record);
+    await settle(tester);
+    tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('stackedZoomIn')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('stackedRotateRight')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('stackedWheelExpand')));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('stackedWheelSpacingExpanded')));
+    await settle(tester);
+    final before = camera(tester);
+    final yaw = painter(tester).scene.rotation;
+    final tilt =
+        (painter(tester).scene.projection as WheelStackProjection).squash;
+    await tester.tap(find.byKey(const ValueKey('wheelDepth-flat')));
+    await settle(tester);
+    expect(find.byKey(const ValueKey('chronologyWheel')), findsOneWidget);
+    expect(
+        tester
+            .widget<ChronologyExplorer>(find.byType(ChronologyExplorer))
+            .selectedId,
+        song.id);
+    await tester.tap(find.byKey(const ValueKey('wheelDepth-3d')));
+    await settle(tester);
+    final after = camera(tester);
+    expect(chart(tester).initialLift, 10,
+        reason: 'Switching projection must retain the chosen layer spacing.');
+    expect(after.zoom, closeTo(before.zoom, 1e-6));
+    expect(
+        (after.normalizedGroundCentre - before.normalizedGroundCentre).distance,
+        lessThan(1e-6));
+    expect(painter(tester).scene.rotation, yaw);
+    expect((painter(tester).scene.projection as WheelStackProjection).squash,
+        tilt);
+    expect(chart(tester).selectedId, song.id);
+    final explorer =
+        tester.widget<ChronologyExplorer>(find.byType(ChronologyExplorer));
+    expect(explorer.controller!.period, period);
+    expect(explorer.hiddenStreams, hidden);
+    expectAllCountries(tester);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+      'wheel and strip preserve depth, period and explicit layer choices',
+      (tester) async {
+    final period = chronologyPeriods.singleWhere((p) => p.id == 'late');
+    final hidden = {'europe', kLineageLayerId};
+    await pump(tester, hidden: hidden, period: period);
+    await tester.tap(find.byKey(const ValueKey('wheelDepth-flat')));
+    await settle(tester);
+    await switchForm(tester, 'strip');
+    expect(find.byType(StripChronologyPage), findsOneWidget);
+    expect(
+        tester
+            .widget<ChronologyDepthToggle>(find.byType(ChronologyDepthToggle))
+            .is3D,
+        isFalse);
+    var explorer =
+        tester.widget<ChronologyExplorer>(find.byType(ChronologyExplorer));
+    expect(explorer.controller!.period, period);
+    expect(explorer.hiddenStreams, hidden);
+    await tester.tap(find.byKey(const ValueKey('stripDepth-3d')));
+    await settle(tester);
+    await switchForm(tester, 'wheel');
+    expect(find.byType(StackedChronologyWheel), findsOneWidget);
+    expect(
+        tester
+            .widget<ChronologyDepthToggle>(find.byType(ChronologyDepthToggle))
+            .is3D,
+        isTrue);
+    explorer =
+        tester.widget<ChronologyExplorer>(find.byType(ChronologyExplorer));
+    expect(explorer.controller!.period, period);
+    expect(explorer.hiddenStreams, hidden);
+    expectAllCountries(tester);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a scrubbed cross-period event opens in the correct 3D range',
+      (tester) async {
+    final oldPeriod = chronologyPeriods.singleWhere((p) => p.id == 'biblical');
+    final event = data.events.singleWhere((e) => e.id == 'ninety_five_theses');
+    expect(event.year, 1517);
+    await pump(tester, hidden: {}, period: oldPeriod);
+    final scrubber =
+        tester.widget<Slider>(find.byKey(const ValueKey('chronoYearScrubber')));
+    scrubber.onChanged!(event.year.toDouble());
+    await settle(tester);
+    var digest = tester.widget<YearDigestBar>(find.byType(YearDigestBar));
+    expect(digest.digest!.year, event.year);
+    expect(chart(tester).cursorYear, event.year);
+    expect(painter(tester).cursorYear, event.year);
+    final item =
+        digest.digest!.happened.singleWhere((record) => record.id == event.id);
+    digest.onOpen(item);
+    await settle(tester);
+    final recent = chronologyPeriods.singleWhere((p) => p.id == 'recent');
+    expect(chart(tester).startYear, recent.start);
+    expect(chart(tester).endYear, recent.end);
+    expect(chart(tester).selectedId, event.id);
+    expect(
+        tester
+            .widget<ChronologyExplorer>(find.byType(ChronologyExplorer))
+            .controller!
+            .period,
+        recent);
+    expect(
+        (painter(tester).scene.prisms as List)
+            .cast<WheelStackPrism>()
+            .any((prism) => prism.id == event.id),
+        isTrue);
+    expectAllCountries(tester);
+    expect(find.byType(BottomSheet), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

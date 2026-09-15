@@ -27,24 +27,34 @@ list; the stacked view’s Reset view restores its camera within the chosen peri
   occlusion and hit-testing. A zero-year record remains a point, not an
   invented duration. No 3D runtime, package or CDN was added; CanvasKit
   continues to come from the site's own origin through `release_web.sh`.
-- One civilization or layer is focused at a time, with an explicit all-layer
-  overview. The initial six streams are Israel, Judah, Egypt, China, Church
-  and Scripture. Chinese opens on China and English on Egypt. Under "All
-  years", a focused layer fits its actual record extent, printed above the
-  chart; a selected numerical period keeps that window. The existing flat
-  wheel remains available through Flat / 3D and keeps its viewport defaults.
+- All enabled countries and layers remain in the same scene. Country rings
+  retain their original order and radii; concurrent records rise within
+  their own ring. Lifespans, kings, ministries, genealogy and events occupy
+  the outer annulus. The calendar keeps its full-axis angle mapping when
+  selecting a period. The previous single-country focus and automatic
+  country date fit were removed after the owner clarified the requirement.
+- Flat / 3D is a shared, named two-choice control above both chart forms.
+  Switching depth preserves the range, filters, selection and viewing
+  position. Wheel/strip navigation also carries the current depth mode.
+  Initial country choices use the existing viewport-sized defaults in
+  both wheel modes; switching modes never changes the chosen filters.
 - Concurrent records can be separated or brought closer, rotated, panned
   and zoomed. Full names are admitted onto visible top faces when they fit;
   otherwise, bounded side callouts use an ellipsis and a leader to a visible
   part of the record. Names never print over one another. Full names and
-  exact records remain accessible through the same-screen All names button
-  and, on taller screens, a scrollable record rail. Short landscape screens
-  use the button to leave room for the chart. Existing detail sheets retain
+  exact records remain accessible through the same-screen All names button,
+  search and the year digest, which is now shared by flat and 3D. Single-finger
+  rotation changes yaw and tilt; a named pan mode changes position, and
+  two-finger zoom works in both modes. A tilt slider, rotation buttons,
+  layer-spacing choices (compact, standard and expanded) and reset offer
+  explicit alternatives to gestures. Standard is the default; expanded
+  makes simultaneous tiers easier to inspect without changing their dates.
+  Existing detail sheets retain
   provenance, approximate flags, scripture links and alternate traditions.
-- The six symbolic category icons were generated with Higgsfield and are
-  bundled as one 1,003,858-byte PNG atlas. They are category illustrations,
-  not portraits or archaeological reconstructions. See
-  `assets/chronology/README.md`. Canvas geometry, not the image, carries dates.
+- The Higgsfield category atlas from v1.6.284 remains in the assets. The
+  whole-ring view currently uses coloured geometry and labels for records;
+  it does not put a single civilization's illustration in the hub. See
+  `assets/chronology/README.md` for the retained illustration's provenance.
 - Filtering is transactional in both forms: checkboxes and All/None edit a
   draft; Apply returns one set to the page. Cancel, outside click and Back
   discard that draft. The action row remains visible while options scroll.
@@ -72,6 +82,11 @@ list; the stacked view’s Reset view restores its camera within the chosen peri
 - Strip lanes are at least 32 px high, with pale bars and restrained group
   headings. Painted width still means duration; short reigns are never
   widened to create a false duration. Controls occupy their own row.
+- The strip also draws every enabled lane as oblique prisms in 3D mode.
+  The front face keeps the exact time extent; the raised top and side are
+  hit-tested against the same geometry the painter uses. Event cards gain
+  corresponding raised edges. Switching depth retains the same time scale
+  and the top visible row with its fractional scroll position.
 - The strip's event region now groups the complete visible event corpus by
   calendar bins, rather than emitting `+N` independently on every packed
   row. A card shows the true event span, count and density; its connector
@@ -100,17 +115,27 @@ At a 900 px full-axis viewport, the previous 44 event rows and 254 `+N`
 badges became two rows containing five dated cards and zero `+N` badges.
 At 216 px, 139 rows and 239 badges became three rows with three cards.
 
-The flat wheel-page test at 1440 × 900 made 345 cold text layouts and
+The v1.6.283 flat wheel-page test at 1440 × 900 made 345 cold text layouts and
 one initial scene; a repeated paint, cursor move and pan each made zero
 additional layouts. These checks live in `wheel_redesign_test.dart` and
 `wheel_paint_cost_test.dart`.
-The stacked China page at AD 100–1500 made 16 cold text layouts, zero on
-a repeated frame, zero on rotation, and 16 when the text size changed at
-higher zoom. The actual painter retained 11 record names, including both
-Song and Liao, plus two axis labels. Liao's visible 907–960 segment is
-before its old quarter-span anchor (961.5), which was behind Song; the
-callout planner now samples multiple angles and radii and still accepts
-only an actually visible top-surface point. The record dates were not changed.
+The former v1.6.284 single-country view printed 11 China names by remapping
+that country's date extent across the circle. The whole-ring view retains
+the original global time axis, so that name count is not a comparable
+target. Surface labels are admitted only when the actual face is visible;
+bounded side labels, All names, the digest and search recover the rest.
+The current measurements, using the actual painters, are:
+
+| Case | First frame / full axis | Warm visible frame | Rotation |
+| --- | ---: | ---: | ---: |
+| China, Europe and Rome, AD 100–1500, 52 records, 1000 × 700, Traditional Chinese | 37 text layouts | 0 | 0 additional layouts |
+| China in the same global axis and date window, 11 records | 16 text layouts | 0 | 0 additional layouts |
+| 3D strip, 540 actual record/card prisms, Simplified Chinese | 694 full-axis layouts; 6 in the 542 × 427 viewport | 0 | not applicable |
+
+These are work counts rather than device frame rates. The flat page's
+current default-capacity case makes 191 cold layouts and zero on warm paint,
+cursor movement or pan; its smaller chart after adding the shared mode row
+selects fewer default rings, so 345→191 is not a like-for-like speed claim.
 
 The pure geometry functions used by the pages are the same functions tested;
 no parallel implementation of the drawing rules is used as an oracle.
