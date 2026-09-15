@@ -52,6 +52,8 @@ import 'package:seeksparks/services/workbench_warmup.dart'
         defaultParallelVersions,
         kWorkbenchParallelModeKey,
         kWorkbenchParallelVersionsKey;
+import 'package:seeksparks/pages/jesus_teachings_page.dart'
+    show JesusTeachingsPage, kJesusTeachingsTitle;
 import 'package:seeksparks/pages/radial_chronology_page.dart'
     show RadialChronologyPage;
 import 'package:seeksparks/pages/strip_chronology_page.dart'
@@ -799,6 +801,14 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             () => pushPage(const FamilyTreePage())),
         // Separate from Family Tree on purpose: the tree is Judah's line
         // of descent, this is both thrones on one time axis.
+        // 2026-09-16, and it goes FIRST in this group on purpose: the
+        // rest of the Resources list is apparatus — atlases, lexicons,
+        // topical indexes, charts — and this one is the Lord's own
+        // teaching. It is the only entry here a reader might open
+        // without a question to look up.
+        WbMenuItem(
+            kJesusTeachingsTitle[locale] ?? kJesusTeachingsTitle['en']!,
+            () => pushPage(const JesusTeachingsPage())),
         WbMenuItem(s('hebrewKings', 'Kings of Judah & Israel'),
             () => pushPage(const HebrewKingsPage())),
         // Earlier than the kings, and resting on a different kind of
