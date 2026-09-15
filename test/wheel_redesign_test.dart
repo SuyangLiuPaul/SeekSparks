@@ -103,46 +103,57 @@ void main() {
     expect(wheelShowsEventText(zoom: 2, selected: false), isTrue);
   });
 
+  void expectSeparatedAxis(double side, String locale) {
+    final candidates = planAxisLabels(
+      minYear: kMinYear,
+      maxYear: kMaxYear,
+      tickLabel: (year) => centuryTickLabel(year, locale),
+      endLabel: (year) => yearLabel(year, locale),
+      endSwing: kAxisEndSwing,
+    );
+    Rect boundsOf(AxisLabel label) {
+      final paragraph =
+          WheelTextMetrics.paragraphOf(label.text, axisStyle(label));
+      return placeWheelAxisLabel(
+        angle: label.angle,
+        width: paragraph.maxIntrinsicWidth,
+        height: paragraph.height,
+        rimRadius: side * rimFractionFor(side),
+        clearance: kAxisLabelClearance,
+        onRing: label.onRing,
+      ).bounds;
+    }
+
+    final labels =
+        retainSeparatedWheelAxisLabels(labels: candidates, boundsOf: boundsOf);
+    expect(labels.where((label) => !label.onRing).map((label) => label.year),
+        [kMinYear, kMaxYear]);
+    expect(labels.where((label) => label.onRing), isNotEmpty);
+    for (final label in labels) {
+      final bounds = boundsOf(label);
+      final outside = math.max(math.max(bounds.left.abs(), bounds.right.abs()),
+          math.max(bounds.top.abs(), bounds.bottom.abs()));
+      expect(outside, lessThanOrEqualTo(side / 2),
+          reason:
+              '$locale, $side px: ${label.text} must stay inside the canvas');
+    }
+    for (var i = 0; i < labels.length; i++) {
+      for (var j = i + 1; j < labels.length; j++) {
+        expect(
+            boundsOf(labels[i])
+                .inflate(2)
+                .overlaps(boundsOf(labels[j]).inflate(2)),
+            isFalse,
+            reason: '$locale, $side px: ${labels[i].text} and '
+                '${labels[j].text} must leave a 4 px gap');
+      }
+    }
+  }
+
   test('phone axis keeps both ends and separates actual label bounds', () {
     for (final side in [300.0, 320.0, 360.0]) {
       for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
-        final candidates = planAxisLabels(
-          minYear: kMinYear,
-          maxYear: kMaxYear,
-          tickLabel: (year) => centuryTickLabel(year, locale),
-          endLabel: (year) => yearLabel(year, locale),
-          endSwing: kAxisEndSwing,
-        );
-        Rect boundsOf(AxisLabel label) {
-          final paragraph =
-              WheelTextMetrics.paragraphOf(label.text, axisStyle(label));
-          return placeWheelAxisLabel(
-            angle: label.angle,
-            width: paragraph.maxIntrinsicWidth,
-            height: paragraph.height,
-            rimRadius: side * rimFractionFor(side),
-            clearance: kAxisLabelClearance,
-            onRing: label.onRing,
-          ).bounds;
-        }
-
-        final labels = retainSeparatedWheelAxisLabels(
-            labels: candidates, boundsOf: boundsOf);
-        expect(
-            labels.where((label) => !label.onRing).map((label) => label.year),
-            [kMinYear, kMaxYear]);
-        expect(labels.where((label) => label.onRing), isNotEmpty);
-        for (var i = 0; i < labels.length; i++) {
-          for (var j = i + 1; j < labels.length; j++) {
-            expect(
-                boundsOf(labels[i])
-                    .inflate(2)
-                    .overlaps(boundsOf(labels[j]).inflate(2)),
-                isFalse,
-                reason: '$locale, $side px: ${labels[i].text} and '
-                    '${labels[j].text} must leave a 4 px gap');
-          }
-        }
+        expectSeparatedAxis(side, locale);
       }
     }
   });
@@ -213,13 +224,50 @@ void main() {
     expect(
         side,
         closeTo(
-            math.min(chartSize.width,
-                chartSize.height - tester.getSize(digest).height),
+            math.min(
+                chartSize.width,
+                chartSize.height -
+                    tester.getSize(digest).height -
+                    wheelControlsFooterHeight),
             0.01));
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('phone corner controls are named and have separate touch areas',
+  testWidgets('wheel footer stays outside the chart in portrait and landscape',
+      (tester) async {
+    for (final size in [const Size(360, 800), const Size(800, 360)]) {
+      await mount(tester, size);
+      expect(tester.takeException(), isNull);
+      final wheel =
+          tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
+      final footer =
+          tester.getRect(find.byKey(const ValueKey('wheelControlsFooter')));
+      final digest = tester.getRect(find.byType(YearDigestBar));
+      expect(footer.height, wheelControlsFooterHeight);
+      expect(wheel.bottom, lessThanOrEqualTo(footer.top));
+      expect(wheel.overlaps(footer), isFalse,
+          reason: 'the controls must leave the full axis visible at $size');
+      expect(footer.bottom, lessThanOrEqualTo(digest.top));
+      expect(footer.left, greaterThanOrEqualTo(0));
+      expect(footer.right, lessThanOrEqualTo(size.width));
+      expect(digest.bottom, lessThanOrEqualTo(size.height));
+      expect(wheel.width, greaterThan(0));
+      debugPrint(
+          'Wheel footer viewport=$size; actual circle side=${wheel.width}');
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        expectSeparatedAxis(wheel.width, locale);
+      }
+      for (final key in ['wheelLegendControl', 'wheelZoomControls']) {
+        final control = tester.getRect(find.byKey(ValueKey(key)));
+        expect(control.top, greaterThanOrEqualTo(footer.top));
+        expect(control.bottom, lessThanOrEqualTo(footer.bottom));
+        expect(control.overlaps(wheel), isFalse);
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
+
+  testWidgets('phone footer controls are named and have separate touch areas',
       (tester) async {
     await mount(tester, const Size(360, 800));
     final semantics = tester.ensureSemantics();

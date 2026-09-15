@@ -29,7 +29,9 @@ range and layers. Fit/reset synchronizes the chart, range menu and list.
   canvas titles. Person, reign and ministry names follow the same rule,
   with names recoverable through the year digest, search and arc details.
   The full legend is behind a named button; it and all three wheel zoom
-  buttons have at least 44 px touch targets.
+  buttons have at least 44 px touch targets. Their own 48 px footer keeps
+  those targets off the axis: enlarging the former corner overlays covered
+  the bottom year labels in the real phone preview.
 - The wheel's radii now fit its square. At 360 px, the old rim radius was
   `360 × .60 = 216 px`, beyond the 180 px half-width before any axis text.
   The new rim is capped at 148 px, reserving 32 px for the outer axis.
@@ -65,7 +67,7 @@ layout counts, not a claim about whole-app FPS or measured physical-device
 latency. The event clusters are still computed against their full lanes so
 panning does not change the membership of a `+N` marker.
 
-The real wheel-page test at 1440 × 900 made 479 cold text layouts and
+The real wheel-page test at 1440 × 900 made 345 cold text layouts and
 one initial scene; a repeated paint, cursor move and pan each made zero
 additional layouts. These checks live in `wheel_redesign_test.dart` and
 `wheel_paint_cost_test.dart`.

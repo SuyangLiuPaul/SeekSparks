@@ -3,6 +3,11 @@ import 'dart:ui';
 
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
 
+/// The wheel controls occupy their own row above the year digest. The
+/// initial stream budget reserves the same height as the rendered footer
+/// so large touch targets cannot cover the axis or trigger a second fit.
+const double wheelControlsFooterHeight = 48;
+
 /// The divisor applied to canvas type before the viewer magnifies it.
 ///
 /// Text grows through the first 4x of zoom, then holds at twice its
@@ -38,6 +43,7 @@ WheelAxisLabelPlacement placeWheelAxisLabel({
   required double rimRadius,
   required double clearance,
   required bool onRing,
+  double endpointGap = 4,
 }) {
   final radius = onRing
       ? ringLabelRadius(rRim: rimRadius, clearance: clearance, height: height)
@@ -49,7 +55,21 @@ WheelAxisLabelPlacement placeWheelAxisLabel({
           clearance: clearance);
   final rotation =
       onRing ? angle + (math.sin(angle) > 0 ? -math.pi / 2 : math.pi / 2) : 0.0;
-  final centre = Offset(math.cos(angle), math.sin(angle)) * radius;
+  var centre = Offset(math.cos(angle), math.sin(angle)) * radius;
+  if (!onRing) {
+    // At the measured 179 px landscape wheel, the two real-font end
+    // labels meet inside the gap wedge. Give each horizontal box its
+    // own side of that wedge's centre line, moving only text and only
+    // as far as its measured width needs. Their year rays stay fixed.
+    final gapAngle = startRad + (sweepRad + 2 * math.pi) / 2;
+    final gapX = math.cos(gapAngle) * rimRadius;
+    final opening = math.sin(angle - gapAngle) > 0;
+    centre = Offset(
+        opening
+            ? math.max(centre.dx, gapX + width / 2 + endpointGap / 2)
+            : math.min(centre.dx, gapX - width / 2 - endpointGap / 2),
+        centre.dy);
+  }
   final halfWidth =
       (width * math.cos(rotation).abs() + height * math.sin(rotation).abs()) /
           2;

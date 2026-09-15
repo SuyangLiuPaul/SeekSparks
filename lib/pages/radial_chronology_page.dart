@@ -1711,8 +1711,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             final digestHeight = WbType.of(context).scaled(76) +
                 1 +
                 MediaQuery.viewPaddingOf(context).bottom;
-            final side = math.min(available.width,
-                math.max(0.0, available.height - digestHeight));
+            final side = math.min(
+                available.width,
+                math.max(
+                    0.0,
+                    available.height -
+                        digestHeight -
+                        wheelControlsFooterHeight));
             _applyDefaultHidden(data, side);
             return ChronologyExplorer(
               controller: _explorer,
@@ -1744,13 +1749,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     final wb = WbColors.of(context);
     final t = WbType.of(context);
 
-    // The readout is a ROW OF THE LAYOUT and the wheel is inside an
-    // `Expanded` above it — not a panel floating over the chart. The
-    // reader placed the cursor in order to look at that part of the
-    // wheel, and covering it is the crosshair defect in a second form.
-    // It sits OUTSIDE the `LayoutBuilder` so `side` is measured against
-    // the height the wheel actually gets, rather than the height it
-    // would have had without a readout.
+    // Controls and readout occupy layout rows below the wheel. The old
+    // corner controls covered the bottom axis when their touch targets
+    // grew to 44 px. Both rows sit outside this LayoutBuilder, so the
+    // wheel measures only the unobstructed area it can actually use.
     return Column(children: [
       Expanded(
         child: LayoutBuilder(builder: (context, box) {
@@ -1880,14 +1882,22 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                 ),
               ),
             ),
-            Positioned(
-                left: 10,
-                bottom: 10,
-                child: _legendChip(context, locale, t, wb)),
-            Positioned(
-                right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
           ]);
         }),
+      ),
+      SizedBox(
+        key: const ValueKey('wheelControlsFooter'),
+        height: wheelControlsFooterHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _legendChip(context, locale, t, wb),
+              _zoomControls(locale, t, wb),
+            ],
+          ),
+        ),
       ),
       // Always present. It used to appear on the first tap, and that
       // took ~90 px out of a wheel whose `side` is `min(width, height)`
@@ -1952,9 +1962,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         ),
       );
 
-  /// The full legend lives behind this stable corner control at every
-  /// width. It used to cover the lower-left quadrant on smaller wheels;
-  /// the same disclosure remains one tap away without covering data.
+  /// The full legend lives behind this named footer control at every
+  /// width. It remains one tap away without covering the wheel or axis.
   Widget _legendChip(
       BuildContext context, String locale, WbType t, WbColors wb) {
     final label = switch (locale) {
@@ -1982,9 +1991,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // "square corners and 1px hairline borders, no shadows, no cards")
     // and `page_chrome_pass_test.dart`'s own ratchet catch a rounded
     // corner appearing in a file the pass had left clean, which a
-    // `BorderRadius.circular(...)` here was. `_legend` and
-    // `_zoomControls`, the two widgets already sharing this page's
-    // bottom corners, are both bare rectangles for the same reason.
+    // `BorderRadius.circular(...)` here was. The full legend and the
+    // adjacent zoom controls use bare rectangles for the same reason.
     return Semantics(
       key: const ValueKey('wheelLegendControl'),
       label: label,
@@ -3985,6 +3993,7 @@ class _WorldWheelPainter extends CustomPainter {
           rimRadius: rRim,
           clearance: kAxisLabelClearance,
           onRing: label.onRing,
+          endpointGap: 4 / zoom,
         ).bounds;
       });
 
@@ -4451,6 +4460,7 @@ class _WorldWheelPainter extends CustomPainter {
         rimRadius: rRim,
         clearance: kAxisLabelClearance,
         onRing: false,
+        endpointGap: 4 / zoom,
       );
       tp.paint(
           canvas, c + placement.centre - Offset(tp.width / 2, tp.height / 2));
