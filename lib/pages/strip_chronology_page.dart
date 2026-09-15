@@ -167,6 +167,9 @@ const String kStripUrlPath = '/strip';
 /// A page needs a title regardless, so this is the strip's small local
 /// supplement, the same way `wheelStrings` is `radial_chronology_page
 /// .dart`'s own.
+/// The strip's own name, shared with the menu entry that opens it.
+const Map<String, String> kStripPageTitle = _kPageTitle;
+
 const Map<String, String> _kPageTitle = {
   'zh-Hans': '世界历史时间条',
   'zh-Hant': '世界歷史時間條',

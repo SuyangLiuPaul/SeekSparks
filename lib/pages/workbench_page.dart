@@ -52,8 +52,10 @@ import 'package:seeksparks/services/workbench_warmup.dart'
         defaultParallelVersions,
         kWorkbenchParallelModeKey,
         kWorkbenchParallelVersionsKey;
-import 'package:seeksparks/utils/chronology_chart_entry.dart'
-    show chronologyChartEntryPage;
+import 'package:seeksparks/pages/radial_chronology_page.dart'
+    show RadialChronologyPage;
+import 'package:seeksparks/pages/strip_chronology_page.dart'
+    show StripChronologyPage, kStripPageTitle;
 import 'package:seeksparks/utils/chapter_navigation.dart'
     show adjacentChapter, nextChapter, previousChapter;
 import 'package:seeksparks/utils/chapter_across_editions.dart'
@@ -811,12 +813,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // answer different questions: that page is the lifespans of
         // Genesis 5 and 11 on an Anno Mundi axis, this is world
         // history from 4000 BC to the present.
-        // Still one entry, not two: the page behind it is whichever
-        // form the reader had open last (`chronologyChartEntryPage`),
-        // not always the wheel — see that file for why there is no
-        // second "World History Strip" item beside this one.
+        // 2026-09-16: TWO ENTRIES, and this reverses the note that used
+        // to stand here. 「menu strip和wheel都要有是吧」.
+        //
+        // The old reasoning was that the wheel and the strip are two
+        // shapes of one chart rather than two charts, so one door was
+        // enough and it opened whichever form the reader had last. That
+        // is a defensible model and it had a defect the owner's question
+        // exposed: the door was LABELLED "World History Wheel" and could
+        // open the strip. A menu item that names one thing and does
+        // another is worse than a longer menu.
+        //
+        // Each now goes where it says. The remembered-form door still
+        // exists for the toolbar icon on the Bible Chronology page,
+        // which has no room to name two.
         WbMenuItem(s('wheelTitle', 'World History Wheel'),
-            () => pushPage(chronologyChartEntryPage(settings))),
+            () => pushPage(const RadialChronologyPage())),
+        WbMenuItem(kStripPageTitle[locale] ?? kStripPageTitle['en']!,
+            () => pushPage(const StripChronologyPage())),
         // 2026-09-08: projection had a route and no door. `#/project`
         // is typeable on the web and unreachable on iOS and Android,
         // which have no address bar — so on the two platforms a Sunday
