@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/services/chart_symbol_service.dart';
+import 'package:seeksparks/utils/chronology_symbols.dart';
 import 'package:seeksparks/utils/chronology_depth_view.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
@@ -637,6 +639,7 @@ class _StackedChronologyWheelState extends State<StackedChronologyWheel> {
                                   scale,
                               selectedId: widget.selectedId,
                               cursorYear: widget.cursorYear,
+                              symbols: ChartSymbolService.instance.cached,
                               zoom: scale,
                               visible: visible,
                             ))),
@@ -884,6 +887,7 @@ class _StackedWheelPainter extends CustomPainter {
       required this.zoom,
       required this.selectedId,
       required this.cursorYear,
+      required this.symbols,
       required this.visible});
   final _StackScene scene;
   final List<StackedChronologyGroup> groups;
@@ -896,6 +900,9 @@ class _StackedWheelPainter extends CustomPainter {
   final double zoom;
   final String? selectedId;
   final int? cursorYear;
+
+  /// Decoded silhouettes by asset name; empty until they load.
+  final Map<String, ui.Image> symbols;
   final Rect visible;
   final List<Rect> paintedLabelBounds = [];
   final List<String> paintedRecordIds = [];
@@ -978,6 +985,7 @@ class _StackedWheelPainter extends CustomPainter {
             Paint()..color = selected ? wb.accent : group.color);
       }
     }
+    _paintGroupSymbols(canvas, p);
     final occupied = <Rect>[];
     _axis(canvas, occupied);
     final style = canvasTextStyle(
@@ -1125,6 +1133,63 @@ class _StackedWheelPainter extends CustomPainter {
     }
   }
 
+  /// One silhouette per stream, standing on the first block that
+  /// stream has.
+  ///
+  /// THIS IS WHAT THE 3D VIEW WAS MISSING, in the owner's own words:
+  /// 「上面也没有写字看不出是什么啊」 — a field of coloured blocks with
+  /// nothing on them. The obvious answer is to write the names on the
+  /// faces, and it is the wrong one: this view TURNS, so any word put
+  /// on it has to choose a bearing and is upside down from half of
+  /// them. A silhouette has no bearing. A pyramid seen from behind is
+  /// still a pyramid.
+  ///
+  /// One per stream, on its earliest block, for the same reason the
+  /// flat wheel does it that way: the corpus holds 1,039 records, and a
+  /// picture on each is the crowding complaint again in another medium.
+  ///
+  /// Drawn flat to the screen rather than sheared onto the face. The
+  /// projection squashes the vertical axis, so a sheared silhouette
+  /// would be a squashed silhouette — and legibility is the entire
+  /// reason these are here.
+  void _paintGroupSymbols(Canvas canvas, WheelStackProjection p) {
+    if (symbols.isEmpty) return;
+    final firstOf = <String, WheelStackPrism>{};
+    for (final prism in scene.prisms) {
+      final group = scene.groupOf[prism.id];
+      if (group == null) continue;
+      final held = firstOf[group.id];
+      if (held == null || prism.startAngle < held.startAngle) {
+        firstOf[group.id] = prism;
+      }
+    }
+    for (final group in groups) {
+      final image = symbols[symbolForStream(group.id)];
+      final prism = firstOf[group.id];
+      if (image == null || prism == null) continue;
+      final centre = p.polar(prism.middleRadius, prism.middleAngle,
+          height: prism.topHeight);
+      // Off the top face by a little, so the mark reads as standing on
+      // the block rather than lying on it, and never larger than it
+      // would be at rest.
+      final size = math.min(
+          (prism.outerRadius - prism.innerRadius) * p.squash * 1.6, 26 / zoom);
+      if (size <= 2) continue;
+      final at = centre.translate(0, -size * 0.55);
+      if (!visible.inflate(size).contains(at)) continue;
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        Rect.fromCenter(center: at, width: size, height: size),
+        Paint()
+          ..isAntiAlias = true
+          ..filterQuality = FilterQuality.medium
+          ..colorFilter = ColorFilter.mode(
+              Color.lerp(group.color, wb.text, .25)!, BlendMode.srcIn),
+      );
+    }
+  }
+
   void _axis(Canvas canvas, List<Rect> occupied) {
     final years = [
       scene.start,
@@ -1185,5 +1250,9 @@ class _StackedWheelPainter extends CustomPainter {
       old.fontSize != fontSize ||
       old.fontFamily != fontFamily ||
       old.locale != locale ||
+      // The symbols arrive after the first frame — a map that changes
+      // from empty to twenty images has to repaint, or the blocks stay
+      // blank until something else happens to invalidate the painter.
+      old.symbols != symbols ||
       old.visible != visible;
 }

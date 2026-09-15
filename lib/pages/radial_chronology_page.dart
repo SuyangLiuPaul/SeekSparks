@@ -38,7 +38,9 @@ import 'package:seeksparks/utils/year_digest.dart'
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
 import 'package:seeksparks/utils/wheel_text_metrics.dart';
+import 'package:seeksparks/services/chart_symbol_service.dart';
 import 'package:seeksparks/utils/chronology_palette.dart';
+import 'package:seeksparks/utils/chronology_symbols.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
@@ -1455,6 +1457,15 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     }
 
     _future = WheelHistoryService.instance.load();
+    // Fire and forget, and repaint if it lands after the first frame.
+    // The chart is complete without the symbols — they are an aid to
+    // reading it, not part of the claim it makes — so nothing waits on
+    // this and a failure here costs a decoration, not a page.
+    if (ChartSymbolService.instance.cached.isEmpty) {
+      ChartSymbolService.instance.load().then((_) {
+        if (mounted) setState(() {});
+      });
+    }
     _viewer.addListener(_onZoom);
     // Own the address bar while this page is up, so a reader who
     // shares the link sends people to the wheel and not to whatever
@@ -2114,6 +2125,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                                 rangeEnd: _rangeEnd,
                                 wb: wb,
                                 zoom: _zoom,
+                                symbols: ChartSymbolService.instance.cached,
                                 rimFont: _wheelFont(t, _kLabelPx),
                                 endFont: _wheelFont(t, 13),
                                 bandFont: _wheelFont(t, 12),
@@ -3981,6 +3993,7 @@ class _WorldWheelPainter extends CustomPainter {
     required this.rangeEnd,
     required this.wb,
     required this.zoom,
+    required this.symbols,
     required this.rimFont,
     required this.endFont,
     required this.bandFont,
@@ -4002,6 +4015,9 @@ class _WorldWheelPainter extends CustomPainter {
   final int? rangeStart;
   final int? rangeEnd;
   final WbColors wb;
+
+  /// Decoded silhouettes by asset name, empty until they load.
+  final Map<String, ui.Image> symbols;
 
   /// Passed through wheelLabelScale: screen type grows to twice its
   /// resting size, then further zoom buys additional detail.
@@ -4026,6 +4042,7 @@ class _WorldWheelPainter extends CustomPainter {
     _paintGrooves(canvas, c, rHub, rBands);
     _paintArcs(canvas, c, rHub, rBands);
     _paintBandNames(canvas, c, rHub, rBands);
+    _paintStreamSymbols(canvas, c, rHub, rBands);
     // Lifespans remain a lighter layer than power bands. At overview
     // the explorer carries event titles; zooming restores radial text
     // over this same tint without changing its meaning.
@@ -4401,6 +4418,60 @@ class _WorldWheelPainter extends CustomPainter {
     }
   }
 
+  /// One silhouette per ring, at the year that ring begins.
+  ///
+  /// WHERE, and why not somewhere more convenient. The symbol sits at
+  /// the FIRST year the stream has a record for, inside its own band —
+  /// so it marks an entry onto the chart rather than floating over the
+  /// middle of a span. A reader scanning for "when does Egypt start"
+  /// gets an answer from the mark itself.
+  ///
+  /// ONE PER RING. At most five rings are drawn, so at most five of
+  /// these are ever on screen. The temptation is a symbol per power or
+  /// per event; the corpus holds 1,039 marks and that would be the
+  /// crowding complaint again in pictures instead of words.
+  ///
+  /// Tinted with the ring's own colour through `BlendMode.srcIn`: the
+  /// assets are white-on-transparent silhouettes precisely so the one
+  /// palette that already follows the reader's theme keeps deciding
+  /// every colour on this canvas.
+  void _paintStreamSymbols(
+      Canvas canvas, Offset c, double rHub, double rBands) {
+    if (symbols.isEmpty) return;
+    for (var i = 0; i < streams.length; i++) {
+      final image = symbols[symbolForStream(streams[i].id)];
+      if (image == null) continue;
+      final band = ringRadii(i, streams.length, rHub, rBands);
+      // The earliest arc this ring actually draws. A ring with nothing
+      // on it in the current range gets no symbol, which is right: the
+      // mark would be pointing at an absence.
+      double? first;
+      for (final arc in arcs) {
+        if (arc.ring != i) continue;
+        if (first == null || arc.a0 < first) first = arc.a0;
+      }
+      if (first == null) continue;
+      // Kept inside the band and off the hairline, and never larger
+      // than it would be at rest: a silhouette blown up to 40 px at
+      // 4000% zoom is an obstruction, not a label.
+      final size = math.min(band.width * 0.78, 22 / zoom);
+      if (size <= 1) continue;
+      final dir = Offset(math.cos(first), math.sin(first));
+      final centre = c + dir * band.centre;
+      final colour = colors[streams[i].id] ??
+          lineColor(streams[i].line, dark: wb.isDark);
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        Rect.fromCenter(center: centre, width: size, height: size),
+        Paint()
+          ..isAntiAlias = true
+          ..filterQuality = FilterQuality.medium
+          ..colorFilter = ColorFilter.mode(colour, BlendMode.srcIn),
+      );
+    }
+  }
+
   void _paintSpokes(Canvas canvas, Offset c, double rBands) {
     final has = selectedId != null;
     // The tick sits ON THE BAND, for every event, whichever end of the
@@ -4622,6 +4693,7 @@ class _WorldWheelPainter extends CustomPainter {
       old.colors != colors ||
       old.wb != wb ||
       old.zoom != zoom ||
+      old.symbols != symbols ||
       old.rimFont != rimFont ||
       old.endFont != endFont ||
       old.bandFont != bandFont;
