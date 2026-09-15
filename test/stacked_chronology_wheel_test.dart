@@ -320,7 +320,21 @@ void main() {
     await tester.dragFrom(tester.getCenter(viewer), const Offset(60, 24));
     await tester.pumpAndSettle();
     expect(angles, isNotEmpty);
-    expect(angles.last.$1, greaterThan(0));
+    // 2026-09-15: 「我用鼠标旋转wheel都反了」. This line used to read
+    // `greaterThan(0)` — drag right, yaw up — which is the behaviour
+    // that was reported. A positive yaw turns the wheel CLOCKWISE, and
+    // clockwise carries the near edge (six o'clock, where the hand is)
+    // to the LEFT, so the wheel ran away from the drag. See
+    // `wheel_drag_follows_the_finger_test.dart`, which argues the sign
+    // from the projection rather than from this widget.
+    //
+    // The BUTTONS keep the other sign and are still right: a button
+    // says "turn it clockwise", a hand says "follow me".
+    expect(angles.last.$1, lessThan(0),
+        reason: 'dragging right must turn the wheel with the hand');
+    // Vertical was always right and is unchanged: `tilt` is a squash
+    // (1 = seen from above), so dragging down lays the wheel flatter,
+    // which is what pulling the front of a turntable down does.
     expect(angles.last.$2, greaterThan(.70));
     expectCamera(camera(tester), initial);
     final yaw = painter(tester).scene.rotation;

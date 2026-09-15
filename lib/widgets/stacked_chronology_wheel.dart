@@ -555,7 +555,32 @@ class _StackedChronologyWheelState extends State<StackedChronologyWheel> {
                     _dragged = true;
                   }
                   if (!_panMode && _pointers.length == 1 && _dragged) {
-                    _changeAngles(_yaw + event.delta.dx * .009,
+                    // 2026-09-15: 「我用鼠标旋转wheel都反了」 — and it was.
+                    //
+                    // `_rotate` is the standard matrix, and screen space
+                    // has y DOWN, so a positive angle turns the wheel
+                    // CLOCKWISE. Think of a clock face: rotate it
+                    // clockwise and the point at six o'clock travels
+                    // LEFT. Six o'clock is the near edge of a tilted
+                    // wheel — the part under the reader's hand — so
+                    // `+dx` sent the thing being dragged in the
+                    // opposite direction to the drag.
+                    //
+                    // A DRAG AND A BUTTON ARE DIFFERENT METAPHORS, which
+                    // is why only this line flips. `Icons.rotate_right`
+                    // promises "turn it clockwise" and `_yaw + π/12`
+                    // delivers exactly that; a drag promises "what is
+                    // under my finger follows my finger", and that is
+                    // the opposite sign. Both are now true.
+                    //
+                    // The vertical axis was already right and is left
+                    // alone: `_tilt` is a SQUASH (1 = seen from
+                    // directly above, .35 = nearly edge-on), so
+                    // dragging down raises it, which tips the near edge
+                    // toward the reader and lays the wheel flatter —
+                    // which is what pulling the front of a turntable
+                    // downward does.
+                    _changeAngles(_yaw - event.delta.dx * .009,
                         _tilt + event.delta.dy * .003);
                   }
                 },
