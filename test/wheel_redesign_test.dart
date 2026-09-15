@@ -124,8 +124,10 @@ void main() {
       ).bounds;
     }
 
-    final labels =
-        retainSeparatedWheelAxisLabels(labels: candidates, boundsOf: boundsOf);
+    final labels = retainSeparatedWheelAxisLabels(
+        labels: candidates,
+        boundsOf: boundsOf,
+        canvasBounds: Rect.fromLTRB(-side / 2, -side / 2, side / 2, side / 2));
     expect(labels.where((label) => !label.onRing).map((label) => label.year),
         [kMinYear, kMaxYear]);
     expect(labels.where((label) => label.onRing), isNotEmpty);
@@ -235,6 +237,7 @@ void main() {
                 chartSize.width,
                 chartSize.height -
                     tester.getSize(digest).height -
+                    48 -
                     wheelControlsFooterHeight),
             0.01));
     await tester.pumpWidget(const SizedBox.shrink());
@@ -293,7 +296,7 @@ void main() {
           expect(tester.takeException(), isNull);
           final legend = find.byKey(const ValueKey('wheelLegendControl'));
           final controls = find.byKey(const ValueKey('wheelZoomControls'));
-          final mode = find.byKey(const ValueKey('wheelStackedMode'));
+          final mode = find.byKey(const ValueKey('wheelDepth-3d'));
           final modeBox = tester.getRect(mode);
           final legendBox = tester.getRect(legend);
           final controlsBox = tester.getRect(controls);
@@ -304,12 +307,9 @@ void main() {
           expect(modeBox.width, greaterThanOrEqualTo(44));
           expect(modeBox.height, greaterThanOrEqualTo(44));
           expect(tester.getSemantics(mode).label, isNotEmpty);
-          expect(legendBox.right + 4, lessThanOrEqualTo(modeBox.left),
-              reason:
-                  '$locale at menu scale $scale must separate Legend and 3D.');
-          expect(modeBox.right + 4, lessThanOrEqualTo(controlsBox.left),
-              reason:
-                  '$locale at menu scale $scale must separate 3D and zoom.');
+          expect(modeBox.overlaps(legendBox), isFalse);
+          expect(modeBox.overlaps(controlsBox), isFalse,
+              reason: 'the shared mode row stays above both chart forms');
           expect(legendBox.right + 4, lessThanOrEqualTo(controlsBox.left),
               reason: '$locale at menu scale $scale must leave room between '
                   'the legend and zoom controls');

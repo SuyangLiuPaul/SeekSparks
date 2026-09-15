@@ -4,6 +4,9 @@
 /// This redesign keeps its data, hit targets and label-fitting rules,
 /// while changing the visual hierarchy: neutral section backgrounds,
 /// lightly tinted duration bars, and names in the theme's text colour.
+/// The raised mode gives every existing row projected record faces;
+/// their geometry is shared with the page's tap handler. No country or
+/// layer is replaced by a single-country focus view.
 ///
 /// Every painter now rejects work outside its visible axes before
 /// laying out text. Event cards group the complete visible event corpus
@@ -43,6 +46,7 @@ import 'package:seeksparks/utils/radial_chronology_layout.dart'
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
 import 'package:seeksparks/utils/strip_event_cards.dart';
+import 'package:seeksparks/utils/strip_depth_layout.dart';
 import 'package:seeksparks/utils/strip_paint_visibility.dart';
 
 /// Retained as the old tick-cluster threshold for regression measurements.
@@ -118,23 +122,29 @@ class StripRow {
     required this.top,
     required this.height,
   })  : lane = null,
-        eventCards = const [];
+        eventCards = const [],
+        depthShapes = const [];
 
   const StripRow.lane(
     StripLane this.lane, {
     required this.top,
     required this.height,
+    this.depthShapes = const [],
   })  : headingKey = null,
         eventCards = const [];
 
   const StripRow.events(
     StripLane this.lane, {
     required this.eventCards,
+    this.depthShapes = const [],
     required this.top,
     required this.height,
   }) : headingKey = null;
 
   final List<StripEventCard> eventCards;
+
+  /// These exact faces drive both Canvas paint and pointer resolution.
+  final List<StripDepthShape> depthShapes;
 
   /// A key into [stripStrings], non-null only for a heading row.
   final String? headingKey;
@@ -268,9 +278,11 @@ class StripLanesPainter extends CustomPainter {
     required this.visibleX1,
     this.visibleY0 = 0,
     this.visibleY1 = double.infinity,
+    this.is3D = false,
   });
 
   final List<StripRow> rows;
+  final bool is3D;
   final double pxPerYear;
   final String locale;
   final String? selectedId;
@@ -310,11 +322,73 @@ class StripLanesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     _paintGrooves(canvas, size.width);
-    _paintFilledBars(canvas);
-    _paintLifespans(canvas);
-    _paintRail(canvas);
-    _paintCrosshair(canvas, size.height);
+    if (is3D) {
+      _paintCrosshair(canvas, size.height);
+      _paintDepthRows(canvas);
+    } else {
+      _paintFilledBars(canvas);
+      _paintLifespans(canvas);
+      _paintRail(canvas);
+      _paintCrosshair(canvas, size.height);
+    }
     _paintEvents(canvas);
+  }
+
+  Path _depthPath(List<Offset> vertices) => Path()..addPolygon(vertices, true);
+
+  void _paintPrism(Canvas canvas, StripDepthShape shape, Color color,
+      {required bool selected}) {
+    final front = Color.lerp(wb.paneBg, color, selected ? .23 : .13)!;
+    final outline = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = selected ? 1.8 : .8
+      ..color = Color.lerp(wb.paneBg, color, selected ? .95 : .65)!;
+    for (final face in [
+      (shape.top, Color.lerp(wb.paneBg, color, .07)!),
+      (shape.side, Color.lerp(wb.paneBg, color, .32)!),
+      (shape.frontFace, front),
+    ]) {
+      final path = _depthPath(face.$1);
+      canvas.drawPath(path, Paint()..color = face.$2);
+      canvas.drawPath(path, outline);
+    }
+  }
+
+  /// All concurrent packed rows stay on the screen. A taller face
+  /// separates the later rows without changing any time coordinate.
+  /// Names stay horizontal inside their own opaque front; a roof may
+  /// pass behind the next prism, but cannot strike through its words.
+  void _paintDepthRows(Canvas canvas) {
+    for (final row in rows) {
+      if (!_rowVisible(row) || row.isHeading || row.eventCards.isNotEmpty) {
+        continue;
+      }
+      final lane = row.lane!;
+      for (var i = 0; i < row.depthShapes.length; i++) {
+        final shape = row.depthShapes[i];
+        if (!_spanVisible(shape.bounds.left, shape.bounds.right)) continue;
+        final span = lane.spans[i];
+        _paintPrism(canvas, shape, _spanColor(span, lane, palette),
+            selected: selectionCovers(
+                selectedId: selectedId,
+                ownId: span.id,
+                streamId: _streamIdFor(span, lane, palette)));
+        final name = palette.spanLabel[span.id] ?? '';
+        final room = stripDepthLabelArea(shape, visibleX0, visibleX1);
+        if (name.isEmpty || room.isEmpty) continue;
+        final fit = fitBarLabel(
+            text: name,
+            roomPx: room.width,
+            size: laneFontPx,
+            measure: _measure);
+        if (fit.text.isEmpty) continue;
+        final text = StripPaintTextCache.layout(
+            text: fit.text,
+            style: canvasTextStyle(fontSize: laneFontPx, color: wb.text));
+        if (text.height > room.height) continue;
+        text.paint(canvas, Offset(room.left, room.center.dy - text.height / 2));
+      }
+    }
   }
 
   double _rowFor(StripSpan span, StripRow row) => row.top + row.height / 2;
@@ -581,8 +655,13 @@ class StripLanesPainter extends CustomPainter {
   void _paintEvents(Canvas canvas) {
     for (final row in rows) {
       if (!_rowVisible(row) || row.eventCards.isEmpty) continue;
-      for (final card in row.eventCards) {
-        if (!_spanVisible(card.x, card.x + card.width)) continue;
+      for (var i = 0; i < row.eventCards.length; i++) {
+        final card = row.eventCards[i];
+        final bounds = is3D ? row.depthShapes[i].bounds : null;
+        if (!_spanVisible(
+            bounds?.left ?? card.x, bounds?.right ?? card.x + card.width)) {
+          continue;
+        }
         _paintEventCard(canvas, row, card);
       }
     }
@@ -596,19 +675,25 @@ class StripLanesPainter extends CustomPainter {
     final rect = Rect.fromLTWH(card.x, row.top + 8, card.width, card.height);
     final radius = Radius.circular(WbMetrics.radiusControl + 2);
     final shape = RRect.fromRectAndRadius(rect, radius);
-    // An offset backplate supplies a quiet raised edge without a
-    // blurred shadow or a texture beneath every line of text.
-    canvas.drawRRect(shape.shift(const Offset(0, 3)),
-        Paint()..color = wb.text.withValues(alpha: .06));
-    canvas.drawRRect(shape, Paint()..color = wb.paneBg);
-    canvas.drawRRect(shape, Paint()..color = accent.withValues(alpha: .045));
-    canvas.drawRRect(
-        shape,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = selected ? 1.8 : .8
-          ..color = (selected ? accent : wb.text)
-              .withValues(alpha: selected ? .9 : .18));
+    if (is3D) {
+      final depth = row.depthShapes
+          .firstWhere((shape) => shape.id == card.events.first.id);
+      _paintPrism(canvas, depth, accent, selected: selected);
+    } else {
+      // An offset backplate supplies a quiet raised edge without a
+      // blurred shadow or a texture beneath every line of text.
+      canvas.drawRRect(shape.shift(const Offset(0, 3)),
+          Paint()..color = wb.text.withValues(alpha: .06));
+      canvas.drawRRect(shape, Paint()..color = wb.paneBg);
+      canvas.drawRRect(shape, Paint()..color = accent.withValues(alpha: .045));
+      canvas.drawRRect(
+          shape,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = selected ? 1.8 : .8
+            ..color = (selected ? accent : wb.text)
+                .withValues(alpha: selected ? .9 : .18));
+    }
     final titleSize = stripEventCardTitleSize(laneFontPx);
     final metaSize = stripEventCardMetaSize(laneFontPx);
     var y = rect.top + 12;
@@ -692,6 +777,7 @@ class StripLanesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(StripLanesPainter old) =>
+      old.is3D != is3D ||
       old.rows != rows ||
       old.wb != wb ||
       old.palette != palette ||

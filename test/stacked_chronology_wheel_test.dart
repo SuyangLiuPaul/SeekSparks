@@ -16,6 +16,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/strip_lanes.dart' show StripLaneKind;
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/utils/chronology_depth_view.dart';
+import 'package:seeksparks/utils/radial_chronology_layout.dart'
+    show angleForSpan;
 import 'package:seeksparks/utils/wheel_stack_layout.dart';
 import 'package:seeksparks/utils/wheel_text_metrics.dart';
 import 'package:seeksparks/utils/year_digest.dart';
@@ -64,7 +67,7 @@ void main() {
                 openEnded: power.ongoing,
               ),
             // Preserve a real point event beside durations. Its complete
-            // name remains reachable in the record rail even when its
+            // name remains reachable in All names even when its
             // zero-length prism has no room to carry canvas text.
             for (final event
                 in data.events.where((event) => event.stream == id).take(1))
@@ -103,20 +106,24 @@ void main() {
     String locale = 'en',
     List<StackedChronologyGroup>? groups,
     ValueChanged<YearDigestItem>? onOpen,
-    VoidCallback? onFlat,
     String? selectedId,
+    int revealRevision = 0,
     int startYear = -4200,
     int endYear = 2026,
     AppSettings? settings,
+    TransformationController? controller,
+    ChronologyDepthCamera? initialCamera,
+    ValueChanged<ChronologyDepthCamera>? onCameraChanged,
+    double initialYaw = 0,
+    double initialTilt = .70,
+    double initialLift = 4,
+    void Function(double, double)? onAnglesChanged,
   }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
     SharedPreferences.setMockInitialValues({});
     final activeSettings = settings ?? AppSettings();
     await activeSettings.setFontFamily('Roboto');
-    // Font selection starts AppSettings' 600 ms preference-write debounce.
-    // Drain it in the fixture, including range-update pumps that do not
-    // otherwise wait for a dropdown animation before the test ends.
     await tester.pump(const Duration(milliseconds: 650));
     await tester.pumpWidget(ChangeNotifierProvider(
       create: (_) => activeSettings,
@@ -124,197 +131,293 @@ void main() {
         theme: ThemeData(
             fontFamily: 'Roboto', fontFamilyFallback: const ['NotoSansSC-Sub']),
         home: Scaffold(
-          body: StackedChronologyWheel(
-            groups: groups ?? groupsFor(locale),
-            locale: locale,
-            label: (item) => label(item, locale),
-            onOpen: onOpen ?? (_) {},
-            onFlat: onFlat ?? () {},
-            selectedId: selectedId,
-            startYear: startYear,
-            endYear: endYear,
-          ),
-        ),
+            body: StackedChronologyWheel(
+          groups: groups ?? groupsFor(locale),
+          locale: locale,
+          label: (item) => label(item, locale),
+          onOpen: onOpen ?? (_) {},
+          onFlat: () {},
+          selectedId: selectedId,
+          revealRevision: revealRevision,
+          startYear: startYear,
+          endYear: endYear,
+          controller: controller,
+          initialCamera: initialCamera,
+          onCameraChanged: onCameraChanged,
+          initialYaw: initialYaw,
+          initialTilt: initialTilt,
+          initialLift: initialLift,
+          onAnglesChanged: onAnglesChanged,
+        )),
       ),
     ));
-    await tester.pump();
-  }
-
-  Future<void> chooseGroup(
-      WidgetTester tester, String? id, String locale) async {
-    await tester.tap(find.byKey(const ValueKey('stackedWheelGroup')));
-    await tester.pumpAndSettle();
-    final name = id == null
-        ? stackedWheelText('overview', locale)
-        : data.streams.singleWhere((stream) => stream.id == id).nameFor(locale);
-    await tester.tap(find.text(name).last);
     await tester.pumpAndSettle();
     expect(painter(tester).fontFamily, 'Roboto');
-    expect(
-        tester
-            .widget<DropdownButton<String>>(
-                find.byKey(const ValueKey('stackedWheelGroup')))
-            .style!
-            .fontFamily,
-        'Roboto');
   }
 
-  void expectRealPaintClear(WidgetTester tester) {
+  Future<void> chooseSpacing(WidgetTester tester, String spacing) async {
+    await tester.tap(find.byKey(const ValueKey('stackedWheelExpand')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(ValueKey('stackedWheelSpacing$spacing')));
+    await tester.pumpAndSettle();
+  }
+
+  ChronologyDepthCamera camera(WidgetTester tester) {
+    final view = viewController(tester).value;
+    return ChronologyDepthCamera.capture(
+      view: painter(tester).scene.view as ChronologyDepthView,
+      viewport: Offset.zero & tester.getSize(find.byType(InteractiveViewer)),
+      scale: view.getMaxScaleOnAxis(),
+      translation: Offset(view.storage[12], view.storage[13]),
+    );
+  }
+
+  void expectCamera(
+      ChronologyDepthCamera actual, ChronologyDepthCamera expected) {
+    expect(actual.zoom, closeTo(expected.zoom, 1e-7));
+    expect(
+        (actual.normalizedGroundCentre - expected.normalizedGroundCentre)
+            .distance,
+        lessThan(1e-7));
+  }
+
+  Set<String> visibleIds(List<StackedChronologyGroup> groups,
+          {int start = -4200, int end = 2026}) =>
+      {
+        for (final group in groups)
+          for (final record in group.records)
+            if (record.endYear >= start && record.startYear <= end) record.id,
+      };
+
+  Offset toGlobal(WidgetTester tester, Offset point) =>
+      tester.getTopLeft(find.byType(InteractiveViewer)) +
+      MatrixUtils.transformPoint(viewController(tester).value, point);
+
+  void expectRealPaintClear(WidgetTester tester, {bool fitShapes = false}) {
     final paint = painter(tester);
     final size = tester.getSize(paintFinder());
     final recorder = ui.PictureRecorder();
     paint.paint(Canvas(recorder), size);
     recorder.endRecording().dispose();
-    final labels = (paint.paintedLabelBounds as List).cast<Rect>();
+    final transform = viewController(tester).value;
+    final labels = (paint.paintedLabelBounds as List)
+        .cast<Rect>()
+        .map((rect) => MatrixUtils.transformRect(transform, rect))
+        .toList();
     final recordIds = (paint.paintedRecordIds as List).cast<String>();
-    expect(recordIds.toSet().length, recordIds.length,
-        reason: 'Each drawn name must refer to one visible original record.');
+    expect(recordIds.toSet().length, recordIds.length);
     expect((paint.scene.records as Map).keys, containsAll(recordIds));
     expect(labels, isNotEmpty,
-        reason: 'An empty diagnostic list cannot prove readable canvas type.');
+        reason: 'An empty diagnostic list cannot establish readable type.');
     for (var i = 0; i < labels.length; i++) {
       final box = labels[i];
       expect(box.left, greaterThanOrEqualTo(-.5));
-      expect(box.top, greaterThanOrEqualTo(-.5));
+      expect(box.top, greaterThanOrEqualTo(31.5),
+          reason: 'Actual canvas text must not slide under the fixed readout.');
       expect(box.right, lessThanOrEqualTo(size.width + .5));
       expect(box.bottom, lessThanOrEqualTo(size.height + .5));
       for (var j = i + 1; j < labels.length; j++) {
         expect(box.overlaps(labels[j]), isFalse,
-            reason:
-                'Actual painted labels $i and $j overlap: $box / ${labels[j]}');
+            reason: 'Actual painted labels $i/$j overlap: $box / ${labels[j]}');
       }
     }
-    // Check the shapes from the scene passed to this very painter, not a
-    // second fit formula. Camera controls occupy the final 44 px.
-    for (final prism in prisms(tester)) {
-      if (prism.bounds.isEmpty) continue;
-      expect(prism.bounds.left, greaterThanOrEqualTo(-.5), reason: prism.id);
-      expect(prism.bounds.top, greaterThanOrEqualTo(-.5), reason: prism.id);
-      expect(prism.bounds.right, lessThanOrEqualTo(size.width + .5),
-          reason: prism.id);
-      expect(prism.bounds.bottom, lessThanOrEqualTo(size.height - 44 + .5),
-          reason: '${prism.id} intersects the camera controls');
+    if (fitShapes) {
+      for (final prism in prisms(tester)) {
+        if (prism.bounds.isEmpty) continue;
+        final box = MatrixUtils.transformRect(transform, prism.bounds);
+        expect(box.left, greaterThanOrEqualTo(-.5), reason: prism.id);
+        expect(box.top, greaterThanOrEqualTo(-.5), reason: prism.id);
+        expect(box.right, lessThanOrEqualTo(size.width + .5), reason: prism.id);
+        expect(box.bottom, lessThanOrEqualTo(size.height + .5),
+            reason: prism.id);
+      }
     }
   }
 
-  testWidgets('choosing a group shows exactly its original records',
+  void expectVisibleText(WidgetTester tester, Finder control, String text) {
+    final paragraph = tester.renderObject<RenderParagraph>(
+        find.descendant(of: control, matching: find.text(text)));
+    expect(paragraph.didExceedMaxLines, isFalse);
+    final bounds = tester.getRect(control);
+    final boxes = paragraph.getBoxesForSelection(
+        TextSelection(baseOffset: 0, extentOffset: text.length));
+    expect(boxes, isNotEmpty);
+    for (final box in boxes) {
+      final a = paragraph.localToGlobal(Offset(box.left, box.top));
+      final b = paragraph.localToGlobal(Offset(box.right, box.bottom));
+      expect(a.dx, greaterThanOrEqualTo(bounds.left - .5));
+      expect(b.dx, lessThanOrEqualTo(bounds.right + .5));
+      expect(a.dy, greaterThanOrEqualTo(bounds.top - .5));
+      expect(b.dy, lessThanOrEqualTo(bounds.bottom + .5));
+    }
+  }
+
+  testWidgets(
+      'every selected country keeps its records, ring and original axis',
       (tester) async {
     addTearDown(tester.view.reset);
     final groups = groupsFor('en');
     await pumpWheel(tester, groups: groups);
-    await chooseGroup(tester, 'europe', 'en');
-    final expected = groups
-        .singleWhere((group) => group.id == 'europe')
-        .records
-        .where((record) => record.endYear >= -4200 && record.startYear <= 2026)
-        .map((record) => record.id)
-        .toSet();
-    expect((painter(tester).scene.records as Map).keys.toSet(), expected);
+    expect((painter(tester).scene.records as Map).keys.toSet(),
+        visibleIds(groups));
     expect(
-        tester
-            .widget<DropdownButton<String>>(
-                find.byKey(const ValueKey('stackedWheelGroup')))
-            .value,
-        'europe');
-    await chooseGroup(tester, null, 'en');
-    final all = {
-      for (final group in groups)
-        for (final record in group.records)
-          if (record.endYear >= -4200 && record.startYear <= 2026) record.id
-    };
-    expect((painter(tester).scene.records as Map).keys.toSet(), all);
+        (painter(tester).scene.rings as List).map((dynamic r) => r.id).toSet(),
+        groups.map((g) => g.id).toSet());
+    expect(find.byKey(const ValueKey('stackedWheelGroup')), findsNothing);
+    expect(find.byKey(const ValueKey('stackedWheelFlat')), findsNothing);
+    expect(find.byKey(const ValueKey('stackedWheelRecords')), findsNothing);
+    for (final prism in prisms(tester)) {
+      final record =
+          (painter(tester).scene.records as Map)[prism.id] as YearDigestItem;
+      expect(prism.startAngle,
+          closeTo(angleForSpan(record.startYear, -4200, 2026), 1e-9));
+      expect(prism.endAngle,
+          closeTo(angleForSpan(record.endYear, -4200, 2026), 1e-9));
+    }
+    expectRealPaintClear(tester, fitShapes: true);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('separation and rotation change geometry without changing dates',
+  testWidgets('separation and rotation preserve all countries and their dates',
       (tester) async {
     addTearDown(tester.view.reset);
     await pumpWheel(tester);
-    await chooseGroup(tester, 'china', 'en');
     final before = {for (final prism in prisms(tester)) prism.id: prism};
-    final tiered =
-        before.values.where((prism) => prism.topHeight > 13).toList();
-    expect(tiered, isNotEmpty,
-        reason: 'The real China corpus must exercise concurrent tiers.');
-    final selected = tester
-        .widget<IconButton>(find.byKey(const ValueKey('stackedWheelExpand')))
-        .isSelected;
-    await tester.tap(find.byKey(const ValueKey('stackedWheelExpand')));
-    await tester.pump();
-    expect(
-        tester
-            .widget<IconButton>(
-                find.byKey(const ValueKey('stackedWheelExpand')))
-            .isSelected,
-        !selected!);
+    await chooseSpacing(tester, 'Compact');
     final after = {for (final prism in prisms(tester)) prism.id: prism};
     expect(after.keys.toSet(), before.keys.toSet());
-    expect(tiered.any((prism) => after[prism.id]!.topHeight != prism.topHeight),
+    expect(before.values.any((p) => after[p.id]!.topHeight != p.topHeight),
         isTrue);
     for (final id in before.keys) {
+      expect(after[id]!.innerRadius, before[id]!.innerRadius);
+      expect(after[id]!.outerRadius, before[id]!.outerRadius);
       expect(after[id]!.startAngle, before[id]!.startAngle);
       expect(after[id]!.endAngle, before[id]!.endAngle);
     }
     final rotation = painter(tester).scene.rotation as double;
     await tester.tap(find.byKey(const ValueKey('stackedRotateRight')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect((painter(tester).scene.rotation as double) - rotation,
-        closeTo(math.pi / 6, 1e-9));
+        closeTo(math.pi / 12, 1e-9));
     await tester.tap(find.byKey(const ValueKey('stackedRotateLeft')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(painter(tester).scene.rotation, closeTo(rotation, 1e-9));
+    expect((painter(tester).scene.records as Map).keys.toSet(),
+        before.keys.toSet());
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('drag orbits yaw and tilt; Pan moves the same complete wheel',
+      (tester) async {
+    addTearDown(tester.view.reset);
+    final angles = <(double, double)>[];
+    await pumpWheel(tester,
+        initialLift: 10, onAnglesChanged: (a, b) => angles.add((a, b)));
+    final all = (painter(tester).scene.records as Map).keys.toSet();
+    final viewer = find.byType(InteractiveViewer);
+    final initial = camera(tester);
+    expect(tester.widget<InteractiveViewer>(viewer).panEnabled, isFalse);
+    await tester.dragFrom(tester.getCenter(viewer), const Offset(60, 24));
+    await tester.pumpAndSettle();
+    expect(angles, isNotEmpty);
+    expect(angles.last.$1, greaterThan(0));
+    expect(angles.last.$2, greaterThan(.70));
+    expectCamera(camera(tester), initial);
+    final yaw = painter(tester).scene.rotation;
+    final tilt =
+        (painter(tester).scene.projection as WheelStackProjection).squash;
+    await tester.tap(find.byKey(const ValueKey('stackedWheelGestureMode')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<InteractiveViewer>(viewer).panEnabled, isTrue);
+    await tester.dragFrom(tester.getCenter(viewer), const Offset(32, -12));
+    await tester.pumpAndSettle();
+    expect(
+        (camera(tester).normalizedGroundCentre - initial.normalizedGroundCentre)
+            .distance,
+        greaterThan(0));
+    expect(painter(tester).scene.rotation, yaw);
+    expect((painter(tester).scene.projection as WheelStackProjection).squash,
+        tilt);
+    final slider = find.byKey(const ValueKey('stackedWheelTilt'));
+    await tester
+        .tapAt(tester.getRect(slider).centerRight - const Offset(16, 0));
+    await tester.pumpAndSettle();
+    expect((painter(tester).scene.projection as WheelStackProjection).squash,
+        greaterThan(tilt));
+    expect((painter(tester).scene.records as Map).keys.toSet(), all);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-      'zoom and reset operate the actual viewer; Flat leaves through callback',
+      'external camera survives projection changes; reset returns to fit',
       (tester) async {
     addTearDown(tester.view.reset);
-    var flats = 0;
-    await pumpWheel(tester, onFlat: () => flats++);
-    final controller = viewController(tester);
-    expect(controller.value.getMaxScaleOnAxis(), 1);
+    final controller = TransformationController();
+    addTearDown(controller.dispose);
+    const initial = ChronologyDepthCamera(
+        normalizedGroundCentre: Offset(.15, -.12), zoom: 2.5);
+    final updates = <ChronologyDepthCamera>[];
+    await pumpWheel(tester,
+        controller: controller,
+        initialCamera: initial,
+        initialYaw: .2,
+        initialTilt: .55,
+        initialLift: 10,
+        onCameraChanged: updates.add);
+    expect(identical(viewController(tester), controller), isTrue);
+    expectCamera(camera(tester), initial);
+    await tester.tap(find.byKey(const ValueKey('stackedRotateRight')));
+    await tester.pumpAndSettle();
+    expectCamera(camera(tester), initial);
     await tester.tap(find.byKey(const ValueKey('stackedZoomIn')));
-    await tester.pump();
-    expect(controller.value.getMaxScaleOnAxis(), greaterThan(1));
-    final larger = controller.value.getMaxScaleOnAxis();
+    await tester.pumpAndSettle();
+    expect(camera(tester).zoom, greaterThan(initial.zoom));
     await tester.tap(find.byKey(const ValueKey('stackedZoomOut')));
-    await tester.pump();
-    expect(controller.value.getMaxScaleOnAxis(), lessThan(larger));
-    await tester.tap(find.byKey(const ValueKey('stackedZoomIn')));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expectCamera(camera(tester), initial);
     await tester.tap(find.byKey(const ValueKey('stackedReset')));
-    await tester.pump();
-    expect(controller.value, Matrix4.identity());
-    await tester.tap(find.byKey(const ValueKey('stackedWheelFlat')));
-    expect(flats, 1);
-    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+    expectCamera(camera(tester), const ChronologyDepthCamera());
+    expect(painter(tester).scene.rotation, 0);
+    expect(
+        (painter(tester).scene.projection as WheelStackProjection).squash, .70);
+    expect(updates, isNotEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.value = Matrix4.identity();
+    expect(tester.takeException(), isNull,
+        reason:
+            'Disposing the chart must not dispose its parent-owned controller.');
   });
 
-  testWidgets('a visible prism opens its original record', (tester) async {
+  testWidgets('a visible world prism opens its original record',
+      (tester) async {
     addTearDown(tester.view.reset);
     final opened = <YearDigestItem>[];
     await pumpWheel(tester, onOpen: opened.add);
-    await chooseGroup(tester, 'china', 'en');
-    final scenePrisms = prisms(tester);
-    final size = tester.getSize(paintFinder());
+    final all = prisms(tester);
+    final viewport = tester.getRect(find.byType(InteractiveViewer));
     Offset? target;
     String? id;
-    for (final prism in scenePrisms.reversed) {
+    for (final prism in all.reversed) {
       if (prism.sweep == 0) continue;
-      final candidate = prism.projection.polar(
+      final point = prism.projection.polar(
           prism.middleRadius, prism.middleAngle,
           height: prism.topHeight);
-      if (candidate.dy < 32 || candidate.dy > size.height - 48) continue;
-      if (hitWheelStackPrism(scenePrisms, candidate)?.id != prism.id) continue;
-      target = candidate;
+      if (!viewport.deflate(36).contains(toGlobal(tester, point))) continue;
+      if (hitWheelStackPrism(all, point)?.id != prism.id) continue;
+      if ((painter(tester).scene.callouts as List)
+          .cast<WheelStackCallout>()
+          .any((c) => c.bounds
+              .inflate(4 / viewController(tester).value.getMaxScaleOnAxis())
+              .contains(point))) {
+        continue;
+      }
+      target = point;
       id = prism.id;
       break;
     }
-    expect(target, isNotNull,
-        reason: 'The focused real China group must have a reachable segment.');
-    final origin = tester.getTopLeft(paintFinder());
-    await tester.tapAt(origin + target!);
+    expect(target, isNotNull);
+    await tester.tapAt(toGlobal(tester, target!));
     await tester.pump();
     expect(opened.single.id, id);
     expect(opened.single.startYear, powers[id]!.start);
@@ -325,62 +428,54 @@ void main() {
   testWidgets('an 8x point marker keeps a six-screen-pixel touch radius',
       (tester) async {
     addTearDown(tester.view.reset);
-    final source = groupsFor('en').singleWhere((group) => group.id == 'china');
-    final event = source.records
-        .firstWhere((record) => record.kind == StripLaneKind.events);
+    final source = groupsFor('en').singleWhere((g) => g.id == 'china');
+    final event =
+        source.records.firstWhere((r) => r.kind == StripLaneKind.events);
     final opened = <YearDigestItem>[];
     await pumpWheel(tester,
+        initialLift: 10,
         groups: [
           StackedChronologyGroup(
               id: source.id,
               name: source.name,
               color: source.color,
-              records: [event]),
+              records: [event])
         ],
         onOpen: opened.add);
-    await chooseGroup(tester, 'china', 'en');
-    final originalPrism = prisms(tester).single;
-    expect(originalPrism.sweep, 0);
-    final projected = originalPrism.projection.polar(
-        originalPrism.middleRadius, originalPrism.middleAngle,
-        height: originalPrism.topHeight);
+    final prism = prisms(tester).single;
+    expect(prism.sweep, 0);
+    final point = prism.projection
+        .polar(prism.middleRadius, prism.middleAngle, height: prism.topHeight);
+    expect(point.dy, lessThan(0),
+        reason: 'The fitted marker must remain tappable outside the original '
+            'child hit box at expanded spacing.');
     final viewer = find.byType(InteractiveViewer);
     final viewport = tester.getSize(viewer);
     final centre = viewport.center(Offset.zero);
     final controller = viewController(tester);
-    // Place the real projected marker in the centre of the actual viewer,
-    // clear of the header and camera controls, at the supported 8x limit.
     controller.value = Matrix4.identity()
       ..translateByDouble(centre.dx, centre.dy, 0, 1)
       ..scaleByDouble(8, 8, 1, 1)
-      ..translateByDouble(-projected.dx, -projected.dy, 0, 1);
-    await tester.pump();
+      ..translateByDouble(-point.dx, -point.dy, 0, 1);
+    await tester.pumpAndSettle();
     expect(controller.value.getMaxScaleOnAxis(), 8);
-    final actualPrism = prisms(tester).single;
-    final actualPoint = actualPrism.projection.polar(
-        actualPrism.middleRadius, actualPrism.middleAngle,
-        height: actualPrism.topHeight);
-    final screenPoint =
-        MatrixUtils.transformPoint(controller.value, actualPoint);
-    final near = screenPoint + const Offset(5.5, 0);
-    final far = screenPoint + const Offset(12, 0);
-    final callouts =
-        (painter(tester).scene.callouts as List).cast<WheelStackCallout>();
-    for (final point in [near, far]) {
-      expect((Offset.zero & viewport).deflate(44).contains(point), isTrue);
+    final screen = MatrixUtils.transformPoint(controller.value, point);
+    final near = screen + const Offset(5.5, 0);
+    final far = screen + const Offset(12, 0);
+    for (final position in [near, far]) {
+      expect((Offset.zero & viewport).deflate(44).contains(position), isTrue);
       expect(
-          callouts.any((callout) => callout.bounds
-              .inflate(4 / 8)
-              .contains(controller.toScene(point))),
-          isFalse,
-          reason: 'This gesture must test the point marker, not a side name.');
+          (painter(tester).scene.callouts as List)
+              .cast<WheelStackCallout>()
+              .any((c) => c.bounds
+                  .inflate(4 / 8)
+                  .contains(controller.toScene(position))),
+          isFalse);
     }
     final origin = tester.getTopLeft(viewer);
     await tester.tapAt(origin + far);
     await tester.pump();
-    expect(opened, isEmpty,
-        reason: 'A scene-space radius of six would wrongly capture this '
-            '12-screen-pixel miss when zoomed to 8x.');
+    expect(opened, isEmpty);
     await tester.tapAt(origin + near);
     await tester.pump();
     expect(opened.single, same(event));
@@ -389,212 +484,272 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a painted side callout opens its original record',
+  testWidgets('a painted side callout opens its original world record',
       (tester) async {
     addTearDown(tester.view.reset);
     final opened = <YearDigestItem>[];
     await pumpWheel(tester,
         locale: 'zh-Hant', startYear: 100, endYear: 1500, onOpen: opened.add);
-    await chooseGroup(tester, 'china', 'zh-Hant');
     expectRealPaintClear(tester);
     final callouts =
         (painter(tester).scene.callouts as List).cast<WheelStackCallout>();
-    expect(callouts, isNotEmpty,
-        reason: 'Real overlapping China durations need readable side names.');
+    expect(callouts, isNotEmpty);
     final target = callouts.first;
     final original =
         (painter(tester).scene.records as Map)[target.id] as YearDigestItem;
     final transform = viewController(tester).value.clone();
-    await tester.tapAt(tester.getTopLeft(paintFinder()) + target.bounds.center);
+    await tester.tapAt(toGlobal(tester, target.bounds.center));
     await tester.pump();
     expect(opened.single, same(original));
-    expect(opened.single.id, target.id);
     expect(viewController(tester).value, transform);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('record cards keep a point event reachable by its full id',
-      (tester) async {
-    addTearDown(tester.view.reset);
-    final opened = <YearDigestItem>[];
-    final groups = groupsFor('zh-Hant');
-    final event =
-        groups.first.records.firstWhere((r) => r.kind == StripLaneKind.events);
-    await pumpWheel(tester,
-        locale: 'zh-Hant', groups: groups, onOpen: opened.add);
-    await chooseGroup(tester, 'china', 'zh-Hant');
-    final card = find.byKey(ValueKey('stackedRecord-${event.id}'));
-    await tester.scrollUntilVisible(card, 200,
-        scrollable: find.descendant(
-          of: find.byKey(const ValueKey('stackedWheelRecords')),
-          matching: find.byType(Scrollable),
-        ));
-    await tester.tap(card);
-    await tester.pump();
-    expect(opened.single, same(event));
-    expect(opened.single.startYear, opened.single.endYear);
-    expect(tester.takeException(), isNull);
-  });
+  for (final size in [const Size(360, 435), const Size(800, 304)]) {
+    testWidgets('All names recovers every selected country at $size',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      final groups = groupsFor('zh-Hant');
+      final opened = <YearDigestItem>[];
+      await pumpWheel(tester,
+          size: size, locale: 'zh-Hant', groups: groups, onOpen: opened.add);
+      await tester.tap(find.byKey(const ValueKey('stackedWheelAllNames')));
+      await tester.pumpAndSettle();
+      final records = groups
+          .expand((g) => g.records)
+          .where((r) => r.endYear >= -4200 && r.startYear <= 2026)
+          .toList()
+        ..sort((a, b) => a.startYear.compareTo(b.startYear));
+      final sheet = find.byType(BottomSheet);
+      final list = find.descendant(of: sheet, matching: find.byType(ListView));
+      expect(tester.widget<ListView>(list).childrenDelegate.estimatedChildCount,
+          records.length + 1);
+      final lastName = find.descendant(
+          of: sheet, matching: find.text(label(records.last, 'zh-Hant')));
+      await tester.scrollUntilVisible(lastName, 180,
+          scrollable:
+              find.descendant(of: sheet, matching: find.byType(Scrollable)));
+      await tester.pumpAndSettle();
+      final row = tester.getRect(lastName);
+      final bounds = tester.getRect(list);
+      expect(row.top, greaterThanOrEqualTo(bounds.top - .5));
+      expect(row.bottom, lessThanOrEqualTo(bounds.bottom + .5));
+      expect(lastName.hitTestable(), findsOneWidget);
+      await tester.tap(lastName);
+      await tester.pumpAndSettle();
+      expect(opened.single, same(records.last));
+      expect(sheet, findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
-  testWidgets('selection and date-window updates keep the correct group',
+  testWidgets(
+      'selection reveals the record while range retains original angles',
       (tester) async {
     addTearDown(tester.view.reset);
     final groups = groupsFor('en');
     final selected = groups
-        .singleWhere((group) => group.id == 'rome')
+        .singleWhere((g) => g.id == 'rome')
         .records
-        .firstWhere(
-            (record) => record.startYear >= 100 && record.endYear <= 1500);
+        .firstWhere((r) => r.startYear >= 100 && r.endYear <= 1500);
     await pumpWheel(tester, groups: groups);
     await pumpWheel(tester,
         groups: groups, selectedId: selected.id, startYear: 100, endYear: 1500);
-    expect(
-        tester
-            .widget<DropdownButton<String>>(
-                find.byKey(const ValueKey('stackedWheelGroup')))
-            .value,
-        'rome');
+    expect((painter(tester).scene.records as Map).keys.toSet(),
+        visibleIds(groups, start: 100, end: 1500));
     expect(painter(tester).selectedId, selected.id);
-    expect(painter(tester).scene.start, 100);
-    expect(painter(tester).scene.end, 1500);
-    final visible =
-        (painter(tester).scene.records as Map).values.cast<YearDigestItem>();
-    expect(visible.map((record) => record.id), contains(selected.id));
+    expect(painter(tester).scene.start, -4200);
+    expect(painter(tester).scene.end, 2026);
+    final prism = prisms(tester).singleWhere((p) => p.id == selected.id);
+    expect(prism.startAngle,
+        closeTo(angleForSpan(selected.startYear, -4200, 2026), 1e-9));
+    final top = prism.projection
+        .polar(prism.middleRadius, prism.middleAngle, height: prism.topHeight);
     expect(
-        visible.every(
-            (record) => record.endYear >= 100 && record.startYear <= 1500),
-        isTrue);
-    expect(viewController(tester).value, Matrix4.identity());
+        (toGlobal(tester, top) -
+                tester.getCenter(find.byType(InteractiveViewer)))
+            .distance,
+        lessThan(.01));
+    expect(camera(tester).zoom, greaterThanOrEqualTo(2));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the actual painter reuses text on warm frames and rotation',
-      (tester) async {
-    addTearDown(tester.view.reset);
-    final china =
-        groupsFor('zh-Hant').singleWhere((group) => group.id == 'china');
-    WheelTextMetrics.resetStatsForTest();
-    await pumpWheel(tester,
-        groups: [china], locale: 'zh-Hant', startYear: 100, endYear: 1500);
-    await chooseGroup(tester, 'china', 'zh-Hant');
-    final cold = WheelTextMetrics.layoutsForTest;
-    final visibleRecords = (painter(tester).scene.records as Map).length;
-    expect(cold, greaterThan(0));
-    expect(cold, lessThanOrEqualTo(visibleRecords + 5),
-        reason:
-            'Only one paragraph per record and the five date ticks are needed.');
-    WheelTextMetrics.zeroCounterForTest();
-    expectRealPaintClear(tester);
-    final warm = WheelTextMetrics.layoutsForTest;
-    final paintedIds =
-        (painter(tester).paintedRecordIds as List).cast<String>();
-    final paintedNames = paintedIds.length;
-    expect(paintedIds, containsAll(['song-dynasty', 'liao-khitan']),
-        reason: 'The overlapping Song and Liao durations both retain visible '
-            'surface, so both original names must be painted in this window.');
-    expect(paintedNames, greaterThanOrEqualTo(3),
-        reason: 'The real China 100–1500 window needs at least three names; '
-            'date ticks alone do not make the chart readable.');
-    expect(warm, 0);
-    WheelTextMetrics.zeroCounterForTest();
-    await tester.tap(find.byKey(const ValueKey('stackedRotateRight')));
-    await tester.pump();
-    final rotation = WheelTextMetrics.layoutsForTest;
-    expect(rotation, 0,
-        reason: 'Rotation moves the existing text; it must not reshape it.');
-    WheelTextMetrics.zeroCounterForTest();
-    await tester.tap(find.byKey(const ValueKey('stackedZoomIn')));
-    await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('stackedZoomIn')));
-    await tester.pump();
-    final zoom = WheelTextMetrics.layoutsForTest;
-    expect(zoom, lessThanOrEqualTo(visibleRecords + 5),
-        reason: 'A new text size needs at most one new paragraph per label.');
-    expect(viewController(tester).value.getMaxScaleOnAxis(), greaterThan(1));
-    debugPrint('Stacked China actual painter layouts: cold=$cold; warm=$warm; '
-        'rotation=$rotation; zoom=$zoom; '
-        'painted record names=$paintedNames; '
-        'painted labels=${(painter(tester).paintedLabelBounds as List).length}');
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('the focused all-time window follows the real group extent',
+  testWidgets('high zoom reveals the real raised top in the same period',
       (tester) async {
     addTearDown(tester.view.reset);
     final groups = groupsFor('en');
-    await pumpWheel(tester, groups: groups);
-    await chooseGroup(tester, 'rome', 'en');
-    final records = groups.singleWhere((group) => group.id == 'rome').records;
-    final earliest = records.map((record) => record.startYear).reduce(math.min);
-    final latest = records.map((record) => record.endYear).reduce(math.max);
-    expect(painter(tester).scene.start, earliest.clamp(-4200, 2026));
-    expect(painter(tester).scene.end, latest.clamp(-4200, 2026));
-    await chooseGroup(tester, null, 'en');
+    await pumpWheel(tester,
+        groups: groups,
+        initialLift: 10,
+        initialYaw: .55,
+        initialCamera: const ChronologyDepthCamera(zoom: 80));
+    final plan = painter(tester).plan as WheelStackPlan;
+    final candidates = prisms(tester)
+        .where((prism) => (plan.tierById[prism.id] ?? 0) >= 3)
+        .toList()
+      ..sort((a, b) => b.topHeight.compareTo(a.topHeight));
+    expect(candidates, isNotEmpty);
+    final target = candidates.first;
+    final viewport = tester.getSize(find.byType(InteractiveViewer));
+    final scale = viewController(tester).value.getMaxScaleOnAxis();
+    expect(viewport.height / 2 - target.topHeight * scale, lessThan(32),
+        reason:
+            'Centring only the ground would put this actual top above the readout.');
+    await pumpWheel(tester,
+        groups: groups,
+        initialLift: 10,
+        selectedId: target.id,
+        revealRevision: 1);
+    final revealed =
+        prisms(tester).singleWhere((prism) => prism.id == target.id);
+    final top = revealed.projection.polar(
+        revealed.middleRadius, revealed.middleAngle,
+        height: revealed.topHeight);
+    expect(
+        (toGlobal(tester, top) -
+                tester.getCenter(find.byType(InteractiveViewer)))
+            .distance,
+        lessThan(.01));
+    expect(camera(tester).zoom, closeTo(80, 1e-6));
     expect(painter(tester).scene.start, -4200);
     expect(painter(tester).scene.end, 2026);
+    expect((painter(tester).scene.records as Map).keys.toSet(),
+        visibleIds(groups));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('short screens recover every record through All names',
+  testWidgets('All names reveals an offscreen record after parent selection',
       (tester) async {
     addTearDown(tester.view.reset);
-    final groups = groupsFor('zh-Hant');
-    final opened = <YearDigestItem>[];
-    await pumpWheel(tester,
-        size: const Size(800, 304),
-        locale: 'zh-Hant',
-        groups: groups,
-        onOpen: opened.add);
-    await chooseGroup(tester, 'china', 'zh-Hant');
-    expect(find.byKey(const ValueKey('stackedWheelRecords')), findsNothing);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 600);
+    SharedPreferences.setMockInitialValues({});
+    final settings = AppSettings();
+    await settings.setFontFamily('Roboto');
+    await tester.pump(const Duration(milliseconds: 650));
+    final china = groupsFor('en').singleWhere((group) => group.id == 'china');
+    final records = china.records
+        .where((record) =>
+            record.id == 'liao-khitan' || record.id == 'song-dynasty')
+        .toList();
+    expect(records.length, 2);
+    final target = records.singleWhere((record) => record.id == 'song-dynasty');
+    String? selected;
+    await tester.pumpWidget(ChangeNotifierProvider(
+        create: (_) => settings,
+        child: MaterialApp(
+          theme: ThemeData(fontFamily: 'Roboto'),
+          home: Scaffold(
+              body: StatefulBuilder(
+                  builder: (context, update) => StackedChronologyWheel(
+                        groups: [
+                          StackedChronologyGroup(
+                              id: china.id,
+                              name: china.name,
+                              color: china.color,
+                              records: records)
+                        ],
+                        locale: 'en',
+                        label: (record) => label(record, 'en'),
+                        onFlat: () {},
+                        selectedId: selected,
+                        initialCamera: const ChronologyDepthCamera(
+                            normalizedGroundCentre: Offset(2, 2), zoom: 16),
+                        onOpen: (record) => update(() => selected = record.id),
+                      ))),
+        )));
+    await tester.pumpAndSettle();
+    final before = prisms(tester).singleWhere((prism) => prism.id == target.id);
+    final beforeTop = before.projection.polar(
+        before.middleRadius, before.middleAngle,
+        height: before.topHeight);
+    expect(
+        tester
+            .getRect(find.byType(InteractiveViewer))
+            .contains(toGlobal(tester, beforeTop)),
+        isFalse);
     await tester.tap(find.byKey(const ValueKey('stackedWheelAllNames')));
     await tester.pumpAndSettle();
-    final records = groups
-        .singleWhere((group) => group.id == 'china')
-        .records
-        .where((record) => record.endYear >= -4200 && record.startYear <= 2026)
-        .toList()
-      ..sort((a, b) => a.startYear.compareTo(b.startYear));
-    final sheet = find.byType(BottomSheet);
-    final list = find.descendant(of: sheet, matching: find.byType(ListView));
-    expect(tester.widget<ListView>(list).childrenDelegate.estimatedChildCount,
-        records.length);
-    final lastName = find.descendant(
-        of: sheet, matching: find.text(label(records.last, 'zh-Hant')));
-    await tester.scrollUntilVisible(lastName, 180,
-        scrollable:
-            find.descendant(of: sheet, matching: find.byType(Scrollable)));
-    // ensureVisible changes the scroll offset after scrollUntilVisible's
-    // last frame. Lay out that offset before measuring or tapping: the
-    // stale final-row centre was y305.3 in a 304 px viewport.
+    await tester.tap(find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text(label(target, 'en'))));
     await tester.pumpAndSettle();
-    final rowRect = tester.getRect(lastName);
-    final listRect = tester.getRect(list);
-    expect(rowRect.top, greaterThanOrEqualTo(listRect.top - .5));
-    expect(rowRect.bottom, lessThanOrEqualTo(listRect.bottom + .5));
-    expect(lastName.hitTestable(), findsOneWidget);
-    await tester.tap(lastName);
-    await tester.pumpAndSettle();
-    expect(opened.single, same(records.last));
-    expect(sheet, findsNothing);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(selected, target.id);
+    final after = prisms(tester).singleWhere((prism) => prism.id == target.id);
+    final afterTop = after.projection
+        .polar(after.middleRadius, after.middleAngle, height: after.topHeight);
+    expect(
+        (toGlobal(tester, afterTop) -
+                tester.getCenter(find.byType(InteractiveViewer)))
+            .distance,
+        lessThan(.01));
+    expect(camera(tester).zoom, closeTo(16, 1e-6));
     expect(tester.takeException(), isNull);
   });
+
+  for (final chinaOnly in [false, true]) {
+    testWidgets('real label cache is warm (China-only=$chinaOnly)',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      final groups = groupsFor('zh-Hant');
+      WheelTextMetrics.resetStatsForTest();
+      await pumpWheel(tester,
+          locale: 'zh-Hant',
+          startYear: 100,
+          endYear: 1500,
+          groups: chinaOnly
+              ? groups.where((g) => g.id == 'china').toList()
+              : groups);
+      final cold = WheelTextMetrics.layoutsForTest;
+      final count = (painter(tester).scene.records as Map).length;
+      expect(cold, greaterThan(0));
+      expect(cold, lessThanOrEqualTo(2 * (count + 5)),
+          reason: 'Initial camera fit can require one additional font size.');
+      WheelTextMetrics.zeroCounterForTest();
+      expectRealPaintClear(tester);
+      final warm = WheelTextMetrics.layoutsForTest;
+      final names = (painter(tester).paintedRecordIds as List).length;
+      expect(names, greaterThan(0),
+          reason: 'Year ticks alone do not identify any records.');
+      expect(warm, 0);
+      WheelTextMetrics.zeroCounterForTest();
+      await tester.tap(find.byKey(const ValueKey('stackedRotateRight')));
+      await tester.pumpAndSettle();
+      final rotation = WheelTextMetrics.layoutsForTest;
+      expect(rotation, lessThanOrEqualTo(count + 5),
+          reason:
+              'Rotation may expose new names, but must reuse existing paragraphs.');
+      WheelTextMetrics.zeroCounterForTest();
+      await tester.tap(find.byKey(const ValueKey('stackedZoomIn')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('stackedZoomIn')));
+      await tester.pumpAndSettle();
+      final zoom = WheelTextMetrics.layoutsForTest;
+      expect(zoom, lessThanOrEqualTo(2 * (count + 5)));
+      debugPrint('World wheel China-only=$chinaOnly: records=$count; '
+          'cold=$cold; warm=$warm; rotation=$rotation; zoom=$zoom; painted names=$names');
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final size in [const Size(360, 435), const Size(800, 304)]) {
     for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
-      testWidgets(
-          'real painted labels and controls stay clear at $size $locale',
+      testWidgets('world names and controls stay clear at $size $locale',
           (tester) async {
         addTearDown(tester.view.reset);
         SharedPreferences.setMockInitialValues({});
         final settings = AppSettings();
         await settings.setFontSize(kFontSizeMax);
         await settings.setMenuScale(kMenuScaleMax);
-        await tester.pump(const Duration(milliseconds: 650));
         await pumpWheel(tester, size: size, locale: locale, settings: settings);
-        await chooseGroup(tester, 'china', locale);
-        expectRealPaintClear(tester);
-        final camera = <Rect>[];
+        expectRealPaintClear(tester, fitShapes: true);
+        final footer =
+            tester.getRect(find.byKey(const ValueKey('stackedWheelFooter')));
+        final viewport = tester.getRect(find.byType(InteractiveViewer));
+        expect(footer.height, stackedWheelFooterHeight);
+        expect(footer.overlaps(viewport), isFalse);
+        final controls = <Rect>[];
         for (final key in [
           'stackedRotateLeft',
           'stackedRotateRight',
@@ -603,56 +758,28 @@ void main() {
           'stackedReset',
           'stackedZoomIn'
         ]) {
-          final control = tester.getRect(find.byKey(ValueKey(key)));
-          expect(control.width, greaterThanOrEqualTo(44));
-          expect(control.height, greaterThanOrEqualTo(44));
-          expect(control.left, greaterThanOrEqualTo(0));
-          expect(control.right, lessThanOrEqualTo(size.width));
-          for (final earlier in camera) {
-            expect(control.overlaps(earlier), isFalse);
+          final box = tester.getRect(find.byKey(ValueKey(key)));
+          expect(box.width, greaterThanOrEqualTo(44));
+          expect(box.height, greaterThanOrEqualTo(44));
+          expect(box.left, greaterThanOrEqualTo(0));
+          expect(box.right, lessThanOrEqualTo(size.width));
+          expect(box.top, greaterThanOrEqualTo(footer.top));
+          expect(box.bottom, lessThanOrEqualTo(footer.bottom));
+          for (final earlier in controls) {
+            expect(box.overlaps(earlier), isFalse);
           }
-          camera.add(control);
+          controls.add(box);
         }
-        final allNames = find.byKey(const ValueKey('stackedWheelAllNames'));
-        final allNamesLabel = stackedWheelText('allNames', locale);
-        final allNamesParagraph = tester.renderObject<RenderParagraph>(
-            find.descendant(of: allNames, matching: find.text(allNamesLabel)));
-        expect(allNamesParagraph.didExceedMaxLines, isFalse);
-        final allNamesRect = tester.getRect(allNames);
-        for (final box in allNamesParagraph.getBoxesForSelection(
-            TextSelection(baseOffset: 0, extentOffset: allNamesLabel.length))) {
-          final start =
-              allNamesParagraph.localToGlobal(Offset(box.left, box.top));
-          final end =
-              allNamesParagraph.localToGlobal(Offset(box.right, box.bottom));
-          expect(start.dx, greaterThanOrEqualTo(allNamesRect.left - .5));
-          expect(end.dx, lessThanOrEqualTo(allNamesRect.right + .5));
-          expect(start.dy, greaterThanOrEqualTo(allNamesRect.top - .5));
-          expect(end.dy, lessThanOrEqualTo(allNamesRect.bottom + .5));
-        }
-        final dropdown = find.byKey(const ValueKey('stackedWheelGroup'));
-        final name = data.streams
-            .singleWhere((stream) => stream.id == 'china')
-            .nameFor(locale);
-        final nameFinder =
-            find.descendant(of: dropdown, matching: find.text(name));
-        final paragraph = tester.renderObject<RenderParagraph>(nameFinder);
-        expect(paragraph.didExceedMaxLines, isFalse);
-        final dropdownRect = tester.getRect(dropdown);
-        for (final box in paragraph.getBoxesForSelection(
-            TextSelection(baseOffset: 0, extentOffset: name.length))) {
-          final a = paragraph.localToGlobal(Offset(box.left, box.top));
-          final b = paragraph.localToGlobal(Offset(box.right, box.bottom));
-          expect(a.dx, greaterThanOrEqualTo(dropdownRect.left - .5));
-          expect(b.dx, lessThanOrEqualTo(dropdownRect.right + .5));
-          expect(a.dy, greaterThanOrEqualTo(dropdownRect.top - .5));
-          expect(b.dy, lessThanOrEqualTo(dropdownRect.bottom + .5));
-        }
-        await chooseGroup(tester, 'europe', locale);
-        expectRealPaintClear(tester);
-        await tester.tap(find.byKey(const ValueKey('stackedWheelExpand')));
-        await tester.pump();
-        expectRealPaintClear(tester);
+        expectVisibleText(
+            tester,
+            find.byKey(const ValueKey('stackedWheelAllNames')),
+            stackedWheelText('allNames', locale));
+        expectVisibleText(
+            tester,
+            find.byKey(const ValueKey('stackedWheelGestureMode')),
+            stackedWheelText('rotateMode', locale));
+        await chooseSpacing(tester, 'Compact');
+        expectRealPaintClear(tester, fitShapes: true);
         expect(tester.takeException(), isNull);
       });
     }

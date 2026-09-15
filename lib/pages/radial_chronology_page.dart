@@ -44,9 +44,12 @@ import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
 import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
 import 'package:seeksparks/widgets/stacked_chronology_wheel.dart';
+import 'package:seeksparks/widgets/chronology_depth_toggle.dart';
+import 'package:seeksparks/utils/chronology_depth_view.dart';
+import 'package:seeksparks/utils/wheel_stack_layout.dart';
 
 /// The default stacked view gives concurrent spans separate heights and
-/// focuses one selected group. StackedChronologyWheel owns its projection;
+/// keeps every enabled ring in place. StackedChronologyWheel owns its projection;
 /// the event explorer and detail sheets are shared with the flat view.
 /// The geometry notes below describe the retained flat view.
 ///
@@ -1318,6 +1321,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   final _explorer = ChronologyExplorerController();
   late bool _stacked;
   int _stackRevealRevision = 0;
+  ChronologyDepthCamera? _depthCamera;
+  ChronologyDepthCamera? _enterDepthCamera;
+  ChronologyDepthCamera? _enterFlatCamera;
+  double _depthYaw = 0;
+  double _depthTilt = .70;
+  double _depthLift = 4;
   Object? _stackGroupsKey;
   List<StackedChronologyGroup> _stackGroups = const [];
 
@@ -1342,10 +1351,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     _defaultsApplied = true;
     final capacity = ringCapacity(side,
         hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side));
-    final keep = _stacked
-        ? {'israel', 'judah', 'egypt', 'china', 'church', 'scripture'}
-        : defaultVisibleStreams(data.streams.map((s) => s.id), capacity)
-            .toSet();
+    final keep =
+        defaultVisibleStreams(data.streams.map((s) => s.id), capacity).toSet();
     for (final s in data.streams) {
       if (!keep.contains(s.id)) _hidden.add(s.id);
     }
@@ -1401,7 +1408,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // A period is a sector of the overview. Keep the entire wheel in
     // view so the coloured sector answers where the period belongs;
     // its readable event list is beside the chart, at the same scale.
-    _resetViewMatrix();
+    if (!_stacked) _resetViewMatrix();
   }
 
   void _openExplorerEvent(BuildContext context, WheelHistoryEvent event,
@@ -1437,6 +1444,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     _stacked = widget.initialStacked;
     if (widget.initialPeriod case final period?) {
       _explorer.selectPeriod(period);
+      if (period.start > kMinYear || period.end < kMaxYear) {
+        _rangeStart = period.start;
+        _rangeEnd = period.end;
+        _cursorYear = ((period.start + period.end) / 2).round();
+      }
     }
     if (widget.initialHiddenStreams case final hidden?) {
       _hidden.addAll(hidden);
@@ -1457,6 +1469,48 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     final z = _viewer.value.getMaxScaleOnAxis();
     // Repaint only on a change worth repainting for.
     if ((z - _zoom).abs() > 0.02) setState(() => _zoom = z);
+  }
+
+  void _setDepth(bool depth) {
+    if (depth == _stacked) return;
+    if (depth) {
+      final size = _viewportSize;
+      if (size != null && _side > 0) {
+        final m = _viewer.value;
+        _enterDepthCamera = ChronologyDepthCamera.fromProjection(
+          projection:
+              WheelStackProjection(centre: size.center(Offset.zero), squash: 1),
+          groundRadius: _side * rimFractionFor(_side),
+          viewport: Offset.zero & size,
+          scale: m.getMaxScaleOnAxis(),
+          translation: Offset(m.storage[12], m.storage[13]),
+        );
+      }
+    } else {
+      _enterFlatCamera = _depthCamera ?? const ChronologyDepthCamera();
+    }
+    setState(() => _stacked = depth);
+  }
+
+  void _restoreFlatCamera(Size size, double radius) {
+    final camera = _enterFlatCamera;
+    if (camera == null) return;
+    _enterFlatCamera = null;
+    final transform = camera.toProjection(
+      projection:
+          WheelStackProjection(centre: size.center(Offset.zero), squash: 1),
+      groundRadius: radius,
+      viewport: Offset.zero & size,
+    );
+    // InteractiveViewer is laid out before restoring its transform. Its
+    // centre may change because 3D reserves a second row of camera controls.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _stacked) return;
+      _viewer.value = Matrix4.identity()
+        ..translateByDouble(
+            transform.translation.dx, transform.translation.dy, 0, 1)
+        ..scaleByDouble(transform.scale, transform.scale, transform.scale, 1);
+    });
   }
 
   /// Run [go] only if the pointer that just lifted never travelled.
@@ -1694,6 +1748,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                 MaterialPageRoute(
                     builder: (_) => StripChronologyPage(
                           initialPeriod: _explorer.period,
+                          initialStacked: _stacked,
                           initialHiddenStreams: Set.unmodifiable(_hidden),
                         )),
               );
@@ -1736,6 +1791,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                     0.0,
                     available.height -
                         digestHeight -
+                        48 -
                         wheelControlsFooterHeight));
             _applyDefaultHidden(data, side);
             return ChronologyExplorer(
@@ -1779,6 +1835,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         StripLaneKind.kings => kReignLayerId,
         StripLaneKind.ministries => kMinistryLayerId,
         StripLaneKind.rail => kLineageLayerId,
+        StripLaneKind.events => 'events',
         _ => null,
       };
       if (id == null) continue;
@@ -1799,22 +1856,26 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       kLifespanLayerId: s('wheelLifespans', 'Genesis lifespans', locale),
       kReignLayerId: s('wheelReigns', 'Kings of Israel & Judah', locale),
       kMinistryLayerId: s('wheelMinistries', 'Ministries', locale),
-      kLineageLayerId: s('wheelLineage', 'Genealogy', locale)
+      kLineageLayerId: s('wheelLineage', 'Genealogy', locale),
+      'events': s('wheelEvents', 'Events', locale),
     };
     colors.addAll({
       kLifespanLayerId: lineColor('shem'),
       kReignLayerId: kingdomArcColor(Kingdom.judah),
       kMinistryLayerId: ministryArcColor(),
-      kLineageLayerId: lineageRailColor()
+      kLineageLayerId: lineageRailColor(),
+      'events': const Color(0xFFA64E72),
     });
     return _stackGroups = [
       for (final id in names.keys)
-        if (grouped[id]?.isNotEmpty ?? false)
+        if ((grouped[id]?.isNotEmpty ?? false) ||
+            _visible(data).any((stream) => stream.id == id))
           StackedChronologyGroup(
               id: id,
               name: names[id]!,
               color: colors[id]!,
-              records: grouped[id]!,
+              records: grouped[id] ?? const [],
+              outerLane: !_visible(data).any((stream) => stream.id == id),
               symbol: id == 'egypt'
                   ? 5
                   : id == 'china' || id == 'world'
@@ -1829,13 +1890,114 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     ];
   }
 
-  Widget _body(BuildContext context, WheelHistoryData data, String locale) {
+  Widget _yearDigest(
+          BuildContext context, WheelHistoryData data, String locale) =>
+      YearDigestBar(
+        digest: _cursorYear == null
+            ? null
+            : buildYearDigest(year: _cursorYear!, lanes: _lanesFor(data)),
+        yearText: _cursorYear == null ? '' : yearLabel(_cursorYear!, locale),
+        hint: s('chronoYearHint', 'Tap the chart to read off a year', locale),
+        label: (item) => digestLabel(
+            item,
+            data,
+            HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
+            ChronologyService.instance.cached?.patriarchs ??
+                const <Patriarch>[],
+            locale),
+        onOpen: (item) {
+          // The year scrubber spans the full axis. Its chosen record can
+          // therefore lie outside the current event-browser period.
+          // Synchronize the actual projected range before selecting it.
+          final period = _explorer.period;
+          if (item.endYear < period.start || item.startYear > period.end) {
+            _explorer.selectPeriod(chronologyPeriods.skip(1).firstWhere(
+                (period) => period.contains(item.startYear),
+                orElse: () => chronologyPeriods.first));
+          }
+          _stackRevealRevision++;
+          _openChartRecord(context, item, data, locale);
+        },
+        onClear: () => setState(() => _cursorYear = null),
+        s: (key, fallback) => s(key, fallback, locale),
+        fill: (key, fallback, values) => fill(key, fallback, locale, values),
+        onYear: _placeCursor,
+        minYear: kMinYear,
+        maxYear: kMaxYear,
+      );
+
+  void _openChartRecord(BuildContext context, YearDigestItem item,
+      WheelHistoryData data, String locale) {
+    final kings =
+        HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[];
+    final patriarchs =
+        ChronologyService.instance.cached?.patriarchs ?? const <Patriarch>[];
+    _placeCursor(item.startYear);
+    if (item.kind == StripLaneKind.rail) {
+      final people =
+          FamilyTreeService.instance.cached ?? const <BiblicalPerson>[];
+      // Both chart forms and the digest open the same visible cohort.
+      // A person named in a hidden layer must still be recoverable here.
+      final drawn = <String>{
+        if (!_hidden.contains(kLifespanLayerId) && creationYear != null)
+          for (final p in patriarchs) p.id,
+        if (!_hidden.contains(kReignLayerId))
+          for (final k in kings) k.id,
+        for (final event in data.events)
+          if (!_hidden.contains(event.stream))
+            for (final person in event.people) person.id,
+      };
+      final cohort = find(stripLineageCohorts(people: people, drawnIds: drawn),
+          (c) => c.year == item.startYear);
+      if (cohort != null) {
+        _select(item.id);
+        showCohort(context,
+            LineageCohort(year: cohort.year, people: cohort.people), locale);
+      }
+    } else {
+      openDigestRecord(context, item, data, kings, patriarchs, locale, _select);
+    }
+  }
+
+  Widget _body(BuildContext context, WheelHistoryData data, String locale) =>
+      Column(children: [
+        SizedBox(
+            height: 48,
+            child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: ChronologyDepthToggle(
+                      is3D: _stacked,
+                      onChanged: _setDepth,
+                      locale: locale,
+                      keyPrefix: 'wheelDepth'),
+                ))),
+        Expanded(child: _chartBody(context, data, locale)),
+        _yearDigest(context, data, locale),
+      ]);
+
+  Widget _chartBody(
+      BuildContext context, WheelHistoryData data, String locale) {
     if (_stacked) {
       final kings =
           HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[];
       final patriarchs =
           ChronologyService.instance.cached?.patriarchs ?? const <Patriarch>[];
       return StackedChronologyWheel(
+        controller: _viewer,
+        initialCamera: _enterDepthCamera,
+        onCameraChanged: (camera) => _depthCamera = camera,
+        onYear: _placeCursor,
+        initialYaw: _depthYaw,
+        cursorYear: _cursorYear,
+        initialTilt: _depthTilt,
+        initialLift: _depthLift,
+        onLiftChanged: (lift) => _depthLift = lift,
+        onAnglesChanged: (yaw, tilt) {
+          _depthYaw = yaw;
+          _depthTilt = tilt;
+        },
         groups: _stackGroupsFor(data, locale),
         locale: locale,
         startYear: _rangeStart ?? kMinYear,
@@ -1848,6 +2010,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             StripLaneKind.stream =>
               data.powers.firstWhere((p) => p.id == item.id).approximate,
             StripLaneKind.rail => true,
+            StripLaneKind.events => data.events
+                .firstWhere((event) => event.id == item.id)
+                .approximate,
             StripLaneKind.ministries => data.ministries
                 .firstWhere((m) => '$kMinistryArcPrefix${m.id}' == item.id)
                 .approximate,
@@ -1856,39 +2021,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           return '${approximate ? approximatePrefix(locale) : ''}${yearLabel(item.startYear, locale)}'
               '${item.startYear == item.endYear ? '' : ' — ${item.openEnded ? s('wheelPresent', 'present', locale) : yearLabel(item.endYear, locale)}'}';
         },
-        onFlat: () => setState(() => _stacked = false),
-        onOpen: (item) {
-          _placeCursor(item.startYear);
-          if (item.kind == StripLaneKind.rail) {
-            final people =
-                FamilyTreeService.instance.cached ?? const <BiblicalPerson>[];
-            // The projected records come from _lanesFor. Its rail excludes
-            // people already named by visible lifespans, kings or events;
-            // tapping that rail must use the same exclusion set.
-            final drawn = <String>{
-              if (!_hidden.contains(kLifespanLayerId) && creationYear != null)
-                for (final p in patriarchs) p.id,
-              if (!_hidden.contains(kReignLayerId))
-                for (final k in kings) k.id,
-              for (final event in data.events)
-                if (!_hidden.contains(event.stream))
-                  for (final person in event.people) person.id,
-            };
-            final cohort = find(
-                stripLineageCohorts(people: people, drawnIds: drawn),
-                (c) => c.year == item.startYear);
-            if (cohort != null) {
-              _select(item.id);
-              showCohort(
-                  context,
-                  LineageCohort(year: cohort.year, people: cohort.people),
-                  locale);
-            }
-          } else {
-            openDigestRecord(
-                context, item, data, kings, patriarchs, locale, _select);
-          }
-        },
+        onFlat: () => _setDepth(false),
+        onOpen: (item) => _openChartRecord(context, item, data, locale),
       );
     }
     final wb = WbColors.of(context);
@@ -1907,6 +2041,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           final hubD = side * _kHubFrac * 2;
           final rHub = side * _kHubFrac;
           final rRim = side * rimFractionFor(side);
+          _restoreFlatCamera(_viewportSize!, rRim);
 
           final scene =
               _sceneFor(data, side, locale, t.scaledChrome(_kLabelPx));
@@ -2040,54 +2175,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _legendChip(context, locale, t, wb),
-                      Tooltip(
-                          message: stackedWheelText('stacked', locale),
-                          child: TextButton(
-                              key: const ValueKey('wheelStackedMode'),
-                              style: TextButton.styleFrom(
-                                  minimumSize: const Size(44, 44),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 4)),
-                              onPressed: () => setState(() => _stacked = true),
-                              child: const Text('3D'))),
                       _zoomControls(locale, t, wb,
                           showPercentage: constraints.maxWidth >= 420),
                     ],
                   )),
         ),
-      ),
-      // Always present. It used to appear on the first tap, and that
-      // took ~90 px out of a wheel whose `side` is `min(width, height)`
-      // — so pointing at the chart rescaled it by about a tenth and
-      // moved the very thing just pointed at. Two wheel tests caught it.
-      YearDigestBar(
-        digest: _cursorYear == null
-            ? null
-            : buildYearDigest(year: _cursorYear!, lanes: _lanesFor(data)),
-        yearText: _cursorYear == null ? '' : yearLabel(_cursorYear!, locale),
-        hint: s('chronoYearHint', 'Tap the chart to read off a year', locale),
-        label: (item) => digestLabel(
-            item,
-            data,
-            HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
-            ChronologyService.instance.cached?.patriarchs ??
-                const <Patriarch>[],
-            locale),
-        onOpen: (item) => openDigestRecord(
-            context,
-            item,
-            data,
-            HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
-            ChronologyService.instance.cached?.patriarchs ??
-                const <Patriarch>[],
-            locale,
-            _select),
-        onClear: () => setState(() => _cursorYear = null),
-        s: (key, fallback) => s(key, fallback, locale),
-        fill: (key, fallback, values) => fill(key, fallback, locale, values),
-        onYear: _placeCursor,
-        minYear: kMinYear,
-        maxYear: kMaxYear,
       ),
     ]);
   }
@@ -3486,6 +3578,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// record through the angular declutter and gives it a label, is what
   /// does the finding at rest.
   void _panTo(WheelHit hit, WheelHistoryData data) {
+    if (_stacked) return;
     final view = _viewportSize;
     if (view == null || _side <= 0) return;
     final scale = _viewer.value.getMaxScaleOnAxis();
@@ -3971,34 +4064,39 @@ class _WorldWheelPainter extends CustomPainter {
     // meet the opening-year label, even when both fit inside the canvas;
     // the shared bounds check keeps the range ends and drops only words
     // that cannot clear them. The actual tick lines above remain intact.
-    for (final l in _axisLabels(rRim).where((l) => l.onRing)) {
+    for (final l
+        in _axisLabels(rRim, math.min(c.dx, c.dy)).where((l) => l.onRing)) {
       _ringLabel(canvas, c, l.text, l.angle, rRim + kAxisLabelClearance,
           wb.mutedText, rimFont / _labelScale(zoom));
     }
   }
 
-  List<AxisLabel> _axisLabels(double rRim) => retainSeparatedWheelAxisLabels(
-      labels: planAxisLabels(
-        minYear: kMinYear,
-        maxYear: kMaxYear,
-        tickLabel: (y) => centuryTickLabel(y, locale),
-        endLabel: (y) => yearLabel(y, locale),
-        endSwing: kAxisEndSwing,
-      ),
-      gap: 4 / zoom,
-      boundsOf: (label) {
-        final tp = _painter(label.text, label.onRing ? wb.mutedText : wb.text,
-            (label.onRing ? rimFont : endFont) / _labelScale(zoom));
-        return placeWheelAxisLabel(
-          angle: label.angle,
-          width: tp.width,
-          height: tp.height,
-          rimRadius: rRim,
-          clearance: kAxisLabelClearance,
-          onRing: label.onRing,
-          endpointGap: 4 / zoom,
-        ).bounds;
-      });
+  List<AxisLabel> _axisLabels(double rRim, double halfSide) =>
+      retainSeparatedWheelAxisLabels(
+          canvasBounds: Rect.fromLTRB(-halfSide, -halfSide, halfSide, halfSide),
+          labels: planAxisLabels(
+            minYear: kMinYear,
+            maxYear: kMaxYear,
+            tickLabel: (y) => centuryTickLabel(y, locale),
+            endLabel: (y) => yearLabel(y, locale),
+            endSwing: kAxisEndSwing,
+          ),
+          gap: 4 / zoom,
+          boundsOf: (label) {
+            final tp = _painter(
+                label.text,
+                label.onRing ? wb.mutedText : wb.text,
+                (label.onRing ? rimFont : endFont) / _labelScale(zoom));
+            return placeWheelAxisLabel(
+              angle: label.angle,
+              width: tp.width,
+              height: tp.height,
+              rimRadius: rRim,
+              clearance: kAxisLabelClearance,
+              onRing: label.onRing,
+              endpointGap: 4 / zoom,
+            ).bounds;
+          });
 
   /// A label lying along the ring outside the rim, centred on [angle],
   /// its inner edge on [innerEdge].
@@ -4444,7 +4542,8 @@ class _WorldWheelPainter extends CustomPainter {
     final paint = Paint()
       ..color = wb.border
       ..strokeWidth = 1 / zoom;
-    for (final l in _axisLabels(rRim).where((l) => !l.onRing)) {
+    for (final l
+        in _axisLabels(rRim, math.min(c.dx, c.dy)).where((l) => !l.onRing)) {
       final a = angleForSpan(l.year, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
       canvas.drawLine(c + dir * rHub, c + dir * (rRim + kRimOuterRing), paint);

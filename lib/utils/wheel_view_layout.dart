@@ -92,13 +92,25 @@ List<AxisLabel> retainSeparatedWheelAxisLabels({
   required List<AxisLabel> labels,
   required Rect Function(AxisLabel label) boundsOf,
   double gap = 4,
+  Rect? canvasBounds,
 }) {
   final retained = labels.where((label) => !label.onRing).toSet();
   final occupied = [
     for (final label in retained) boundsOf(label).inflate(gap / 2),
   ];
   for (final label in labels.where((label) => label.onRing)) {
-    final bounds = boundsOf(label).inflate(gap / 2);
+    final ink = boundsOf(label);
+    // The shared mode row leaves a 131 px wheel in the short landscape
+    // case. Even separated Chinese tick labels can cross that boundary;
+    // their ticks and the year cursor remain when the words cannot fit.
+    if (canvasBounds != null &&
+        (ink.left < canvasBounds.left ||
+            ink.right > canvasBounds.right ||
+            ink.top < canvasBounds.top ||
+            ink.bottom > canvasBounds.bottom)) {
+      continue;
+    }
+    final bounds = ink.inflate(gap / 2);
     if (occupied.any(bounds.overlaps)) continue;
     retained.add(label);
     occupied.add(bounds);

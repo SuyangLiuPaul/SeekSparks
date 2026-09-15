@@ -10,6 +10,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/pages/strip_chronology_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/models/wheel_history.dart';
@@ -31,6 +36,88 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(StripPaintTextCache.resetForTest);
   tearDown(StripPaintTextCache.resetForTest);
+
+  testWidgets('the real 3D page culls before layout and reuses its warm frame',
+      (tester) async {
+    await tester.runAsync(() => WheelHistoryService.instance.load());
+    SharedPreferences.setMockInitialValues({'locale': 'en'});
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1000, 800);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => MainProvider()),
+          ChangeNotifierProvider(create: (_) => AppSettings()),
+        ],
+        child: const MaterialApp(
+            home: StripChronologyPage(initialHiddenStreams: {}))));
+    await tester.pumpAndSettle();
+    StripLanesPainter actual() => tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .map((widget) => widget.painter)
+        .whereType<StripLanesPainter>()
+        .single;
+    while (actual().pxPerYear < 3) {
+      await tester.tap(find.byWidgetPredicate((widget) =>
+          widget is IconButton &&
+          widget.icon is Icon &&
+          (widget.icon as Icon).icon == Icons.add));
+      await tester.pumpAndSettle();
+    }
+    final streamRow = actual().rows.firstWhere((row) =>
+        row.lane?.kind == StripLaneKind.stream &&
+        row.depthShapes.any((shape) => shape.front.width > 150));
+    final shape =
+        streamRow.depthShapes.firstWhere((shape) => shape.front.width > 150);
+    ScrollPosition scroll(String key) => tester
+        .state<ScrollableState>(find
+            .descendant(
+                of: find.byKey(ValueKey(key)),
+                matching: find.byType(Scrollable))
+            .first)
+        .position;
+    final h = scroll('stripHScroll');
+    final v = scroll('stripVScroll');
+    h.jumpTo((shape.front.center.dx - h.viewportDimension / 2)
+        .clamp(0.0, h.maxScrollExtent));
+    v.jumpTo((streamRow.top - 30).clamp(0.0, v.maxScrollExtent));
+    await tester.pump();
+    final real = actual();
+    expect(real.is3D, isTrue);
+    final size = Size(stripContentWidth(real.pxPerYear),
+        real.rows.last.top + real.rows.last.height);
+    StripPaintTextCache.resetForTest();
+    _paint(
+        StripLanesPainter(
+            rows: real.rows,
+            pxPerYear: real.pxPerYear,
+            locale: real.locale,
+            selectedId: null,
+            wb: real.wb,
+            laneFontPx: real.laneFontPx,
+            palette: real.palette,
+            visibleX0: 0,
+            visibleX1: size.width,
+            is3D: true),
+        size);
+    final full = StripPaintTextCache.layoutsForTest;
+    StripPaintTextCache.resetForTest();
+    _paint(real, size);
+    final cold = StripPaintTextCache.layoutsForTest;
+    expect(cold, greaterThan(0));
+    expect(cold, lessThan(full));
+    StripPaintTextCache.zeroCounterForTest();
+    _paint(real, size);
+    final warm = StripPaintTextCache.layoutsForTest;
+    expect(warm, 0);
+    final shapeCount =
+        real.rows.fold(0, (sum, row) => sum + row.depthShapes.length);
+    // ignore: avoid_print
+    print('STRIP 3D ($shapeCount real record/card prisms): '
+        'full axis=$full layouts; '
+        '${h.viewportDimension}x${v.viewportDimension} viewport=$cold; warm=$warm');
+    expect(tester.takeException(), isNull);
+  });
 
   test('a cached line preserves the old text width and line height', () {
     for (final text in ['犹大与以色列', '猶大與以色列', 'Kings of Israel']) {

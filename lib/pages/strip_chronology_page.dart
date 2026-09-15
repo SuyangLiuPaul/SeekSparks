@@ -138,6 +138,8 @@ import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/utils/strip_viewport.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
 import 'package:seeksparks/utils/strip_event_cards.dart';
+import 'package:seeksparks/utils/strip_depth_layout.dart';
+import 'package:seeksparks/widgets/chronology_depth_toggle.dart';
 import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
 import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
@@ -172,13 +174,17 @@ const Map<String, String> _kPageTitle = {
 
 class StripChronologyPage extends StatefulWidget {
   const StripChronologyPage(
-      {super.key, this.initialPeriod, this.initialHiddenStreams});
+      {super.key,
+      this.initialPeriod,
+      this.initialHiddenStreams,
+      this.initialStacked = true});
 
   /// Switching forms keeps the reader's range and layer choices. Each
   /// route still owns its controller, so replacing one cannot dispose
   /// the incoming page's navigation state.
   final ChronologyPeriod? initialPeriod;
   final Set<String>? initialHiddenStreams;
+  final bool initialStacked;
 
   @override
   State<StripChronologyPage> createState() => _StripChronologyPageState();
@@ -191,6 +197,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
 
   double _pxPerYear = kStripInitialPxPerYear;
   String? _selectedId;
+  late bool _stacked;
 
   /// Streams the reader has switched off — the wheel's own field
   /// (`radial_chronology_page.dart`'s `_hidden`), reproduced with the
@@ -275,6 +282,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   @override
   void initState() {
     super.initState();
+    _stacked = widget.initialStacked;
     if (widget.initialPeriod case final period?) {
       _explorer.selectPeriod(period);
     }
@@ -323,6 +331,34 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   }
 
   void _select(String? id) => setState(() => _selectedId = id);
+
+  Iterable<StripDepthRowExtent> _rowExtents(List<StripRow> rows) =>
+      rows.map((row) => (
+            id: row.headingKey ?? row.lane!.id,
+            top: row.top,
+            height: row.height
+          ));
+
+  int _depthRevision = 0;
+
+  void _setDepth(bool value) {
+    if (_stacked == value) return;
+    final anchor = stripDepthScrollAnchor(
+        _rowExtents(_rowsCache ?? []), _vCtl.hasClients ? _vCtl.offset : 0);
+    final revision = ++_depthRevision;
+    setState(() => _stacked = value);
+    // Row heights change, but the reader's location is a row plus a
+    // fraction of that row. Retaining only pixels would silently jump
+    // to a different country's records when the raised faces collapse.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || revision != _depthRevision || !_vCtl.hasClients) return;
+      final offset =
+          stripDepthOffsetForAnchor(_rowExtents(_rowsCache ?? []), anchor);
+      if (offset != null) {
+        _vCtl.jumpTo(offset.clamp(0.0, _vCtl.position.maxScrollExtent));
+      }
+    });
+  }
 
   void _zoomStep(int delta) {
     final next = stripNextScale(_pxPerYear, delta, _viewportW);
@@ -497,6 +533,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           Navigator.of(context).pushReplacement(
             MaterialPageRoute<void>(
                 builder: (_) => RadialChronologyPage(
+                      initialStacked: _stacked,
                       initialPeriod: _explorer.period,
                       initialHiddenStreams: Set.unmodifiable(_hidden),
                     )),
@@ -553,6 +590,20 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       // landed, and `Positioned(bottom: 10)` then put the zoom cluster
       // on top of the readout it was meant to sit above.
       return Column(children: [
+        SizedBox(
+          height: 48,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: ChronologyDepthToggle(
+                  is3D: _stacked,
+                  onChanged: _setDepth,
+                  locale: locale,
+                  keyPrefix: 'stripDepth'),
+            ),
+          ),
+        ),
         Expanded(
             child: Stack(children: [
           Column(children: [
@@ -681,7 +732,18 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                             onPointerUp: (e) => _commitPress(e, () {
                               final card = _eventCardAt(e.localPosition, rows);
                               if (card == null) {
-                                _placeCursorAtX(e.localPosition.dx);
+                                final depthHit = _stacked
+                                    ? _depthSpanAt(e.localPosition, rows)
+                                    : null;
+                                if (depthHit == null) {
+                                  _placeCursorAtX(e.localPosition.dx);
+                                } else {
+                                  _placeCursor(
+                                      yearForX(e.localPosition.dx, _pxPerYear)
+                                          .round()
+                                          .clamp(depthHit.span.startYear,
+                                              depthHit.span.endYear));
+                                }
                               } else if (card.firstYear == card.lastYear) {
                                 _placeCursor(card.firstYear);
                               }
@@ -721,6 +783,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                                   Positioned.fill(
                                     child: CustomPaint(
                                       painter: StripLanesPainter(
+                                        is3D: _stacked,
                                         rows: rows,
                                         pxPerYear: _pxPerYear,
                                         locale: locale,
@@ -833,7 +896,18 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                       endYear: event.year),
             ]);
         rows.add(StripRow.events(lane,
-            eventCards: cards, top: y, height: events.rowHeights[i]));
+            eventCards: cards,
+            top: y,
+            height: events.rowHeights[i],
+            depthShapes: _stacked
+                ? [
+                    for (final card in cards)
+                      stripDepthPrism(
+                          id: card.events.first.id,
+                          front: Rect.fromLTWH(
+                              card.x, y + 8, card.width, card.height))
+                  ]
+                : const []));
         y += events.rowHeights[i];
       }
     }
@@ -856,13 +930,57 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         }
         lastKind = lane.kind;
       }
-      rows.add(StripRow.lane(lane, top: y, height: laneH));
-      y += laneH;
+      final rowH = _stacked ? stripDepthRowHeight(laneH, lane.subLane) : laneH;
+      rows.add(StripRow.lane(lane,
+          top: y,
+          height: rowH,
+          depthShapes: _stacked
+              ? [
+                  for (final span in lane.spans)
+                    layoutStripDepthSpan(
+                        id: span.id,
+                        x0: xForYear(span.startYear, _pxPerYear),
+                        x1: xForYear(span.endYear, _pxPerYear),
+                        rowTop: y,
+                        rowHeight: rowH,
+                        flatHeight: laneH,
+                        tier: lane.subLane,
+                        cohortSize: span.cohortSize)
+                ]
+              : const []));
+      y += rowH;
     }
     return rows;
   }
 
+  ({StripRow row, StripSpan span})? _depthSpanAt(
+      Offset pos, List<StripRow> rows) {
+    final candidates =
+        rows.where((row) => !row.isHeading && row.eventCards.isEmpty);
+    final shape =
+        hitStripDepthShapes(candidates.expand((row) => row.depthShapes), pos);
+    if (shape == null) return null;
+    for (final row in candidates) {
+      for (final span in row.lane!.spans) {
+        if (span.id == shape.id) return (row: row, span: span);
+      }
+    }
+    return null;
+  }
+
   StripEventCard? _eventCardAt(Offset pos, List<StripRow> rows) {
+    if (_stacked) {
+      final candidates = rows.where((row) => row.eventCards.isNotEmpty);
+      final shape =
+          hitStripDepthShapes(candidates.expand((row) => row.depthShapes), pos);
+      if (shape == null) return null;
+      for (final row in candidates) {
+        for (final card in row.eventCards) {
+          if (card.events.first.id == shape.id) return card;
+        }
+      }
+      return null;
+    }
     for (final row in rows) {
       if (pos.dy < row.top || pos.dy >= row.top + row.height) continue;
       for (final card in row.eventCards) {
@@ -896,11 +1014,10 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     }
   }
 
-  /// Which row [pos.dy] falls in, then which span [pos.dx] falls on
-  /// within it — the strip's own `_handleTap`, in the same two-stage
-  /// shape as the wheel's (ring, then angle) but simpler: rows do not
-  /// overlap, so there is exactly one row per y and [nearestSpanAt]
-  /// (not a bespoke scorer) decides the rest.
+  /// Raised records resolve against the same front, roof and side
+  /// polygons the painter uses, in reverse paint order. Flat records
+  /// retain the row-and-time target from [nearestSpanAt]. Either route
+  /// returns the original span id to the existing detail sheet.
   void _handleTap(
     BuildContext context,
     Offset pos,
@@ -910,8 +1027,10 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     String locale,
     List<StripRow> rows,
   ) {
-    StripRow? hit;
+    final depthHit = _stacked ? _depthSpanAt(pos, rows) : null;
+    StripRow? hit = depthHit?.row;
     for (final row in rows) {
+      if (hit != null) break;
       if (pos.dy >= row.top && pos.dy < row.top + row.height) {
         hit = row;
         break;
@@ -958,8 +1077,11 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           x1: xForYear(s.endYear, _pxPerYear)
         )
     ];
-    final pick = nearestSpanAt(pos.dx, targets);
-    if (pick == null) {
+    final pick = _stacked ? null : nearestSpanAt(pos.dx, targets);
+    final span = _stacked
+        ? depthHit?.span
+        : (pick == null ? null : lane.spans[pick.index]);
+    if (span == null) {
       // The tap missed every span's target — a stream's OWN band still
       // answers, the same fallback the wheel gives an empty stretch of
       // ring; the other kinds have no such background record.
@@ -971,7 +1093,6 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       return;
     }
 
-    final span = lane.spans[pick.index];
     switch (span.kind) {
       case StripLaneKind.events:
         // Event callouts were resolved against their rectangles above.
@@ -1013,10 +1134,11 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         final year =
             int.tryParse(span.id.substring(kStripLineagePrefix.length));
         if (year == null) return;
+        final visible = _visibleInputs(data, kings, patriarchs);
         final drawn = <String>{
-          for (final p in patriarchs) p.id,
-          for (final k in kings) k.id,
-          for (final e in data.events)
+          for (final p in visible.patriarchs) p.id,
+          for (final k in visible.kings) k.id,
+          for (final e in visible.data.events)
             for (final link in e.people) link.id,
         };
         final cohort = find(
@@ -1112,6 +1234,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       _pxPerYear,
       textScale,
       _laneZoom,
+      _stacked,
       (_hidden.toList()..sort()).join(',')
     );
     if (_rowsKey == key && _rowsCache != null) return _rowsCache!;

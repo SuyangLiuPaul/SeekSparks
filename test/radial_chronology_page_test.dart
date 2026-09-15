@@ -636,7 +636,16 @@ void main() {
     await tester.enterText(
         find.byKey(const ValueKey('wheelFindField')), '主前${-e.year}');
     await settle(tester);
-    await tester.tap(find.text(e.titles['zh-Hans']!).first);
+    // The explorer can show this same title behind the modal barrier.
+    // Open the search result, not the first matching text in the page.
+    final result = find.descendant(
+      of: find.byKey(const ValueKey('wheelFindList')),
+      matching: find.text(e.titles['zh-Hans']!),
+    );
+    expect(result, findsOneWidget);
+    expect(result.hitTestable(), findsOneWidget,
+        reason: 'the matching search result must be visible and tappable');
+    await tester.tap(result);
     await settle(tester);
     expect(find.byKey(const ValueKey('wheelFindField')), findsNothing,
         reason: 'the search sheet did not give way to the record sheet');
