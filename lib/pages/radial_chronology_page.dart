@@ -647,6 +647,18 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hant': '年代軸止於何處',
     'en': 'Where the axis stops',
   },
+  // The hub's two lines, 2026-09-15. The hub used to repeat the page
+  // title, which the AppBar already carries two rows above it.
+  'wheelHubCovers': {
+    'zh-Hans': '本图涵盖',
+    'zh-Hant': '本圖涵蓋',
+    'en': 'this chart covers',
+  },
+  'wheelHubYear': {
+    'zh-Hans': '点中的年份',
+    'zh-Hant': '點中的年份',
+    'en': 'the year you tapped',
+  },
   'wheelTitle': {
     'zh-Hans': '世界史轮盘',
     'zh-Hant': '世界史輪盤',
@@ -2204,28 +2216,75 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// the explorer. Removing the four-block caption also keeps a small
   /// wheel's centre inside its circle instead of wrapping into the bands.
   Widget _hubCaption(
-          BuildContext context,
-          String locale,
-          WbType t,
-          WbColors wb,
-          double hubD,
-          List<WheelStream> streams,
-          WheelHistoryData data,
-          List<_Life> lives) =>
-      SizedBox(
-        key: const ValueKey('wheelHubCaption'),
-        width: hubD * 0.82,
-        child: Text(
-          s('wheelTitle', 'World History Wheel', locale),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: wb.mutedText,
-            fontSize: t.scaledChrome(11),
-            fontWeight: FontWeight.w600,
-            height: 1.25,
+      BuildContext context,
+      String locale,
+      WbType t,
+      WbColors wb,
+      double hubD,
+      List<WheelStream> streams,
+      WheelHistoryData data,
+      List<_Life> lives) {
+    // THE YEAR, NOT THE TITLE. The page's own AppBar already says
+    // "World History Wheel" two rows above this, so the hub was
+    // spending the calmest circle on the chart repeating it.
+    //
+    // What goes there instead is the thing the chart is being asked
+    // for. The footer says 「点一下图表，读出那一年」 and the answer used to
+    // appear in the digest bar below the wheel — so a reader tapping
+    // around the rim had to look away from the point of the finger to
+    // read the result. It is now under the finger's own circle.
+    //
+    // With no cursor yet, the hub says what the chart COVERS, which is
+    // the other question a reader asks of a chronology before they
+    // touch it. That line used to sit in small grey type above the
+    // chart; it is the same fact, in the place the eye already is.
+    final year = _cursorYear;
+    final hint = year == null
+        ? s('wheelHubCovers', 'this chart covers', locale)
+        : s('wheelHubYear', 'the year you tapped', locale);
+    return SizedBox(
+      key: const ValueKey('wheelHubCaption'),
+      width: hubD * 0.82,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            year == null
+                ? '${yearLabel(_rangeStart ?? kMinYear, locale)} — '
+                    '${yearLabel(_rangeEnd ?? kMaxYear, locale)}'
+                : yearLabel(year, locale),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: year == null ? wb.mutedText : wb.text,
+              fontSize: t.scaledChrome(year == null ? 11 : 16),
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
           ),
-        ),
-      );
+          if (hint.isNotEmpty)
+            Text(
+              hint,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: wb.mutedText,
+                // The app's own small-print floor, not a size chosen to
+                // make this line fit. `font_size_reach_ratchet_test`
+                // caught 9.5 here within minutes of it being written —
+                // which is the same defect, in a widget, that the
+                // canvas type had in `scaledChrome` an hour earlier.
+                fontSize: math.max(
+                    t.scaledChrome(11), WbMetrics.smallPrintFloor),
+                height: 1.25,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   /// The full legend lives behind this named footer control at every
   /// width. It remains one tap away without covering the wheel or axis.
@@ -4398,23 +4457,87 @@ class _WorldWheelPainter extends CustomPainter {
 
   /// The band's own name, set in the gap wedge before twelve o'clock,
   /// where no data is ever drawn.
+  /// The bearing the ring names hang off, in radians.
+  ///
+  /// Left and a little up. Two reasons, and the second is the one that
+  /// makes it work: the labels read left-to-right so they want to sit
+  /// to the LEFT of what they point at, and the upper-left quadrant of
+  /// this chart is empty in practice — the corpus begins at 4200 BC at
+  /// twelve o'clock and fills clockwise, so the last quadrant a reader
+  /// reaches is the one with the most room in it.
+  static const double _kBandNameBearing = math.pi * 200 / 180;
+
+  /// Each ring's name, beside ITS OWN RING, on a leader.
+  ///
+  /// What this replaces: all four names right-aligned against the
+  /// vertical axis at `c.dy - band.centre`, which drew them as a
+  /// stacked list floating near the hub. The owner's screenshots show
+  /// the result — 以色列 / 犹大 / 教会 / 圣经 in a little column in the
+  /// middle of the chart, naming four rings without saying which name
+  /// belongs to which one. A legend that has to be decoded by counting
+  /// inwards is not a legend.
+  ///
+  /// So each name now hangs off its own ring on a short leader, the way
+  /// a callout on a printed diagram does. The natural y for each is
+  /// where the bearing crosses that ring, which fans them apart — but
+  /// only by `|sin| x pitch`, about 7 px at a 900 px canvas, so they
+  /// are then pushed apart to a readable pitch. Pushed UPWARD, away
+  /// from the data: the leader stretches instead, which is exactly what
+  /// a leader is for.
   void _paintBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
-    for (var i = 0; i < streams.length; i++) {
+    if (streams.isEmpty) return;
+    final dir =
+        Offset(math.cos(_kBandNameBearing), math.sin(_kBandNameBearing));
+    final gap = 3 / zoom;
+    var ceiling = double.infinity;
+    // Outermost first, so the push upward accumulates in one direction
+    // and the ring closest to the rim keeps the y it was born with.
+    for (var i = streams.length - 1; i >= 0; i--) {
       final band = ringRadii(i, streams.length, rHub, rBands);
+      final colour = (colors[streams[i].id] ??
+              lineColor(streams[i].line, dark: wb.isDark))
+          .withValues(alpha: 0.98);
       final tp = _WheelText(
         streams[i].nameFor(locale),
         canvasTextStyle(
-          color: (colors[streams[i].id] ??
-                  lineColor(streams[i].line, dark: wb.isDark))
-              .withValues(alpha: 0.98),
-          fontSize: math.min(bandFont / _labelScale(zoom), band.width * 1.05),
+          color: colour,
+          fontSize: bandFont / _labelScale(zoom),
           fontWeight: FontWeight.w600,
         ),
       );
-      canvas.save();
-      canvas.translate(c.dx, c.dy - band.centre);
-      tp.paint(canvas, Offset(-tp.width - 7, -tp.height / 2));
-      canvas.restore();
+      final anchor = c + dir * band.centre;
+      var y = anchor.dy;
+      final pitch = tp.height + 4 / zoom;
+      if (ceiling.isFinite && y > ceiling - pitch) y = ceiling - pitch;
+      ceiling = y;
+      final right = anchor.dx - 9 / zoom;
+      final box = Rect.fromLTWH(
+          right - tp.width, y - tp.height / 2, tp.width, tp.height);
+      // A plate, for the same reason the selected callout has one: a
+      // level label crosses whatever it is over instead of following
+      // it, and the quadrant is usually but not always empty.
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(box.inflate(gap),
+              Radius.circular(WbMetrics.radiusControl / zoom)),
+          Paint()..color = wb.paneBg.withValues(alpha: 0.82));
+      tp.paint(canvas, box.topLeft);
+      // The leader: out to the label, then across to the ring. Two
+      // segments rather than one diagonal, so it reads as a pointer and
+      // not as another piece of data drawn on the chart.
+      final elbow = Offset(right - 3 / zoom, y);
+      canvas.drawLine(
+          elbow,
+          Offset(anchor.dx - 3 / zoom, y),
+          Paint()
+            ..strokeWidth = 0.8 / zoom
+            ..color = colour.withValues(alpha: 0.55));
+      canvas.drawLine(
+          Offset(anchor.dx - 3 / zoom, y),
+          anchor,
+          Paint()
+            ..strokeWidth = 0.8 / zoom
+            ..color = colour.withValues(alpha: 0.55));
+      canvas.drawCircle(anchor, 1.6 / zoom, Paint()..color = colour);
     }
   }
 
