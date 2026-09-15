@@ -79,6 +79,8 @@ import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
 import 'package:seeksparks/constants/projection_setup.dart';
 import 'package:seeksparks/constants/projection_strings.dart';
+import 'package:seeksparks/constants/text_patterns.dart'
+    show sanitizeForProjection;
 import 'package:seeksparks/constants/workbench_theme.dart'
     show WbColors, WbMetrics;
 import 'package:seeksparks/models/verse.dart';
@@ -354,12 +356,15 @@ class ProjectionStage extends StatelessWidget {
   /// together as the printed page has it.
   List<Widget> _firstLines(WbColors wb) {
     if (layout.flow == ProjectionFlow.continuous) {
-      return [_runTogether(wb, [for (final v in verses) v.text], typeSize,
-          wb.text)];
+      return [
+        _runTogether(wb, [for (final v in verses) sanitizeForProjection(v.text)],
+            typeSize, wb.text)
+      ];
     }
     return [
       for (var i = 0; i < verses.length; i++)
-        _line(wb, verses[i].text, verses[i].verseLabel, typeSize, wb.text),
+        _line(wb, sanitizeForProjection(verses[i].text), verses[i].verseLabel,
+            typeSize, wb.text),
     ];
   }
 
@@ -482,9 +487,14 @@ class ProjectionStage extends StatelessWidget {
       return _s('projectionSecondVersionLoading',
           'Loading the second edition', locale);
     }
-    return text ??
-        _s('projectionSecondVersionMissing',
-            'This edition has no text here', locale);
+    if (text == null) {
+      return _s('projectionSecondVersionMissing',
+          'This edition has no text here', locale);
+    }
+    // The companion edition carries the same markup the first one does,
+    // and the same rule applies to it: the room reads scripture, not
+    // the apparatus the file stores it with.
+    return sanitizeForProjection(text);
   }
 
   /// The reference, and the edition or editions it belongs to.
