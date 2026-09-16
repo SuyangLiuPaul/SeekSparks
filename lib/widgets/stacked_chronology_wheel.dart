@@ -1003,7 +1003,8 @@ class _StackedWheelPainter extends CustomPainter {
     var admitted = 0;
     // Reject impossible faces before shaping text. All names remain in
     // the sheet and parent digest; dragging must not shape every record.
-    for (var i = scene.prisms.length - 1; i >= 0 && admitted < 60; i--) {
+    final budget = stackLabelBudget(zoom, scene.view.fitScale);
+    for (var i = scene.prisms.length - 1; i >= 0 && admitted < budget; i--) {
       final prism = scene.prisms[i];
       if (prism.sweep == 0 || !prism.bounds.overlaps(visible)) continue;
       if ((prism.outerRadius - prism.innerRadius) * scene.projection.squash <

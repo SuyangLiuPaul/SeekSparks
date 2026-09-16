@@ -300,15 +300,37 @@ void main() {
     });
 
     test('visible point markers also reserve their ink above rear labels', () {
+      // The placement search walks several points along the arc
+      // (2026-09-16 「这些放得了放得下的都应该放」), so a marker sitting on
+      // one of them moves the name rather than cancelling it. What must
+      // hold either way is that a name is never drawn THROUGH a marker.
       final lower = prism('lower');
       final points = [
         for (final fraction in [.25, .5, .75])
           prism('point-$fraction',
               start: math.pi * fraction, end: math.pi * fraction),
       ];
+      final moved = wheelStackLabelPlacement(lower, const Size(28, 12),
+          occluders: points, pointRadius: 3);
+      if (moved != null) {
+        for (final point in points) {
+          expect(
+              moved.bounds.overlaps(
+                  wheelStackPointFootprint(point, radius: 3).getBounds()),
+              isFalse,
+              reason: 'the name was placed over ${point.id}');
+        }
+      }
+
+      // And when every place it could go is taken, it still refuses.
+      final everywhere = [
+        for (final fraction in [.12, .25, .37, .5, .63, .75, .88])
+          prism('point-$fraction',
+              start: math.pi * fraction, end: math.pi * fraction),
+      ];
       expect(
           wheelStackLabelPlacement(lower, const Size(28, 12),
-              occluders: points, pointRadius: 3),
+              occluders: everywhere, pointRadius: 3),
           isNull);
     });
   });

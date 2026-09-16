@@ -348,3 +348,34 @@ Widget wheelChromeTitle(BuildContext context, String text, double paneWidth) {
 /// The gap between the back button and [wheelChromeTitle]. See its doc.
 double wheelChromeTitleSpacing(double paneWidth) =>
     paneWidth >= kWheelNarrowPaneWidth ? NavigationToolbar.kMiddleSpacing : 4;
+
+/// The route the two chronology forms swap through.
+///
+/// 2026-09-16 「轮子和strip toggle的时候左右移动应该根据这两个位置决定
+/// 现在都是右边往左边看起来很奇怪」, and it is. The toggle above puts the
+/// two forms side by side — the wheel on the left segment, the strip on
+/// the right — and a stock [MaterialPageRoute] slides in from the right
+/// whichever way you went. Pressing the LEFT segment and watching the
+/// page arrive from the right is the thing that reads as wrong: the
+/// control says where the two views are, and then the movement
+/// contradicts it.
+///
+/// So the page moves the way the toggle does. [toRight] is true for the
+/// press that moves rightward along the control.
+Route<T> chartFormRoute<T>({
+  required WidgetBuilder builder,
+  required bool toRight,
+}) =>
+    PageRouteBuilder<T>(
+      transitionDuration: const Duration(milliseconds: 220),
+      reverseTransitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, animation, secondary) => builder(context),
+      transitionsBuilder: (context, animation, secondary, child) =>
+          SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset(toRight ? 1 : -1, 0),
+          end: Offset.zero,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)).animate(animation),
+        child: child,
+      ),
+    );

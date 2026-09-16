@@ -1769,14 +1769,16 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             onSelectionChanged: (selected) {
               if (selected.first != 'strip') return;
               context.read<AppSettings>().setChronologyView('strip');
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                    builder: (_) => StripChronologyPage(
-                          initialPeriod: _explorer.period,
-                          initialStacked: _stacked,
-                          initialHiddenStreams: Set.unmodifiable(_hidden),
-                        )),
-              );
+              // The strip is the RIGHT segment, so the page arrives
+              // from the right. See `chartFormRoute`.
+              Navigator.of(context).pushReplacement(chartFormRoute<void>(
+                toRight: true,
+                builder: (_) => StripChronologyPage(
+                  initialPeriod: _explorer.period,
+                  initialStacked: _stacked,
+                  initialHiddenStreams: Set.unmodifiable(_hidden),
+                ),
+              ));
             },
           ),
         ),

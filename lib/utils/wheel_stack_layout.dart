@@ -304,7 +304,16 @@ WheelStackLabelPlacement? wheelStackLabelPlacement(
   Iterable<Rect> occupied = const [],
 }) {
   if (textSize.isEmpty || prism.sweep == 0) return null;
-  for (final fraction in [.5, .25, .75]) {
+  // SEVEN PLACES ALONG THE ARC, NOT THREE.
+  //
+  // 2026-09-16 「这些放得了放得下的都应该放 这种zoom in后面又有足够位置就
+  // 应该把文字放在后面」. A long thin face is exactly the shape that fails
+  // at the middle and fits nearer an end, because the top narrows
+  // toward the middle of a raised stack and because whatever is in
+  // front of it usually covers one part and not the whole. Three
+  // attempts threw those away; the search is cheap next to shaping the
+  // text, which has already happened by the time we get here.
+  for (final fraction in [.5, .25, .75, .12, .88, .37, .63]) {
     final angle = prism.startAngle + prism.sweep * fraction;
     var rotation =
         math.atan2(prism.projection.squash * math.cos(angle), -math.sin(angle));
@@ -618,4 +627,22 @@ bool _quadFitsTop(WheelStackPrism prism, List<Offset> projected) {
     }
   }
   return prism.innerRadius == 0 || !(allPositive || allNegative);
+}
+
+/// How many names the depth view may shape in one frame.
+///
+/// 2026-09-16 「很多这些地方可以加进去的都没有加」, of a zoomed-in render
+/// where most faces carried no name. Sixty was chosen at the resting
+/// zoom, where the whole chart is on screen and sixty names is already
+/// more than a reader can take in. Zoomed in, the painter has already
+/// discarded everything outside the viewport before it counts, so the
+/// same sixty is now a cap on a much smaller set — it stops naming
+/// faces that have plenty of room, which is the complaint.
+///
+/// The budget therefore rises with the magnification and stops at four
+/// times the resting one, which is the point where the remaining
+/// candidates on screen run out before the budget does.
+int stackLabelBudget(double scale, double fitScale) {
+  if (!scale.isFinite || !fitScale.isFinite || fitScale <= 0) return 60;
+  return (60 * (scale / fitScale)).round().clamp(60, 240);
 }

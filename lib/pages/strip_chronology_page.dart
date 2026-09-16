@@ -649,14 +649,16 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         onSelectionChanged: (selected) {
           if (selected.first != 'wheel') return;
           context.read<AppSettings>().setChronologyView('wheel');
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute<void>(
-                builder: (_) => RadialChronologyPage(
-                      initialStacked: _stacked,
-                      initialPeriod: _explorer.period,
-                      initialHiddenStreams: Set.unmodifiable(_hidden),
-                    )),
-          );
+          // The wheel is the LEFT segment, so the page arrives from
+          // the left. See `chartFormRoute`.
+          Navigator.of(context).pushReplacement(chartFormRoute<void>(
+            toRight: false,
+            builder: (_) => RadialChronologyPage(
+              initialStacked: _stacked,
+              initialPeriod: _explorer.period,
+              initialHiddenStreams: Set.unmodifiable(_hidden),
+            ),
+          ));
         },
       );
 
@@ -2006,6 +2008,13 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     final vMoreBelow = maxScrollY > 0.5 &&
         (!_vCtl.hasClients || _vCtl.offset < maxScrollY - 0.5);
 
+    // A PILL, NOT A BAR ACROSS THE CHART.
+    //
+    // This said "there is more below" by covering the row it was
+    // talking about: a full-width band at 85% opacity, sitting on the
+    // last lane. The warning and the thing it warns about cannot be
+    // the same pixels. It is the width of its own words now, centred,
+    // so the lane reads either side of it.
     Widget banner(IconData icon, String label, {required bool top}) =>
         Positioned(
           left: headerW,
@@ -2013,17 +2022,22 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           top: top ? 0 : null,
           bottom: top ? null : 0,
           child: IgnorePointer(
-            child: Container(
-              color: wb.paneBg.withValues(alpha: 0.85),
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              alignment: Alignment.center,
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(icon, size: t.scaledChrome(14), color: wb.mutedText),
-                const SizedBox(width: 4),
-                Text(label,
-                    style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaledChrome(11))),
-              ]),
+            child: Align(
+              alignment: top ? Alignment.topCenter : Alignment.bottomCenter,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: wb.paneBg.withValues(alpha: 0.92),
+                  border: Border.all(color: wb.border),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 7),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(icon, size: t.scaledChrome(14), color: wb.mutedText),
+                  const SizedBox(width: 4),
+                  Text(label,
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaledChrome(11))),
+                ]),
+              ),
             ),
           ),
         );
