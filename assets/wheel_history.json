@@ -3496,6 +3496,25 @@
    }
   },
   {
+   "id": "maurya-empire",
+   "start": -322,
+   "end": -185,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Maurya Empire",
+    "zh-Hans": "孔雀王朝",
+    "zh-Hant": "孔雀王朝"
+   },
+   "note": {
+    "en": "The first empire to hold most of the subcontinent. Ashoka's edicts, cut in stone after the Kalinga war, are among the oldest datable Indian inscriptions.",
+    "zh-Hans": "首个统辖印度次大陆大部的帝国。阿育王在羯陵伽战后所刻的诏谕，是印度最早可系年的铭文之一。",
+    "zh-Hant": "首個統轄印度次大陸大部的帝國。阿育王在羯陵伽戰後所刻的詔諭，是印度最早可繫年的銘文之一。"
+   }
+  },
+  {
    "id": "nabataean-kingdom",
    "start": -312,
    "end": 106,
@@ -3669,6 +3688,25 @@
    }
   },
   {
+   "id": "shunga-empire",
+   "start": -185,
+   "end": -73,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Shunga Empire",
+    "zh-Hans": "巽伽王朝",
+    "zh-Hant": "巽伽王朝"
+   },
+   "note": {
+    "en": "The dynasty that took the Maurya throne at Pataliputra and held the middle Ganges for a century.",
+    "zh-Hans": "于华氏城取孔雀王朝而代之，据恒河中游百余年。",
+    "zh-Hant": "於華氏城取孔雀王朝而代之，據恆河中游百餘年。"
+   }
+  },
+  {
    "id": "hasmonean-kingdom",
    "start": -140,
    "end": -37,
@@ -3785,6 +3823,25 @@
    }
   },
   {
+   "id": "satavahana-empire",
+   "start": -100,
+   "end": 225,
+   "region": "asia",
+   "stream": "india",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Satavahana Empire",
+    "zh-Hans": "百乘王朝",
+    "zh-Hant": "百乘王朝"
+   },
+   "note": {
+    "en": "The Deccan power that linked the northern kingdoms to the Roman sea trade of the western coast. Its dates are argued over by more than a century at the start.",
+    "zh-Hans": "德干高原的强权，把北方诸国与西海岸对罗马的海上贸易连在一起。其起始年代，学者之间相差一个世纪以上。",
+    "zh-Hant": "德干高原的強權，把北方諸國與西海岸對羅馬的海上貿易連在一起。其起始年代，學者之間相差一個世紀以上。"
+   }
+  },
+  {
    "id": "rom-mark-antony",
    "start": -83,
    "end": -30,
@@ -3882,6 +3939,25 @@
     "en": "The empire of Augustus and his successors — the decree, the roads, the peace and the persecutions that frame the whole New Testament.",
     "zh-Hans": "奥古斯都及其继任者的帝国：报名上册的谕旨、罗马大道、罗马和平与逼迫，构成整卷新约的框架。",
     "zh-Hant": "奧古斯都及其繼任者的帝國：報名上冊的諭旨、羅馬大道、羅馬和平與逼迫，構成整卷新約的框架。"
+   }
+  },
+  {
+   "id": "kushan-empire",
+   "start": 30,
+   "end": 375,
+   "region": "asia",
+   "stream": "india",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Kushan Empire",
+    "zh-Hans": "贵霜帝国",
+    "zh-Hant": "貴霜帝國"
+   },
+   "note": {
+    "en": "Astride the trade roads from India into Central Asia, and the setting of the Gandharan workshops that first gave the Buddha a human figure.",
+    "zh-Hans": "横跨印度通往中亚的商道，犍陀罗造像即出于其境，佛陀首次被塑成人形。",
+    "zh-Hant": "橫跨印度通往中亞的商道，犍陀羅造像即出於其境，佛陀首次被塑成人形。"
    }
   },
   {
@@ -4189,6 +4265,25 @@
    }
   },
   {
+   "id": "three-kingdoms-korea",
+   "start": 300,
+   "end": 668,
+   "region": "asia",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Three Kingdoms of Korea",
+    "zh-Hans": "朝鲜三国时代",
+    "zh-Hant": "朝鮮三國時代"
+   },
+   "note": {
+    "en": "Koguryo, Paekche and Silla. Paekche is the kingdom that sent Buddhism to the Japanese court, which is why the Asuka band opens where it does. Drawn from the fourth century, when the three were states: the Samguk Sagi's foundation years — Silla 57 BC, Koguryo 37 BC, Paekche 18 BC — are tradition, and this chart draws tradition only where it says so.",
+    "zh-Hans": "高句丽、百济、新罗三国并立。百济即向日本朝廷传入佛教的一国，飞鸟时代的起点由此而来。此段自四世纪画起，即三者成国之时；《三国史记》所记的建国之年——新罗前57年、高句丽前37年、百济前18年——属传说，本图只在注明之处才画传说。",
+    "zh-Hant": "高句麗、百濟、新羅三國並立。百濟即向日本朝廷傳入佛教的一國，飛鳥時代的起點由此而來。此段自四世紀畫起，即三者成國之時；《三國史記》所記的建國之年——新羅前57年、高句麗前37年、百濟前18年——屬傳說，本圖只在註明之處才畫傳說。"
+   }
+  },
+  {
    "id": "rom-christian-emperors",
    "start": 306,
    "end": 476,
@@ -4243,6 +4338,25 @@
     "en": "He held Rome and Italy for six years against the other claimants of the tetrarchy, and drowned in the Tiber after losing to Constantine at the Milvian Bridge.",
     "zh-Hans": "他据罗马与意大利六年，抗衡四帝共治下的其他称帝者，最终在米尔维安大桥败于君士坦丁，溺毙于台伯河。",
     "zh-Hant": "他據羅馬與意大利六年，抗衡四帝共治下的其他稱帝者，最終在米爾維安大橋敗於君士坦丁，溺斃於台伯河。"
+   }
+  },
+  {
+   "id": "gupta-empire",
+   "start": 320,
+   "end": 550,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Gupta Empire",
+    "zh-Hans": "笈多王朝",
+    "zh-Hant": "笈多王朝"
+   },
+   "note": {
+    "en": "The classical age of northern India: the decimal place-value notation and the zero used as a number belong to these centuries.",
+    "zh-Hans": "北印度的古典时代：十进位记数法与作为数字使用的零，皆出于这几个世纪。",
+    "zh-Hant": "北印度的古典時代：十進位記數法與作為數字使用的零，皆出於這幾個世紀。"
    }
   },
   {
@@ -4702,6 +4816,25 @@
    }
   },
   {
+   "id": "asuka-period",
+   "start": 538,
+   "end": 710,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Asuka Period",
+    "zh-Hans": "飞鸟时代",
+    "zh-Hant": "飛鳥時代"
+   },
+   "note": {
+    "en": "Buddhism reached the court from Paekche and the Taika reforms remade the state on Chinese lines. Suiko, already on this chart, reigned inside it. The 538 start follows the Gangoji record rather than the 552 of the Nihon Shoki.",
+    "zh-Hans": "佛教自百济传入朝廷，大化改新按中国制度重整国家。本图已有的推古天皇即在其中。起于538年是依元兴寺的记载，而非《日本书纪》的552年。",
+    "zh-Hant": "佛教自百濟傳入朝廷，大化改新按中國制度重整國家。本圖已有的推古天皇即在其中。起於538年是依元興寺的記載，而非《日本書紀》的552年。"
+   }
+  },
+  {
    "id": "lombard-kingdom",
    "start": 568,
    "end": 774,
@@ -4892,6 +5025,25 @@
    }
   },
   {
+   "id": "unified-silla",
+   "start": 668,
+   "end": 935,
+   "region": "asia",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Unified Silla",
+    "zh-Hans": "统一新罗",
+    "zh-Hant": "統一新羅"
+   },
+   "note": {
+    "en": "Silla held the peninsula for nearly three centuries after defeating its two rivals with Tang help.",
+    "zh-Hans": "新罗借唐之力灭其二敌，统治半岛近三百年。",
+    "zh-Hant": "新羅借唐之力滅其二敵，統治半島近三百年。"
+   }
+  },
+  {
    "id": "pope-leo-ii",
    "start": 682,
    "end": 683,
@@ -4908,6 +5060,25 @@
     "en": "Confirmed the Third Council of Constantinople and its condemnation of the one-will teaching, including its censure of his predecessor Honorius.",
     "zh-Hans": "他确认第三次君士坦丁堡会议的决议，接受该会对基督一志论的定罪，连同对前任教皇何诺留的谴责。",
     "zh-Hant": "他確認第三次君士坦丁堡會議的決議，接受該會對基督一志論的定罪，連同對前任教皇何諾留的譴責。"
+   }
+  },
+  {
+   "id": "nara-period",
+   "start": 710,
+   "end": 794,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Nara Period",
+    "zh-Hans": "奈良时代",
+    "zh-Hant": "奈良時代"
+   },
+   "note": {
+    "en": "The capital fixed at Heijo-kyo, and the first written Japanese histories — the Kojiki and the Nihon Shoki — compiled.",
+    "zh-Hans": "定都平城京，日本最早的史书《古事记》与《日本书纪》于此时编成。",
+    "zh-Hant": "定都平城京，日本最早的史書《古事記》與《日本書紀》於此時編成。"
    }
   },
   {
@@ -5006,6 +5177,25 @@
    }
   },
   {
+   "id": "heian-period",
+   "start": 794,
+   "end": 1185,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Heian Period",
+    "zh-Hans": "平安时代",
+    "zh-Hant": "平安時代"
+   },
+   "note": {
+    "en": "The court at Heian-kyo, modern Kyoto, and the classical age of Japanese letters — the Tale of Genji among them.",
+    "zh-Hans": "朝廷设于平安京，即今京都；日本古典文学的鼎盛期，《源氏物语》即出于此时。",
+    "zh-Hant": "朝廷設於平安京，即今京都；日本古典文學的鼎盛期，《源氏物語》即出於此時。"
+   }
+  },
+  {
    "id": "pope-leo-iii",
    "start": 795,
    "end": 816,
@@ -5098,6 +5288,25 @@
     "en": "Walled the Vatican quarter after Arab raiders plundered St Peter's in 846.",
     "zh-Hans": "846年阿拉伯人劫掠圣彼得大堂后，他为梵蒂冈一带筑起城墙。",
     "zh-Hant": "846年阿拉伯人劫掠聖彼得大堂後，他為梵蒂岡一帶築起城牆。"
+   }
+  },
+  {
+   "id": "chola-empire",
+   "start": 850,
+   "end": 1279,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Chola Empire",
+    "zh-Hans": "朱罗王朝",
+    "zh-Hant": "朱羅王朝"
+   },
+   "note": {
+    "en": "The Tamil sea power of the south, whose fleets reached Sumatra and whose temples at Thanjavur still stand.",
+    "zh-Hans": "南印度的泰米尔海上强权，船队远至苏门答腊，坦贾武尔的神庙至今犹存。",
+    "zh-Hant": "南印度的泰米爾海上強權，船隊遠至蘇門答臘，坦賈武爾的神廟至今猶存。"
    }
   },
   {
@@ -5212,6 +5421,25 @@
     "en": "Emperor from childhood but ruling alone only from 945; the books compiled at his court preserve much of what is known of the Byzantine state.",
     "zh-Hans": "幼年即位，直到945年才亲政；他宫中编成的书卷，保存了后世对拜占庭朝廷所知的大半。",
     "zh-Hant": "幼年即位，直到945年才親政；他宮中編成的書卷，保存了後世對拜占庭朝廷所知的大半。"
+   }
+  },
+  {
+   "id": "goryeo",
+   "start": 918,
+   "end": 1392,
+   "region": "asia",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Goryeo",
+    "zh-Hans": "高丽王朝",
+    "zh-Hant": "高麗王朝"
+   },
+   "note": {
+    "en": "The kingdom the name Korea comes from. Its craftsmen cut the Tripitaka Koreana into eighty thousand woodblocks, and cast movable metal type two centuries before Gutenberg.",
+    "zh-Hans": "Korea 一名即出于此。其匠人将《高丽大藏经》刻成八万余块经版，并早于古腾堡两个世纪铸出金属活字。",
+    "zh-Hant": "Korea 一名即出於此。其匠人將《高麗大藏經》刻成八萬餘塊經版，並早於古騰堡兩個世紀鑄出金屬活字。"
    }
   },
   {
@@ -5653,6 +5881,25 @@
    }
   },
   {
+   "id": "kamakura-shogunate",
+   "start": 1185,
+   "end": 1333,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Kamakura Shogunate",
+    "zh-Hans": "镰仓幕府",
+    "zh-Hant": "鎌倉幕府"
+   },
+   "note": {
+    "en": "The first of the warrior governments. It twice turned back Kublai Khan's fleets, in 1274 and 1281.",
+    "zh-Hans": "第一个武家政权。1274年与1281年两度击退忽必烈的船队。",
+    "zh-Hant": "第一個武家政權。1274年與1281年兩度擊退忽必烈的船隊。"
+   }
+  },
+  {
    "id": "third-crusade",
    "start": 1189,
    "end": 1192,
@@ -5688,6 +5935,44 @@
     "en": "The Frankish and Venetian state set up in Constantinople after the Fourth Crusade; Greek rule returned in 1261.",
     "zh-Hans": "第四次十字军之后在君士坦丁堡建立的法兰克与威尼斯政权；1261年希腊人复国。",
     "zh-Hant": "第四次十字軍之後在君士坦丁堡建立的法蘭克與威尼斯政權；1261年希臘人復國。"
+   }
+  },
+  {
+   "id": "delhi-sultanate",
+   "start": 1206,
+   "end": 1526,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Delhi Sultanate",
+    "zh-Hans": "德里苏丹国",
+    "zh-Hant": "德里蘇丹國"
+   },
+   "note": {
+    "en": "Three centuries of Muslim rule in the north, ended by Babur at Panipat.",
+    "zh-Hans": "北印度三百年的穆斯林统治，终于巴布尔在帕尼帕特一战。",
+    "zh-Hant": "北印度三百年的穆斯林統治，終於巴布爾在帕尼帕特一戰。"
+   }
+  },
+  {
+   "id": "mongol-empire",
+   "start": 1206,
+   "end": 1368,
+   "region": "asia",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Mongol Empire",
+    "zh-Hans": "蒙古帝国",
+    "zh-Hant": "蒙古帝國"
+   },
+   "note": {
+    "en": "The largest contiguous land empire there has been, from Korea to Hungary. Its Chinese half is on this chart as the Yuan; the roads it held open carried the friars and the Polos east.",
+    "zh-Hans": "历史上疆域相连最广的帝国，自朝鲜直抵匈牙利。其中国部分即本图的元朝；它所维持的道路，把方济各会士与波罗一家带向东方。",
+    "zh-Hant": "歷史上疆域相連最廣的帝國，自朝鮮直抵匈牙利。其中國部分即本圖的元朝；它所維持的道路，把方濟各會士與波羅一家帶向東方。"
    }
   },
   {
@@ -5938,6 +6223,25 @@
    }
   },
   {
+   "id": "muromachi-shogunate",
+   "start": 1336,
+   "end": 1573,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Muromachi Shogunate",
+    "zh-Hans": "室町幕府",
+    "zh-Hant": "室町幕府"
+   },
+   "note": {
+    "en": "The Ashikaga shoguns at Kyoto. Francis Xavier landed at Kagoshima in 1549, inside these years.",
+    "zh-Hans": "足利将军家在京都执政。1549年沙勿略于鹿儿岛登陆，即在此期间。",
+    "zh-Hant": "足利將軍家在京都執政。1549年沙勿略於鹿兒島登陸，即在此期間。"
+   }
+  },
+  {
    "id": "ming-dynasty",
    "start": 1368,
    "end": 1644,
@@ -5954,6 +6258,25 @@
     "en": "The last Han Chinese imperial dynasty, during whose later years Jesuit missionaries such as Matteo Ricci reached Beijing.",
     "zh-Hans": "最后一个汉人皇朝，其后期利玛窦等耶稣会士抵达北京。",
     "zh-Hant": "最後一個漢人皇朝，其後期利瑪竇等耶穌會士抵達北京。"
+   }
+  },
+  {
+   "id": "joseon",
+   "start": 1392,
+   "end": 1897,
+   "region": "asia",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Joseon",
+    "zh-Hans": "朝鲜王朝",
+    "zh-Hant": "朝鮮王朝"
+   },
+   "note": {
+    "en": "Five centuries under the Yi. Sejong's scholars published the Korean alphabet in 1446, and the first Protestant missionaries arrived in its last decades.",
+    "zh-Hans": "李氏五百年之治。世宗朝的学者于1446年颁行谚文，其末期迎来最早的新教宣教士。",
+    "zh-Hant": "李氏五百年之治。世宗朝的學者於1446年頒行諺文，其末期迎來最早的新教宣教士。"
    }
   },
   {
@@ -6052,6 +6375,25 @@
    }
   },
   {
+   "id": "sengoku-period",
+   "start": 1467,
+   "end": 1603,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Sengoku Period",
+    "zh-Hans": "战国时代",
+    "zh-Hant": "戰國時代"
+   },
+   "note": {
+    "en": "A century and more of civil war, from the Onin War to Tokugawa Ieyasu's appointment as shogun, drawn across the two shogunates it broke.",
+    "zh-Hans": "自应仁之乱至德川家康受封征夷大将军，百余年诸侯混战；此段横跨它所瓦解的两个幕府。",
+    "zh-Hant": "自應仁之亂至德川家康受封征夷大將軍，百餘年諸侯混戰；此段橫跨它所瓦解的兩個幕府。"
+   }
+  },
+  {
    "id": "huldrych-zwingli",
    "start": 1484,
    "end": 1531,
@@ -6106,6 +6448,25 @@
     "en": "The first global empire, which carried Catholic missions across the Americas and the Pacific.",
     "zh-Hans": "史上第一个全球性帝国，将天主教宣教带到美洲与太平洋各地。",
     "zh-Hant": "史上第一個全球性帝國，將天主教宣教帶到美洲與太平洋各地。"
+   }
+  },
+  {
+   "id": "portuguese-brazil",
+   "start": 1500,
+   "end": 1822,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Portuguese Brazil",
+    "zh-Hans": "葡属巴西",
+    "zh-Hant": "葡屬巴西"
+   },
+   "note": {
+    "en": "Claimed by Cabral in 1500 and governed from Lisbon until independence in 1822 — the one American empire that was Portuguese rather than Spanish.",
+    "zh-Hans": "1500年卡布拉尔宣示占有，由里斯本治理至1822年独立——美洲唯一属葡萄牙而非西班牙的疆域。",
+    "zh-Hant": "1500年卡布拉爾宣示佔有，由里斯本治理至1822年獨立——美洲唯一屬葡萄牙而非西班牙的疆域。"
    }
   },
   {
@@ -6280,6 +6641,44 @@
    }
   },
   {
+   "id": "viceroyalty-new-spain",
+   "start": 1535,
+   "end": 1821,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Viceroyalty of New Spain",
+    "zh-Hans": "新西班牙总督辖区",
+    "zh-Hant": "新西班牙總督轄區"
+   },
+   "note": {
+    "en": "Mexico City ruled New Spain from soon after the fall of Tenochtitlan until 1821, with the friars' missions running north into what is now the United States.",
+    "zh-Hans": "特诺奇提特兰陷落后不久至1821年，墨西哥城统辖新西班牙，修会的传教站北至今日美国境内。",
+    "zh-Hant": "特諾奇提特蘭陷落後不久至1821年，墨西哥城統轄新西班牙，修會的傳教站北至今日美國境內。"
+   }
+  },
+  {
+   "id": "viceroyalty-peru",
+   "start": 1542,
+   "end": 1824,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Viceroyalty of Peru",
+    "zh-Hans": "秘鲁总督辖区",
+    "zh-Hant": "秘魯總督轄區"
+   },
+   "note": {
+    "en": "Lima ruled Spanish South America after the fall of the Inca, until the wars of independence.",
+    "zh-Hans": "印加覆亡后，利马统辖西属南美，直至独立战争。",
+    "zh-Hant": "印加覆亡後，利馬統轄西屬南美，直至獨立戰爭。"
+   }
+  },
+  {
    "id": "pope-paul-iv",
    "start": 1555,
    "end": 1559,
@@ -6334,6 +6733,25 @@
     "en": "The largest empire in history, whose language, Bible translations and missionary societies spread Protestant Christianity worldwide, and which governed Palestine under mandate before 1948.",
     "zh-Hans": "史上疆域最广的帝国，其语言、圣经译本与差会把更正教信仰传遍世界，1948年前并以委任统治管理巴勒斯坦。",
     "zh-Hant": "史上疆域最廣的帝國，其語言、聖經譯本與差會把更正教信仰傳遍世界，1948年前並以委任統治管理巴勒斯坦。"
+   }
+  },
+  {
+   "id": "tokugawa-shogunate",
+   "start": 1603,
+   "end": 1868,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Tokugawa Shogunate",
+    "zh-Hans": "江户幕府",
+    "zh-Hant": "江戶幕府"
+   },
+   "note": {
+    "en": "Two and a half centuries of peace under the Tokugawa at Edo, and of sakoku, the closed country: Christianity was banned and all but ended in Japan until the ports reopened.",
+    "zh-Hans": "德川氏在江户维持两个半世纪的太平，同时行锁国之制：基督教遭禁，几近绝迹，直至开港方再传入。",
+    "zh-Hant": "德川氏在江戶維持兩個半世紀的太平，同時行鎖國之制：基督教遭禁，幾近絕跡，直至開港方再傳入。"
    }
   },
   {
@@ -6508,6 +6926,26 @@
    }
   },
   {
+   "id": "united-states",
+   "start": 1776,
+   "end": null,
+   "ongoing": true,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "United States of America",
+    "zh-Hans": "美利坚合众国",
+    "zh-Hant": "美利堅合眾國"
+   },
+   "note": {
+    "en": "Independent from 1776. The band is drawn open because it has not ended.",
+    "zh-Hans": "1776年独立。此段作开口绘制，因尚未终结。",
+    "zh-Hant": "1776年獨立。此段作開口繪製，因尚未終結。"
+   }
+  },
+  {
    "id": "pope-pius-vii",
    "start": 1800,
    "end": 1823,
@@ -6603,6 +7041,44 @@
    }
   },
   {
+   "id": "british-raj",
+   "start": 1858,
+   "end": 1947,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "British Raj",
+    "zh-Hans": "英属印度",
+    "zh-Hant": "英屬印度"
+   },
+   "note": {
+    "en": "Crown rule after the rebellion of 1857, ending at partition. William Carey's mission and the Serampore presses came a generation before it; the church councils and the vernacular Bibles grew up inside it.",
+    "zh-Hans": "1857年起义之后由英王直辖，终于1947年分治。克理的宣教与塞兰坡的印刷所早其一代；教会公会与各方言圣经则在其间成长。",
+    "zh-Hant": "1857年起義之後由英王直轄，終於1947年分治。克理的宣教與塞蘭坡的印刷所早其一代；教會公會與各方言聖經則在其間成長。"
+   }
+  },
+  {
+   "id": "empire-of-japan",
+   "start": 1868,
+   "end": 1947,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Empire of Japan",
+    "zh-Hans": "大日本帝国",
+    "zh-Hant": "大日本帝國"
+   },
+   "note": {
+    "en": "From the Meiji restoration to the postwar constitution: industrialisation, the wars with China and Russia, the empire in Korea, Manchuria and the Pacific, and the defeat of 1945.",
+    "zh-Hans": "自明治维新至战后宪法：工业化、甲午与日俄之战、在朝鲜、满洲与太平洋的扩张，以及1945年的战败。",
+    "zh-Hant": "自明治維新至戰後憲法：工業化、甲午與日俄之戰、在朝鮮、滿洲與太平洋的擴張，以及1945年的戰敗。"
+   }
+  },
+  {
    "id": "pope-leo-xiii",
    "start": 1878,
    "end": 1903,
@@ -6619,6 +7095,25 @@
     "en": "Opened modern Catholic social teaching with Rerum Novarum in 1891, and encouraged the study of Scripture and of Aquinas.",
     "zh-Hans": "他1891年以《新事》通谕开启近代天主教社会训导，并鼓励研读圣经与阿奎那的著作。",
     "zh-Hant": "他1891年以《新事》通諭開啟近代天主教社會訓導，並鼓勵研讀聖經與阿奎那的著作。"
+   }
+  },
+  {
+   "id": "korean-empire",
+   "start": 1897,
+   "end": 1910,
+   "region": "asia",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Korean Empire",
+    "zh-Hans": "大韩帝国",
+    "zh-Hant": "大韓帝國"
+   },
+   "note": {
+    "en": "Thirteen years as a declared empire between the end of Chinese suzerainty and annexation by Japan.",
+    "zh-Hans": "自脱离中国宗主至被日本吞并，称帝十三年。",
+    "zh-Hant": "自脫離中國宗主至被日本吞併，稱帝十三年。"
    }
   },
   {
@@ -6641,6 +7136,25 @@
    }
   },
   {
+   "id": "republic-of-china",
+   "start": 1912,
+   "end": 1949,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Republic of China",
+    "zh-Hans": "中华民国",
+    "zh-Hant": "中華民國"
+   },
+   "note": {
+    "en": "Proclaimed at the Qing abdication and governing the mainland until 1949. These years hold the May Fourth movement, the warlords, the Japanese invasion, and the widest reach the missionary societies ever had in China.",
+    "zh-Hans": "清帝退位后成立，统治中国大陆至1949年。这几十年间有五四运动、军阀混战、日本入侵，也是宣教差会在华影响最广的时期。",
+    "zh-Hant": "清帝退位後成立，統治中國大陸至1949年。這幾十年間有五四運動、軍閥混戰、日本入侵，也是宣教差會在華影響最廣的時期。"
+   }
+  },
+  {
    "id": "pope-benedict-xv",
    "start": 1914,
    "end": 1922,
@@ -6657,6 +7171,25 @@
     "en": "Called the First World War a useless slaughter, kept the Holy See neutral, and spent its means on relief and the exchange of prisoners.",
     "zh-Hans": "他称第一次世界大战为无益的屠杀，使教廷保持中立，并倾其财力于救济与交换战俘。",
     "zh-Hant": "他稱第一次世界大戰為無益的屠殺，使教廷保持中立，並傾其財力於救濟與交換戰俘。"
+   }
+  },
+  {
+   "id": "warlord-era-china",
+   "start": 1916,
+   "end": 1928,
+   "region": "asia",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Warlord Era in China",
+    "zh-Hans": "军阀割据",
+    "zh-Hant": "軍閥割據"
+   },
+   "note": {
+    "en": "Between Yuan Shikai's death and the Northern Expedition's nominal reunification, the republic's authority was divided among regional armies. Drawn inside the Republic's own band, as the Three Kingdoms are drawn inside China's chain.",
+    "zh-Hans": "自袁世凯去世至北伐名义上统一全国，民国政令分散于各地军队之手。此段画在中华民国的带子里，如同三国画在中国这条链上。",
+    "zh-Hant": "自袁世凱去世至北伐名義上統一全國，民國政令分散於各地軍隊之手。此段畫在中華民國的帶子裡，如同三國畫在中國這條鏈上。"
    }
   },
   {
@@ -6717,6 +7250,46 @@
    }
   },
   {
+   "id": "japan-postwar",
+   "start": 1947,
+   "end": null,
+   "ongoing": true,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Japan",
+    "zh-Hans": "日本国",
+    "zh-Hant": "日本國"
+   },
+   "note": {
+    "en": "The state under the 1947 constitution. The band is drawn open because it has not ended.",
+    "zh-Hans": "1947年宪法下的国家。此段作开口绘制，因尚未终结。",
+    "zh-Hant": "1947年憲法下的國家。此段作開口繪製，因尚未終結。"
+   }
+  },
+  {
+   "id": "republic-of-india",
+   "start": 1947,
+   "end": null,
+   "ongoing": true,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Republic of India",
+    "zh-Hans": "印度共和国",
+    "zh-Hant": "印度共和國"
+   },
+   "note": {
+    "en": "Independent from 1947. The band is drawn open because it has not ended.",
+    "zh-Hans": "1947年独立。此段作开口绘制，因尚未终结。",
+    "zh-Hant": "1947年獨立。此段作開口繪製，因尚未終結。"
+   }
+  },
+  {
    "id": "state-of-israel",
    "start": 1948,
    "end": null,
@@ -6734,6 +7307,26 @@
     "en": "The modern Jewish state declared in 1948, the first sovereign Jewish state in the land since the Hasmoneans.",
     "zh-Hans": "1948年宣告成立的现代犹太国家，是自哈斯蒙尼王朝以来该地首个拥有主权的犹太国家。",
     "zh-Hant": "1948年宣告成立的現代猶太國家，是自哈斯蒙尼王朝以來該地首個擁有主權的猶太國家。"
+   }
+  },
+  {
+   "id": "peoples-republic-of-china",
+   "start": 1949,
+   "end": null,
+   "ongoing": true,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "People's Republic of China",
+    "zh-Hans": "中华人民共和国",
+    "zh-Hant": "中華人民共和國"
+   },
+   "note": {
+    "en": "Established in 1949. The chart already carries its events — the missionaries' withdrawal, the Three-Self movement, the Cultural Revolution's closing of the churches, the reopening of 1979. The band is drawn open because the state has not ended.",
+    "zh-Hans": "1949年成立。本图已载有其间的事件——宣教士撤离、三自爱国运动、文化大革命关闭教会、1979年教会重开。此段作开口绘制，因这个国家尚未终结。",
+    "zh-Hant": "1949年成立。本圖已載有其間的事件——宣教士撤離、三自愛國運動、文化大革命關閉教會、1979年教會重開。此段作開口繪製，因這個國家尚未終結。"
    }
   },
   {

@@ -315,8 +315,8 @@ void main() {
     }
     // The guard on the guard: a sweep that saw one record, or one
     // vocabulary word, would pass everything above and prove nothing.
-    expect(checked, 1121,
-        reason: '776 events + 263 powers + 82 nations; if this moved, the '
+    expect(checked, 1152,
+        reason: '776 events + 294 powers + 82 nations; if this moved, the '
             'corpus grew and the count should move with it. 2026-09-02 '
             'added 74 church-history records; 2026-09-03 added 42 Roman '
             'and Greek ones, merged two duplicate pairs away, and took 15 '
@@ -358,7 +358,24 @@ void main() {
             'Yangshao → Longshan → 五帝 → 夏 → 二里頭 into the existing '
             'Shang; India runs Harappan → Vedic; Japan runs 繩文 → 彌生 → '
             '古墳; and Korea, Elam, Nubia, Mitanni, Minoan Crete and the '
-            'Olmec reach the chart for the first time.');
+            'Olmec reach the chart for the first time.'
+            '\n'
+            '2026-09-16: 1,121 → 1,152. The MODERN end this time, and the '
+            'same measurement that found the ancient one: the bands of a '
+            'stream read in order. 「中国还有很多其他的在清朝之后很多 都'
+            'missing了在strip里面」 — and China was not the worst of it. '
+            'The China lane stopped at 1912, 114 years short of the axis; '
+            'Japan stopped at AD 628, so 1,398 years of a lane a reader '
+            'can see were blank; India had holes of 940, 684 and 169 '
+            'years; the Americas stopped at 1533. 31 powers close all of '
+            'them. China now runs 民国 → 人民共和国, Japan 飛鳥 → 奈良 → '
+            '平安 → 鎌倉 → 室町 → 江戶 → 帝國 → 日本國, India 孔雀 → '
+            '巽伽/百乘 → 貴霜 → 笈多 → 朱羅 → 德里 → 蒙兀兒 → 英屬 → '
+            '共和國, the Americas run on through the viceroyalties and '
+            'Brazil to the United States, and the Mongol empire and the '
+            'Korean chain reach the chart. NOT added, and told to the '
+            'owner rather than settled here: the Republic of China on '
+            'Taiwan after 1949, and the two Koreas after 1948.');
 
     expect(seen, {'scripture', 'scripture+thiele', 'conventional',
         'traditional'},

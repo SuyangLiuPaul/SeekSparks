@@ -194,7 +194,14 @@ void main() {
     // no regnal years for Israel's neighbours either.
     // 2026-09-15: 226 → 255, the 32 ancient bands less the three that
     // are `traditional` rather than conventional (五帝, 夏朝, 고조선).
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 255);
+    // 2026-09-16: 255 → 286, the 31 modern and medieval bands that
+    // close the other end — 「中国还有很多其他的在清朝之后很多 都missing
+    // 了在strip里面」. Every one is conventional, which is the whole
+    // reason the Korean three kingdoms are drawn from the fourth
+    // century and not from the Samguk Sagi's 57 BC: a founding year out
+    // of a traditional chronicle would have had to be `traditional`,
+    // and this band is not that.
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 286);
     // And the three, named, because a value used by nothing is a value
     // that quietly stopped being applied.
     expect(

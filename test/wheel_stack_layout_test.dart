@@ -173,7 +173,12 @@ void main() {
         'europe': 8,
         'americas': 4,
         'china': 2,
-        'japan': 1,
+        // 2026-09-16: 1 → 2. Japan's lane used to hold four bands that
+        // never overlapped. It now runs 飛鳥 → 日本國, and 戰國 (1467-
+        // 1603) crosses the two shogunates it broke, exactly as 推古
+        // sits inside 飛鳥 — so the lane needs two tiers, which is what
+        // this number is for.
+        'japan': 2,
         'india': 2,
         'church': 6,
         'world': 7,
@@ -186,8 +191,12 @@ void main() {
       for (final assignment in plan.assignments) {
         expect(rows.contains(assignment.interval), isTrue);
       }
+      // 2026-09-16: 20 → 23. 「中国还有很多其他的在清朝之后很多 都
+      // missing了在strip里面」 — the chain used to stop at 清朝/1912,
+      // 114 years short of the axis. 民国, 軍閥割據 and 人民共和國 close
+      // it.
       final china = rows.where((row) => row.stream == 'china');
-      expect(china.length, 20);
+      expect(china.length, 23);
       expect(rows.where((row) => row.isPoint).map((row) => row.id).toSet(),
           {'gedaliah-governor', 'eighth-crusade'});
     });
