@@ -1070,7 +1070,25 @@ class _StackedWheelPainter extends CustomPainter {
     // show the whole name is printing a word that is not the record's
     // name, with a leader line pointing at the record to confirm it.
     final bankWidth = math.min(140 / zoom, visible.width * .26);
-    final perSide = visible.width < 520 ? 2 : 4;
+    // AS MANY AS THE BANK HOLDS, NOT FOUR.
+    //
+    // 2026-09-16 「这个你还是没有做好」, of a zoomed-in render where two
+    // faces beside a named one carried nothing. Four a side was chosen
+    // at the resting zoom, where the whole chart is on screen and the
+    // banks would otherwise run the full height of it. Zoomed in there
+    // are few records on screen and a tall empty bank beside them, and
+    // the cap was the only thing keeping the names out.
+    //
+    // The narrow-canvas rule stays: on a phone two a side is already a
+    // quarter of the width spoken for.
+    final line = fontSize * 2.2;
+    final perSide = visible.width < 520
+        ? 2
+        : (visible.height / line).floor().clamp(4, 10);
+    // Both terms are in SCENE units and both shrink with the scale, so
+    // this is "how many lines the bank is tall" at any zoom — about
+    // twenty-four on a desktop, which is why four was leaving most of
+    // the bank empty.
     if (bankWidth < fontSize * 2) return;
     // Bounded candidates keep rotate frames cheap. The complete prism list
     // still supplies occlusion; excluded names do not make a wall vanish.
@@ -1079,14 +1097,25 @@ class _StackedWheelPainter extends CustomPainter {
     if (selectedId != null && scene.records.containsKey(selectedId)) {
       candidates.add(selectedId!);
     }
+    // Two per stream is a fair share when the whole chart is on screen
+    // and twenty-two streams compete for eight slots. Zoomed into one
+    // ring there is no competition — the names that are missing all
+    // belong to the same stream, which is exactly what the share was
+    // keeping out. So the share lifts with the magnification and not
+    // before it: shaping a name costs a paragraph, and at the resting
+    // zoom every stream is a candidate.
+    final zoomedIn = zoom >= 2;
+    final perGroupCap =
+        zoomedIn && perSide > 2 ? (perSide / 2).ceil() : 2;
+    final maxCandidates = zoomedIn ? perSide * 3 : 24;
     for (final prism in scene.prisms.reversed) {
-      if (candidates.length >= 24) break;
+      if (candidates.length >= maxCandidates) break;
       if (paintedRecordIds.contains(prism.id) ||
           (prism.sweep != 0 && !prism.bounds.overlaps(visible))) {
         continue;
       }
       final group = scene.groupOf[prism.id]!.id;
-      if ((perGroup[group] ?? 0) >= 2) continue;
+      if ((perGroup[group] ?? 0) >= perGroupCap) continue;
       perGroup[group] = (perGroup[group] ?? 0) + 1;
       candidates.add(prism.id);
     }

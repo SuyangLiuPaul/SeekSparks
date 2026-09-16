@@ -1951,7 +1951,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         onClear: () => setState(() => _cursorYear = null),
         s: (key, fallback) => s(key, fallback, locale),
         fill: (key, fallback, values) => fill(key, fallback, locale, values),
-        onYear: _placeCursor,
+        onYear: _scrubToYear,
         minYear: kMinYear,
         maxYear: kMaxYear,
       );
@@ -2018,7 +2018,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         controller: _viewer,
         initialCamera: _enterDepthCamera,
         onCameraChanged: (camera) => _depthCamera = camera,
-        onYear: _placeCursor,
+        onYear: _scrubToYear,
         initialYaw: _depthYaw,
         cursorYear: _cursorYear,
         initialTilt: _depthTilt,
@@ -3791,6 +3791,39 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// the year genuinely can be off-screen. Selection, which forces the
   /// record through the angular declutter and gives it a label, is what
   /// does the finding at rest.
+  /// The scrubber moves the CHART, not only the cursor.
+  ///
+  /// 2026-09-16 「我往后面拽的时候应该整个图跟着往后面移动」, of the strip —
+  /// and the same is true here once the reader has zoomed in, where the
+  /// year they are scrubbing to can be off the side of the viewport. At
+  /// the resting zoom the whole wheel is on screen and nothing moves,
+  /// which is correct rather than a special case.
+  ///
+  /// A press on the chart is deliberately NOT this: the year is already
+  /// under the finger there, and recentring would move what is being
+  /// pointed at.
+  void _scrubToYear(int year) {
+    _placeCursor(year);
+    final view = _viewportSize;
+    if (view == null || _zoom <= 1.02) return;
+    final side = math.min(view.width, view.height);
+    final rBands = side * bandsFractionFor(side);
+    final rHub = side * _kHubFrac;
+    final angle = angleForSpan(
+        year.clamp(kMinYear, kMaxYear), kMinYear, kMaxYear);
+    final radius = (rHub + rBands) / 2;
+    final t = focusTranslation(
+      px: view.width / 2 + radius * math.cos(angle),
+      py: view.height / 2 + radius * math.sin(angle),
+      scale: _zoom,
+      viewW: view.width,
+      viewH: view.height,
+    );
+    _viewer.value = Matrix4.identity()
+      ..translateByDouble(t.dx, t.dy, 0, 1)
+      ..scaleByDouble(_zoom, _zoom, 1, 1);
+  }
+
   void _panTo(WheelHit hit, WheelHistoryData data) {
     if (_stacked) return;
     final view = _viewportSize;

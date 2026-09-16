@@ -77,6 +77,76 @@ double ringPitch(int ringCount, double rHub, double rMax) =>
   );
 }
 
+/// The thinnest a sub-layer may be drawn and still be a layer.
+///
+/// The same floor the lifespan band is held to: below this a stripe is
+/// a hairline, it cannot carry a name, and a finger cannot pick it out
+/// of its neighbours.
+const double kStreamTierFloorPx = 6.6;
+
+/// How many sub-layers one stream's ring may be divided into.
+///
+/// 2026-09-16 「你看家谱这个一个圈圈多个layer 那具体这个 filter里面的应该
+/// 也可以这样去做 一个圈圈 但是那个每个条可以细一些多层这样 ... 这样就知
+/// 道同一时代同时发生事情」.
+///
+/// THIS FILE ARGUED AGAINST SUB-RINGING AND THE ARGUMENT WAS RIGHT AT
+/// THE TIME. [planArcNames]' doc still carries it: 22 streams share
+/// about 153 canvas units, one ring is 6.95 of them, and europe nests
+/// eight powers deep — eight slices of that are 0.87 units, under a
+/// hairline and under any target. What changed is the number of rings.
+/// The chart opens on four streams and will not draw more than twelve,
+/// so a ring is 38 units at four and 12.75 at twelve, and the question
+/// stops having one answer.
+///
+/// So it is asked per chart rather than decided once: as many layers as
+/// clear [floorPx], never more than the overlaps [wanted], and one when
+/// nothing else fits. A stream whose powers need more layers than fit
+/// keeps the old behaviour for the remainder — they share the last
+/// layer, exactly as they shared the one ring before.
+int streamTierCount({
+  required int wanted,
+  required int ringCount,
+  required double rHub,
+  required double rMax,
+  double floorPx = kStreamTierFloorPx,
+}) {
+  if (wanted <= 1 || ringCount <= 0) return 1;
+  final band = ringRadii(0, ringCount, rHub, rMax).width;
+  if (!band.isFinite || band <= 0) return 1;
+  final fits = (band / floorPx).floor();
+  if (fits <= 1) return 1;
+  return fits < wanted ? fits : wanted;
+}
+
+/// The slice of one stream's ring that layer [tier] of [tiers] occupies.
+///
+/// Layer 0 is the OUTERMOST, which is [ringRadii]'s own convention for
+/// rings and keeps "first is outermost" true at both scales. A fifth of
+/// each slice is left as the gap, for the reason [ringRadii] leaves one
+/// between rings: without it the layers read as one thick arc whose
+/// colour happens to change.
+({double inner, double outer, double centre, double width}) tierRadii(
+  int ring,
+  int ringCount,
+  double rHub,
+  double rMax, {
+  int tier = 0,
+  int tiers = 1,
+}) {
+  final band = ringRadii(ring, ringCount, rHub, rMax);
+  if (tiers <= 1) return band;
+  final slice = band.width / tiers;
+  final outer = band.outer - tier.clamp(0, tiers - 1) * slice;
+  final fill = slice * 0.8;
+  return (
+    inner: outer - fill,
+    outer: outer,
+    centre: outer - fill / 2,
+    width: fill,
+  );
+}
+
 /// The angle for [year] on an axis running [minYear]..[maxYear].
 ///
 /// THE ONLY YEAR→ANGLE FUNCTION ON THIS WHEEL, and that is the whole
@@ -1134,6 +1204,44 @@ double? placeArcName(
   return best.start + (bestW - needed) / 2;
 }
 
+/// How much clear arc there is immediately AFTER [a1] on this ring.
+///
+/// 2026-09-16 「这种也是后面有位置就应该可以放label」, of a three-year reign
+/// at 3295% with empty chart all round it and no name on it. A short
+/// span is too narrow for its own name at every zoom — the name is
+/// wider than the thing it names, and no magnification changes that,
+/// because both grow together. What does change is the room beside it.
+///
+/// A blocker is another arc on the same ring, or a name already placed
+/// there; [limit] is the end of the axis. Spans that start at or before
+/// [a1] cannot block what comes after it and are ignored — that
+/// includes the arc doing the asking.
+double arcNameRoomAfter(
+  double a1,
+  List<ArcSpan> claimed,
+  List<ArcSpan> arcs,
+  double limit, {
+  double gap = 0,
+}) {
+  final from = a1 + gap;
+  if (from >= limit) return 0;
+  var stop = limit;
+  for (final list in [claimed, arcs]) {
+    for (final span in list) {
+      if (span.end <= from) continue;
+      // A span that STRADDLES the starting point leaves no room at all,
+      // and missing that was the first version's defect: a power nested
+      // inside a longer one — Mehmed IV inside the Ottoman Empire —
+      // ends before its container does, so the ring after it is the
+      // container's ink and, usually, the container's name.
+      if (span.start <= from) return 0;
+      if (span.start < stop) stop = span.start;
+    }
+  }
+  final room = stop - from;
+  return room > 0 ? room : 0;
+}
+
 /// One power (or other stream member) asking for its name to be set on
 /// its own ring, before any placement has decided whether it survives.
 ///
@@ -1213,12 +1321,20 @@ List<PlannedArcName> planArcNames({
 
   final maxEm = ringPitch(ringCount, rHub, rBands) * kArcLabelPitchFraction;
   final occupiedByRing = <int, List<ArcSpan>>{};
+  // Every arc on each ring, so a name set BESIDE its own arc knows what
+  // it would land on. The names alone are not enough: an unnamed
+  // neighbour still has ink.
+  final arcsByRing = <int, List<ArcSpan>>{};
+  for (final r in requests) {
+    arcsByRing.putIfAbsent(r.ring, () => []).add((start: r.a0, end: r.a1));
+  }
+  final axisEnd = startRad + sweepRad;
   final out = <PlannedArcName>[];
   for (final r in requests) {
     final claimed = occupiedByRing.putIfAbsent(r.ring, () => []);
     final band = ringRadii(r.ring, ringCount, rHub, rBands);
     final room = arcNameRoom(r.a0, r.a1, claimed);
-    final size = fitArcLabel(
+    var size = fitArcLabel(
       text: r.name,
       radius: band.centre,
       sweep: room,
@@ -1228,12 +1344,36 @@ List<PlannedArcName> planArcNames({
       floorPx: floorPx,
       measure: measure,
     );
-    if (size <= 0) {
-      out.add(nothing);
-      continue;
+    var needed = size <= 0 ? 0.0 : measure(r.name, size) / band.centre;
+    var at = size <= 0 ? null : placeArcName(r.a0, r.a1, claimed, needed);
+    if (at == null) {
+      // INSIDE IF IT FITS, BESIDE IT IF IT DOES NOT.
+      //
+      // 2026-09-16 「这种也是后面有位置就应该可以放label」 — and 「这样
+      // wheel strip就一致了」: the strip already names a bar too narrow
+      // to hold its name just after the bar, and this is the same rule
+      // on a curve. A short reign is narrower than its own name at
+      // EVERY zoom, because the arc and the glyphs grow together; the
+      // empty ring beside it is what changes.
+      final gap = 2 / (band.centre * (zoom > 0 ? zoom : 1));
+      final beside = arcNameRoomAfter(
+          r.a1, claimed, arcsByRing[r.ring]!, axisEnd,
+          gap: gap);
+      size = fitArcLabel(
+        text: r.name,
+        radius: band.centre,
+        sweep: beside,
+        maxEm: maxEm,
+        desiredSize: desiredSize,
+        zoom: zoom,
+        floorPx: floorPx,
+        measure: measure,
+      );
+      if (size > 0) {
+        needed = measure(r.name, size) / band.centre;
+        if (needed <= beside) at = r.a1 + gap;
+      }
     }
-    final needed = measure(r.name, size) / band.centre;
-    final at = placeArcName(r.a0, r.a1, claimed, needed);
     if (at == null) {
       out.add(nothing);
       continue;

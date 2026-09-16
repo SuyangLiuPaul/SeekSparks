@@ -531,6 +531,22 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   void _placeCursor(int year) =>
       setState(() => _cursorYear = year.clamp(kStripMinYear, kStripMaxYear));
 
+  /// The scrubber moves the CHART, not only the cursor.
+  ///
+  /// 2026-09-16 「我往后面拽的时候应该整个图跟着往后面移动」 — the year
+  /// slider ran to 主后1796 while the chart sat at 主后1420, so the reader
+  /// was scrubbing a year they could not see. A press on the chart is
+  /// deliberately NOT this: there the year is already under the finger,
+  /// and recentring would move the thing being pointed at.
+  void _scrubToYear(int year) {
+    _placeCursor(year);
+    if (_viewportW <= 0 || !_hCtl.hasClients) return;
+    final target = scrollToCentre(year, _pxPerYear, _viewportW);
+    // `jumpTo`, not `animateTo`: a drag has to track the finger, and an
+    // animation queued per slider tick lags behind it by design.
+    _hCtl.jumpTo(target.clamp(0.0, _hCtl.position.maxScrollExtent));
+  }
+
   /// The same, from a content-x — what a press on the lanes or on the
   /// ruler means.
   void _placeCursorAtX(double x) =>
@@ -2134,7 +2150,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         onClear: () => setState(() => _cursorYear = null),
         s: (key, fallback) => s(key, fallback, locale),
         fill: (key, fallback, values) => fill(key, fallback, locale, values),
-        onYear: _placeCursor,
+        onYear: _scrubToYear,
         minYear: kStripMinYear,
         maxYear: kStripMaxYear,
       );
