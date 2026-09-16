@@ -426,19 +426,51 @@ class StripLanesPainter extends CustomPainter {
                 ownId: span.id,
                 streamId: _streamIdFor(span, lane, palette)));
         final name = palette.spanLabel[span.id] ?? '';
+        if (name.isEmpty) continue;
         final room = stripDepthLabelArea(shape, visibleX0, visibleX1);
-        if (name.isEmpty || room.isEmpty) continue;
-        final fit = fitBarLabel(
-            text: name,
-            roomPx: room.width,
-            size: laneFontPx,
-            measure: _measure);
-        if (fit.text.isEmpty) continue;
+        final fit = room.isEmpty
+            ? (text: '', ellipsised: false)
+            : fitBarLabel(
+                text: name,
+                roomPx: room.width,
+                size: laneFontPx,
+                measure: _measure);
+        final fits = fit.text.isNotEmpty;
+        if (fits) {
+          final text = StripPaintTextCache.layout(
+              text: fit.text,
+              style: canvasTextStyle(fontSize: laneFontPx, color: wb.text));
+          if (text.height <= room.height) {
+            text.paint(
+                canvas, Offset(room.left, room.center.dy - text.height / 2));
+            continue;
+          }
+        }
+        // 2026-09-16 「好像这个其实后面放得下 但是zoom in多一次那个框框就
+        // 放得下了 这样就放回框框里」 — inside whenever it fits, which is
+        // what the branch above is for, and beside it when it does not.
+        // The depth rows are the same picture as the flat bars and were
+        // the path this was missing: a seven-year reign drawn as a prism
+        // carried no name at all while the lane to its right was empty.
+        var nextX0 = double.infinity;
+        for (final other in row.depthShapes) {
+          final left = other.bounds.left;
+          if (left >= shape.bounds.right && left < nextX0) nextX0 = left;
+        }
+        final at = trailingLabelX(
+          barX1: shape.bounds.right,
+          labelW: _measure(name, laneFontPx),
+          nextX0: nextX0,
+          viewX0: visibleX0,
+          viewX1: visibleX1,
+        );
+        if (at == null) continue;
         final text = StripPaintTextCache.layout(
-            text: fit.text,
-            style: canvasTextStyle(fontSize: laneFontPx, color: wb.text));
-        if (text.height > room.height) continue;
-        text.paint(canvas, Offset(room.left, room.center.dy - text.height / 2));
+            text: name,
+            style: canvasTextStyle(
+                fontSize: laneFontPx, color: wb.text.withValues(alpha: 0.8)));
+        final middle = room.isEmpty ? shape.front.center.dy : room.center.dy;
+        text.paint(canvas, Offset(at, middle - text.height / 2));
       }
     }
   }
