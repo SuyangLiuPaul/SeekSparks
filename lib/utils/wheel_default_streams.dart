@@ -34,6 +34,12 @@ const List<String> kStreamPriority = <String>[
   'israel',
   'judah',
   'church',
+  // 2026-09-16, moved up from eighteenth: 「有一个全世界的tick也可以在
+  // filter而且default是tick的」. It is the lane the wars, the pandemics
+  // and the landings are drawn on, and at eighteenth a reader had to
+  // know it existed before they could ask for it — under a name,
+  // 「其他」, that told them it was the leftovers.
+  'world',
   'egypt',
   'assyria',
   'babylon',
@@ -47,7 +53,6 @@ const List<String> kStreamPriority = <String>[
   'arabia',
   'islam',
   'europe',
-  'world',
   'china',
   'india',
   'japan',
@@ -86,7 +91,8 @@ const List<String> kStreamPriority = <String>[
 ///   • The opening four are the SPINE — scripture, Israel, Judah, the
 ///     church. That is the line this application exists to follow, and
 ///     it is never the thing a reader has to go and switch on.
-///   • The fifth slot is THE COMPARISON the reader came to make: what
+///   • The fifth, since 2026-09-16, is 全世界 — see [kOpeningStreams].
+///   • The sixth slot is THE COMPARISON the reader came to make: what
 ///     Egypt was doing then, where Babylon falls against the kings. A
 ///     chart with no free slot is a fixed poster. A chart with six or
 ///     more asks the reader to tell one muted hue from another around a
@@ -112,7 +118,18 @@ const List<String> kStreamPriority = <String>[
 const int kMaxVisibleStreams = 12;
 
 /// How many rings the wheel opens with, leaving exactly one slot free.
-const int kOpeningStreams = 4;
+///
+/// 2026-09-16: 4 → 5. 「有一个全世界的tick也可以在filter而且default是
+/// tick的」. The fifth is 全世界, and it is a different kind of request
+/// from "add Egypt": Egypt is a comparison a reader goes looking for,
+/// while the world lane is the one that says what century the reader is
+/// standing in — both world wars, the moon landing, the pandemic. A
+/// chart that opens without it opens with no present tense.
+///
+/// The free slot above is not lost, because [kMaxVisibleStreams] is 12
+/// and always was: what the opening count decides is how many the
+/// reader MEETS, not how many they may have.
+const int kOpeningStreams = 5;
 
 /// How many rings a wheel of this size can hold and still be read.
 ///

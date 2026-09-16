@@ -224,9 +224,9 @@
    "id": "world",
    "line": "none",
    "name": {
-    "zh-Hans": "其他",
-    "zh-Hant": "其他",
-    "en": "Elsewhere"
+    "zh-Hans": "全世界",
+    "zh-Hant": "全世界",
+    "en": "The Wider World"
    }
   }
  ],
@@ -7136,6 +7136,25 @@
    }
   },
   {
+   "id": "korea-under-japan",
+   "start": 1910,
+   "end": 1945,
+   "region": "asia",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Korea under Japanese Rule",
+    "zh-Hans": "日本统治朝鲜",
+    "zh-Hant": "日本統治朝鮮"
+   },
+   "note": {
+    "en": "Thirty-five years of annexation, ended by the Japanese surrender. Pyongyang's churches were large enough in these years to be called the Jerusalem of the East, and the refusal of Shinto shrine worship cost many of their leaders their freedom.",
+    "zh-Hans": "吞并三十五年，终于日本投降。这些年间平壤教会之盛，有东方耶路撒冷之称；拒拜神社使其中许多领袖身陷囹圄。",
+    "zh-Hant": "吞併三十五年，終於日本投降。這些年間平壤教會之盛，有東方耶路撒冷之稱；拒拜神社使其中許多領袖身陷囹圄。"
+   }
+  },
+  {
    "id": "republic-of-china",
    "start": 1912,
    "end": 1949,
@@ -7174,6 +7193,25 @@
    }
   },
   {
+   "id": "world-war-one",
+   "start": 1914,
+   "end": 1918,
+   "region": "modern",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "First World War",
+    "zh-Hans": "第一次世界大战",
+    "zh-Hant": "第一次世界大戰"
+   },
+   "note": {
+    "en": "Four years and three months. Its end took the Ottoman empire off this chart and put Britain in Jerusalem, both of which are drawn here as their own records.",
+    "zh-Hans": "四年零三个月。它的结束使奥斯曼帝国从本图消失，又把英国带进耶路撒冷；二者本图各有其条目。",
+    "zh-Hant": "四年零三個月。它的結束使奧斯曼帝國從本圖消失，又把英國帶進耶路撒冷；二者本圖各有其條目。"
+   }
+  },
+  {
    "id": "warlord-era-china",
    "start": 1916,
    "end": 1928,
@@ -7190,6 +7228,25 @@
     "en": "Between Yuan Shikai's death and the Northern Expedition's nominal reunification, the republic's authority was divided among regional armies. Drawn inside the Republic's own band, as the Three Kingdoms are drawn inside China's chain.",
     "zh-Hans": "自袁世凯去世至北伐名义上统一全国，民国政令分散于各地军队之手。此段画在中华民国的带子里，如同三国画在中国这条链上。",
     "zh-Hant": "自袁世凱去世至北伐名義上統一全國，民國政令分散於各地軍隊之手。此段畫在中華民國的帶子裡，如同三國畫在中國這條鏈上。"
+   }
+  },
+  {
+   "id": "influenza-pandemic-band",
+   "start": 1918,
+   "end": 1920,
+   "region": "modern",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The 1918 Influenza Pandemic",
+    "zh-Hans": "1918年流感大流行",
+    "zh-Hant": "1918年流感大流行"
+   },
+   "note": {
+    "en": "Three years and three or four waves, and tens of millions of deaths — more than the war it followed.",
+    "zh-Hans": "历时三年，三四波疫潮，死者数千万，多过它所接续的那场战争。",
+    "zh-Hant": "歷時三年，三四波疫潮，死者數千萬，多過它所接續的那場戰爭。"
    }
   },
   {
@@ -7250,6 +7307,44 @@
    }
   },
   {
+   "id": "world-war-two",
+   "start": 1939,
+   "end": 1945,
+   "region": "modern",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Second World War",
+    "zh-Hans": "第二次世界大战",
+    "zh-Hant": "第二次世界大戰"
+   },
+   "note": {
+    "en": "Six years. The deadliest war there has been, and the one whose ending set up almost everything later on this lane — the United Nations, the two Koreas, the state of Israel.",
+    "zh-Hans": "六年。有史以来死伤最重的战争；本条线其后的大半——联合国、两个朝鲜、以色列国——都由它的结局立定。",
+    "zh-Hant": "六年。有史以來死傷最重的戰爭；本條線其後的大半——聯合國、兩個朝鮮、以色列國——都由它的結局立定。"
+   }
+  },
+  {
+   "id": "cold-war",
+   "start": 1947,
+   "end": 1991,
+   "region": "modern",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The Cold War",
+    "zh-Hans": "冷战",
+    "zh-Hant": "冷戰"
+   },
+   "note": {
+    "en": "Forty-four years between the two blocs, from the Truman doctrine to the Soviet Union's dissolution. Most of the church-behind-the-curtain records on this chart sit inside it.",
+    "zh-Hans": "两大阵营对峙四十四年，自杜鲁门主义至苏联解体。本图中铁幕之下的教会条目，大半都在其中。",
+    "zh-Hant": "兩大陣營對峙四十四年，自杜魯門主義至蘇聯解體。本圖中鐵幕之下的教會條目，大半都在其中。"
+   }
+  },
+  {
    "id": "japan-postwar",
    "start": 1947,
    "end": null,
@@ -7290,6 +7385,46 @@
    }
   },
   {
+   "id": "dpr-korea",
+   "start": 1948,
+   "end": null,
+   "ongoing": true,
+   "region": "asia",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Democratic People's Republic of Korea",
+    "zh-Hans": "朝鲜民主主义人民共和国",
+    "zh-Hant": "朝鮮民主主義人民共和國"
+   },
+   "note": {
+    "en": "The northern state, declared in 1948. The band is drawn open because it has not ended.",
+    "zh-Hans": "1948年宣告成立的北方国家。此段作开口绘制，因尚未终结。",
+    "zh-Hant": "1948年宣告成立的北方國家。此段作開口繪製，因尚未終結。"
+   }
+  },
+  {
+   "id": "republic-of-korea",
+   "start": 1948,
+   "end": null,
+   "ongoing": true,
+   "region": "asia",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Republic of Korea",
+    "zh-Hans": "大韩民国",
+    "zh-Hant": "大韓民國"
+   },
+   "note": {
+    "en": "The southern state, declared in 1948. The band is drawn open because it has not ended.",
+    "zh-Hans": "1948年宣告成立的南方国家。此段作开口绘制，因尚未终结。",
+    "zh-Hant": "1948年宣告成立的南方國家。此段作開口繪製，因尚未終結。"
+   }
+  },
+  {
    "id": "state-of-israel",
    "start": 1948,
    "end": null,
@@ -7327,6 +7462,44 @@
     "en": "Established in 1949. The chart already carries its events — the missionaries' withdrawal, the Three-Self movement, the Cultural Revolution's closing of the churches, the reopening of 1979. The band is drawn open because the state has not ended.",
     "zh-Hans": "1949年成立。本图已载有其间的事件——宣教士撤离、三自爱国运动、文化大革命关闭教会、1979年教会重开。此段作开口绘制，因这个国家尚未终结。",
     "zh-Hant": "1949年成立。本圖已載有其間的事件——宣教士撤離、三自愛國運動、文化大革命關閉教會、1979年教會重開。此段作開口繪製，因這個國家尚未終結。"
+   }
+  },
+  {
+   "id": "korean-war-band",
+   "start": 1950,
+   "end": 1953,
+   "region": "modern",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Korean War",
+    "zh-Hans": "朝鲜战争",
+    "zh-Hant": "朝鮮戰爭"
+   },
+   "note": {
+    "en": "Three years, ended by an armistice rather than a peace — which is why the two Korean bands beside it both run open.",
+    "zh-Hans": "三年，以停战而非和约收场——旁边两条朝鲜半岛的带子因此都作开口。",
+    "zh-Hant": "三年，以停戰而非和約收場——旁邊兩條朝鮮半島的帶子因此都作開口。"
+   }
+  },
+  {
+   "id": "vietnam-war-band",
+   "start": 1955,
+   "end": 1975,
+   "region": "modern",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Vietnam War",
+    "zh-Hans": "越南战争",
+    "zh-Hant": "越南戰爭"
+   },
+   "note": {
+    "en": "Twenty years by the conventional reckoning, from the partition to the fall of Saigon.",
+    "zh-Hans": "按通行算法为二十年，自南北分治至西贡陷落。",
+    "zh-Hant": "按通行算法為二十年，自南北分治至西貢陷落。"
    }
   },
   {
@@ -7422,6 +7595,45 @@
     "en": "The first pope from the Americas and the first Jesuit, elected while his predecessor was still living. He pressed the church toward the poor, migrants and the care of the earth, and toward the churches of Asia, Africa and Latin America where most of its members now are; he died in 2025.",
     "zh-Hans": "他是第一位来自美洲、也是第一位耶稣会出身的教皇，当选时前任仍在世。他推动教会转向贫穷人、移民与对大地的看顾，也转向亚洲、非洲与拉丁美洲——今日大多数信徒所在之处。他于2025年去世。",
     "zh-Hant": "他是第一位來自美洲、也是第一位耶穌會出身的教皇，當選時前任仍在世。他推動教會轉向貧窮人、移民與對大地的看顧，也轉向亞洲、非洲與拉丁美洲——今日大多數信徒所在之處。他於2025年去世。"
+   }
+  },
+  {
+   "id": "covid-pandemic-band",
+   "start": 2020,
+   "end": 2023,
+   "region": "modern",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The COVID-19 Pandemic",
+    "zh-Hans": "新冠疫情",
+    "zh-Hant": "新冠疫情"
+   },
+   "note": {
+    "en": "From the declaration of a pandemic in March 2020 to the end of the global emergency in May 2023. Church buildings closed worldwide inside it, which is its own record on this chart.",
+    "zh-Hans": "自2020年3月宣告大流行，至2023年5月全球突发事件状态解除。其间全球教会建筑关闭，本图另有专条。",
+    "zh-Hant": "自2020年3月宣告大流行，至2023年5月全球突發事件狀態解除。其間全球教會建築關閉，本圖另有專條。"
+   }
+  },
+  {
+   "id": "war-in-ukraine-band",
+   "start": 2022,
+   "end": null,
+   "ongoing": true,
+   "region": "modern",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The War in Ukraine",
+    "zh-Hans": "俄乌战争",
+    "zh-Hant": "俄烏戰爭"
+   },
+   "note": {
+    "en": "The full invasion of February 2022, after fighting in the east and Crimea since 2014. The band is drawn open because the war has not ended.",
+    "zh-Hans": "2022年2月的全面入侵；此前自2014年起，乌东与克里米亚已有战事。此段作开口绘制，因战事尚未结束。",
+    "zh-Hant": "2022年2月的全面入侵；此前自2014年起，烏東與克里米亞已有戰事。此段作開口繪製，因戰事尚未結束。"
    }
   },
   {
@@ -22646,6 +22858,24 @@
    }
   },
   {
+   "id": "haiti_earthquake_2010",
+   "year": 2010,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Haiti Earthquake",
+    "zh-Hans": "海地大地震",
+    "zh-Hant": "海地大地震"
+   },
+   "desc": {
+    "en": "A magnitude 7.0 earthquake destroyed much of Port-au-Prince and killed well over a hundred thousand people.",
+    "zh-Hans": "7.0级地震摧毁太子港大半，死者远逾十万。",
+    "zh-Hant": "7.0級地震摧毀太子港大半，死者遠逾十萬。"
+   }
+  },
+  {
    "id": "rcuv_chinese",
    "year": 2010,
    "era": "bible",
@@ -22661,6 +22891,24 @@
     "en": "The Union Version is revised against better manuscripts and updated for changed Chinese usage.",
     "zh-Hans": "和合本依据更佳的抄本修订，并更新已变迁的中文用语。",
     "zh-Hant": "和合本依據更佳的抄本修訂，並更新已變遷的中文用語。"
+   }
+  },
+  {
+   "id": "arab_spring",
+   "year": 2011,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Arab Spring",
+    "zh-Hans": "阿拉伯之春",
+    "zh-Hant": "阿拉伯之春"
+   },
+   "desc": {
+    "en": "Risings across the Arab world unseated four governments and opened the Syrian war, which displaced more people than any conflict since 1945.",
+    "zh-Hans": "阿拉伯世界各地的民众运动推翻四国政府，并开启叙利亚战事——1945年以来流离失所人数最多的一场冲突。",
+    "zh-Hant": "阿拉伯世界各地的民眾運動推翻四國政府，並開啟敘利亞戰事——1945年以來流離失所人數最多的一場衝突。"
    }
   },
   {
@@ -22700,7 +22948,61 @@
    }
   },
   {
-   "id": "covid_pandemic",
+   "id": "ebola_west_africa",
+   "year": 2014,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Ebola Epidemic in West Africa",
+    "zh-Hans": "西非埃博拉疫情",
+    "zh-Hant": "西非伊波拉疫情"
+   },
+   "desc": {
+    "en": "The largest Ebola outbreak on record, in Guinea, Liberia and Sierra Leone.",
+    "zh-Hans": "有记录以来规模最大的埃博拉疫情，发生于几内亚、利比里亚与塞拉利昂。",
+    "zh-Hant": "有記錄以來規模最大的伊波拉疫情，發生於幾內亞、賴比瑞亞與獅子山。"
+   }
+  },
+  {
+   "id": "europe_refugee_crisis",
+   "year": 2015,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Refugee Crisis in Europe",
+    "zh-Hans": "欧洲难民危机",
+    "zh-Hant": "歐洲難民危機"
+   },
+   "desc": {
+    "en": "More than a million people crossed the Mediterranean in a single year, most of them from Syria, Afghanistan and Iraq.",
+    "zh-Hans": "一年之内逾百万人渡过地中海，多来自叙利亚、阿富汗与伊拉克。",
+    "zh-Hant": "一年之內逾百萬人渡過地中海，多來自敘利亞、阿富汗與伊拉克。"
+   }
+  },
+  {
+   "id": "paris_climate_agreement",
+   "year": 2015,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Paris Climate Agreement",
+    "zh-Hans": "《巴黎协定》通过",
+    "zh-Hant": "《巴黎協定》通過"
+   },
+   "desc": {
+    "en": "Nearly every country agreed to limit warming — the first climate treaty with that reach.",
+    "zh-Hans": "几乎所有国家同意限制升温，是第一份有此覆盖面的气候条约。",
+    "zh-Hant": "幾乎所有國家同意限制升溫，是第一份有此覆蓋面的氣候條約。"
+   }
+  },
+  {
+   "id": "covid_church_closures",
    "year": 2020,
    "era": "world",
    "stream": "world",
@@ -22715,6 +23017,24 @@
     "en": "Congregations worldwide are scattered and worship moves online for the first time on such a scale.",
     "zh-Hans": "全球会众被迫分散，敬拜首次如此大规模地转往网上。",
     "zh-Hant": "全球會眾被迫分散，敬拜首次如此大規模地轉往網上。"
+   }
+  },
+  {
+   "id": "covid_pandemic",
+   "year": 2020,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "COVID-19 Declared a Pandemic",
+    "zh-Hans": "新冠疫情宣告为大流行",
+    "zh-Hant": "新冠疫情宣告為大流行"
+   },
+   "desc": {
+    "en": "The WHO declared a pandemic in March 2020; it went on to kill millions and to shut most of the world indoors.",
+    "zh-Hans": "世卫组织于2020年3月宣告大流行；其后夺去数百万人的生命，并使世界大半闭门不出。",
+    "zh-Hant": "世衛組織於2020年3月宣告大流行；其後奪去數百萬人的生命，並使世界大半閉門不出。"
    }
   },
   {
@@ -22757,7 +23077,7 @@
    "id": "war_in_ukraine",
    "year": 2022,
    "era": "world",
-   "stream": "europe",
+   "stream": "world",
    "basis": "conventional",
    "approximate": false,
    "title": {
@@ -22769,6 +23089,24 @@
     "en": "Russian forces invaded Ukraine in February 2022, after fighting in the east and Crimea since 2014.",
     "zh-Hans": "2022年2月俄军入侵乌克兰；此前自2014年起，乌东与克里米亚已有战事。",
     "zh-Hant": "2022年2月俄軍入侵烏克蘭；此前自2014年起，烏東與克里米亞已有戰事。"
+   }
+  },
+  {
+   "id": "turkey_syria_earthquake_2023",
+   "year": 2023,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Turkey and Syria Earthquakes",
+    "zh-Hans": "土耳其与叙利亚大地震",
+    "zh-Hant": "土耳其與敘利亞大地震"
+   },
+   "desc": {
+    "en": "Two earthquakes nine hours apart killed more than fifty thousand people across southern Turkey and northern Syria.",
+    "zh-Hans": "相隔九小时的两场地震，在土耳其南部与叙利亚北部夺去五万余人的生命。",
+    "zh-Hant": "相隔九小時的兩場地震，在土耳其南部與敘利亞北部奪去五萬餘人的生命。"
    }
   },
   {

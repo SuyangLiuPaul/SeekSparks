@@ -14,11 +14,13 @@ and the catch-all lane's Korean chain stopped at 108 BC.
 That is squarely against the file's own stated coverage — 「若无后者，
 读者自身所经历的那几个世纪反而会是全图最空白的部分」.
 
-NOT ADDED, deliberately, and told to the owner rather than decided
-here: the Republic of China on Taiwan after 1949, and the two Koreas
-after 1948. Each would put a contested claim on the chart in one
-direction or the other, and this file's rule is that a band is a
-conventional, widely published fact.
+NOT ADDED. The Republic of China on Taiwan after 1949 — 「台湾那个暂时
+不用提 很敏感」. The mainland state from 1949 is drawn, which is what
+the owner asked for in the same breath.
+
+The two Koreas from 1948 WERE asked for — 「1948后可以韩国 朝鲜」 — and
+are drawn as two open bands on the same lane, which is what the lane
+already does for polities that share a region and a century.
 """
 
 import json
@@ -309,6 +311,29 @@ NEW = [
       "suzerainty and annexation by Japan.",
       '自脱离中国宗主至被日本吞并，称帝十三年。',
       '自脫離中國宗主至被日本吞併，稱帝十三年。'),
+    p('korea-under-japan', 'world', 'asia', 1910, 1945,
+      'Korea under Japanese Rule', '日本统治朝鲜', '日本統治朝鮮',
+      "Thirty-five years of annexation, ended by the Japanese surrender. "
+      "Pyongyang's churches were large enough in these years to be "
+      "called the Jerusalem of the East, and the refusal of Shinto "
+      "shrine worship cost many of their leaders their freedom.",
+      '吞并三十五年，终于日本投降。这些年间平壤教会之盛，有东方耶路撒冷'
+      '之称；拒拜神社使其中许多领袖身陷囹圄。',
+      '吞併三十五年，終於日本投降。這些年間平壤教會之盛，有東方耶路撒冷'
+      '之稱；拒拜神社使其中許多領袖身陷囹圄。'),
+    p('republic-of-korea', 'world', 'asia', 1948, None,
+      'Republic of Korea', '大韩民国', '大韓民國',
+      "The southern state, declared in 1948. The band is drawn open "
+      "because it has not ended.",
+      '1948年宣告成立的南方国家。此段作开口绘制，因尚未终结。',
+      '1948年宣告成立的南方國家。此段作開口繪製，因尚未終結。'),
+    p('dpr-korea', 'world', 'asia', 1948, None,
+      "Democratic People's Republic of Korea",
+      '朝鲜民主主义人民共和国', '朝鮮民主主義人民共和國',
+      "The northern state, declared in 1948. The band is drawn open "
+      "because it has not ended.",
+      '1948年宣告成立的北方国家。此段作开口绘制，因尚未终结。',
+      '1948年宣告成立的北方國家。此段作開口繪製，因尚未終結。'),
     p('mongol-empire', 'world', 'asia', 1206, 1368,
       'Mongol Empire', '蒙古帝国', '蒙古帝國',
       "The largest contiguous land empire there has been, from Korea to "

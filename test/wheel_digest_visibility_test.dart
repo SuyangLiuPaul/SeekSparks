@@ -81,6 +81,11 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
     await tester.pump(const Duration(milliseconds: 400));
+    // The Filter is REMEMBERED since 2026-09-16, which means applying it
+    // writes to AppSettings, which debounces its own persistence by
+    // 600 ms. Let that timer run rather than leave it pending at
+    // teardown — the debounce is the app's, not this test's to dodge.
+    await tester.pump(const Duration(milliseconds: 700));
   }
 
   testWidgets('hidden stream powers and events stay out of the year readout',

@@ -245,9 +245,18 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// stops being a chart and starts being a texture. So the strip opens
   /// on the same twelve the widest wheel shows, in the same order, and
   /// the other ten are one tap away in the filter.
-  void _applyDefaultHidden(WheelHistoryData data) {
+  void _applyDefaultHidden(WheelHistoryData data, Set<String>? kept) {
     if (_defaultsApplied) return;
     _defaultsApplied = true;
+    // WHAT THE READER CHOSE BEATS WHAT THE CHART OPENS WITH — the same
+    // rule and the same nullable as the wheel's. See
+    // `AppSettings._kChronologyHidden` for why null and empty differ.
+    if (kept != null) {
+      _hidden
+        ..clear()
+        ..addAll(kept);
+      return;
+    }
     // 12 → [kOpeningStreams], 2026-09-15. 「filter limit应该apply strip
     // 和 wheel上面吧一起」.
     //
@@ -614,7 +623,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           }
           // Resolve the initial set before either the chart or the browser
           // sees the data: a post-frame default painted all 22 streams first.
-          _applyDefaultHidden(data);
+          _applyDefaultHidden(
+              data, context.read<AppSettings>().chronologyHiddenStreams);
           final textScale = WbType.of(context).textScale;
           return ChronologyExplorer(
             controller: _explorer,
@@ -1471,6 +1481,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   }
 
   Future<void> _showFilter(BuildContext context, String locale) async {
+    final settings = context.read<AppSettings>();
     final data = await _future;
     if (!mounted || !context.mounted || data == null) return;
     final result = await showChronologyFilterSheet(
@@ -1493,6 +1504,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     setState(() => _hidden
       ..clear()
       ..addAll(result));
+    // KEPT, not just applied — see the wheel's own note on this line.
+    await settings.setChronologyHiddenStreams(_hidden);
   }
 
   // ── about ──────────────────────────────────────────────────────────

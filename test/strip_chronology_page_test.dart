@@ -591,6 +591,12 @@ void main() {
         reason: 'checkbox edits are a draft until Apply');
     await tester.tap(find.byKey(const ValueKey('chronologyFilterApply')));
     await tester.pumpAndSettle();
+    // The Filter is REMEMBERED since 2026-09-16: applying it writes to
+    // AppSettings, whose persistence debounces 600 ms. `pumpAndSettle`
+    // does not run a bare Timer — it pumps while frames are scheduled —
+    // so the timer has to be waited out explicitly or it is pending at
+    // teardown.
+    await tester.pump(const Duration(milliseconds: 700));
 
     final after = tester.getSize(find.byKey(const ValueKey('chronologyStrip')));
     final afterPainter = actualPainter(tester);

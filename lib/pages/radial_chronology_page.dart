@@ -1375,9 +1375,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   bool _defaultsApplied = false;
 
   /// Fill [_hidden] with everything the wheel has no room for.
-  void _applyDefaultHidden(WheelHistoryData data, double side) {
+  void _applyDefaultHidden(WheelHistoryData data, Set<String>? kept,
+      double side) {
     if (_defaultsApplied) return;
     _defaultsApplied = true;
+    // WHAT THE READER CHOSE BEATS WHAT THE CHART OPENS WITH. An empty
+    // set is a choice — every lane on — and is not the same as never
+    // having opened Filter, which is why this is nullable.
+    if (kept != null) {
+      _hidden
+        ..clear()
+        ..addAll(kept);
+      return;
+    }
     // Two bounds, and the smaller wins. The geometry says how many
     // rings this canvas can draw at a readable thickness; the opening
     // count says how many the reader should meet, which is four on
@@ -1850,7 +1860,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                         digestHeight -
                         48 -
                         wheelControlsFooterHeight));
-            _applyDefaultHidden(data, side);
+            _applyDefaultHidden(
+                data, context.read<AppSettings>().chronologyHiddenStreams, side);
             return ChronologyExplorer(
               controller: _explorer,
               chart: _body(context, data, locale),
@@ -3196,6 +3207,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   }
 
   Future<void> _showFilter(BuildContext context, String locale) async {
+    final settings = context.read<AppSettings>();
     final data = await _future;
     if (data == null || !mounted || !context.mounted) return;
     final result = await showChronologyFilterSheet(
@@ -3220,6 +3232,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         ..clear()
         ..addAll(result);
     });
+    // KEPT, not just applied. 2026-09-16 「filter我选了之后换strip或者
+    // wheel或者离开那个界面，那个filter就reset了」 — the two charts hand
+    // the set to each other, so flipping between them held; leaving the
+    // chart and coming back did not, because the set lived only here.
+    await settings.setChronologyHiddenStreams(_hidden);
   }
 
   void _showAbout(BuildContext context, String locale) {
@@ -4263,20 +4280,44 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       // finger, so a tap near one has to reach it. Which of the
       // candidates wins is `nearestArcAt`'s question, and it answers it
       // by containment first — see its doc.
+      double offRing(_Arc arc) => (r -
+              tierRadii(arc.ring, streams.length, rHub, rBands,
+                      tier: arc.tier, tiers: arc.tiers)
+                  .centre)
+          .abs();
+      // THE LAYER THE FINGER IS IN, BEFORE THE REST OF THE RING.
+      //
+      // 2026-09-16. The tolerance below is a whole ring's pitch on
+      // purpose — the layers are thinner than a finger, so a tap near
+      // one has to reach it. On a lane divided into seven that meant
+      // every layer was a candidate for every tap, and `nearestArcAt`
+      // decides by containment, so the widest band under the finger
+      // could never win against a narrow band on any OTHER layer of its
+      // ring. Tapping 以拦 opened whatever short span happened to be
+      // nested three layers away.
+      //
+      // So the arcs whose own layer the finger is actually in get
+      // asked first, and the whole ring is consulted only when that
+      // layer has nothing at this angle — which is what keeps a thin
+      // layer reachable in the first place.
+      final onLayer = [
+        for (final arc in arcs)
+          if (offRing(arc) <= pitch / (2 * math.max(1, arc.tiers))) arc
+      ];
       final inBand = [
         for (final arc in arcs)
-          if ((r -
-                      tierRadii(arc.ring, streams.length, rHub, rBands,
-                              tier: arc.tier, tiers: arc.tiers)
-                          .centre)
-                  .abs() <=
-              pitch / 2)
-            arc
+          if (offRing(arc) <= pitch / 2) arc
       ];
-      final pick = nearestArcAt(
-          a, r, [for (final arc in inBand) (a0: arc.a0, a1: arc.a1)]);
+      ({int index, double score})? pickIn(List<_Arc> pool) => nearestArcAt(
+          a, r, [for (final arc in pool) (a0: arc.a0, a1: arc.a1)]);
+      var candidates = onLayer;
+      var pick = pickIn(candidates);
+      if (pick == null) {
+        candidates = inBand;
+        pick = pickIn(candidates);
+      }
       if (pick != null) {
-        final arc = inBand[pick.index];
+        final arc = candidates[pick.index];
         // A TICK ON THIS BAND IS A SMALLER TARGET THAN THE BAND.
         //
         // A conflict that could not exist until 2026-09-15: event ticks

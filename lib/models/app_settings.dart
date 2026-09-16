@@ -182,6 +182,22 @@ const String _kNotesSortDefault = 'canonical';
 // time, and the in-page switch (`stripStrings['stripViewSwitch']`)
 // writes here when they change their mind. Same allowlist-clamp
 // pattern as `_kNotesSortMode`, immediately above.
+/// 2026-09-16: which chronology lanes the reader has switched OFF.
+///
+/// 「filter我选了之后换strip或者wheel或者离开那个界面，那个filter就reset
+/// 了」. The two charts already hand the set to each other when the
+/// reader flips between them, so that half worked; leaving the chart
+/// and coming back did not, because the set lived only in the page's
+/// own state and `_applyDefaultHidden` filled it again from scratch.
+///
+/// `null` — the key absent — means the reader has never touched Filter,
+/// and is NOT the same as the empty list, which means they turned
+/// everything on. That distinction is the whole reason this is stored
+/// as a list and read back as a nullable: without it, a reader who
+/// showed all 22 lanes would be handed the opening five again on their
+/// next visit.
+const _kChronologyHidden = 'chronologyHiddenStreams';
+
 const _kChronologyView = 'chronologyView';
 const Set<String> _kChronologyViewAllowed = {'wheel', 'strip'};
 const String _kChronologyViewDefault = 'wheel';
@@ -376,6 +392,10 @@ class AppSettings extends ChangeNotifier {
   String _notesSortMode = _kNotesSortDefault;
   // 2026-09-04: see _kChronologyView comment.
   String _chronologyView = _kChronologyViewDefault;
+
+  // 2026-09-16: see _kChronologyHidden comment. Null until the reader
+  // has used Filter even once.
+  List<String>? _chronologyHidden;
   // 2026-09-08: see _kInterlinearVersion comment.
   String _interlinearVersion = '';
   // 2026-09-09: see the 投影 block above the class.
@@ -556,6 +576,25 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kChronologyView, view);
+  }
+
+  /// The lanes the reader has switched off, or null if they never have.
+  /// See [_kChronologyHidden] for why null and empty differ.
+  Set<String>? get chronologyHiddenStreams =>
+      _chronologyHidden == null ? null : Set.unmodifiable(_chronologyHidden!);
+
+  Future<void> setChronologyHiddenStreams(Set<String> hidden) async {
+    final next = hidden.toList()..sort();
+    if (_chronologyHidden != null &&
+        _chronologyHidden!.length == next.length &&
+        List.generate(next.length, (i) => _chronologyHidden![i] == next[i])
+            .every((same) => same)) {
+      return;
+    }
+    _chronologyHidden = next;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kChronologyHidden, next);
   }
 
   /// 2026-09-08: the reader's standing pick of interlinear edition, or
@@ -1299,6 +1338,9 @@ class AppSettings extends ChangeNotifier {
             _kChronologyViewAllowed.contains(storedChronologyView))
         ? storedChronologyView
         : _kChronologyViewDefault;
+
+    // 2026-09-16: see _kChronologyHidden. Absent stays null.
+    _chronologyHidden = prefs.getStringList(_kChronologyHidden);
 
     // 2026-09-08: see _kInterlinearVersion. No allowlist clamp on the
     // way in — the legal set is computed, and a code that has since

@@ -315,8 +315,8 @@ void main() {
     }
     // The guard on the guard: a sweep that saw one record, or one
     // vocabulary word, would pass everything above and prove nothing.
-    expect(checked, 1152,
-        reason: '776 events + 294 powers + 82 nations; if this moved, the '
+    expect(checked, 1170,
+        reason: '783 events + 305 powers + 82 nations; if this moved, the '
             'corpus grew and the count should move with it. 2026-09-02 '
             'added 74 church-history records; 2026-09-03 added 42 Roman '
             'and Greek ones, merged two duplicate pairs away, and took 15 '
@@ -375,7 +375,24 @@ void main() {
             'Brazil to the United States, and the Mongol empire and the '
             'Korean chain reach the chart. NOT added, and told to the '
             'owner rather than settled here: the Republic of China on '
-            'Taiwan after 1949, and the two Koreas after 1948.');
+            'Taiwan after 1949, and the two Koreas after 1948. He '
+            'answered the same day — 「1948后可以韩国 朝鲜」 and 「台湾那个'
+            '暂时不用提 很敏感」 — so 1,152 → 1,155: the two Koreas as two '
+            'open bands on one lane, and the 1910-1945 annexation that '
+            'joins them to 大韓帝國.'
+            '\n'
+            '2026-09-16, same day, 1,155 → 1,170: the world lane itself. '
+            '「一战二战这些 持续时间也是可以加进去好像那些环一样」 — 8 '
+            'bands, because a war is a SPAN and this chart already draws '
+            'the crusades and the Reformation that way; both world wars '
+            'were one-year ticks at their outbreak. And 「很多全世界大事情'
+            '类似于covid 俄乌战争这些也要在最外圈写进去」 — 7 events, plus '
+            'two edits: COVID was titled 「疫情关闭教会建筑」 where the 1918 '
+            'influenza beside it is titled as the pandemic, so the '
+            'pandemic took its own name back and the closures became '
+            'their own record; and the Ukraine war moved off 欧洲 to the '
+            'world lane, where both world wars, Korea, Vietnam and Iraq '
+            'already were.');
 
     expect(seen, {'scripture', 'scripture+thiele', 'conventional',
         'traditional'},

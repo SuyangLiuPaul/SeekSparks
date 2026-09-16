@@ -44,7 +44,7 @@ import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart'
-    show RadialLabel, ringRadii;
+    show RadialLabel, ringRadii, tierRadii;
 import 'package:seeksparks/utils/wheel_default_streams.dart'
     show bandsFractionFor;
 import 'package:seeksparks/utils/version_mapper.dart'
@@ -251,8 +251,17 @@ void main() {
     var widest = 0.0;
     for (final dynamic arc in painter.arcs as List) {
       final ring = arc.ring as int;
-      final radius = ringRadii(ring, streamIds.length, side * 0.115,
-              side * bandsFractionFor(side))
+      // THE ARC'S OWN LAYER, not the ring's centre. Until 2026-09-16
+      // this read `ringRadii(...).centre`, which is the middle of the
+      // whole band — and since the rings were divided into layers that
+      // is not where most arcs are. It passed only because the widest
+      // gap kept landing on a stream with one layer; the day 全世界
+      // opened by default, the target moved to 檀君古朝鲜 on a lane seven
+      // layers deep, and the tap landed on a different layer's arc. The
+      // painter and the hit test both use `tierRadii`, so this does too.
+      final radius = tierRadii(ring, streamIds.length, side * 0.115,
+              side * bandsFractionFor(side),
+              tier: arc.tier as int, tiers: arc.tiers as int)
           .centre;
       final a0 = arc.a0 as double, a1 = arc.a1 as double;
       final ticks = <double>[

@@ -196,12 +196,17 @@ void main() {
     // ceiling goes back to what the rings can carry. What the reader
     // adds deliberately is their business.
     expect(kOpeningStreams, lessThan(kMaxVisibleStreams));
-    expect(kOpeningStreams, 4);
+    // 2026-09-16: 4 → 5. 「有一个全世界的tick也可以在filter而且default是
+    // tick的」 — see [kOpeningStreams]. The spine still opens the chart;
+    // 全世界 joins it, because it is the lane that says what century the
+    // reader is standing in.
+    expect(kOpeningStreams, 5);
     expect(kMaxVisibleStreams, greaterThanOrEqualTo(12),
         reason: 'the ancient world has to fit beside the spine');
     expect(defaultVisibleStreams(data.streams.map((s) => s.id), kOpeningStreams),
-        spine,
-        reason: 'the opening rings are meant to BE the spine, in order');
+        [...spine, 'world'],
+        reason: 'the opening rings are the spine, in order, and then the '
+            'lane that says what century the reader is in');
   });
 
   test('no canvas, however large, is given more rings than the ceiling', () {

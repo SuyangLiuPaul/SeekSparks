@@ -201,7 +201,7 @@ void main() {
     // century and not from the Samguk Sagi's 57 BC: a founding year out
     // of a traditional chronicle would have had to be `traditional`,
     // and this band is not that.
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 286);
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 297);
     // And the three, named, because a value used by nothing is a value
     // that quietly stopped being applied.
     expect(
