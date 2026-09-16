@@ -79,29 +79,45 @@ double ringPitch(int ringCount, double rHub, double rMax) =>
 
 /// The thinnest a sub-layer may be drawn and still be a layer.
 ///
-/// The same floor the lifespan band is held to: below this a stripe is
-/// a hairline, it cannot carry a name, and a finger cannot pick it out
-/// of its neighbours.
+/// MEASURED OFF THE LAYER THE OWNER POINTED AT. 2026-09-16, with a
+/// photograph of the genealogy annulus at 387% — Adam, Seth, Enosh,
+/// Kenan, Mahalalel, Enoch, six thin concentric arcs each carrying its
+/// own name — and 「很多overlap的圈圈环里面的可以学习这种啊 可以吗 多些环
+/// 在一个环里多些都行」.
 ///
-/// 2026-09-16: 6.6 → 5.5. 「我记得之前版本是类似于中国环里面几个环如果是
-/// 同时发生的事情这个不见了 其他的也是 这个要恢复」. Measured: on a 390 dp
-/// phone the whole stream annulus is 60 px, so a ring is 12.1 px at four
-/// lanes and 9.7 at five — and at 6.6 that is ONE layer at every ring
-/// count this chart can draw. The layering the owner is asking about
-/// has never existed on a phone; it was measured into being on a
-/// desktop, where a ring is 36 px and carries five.
+/// So this number is that annulus's own: on a 390 dp phone the
+/// genealogy packs sixteen sub-rings into its band and strokes each at
+/// 1.70 px. That is what ships, and what the owner is asking the stream
+/// rings to look like.
 ///
-/// 5.5 buys the phone two layers, which is the whole of what the
-/// feature claims — that two things ran at once. It does not buy it
-/// five: a stream that wants more still shares its last layer, which is
-/// the behaviour every stream had before layers existed.
+/// The doc that stood here said this was 「the same floor the lifespan
+/// band is held to」. It was not, and had never been: the lifespan band
+/// has no floor at all — `lifeArcRingCount` returns however many
+/// sub-rings the packing needed. 6.6, then 5.5, was three times
+/// stricter than the thing it claimed to match, which is why one
+/// stream's ring kept coming out as two thick slabs where the
+/// genealogy beside it drew six thin ones.
 ///
-/// A 5.5 px stripe is below a finger, and that is answered where it is
-/// asked rather than by refusing to draw: the hit test looks in the
-/// finger's own layer first and falls back to the whole ring when that
-/// layer is empty at the tapped angle, so a tap on a thin layer lands
-/// on the ring it belongs to either way.
-const double kStreamTierFloorPx = 5.5;
+/// A 1.70 px stripe is a hairline at rest and legible from about 2x,
+/// which is how the genealogy is read too. Where it is BELOW a finger,
+/// the hit test answers: it looks in the finger's own layer first and
+/// falls back to the whole ring when that layer is empty at the tapped
+/// angle, so a tap on a thin layer lands on its ring either way.
+///
+/// 2026-09-16, in two steps and this is the second. 6.6 → 5.5 came from
+/// 「我记得之前版本是类似于中国环里面几个环如果是同时发生的事情这个不见
+/// 了」 and bought a phone two layers where it had one. Two was still not
+/// what the owner meant, and the second message says so with a picture
+/// of what they did mean. 5.5 → 1.70.
+///
+/// On a 390 dp phone this takes a five-lane chart from ONE layer per
+/// stream to five, so the streams that nest — 教会 six deep, 全世界
+/// seven, 欧洲 eight — draw as the genealogy does rather than as two
+/// slabs with their names on top of each other.
+///
+/// A stream that wants more layers than fit still shares its last one,
+/// which is the behaviour every stream had before layers existed.
+const double kStreamTierFloorPx = 1.70;
 
 /// How many sub-layers one stream's ring may be divided into.
 ///

@@ -155,8 +155,18 @@ void main() {
     // argued against sub-ringing at 22 streams and the arithmetic was
     // right. What changed is that the chart opens on four and will not
     // draw more than twelve.
-    expect(streamTierCount(wanted: 8, ringCount: 22, rHub: 100, rMax: 253), 1,
-        reason: 'the case the old argument measured — 0.87 units a layer');
+    // 2026-09-16: 1 → 3. The floor became the genealogy annulus's own
+    // stroke (1.70 px, measured on a 390 dp phone) after 「很多overlap的
+    // 圈圈环里面的可以学习这种啊 可以吗 多些环在一个环里多些都行」, with a
+    // photograph of six named lifespan arcs nested in one band.
+    //
+    // The old argument this line records is still sound about ITS case —
+    // 22 streams sharing 153 units is 5.56 a ring, and eight layers of
+    // that would be 0.56 — but the answer is no longer "then one
+    // layer": it is as many as clear the floor, which here is three.
+    // The remaining overlaps share the last layer, as they always did.
+    expect(streamTierCount(wanted: 8, ringCount: 22, rHub: 100, rMax: 253), 3,
+        reason: 'the case the old argument measured — 5.56 units a ring');
     expect(streamTierCount(wanted: 8, ringCount: 4, rHub: 100, rMax: 400),
         greaterThan(1));
     expect(streamTierCount(wanted: 1, ringCount: 4, rHub: 100, rMax: 400), 1,

@@ -44,8 +44,10 @@ void main() {
     });
 
     test('and a canvas too small for five rings still refuses', () {
-      // Well below any phone: the floor is a floor, not a suggestion.
-      const side = 120.0;
+      // The floor is a floor, not a suggestion — but since it became
+      // the genealogy's own 1.70 px it takes an absurd canvas to reach.
+      // 50 dp is not a device; it is the proof that the guard exists.
+      const side = 50.0;
       final bands = bandsFractionFor(side);
       expect(
           openingStreamCount(side, hubFraction: _hub, bandsFraction: bands),
@@ -62,36 +64,39 @@ void main() {
   });
 
   group('layers inside a ring', () {
-    test('a ring that used to carry one layer now carries more', () {
-      // The measurements that produced the floor change. `wanted` is 6
-      // so the answer is the geometry's, not the corpus's.
-      int tiers(double side, int rings) => streamTierCount(
-          wanted: 6,
+    test('a ring gives the overlaps their own lanes, as the genealogy does',
+        () {
+      // The floor is the genealogy annulus's own stroke on the narrowest
+      // canvas — 1.70 px — 「很多overlap的圈圈环里面的可以学习这种啊」. So
+      // the answer is the CORPUS's depth almost everywhere, not the
+      // geometry's patience.
+      int tiers(double side, int rings, int want) => streamTierCount(
+          wanted: want,
           ringCount: rings,
           rHub: side * _hub,
           rMax: side * bandsFractionFor(side));
 
-      // 6 rings at 600 dp: 1 before, 2 now.
-      expect(tiers(600, 6), greaterThanOrEqualTo(2));
-      // 8 rings at 900 dp: 1 before, 2 now.
-      expect(tiers(900, 8), greaterThanOrEqualTo(2));
-      // 12 rings at 1440 is 14.9 px a ring, which is two layers at
-      // either floor — the change does not reach every case and this
-      // records which.
-      expect(tiers(1440, 12), 2);
-      // 6 rings at 1440: 4 before, 5 now.
-      expect(tiers(1440, 6), greaterThanOrEqualTo(5));
+      // Every canvas from 600 dp up gives eight overlaps eight lanes.
+      for (final side in [600.0, 900.0, 1440.0]) {
+        expect(tiers(side, 5, 8), 8, reason: '$side');
+      }
+      // 12 rings at 1440: 2 before this change, the full depth now.
+      expect(tiers(1440, 12, 6), 6);
     });
 
-    test('a phone at four lanes gets the two layers it could not have',
-        () {
-      expect(
-          streamTierCount(
-              wanted: 4,
-              ringCount: 4,
-              rHub: 390 * _hub,
-              rMax: 390 * bandsFractionFor(390)),
-          2);
+    test('a phone at five lanes gets five layers, not one', () {
+      // The measurement the owner's photograph is about: a 390 dp phone
+      // at the opening five lanes. One layer before 2026-09-16, two
+      // after the first correction, five now.
+      final n = streamTierCount(
+          wanted: 8,
+          ringCount: 5,
+          rHub: 390 * _hub,
+          rMax: 390 * bandsFractionFor(390));
+      expect(n, 5);
+      // And a stream that wants more than fits still shares its last
+      // lane, which is what every stream did before layers existed.
+      expect(n, lessThan(8));
     });
 
     test('nothing is divided below the floor', () {
