@@ -4762,6 +4762,21 @@ class _WorldWheelPainter extends CustomPainter {
           Paint()
             ..color = l.color.withValues(alpha: (alpha * 2.6).clamp(0.0, 1.0)),
         );
+        // AND ITS NAME BESIDE THE DOT. 2026-09-16 「你看这个可以在后面显示
+        // 而不是在那个框框内的是不是」, of 哈该 — 主前520 to 主前520, one
+        // year wide, whose name lived only inside the panel a tap opened.
+        //
+        // `nameSize` is 0 here because the planner sizes a name to fit
+        // INSIDE its own arc and this arc has no width to fit inside.
+        // That is the right rule for a name printed along an arc and the
+        // wrong one for a callout, which is what this is: it is set at
+        // the canvas size, upright, and the walk in `_uprightArcLabel`
+        // finds it somewhere free and draws a leader back to the mark.
+        if (l.name.isNotEmpty &&
+            wheelShowsEventText(zoom: zoom, selected: sel)) {
+          _uprightArcLabel(canvas, c, l.centre, l.name, l.arc.a0, l.arc.sweep,
+              rimFont / _labelScale(zoom), sel ? 1.0 : 0.7);
+        }
       }
     }
     final chosen = _find(lives, (l) => l.id == selectedId);
@@ -5141,7 +5156,13 @@ class _WorldWheelPainter extends CustomPainter {
   /// rather than following it and has to win against the fill beneath.
   void _uprightArcLabel(Canvas canvas, Offset c, double radius, String text,
       double a0, double sweep, double fontSize, double dim) {
-    if (sweep <= 0 || fontSize <= 0 || text.isEmpty) return;
+    // A SPAN OF ZERO IS STILL A RECORD. 2026-09-16 「你看这个可以在后面显
+    // 示而不是在那个框框内的是不是」, of 哈该 — 主前520 to 主前520, one
+    // year, drawn as a mark with no width. `sweep <= 0` sent it home
+    // with no name at all, so the only way to learn what the mark was
+    // was to tap it and read the panel. It gets a name like everything
+    // else now; the walk below finds it somewhere free.
+    if (sweep < 0 || fontSize <= 0 || text.isEmpty) return;
     final tp = _painter(text, wb.text.withValues(alpha: 0.98 * dim), fontSize);
     final mid = a0 + sweep / 2;
     final centre = c + Offset(math.cos(mid), math.sin(mid)) * radius;

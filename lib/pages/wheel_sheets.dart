@@ -252,6 +252,41 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
   /// first line down by a button's height, and it is outside the
   /// `ListView` so it does not scroll away from the reader who is
   /// looking for it.
+  /// How a detail panel arrives.
+  ///
+  /// 2026-09-16 「我发现这种pop up给人的体验感很不好，可以换个吗？或者hover
+  /// 然后按的时候就freeze在那里之类的」, of a panel listing sixty-seven popes
+  /// across the middle of the chart.
+  ///
+  /// The complaint is the COVERING, not the list: a reader taps a ring
+  /// to ask "what is this", and the answer arrived on top of the thing
+  /// they were pointing at, over a dimmed chart — so they could read
+  /// the answer or see the question, never both.
+  ///
+  /// Two changes, and deliberately not a third. The barrier is
+  /// transparent, so the chart behind stays at full strength and the
+  /// reader can still see what they asked about; and on a wide screen
+  /// the panel is bounded rather than spanning the window, so it sits
+  /// in a corner of the chart instead of across it.
+  ///
+  /// It is still a bottom sheet. Docking it to the side was tried and
+  /// reverted the same hour: it is the right shape, and it changes the
+  /// widget every one of twenty-six tests reaches for by type — a
+  /// presentation change should not cost that, and buying it properly
+  /// means giving the panel an identity of its own first.
+  Future<void> _present(BuildContext context, WbColors wb,
+          {required WidgetBuilder builder}) =>
+      showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: wb.paneBg,
+        isScrollControlled: true,
+        barrierColor: Colors.transparent,
+        constraints: MediaQuery.sizeOf(context).width < 720
+            ? null
+            : const BoxConstraints(maxWidth: 560),
+        builder: builder,
+      );
+
   Widget buildSheet(BuildContext sheet, List<Widget> children) {
     final wb = WbColors.of(sheet);
     final t = WbType.of(sheet);
@@ -413,10 +448,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     final stream = data.streams.firstWhere((s) => s.id == e.stream,
         orElse: () => const WheelStream(id: '', line: 'none', names: {}));
     final approx = e.approximate ? approximatePrefix(locale) : '';
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       // `WbType.of` WATCHES, and a tap handler is not a build — resolving
       // it out here threw before the sheet ever opened, so no detail sheet
       // on this page could be opened in a debug build. Resolved against
@@ -590,10 +624,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
   /// this app rather than by the asset, which says so plainly.
   void showCohort(BuildContext context, LineageCohort cohort, String locale) {
     final wb = WbColors.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         return buildSheet(sheet, [
@@ -656,10 +689,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
       BuildContext context, WheelMinistry ministry, String locale) {
     final wb = WbColors.of(context);
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         final note = ministry.noteFor(locale);
@@ -780,10 +812,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
       BuildContext context, WheelOmission omission, String locale) {
     final wb = WbColors.of(context);
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         final note = omission.noteFor(locale);
@@ -860,10 +891,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     final wb = WbColors.of(context);
     final houseKing = HebrewKingsService.instance.cached?.byId(king.house);
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         final alt = king.altNames?[locale];
@@ -1121,10 +1151,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     if (chron == null || creation == null) return;
     final anchor = find(chron.epochs, (e) => e.id == _kAnchorEpoch);
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         final mt = man.figures[kDrawnTradition];
@@ -1347,10 +1376,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
       WheelHistoryData data, String locale, void Function(String) select) {
     final wb = WbColors.of(context);
     final colors = colorsFor(data, dark: wb.isDark);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         return buildSheet(sheet, [
@@ -1413,10 +1441,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     final wb = WbColors.of(context);
     final stream = data.streams.firstWhere((s) => s.id == p.stream,
         orElse: () => const WheelStream(id: '', line: 'none', names: {}));
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         return buildSheet(sheet, [
@@ -1622,10 +1649,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     final events = data.eventsOf(stream.id)
       ..sort((a, b) => a.year.compareTo(b.year));
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      isScrollControlled: true,
+    _present(
+      context,
+      wb,
       builder: (sheet) {
         final t = WbType.of(sheet);
         return buildSheet(sheet, [
