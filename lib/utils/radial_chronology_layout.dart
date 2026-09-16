@@ -1315,11 +1315,16 @@ List<PlannedArcName> planArcNames({
   required double zoom,
   required double floorPx,
   required LabelMeasure measure,
+  /// The band `ring` occupies, when the caller has divided its rings
+  /// into layers and this file's own [ringRadii] no longer describes
+  /// them. `ring` stays what its doc says it is — a number requests
+  /// sharing a radius share — so a caller with layers hands in a
+  /// composite of its ring and its layer and answers for it here.
+  ({double centre, double width}) Function(int ring)? bandOf,
 }) {
   const nothing = (name: '', a0: 0.0, sweep: 0.0, size: 0.0);
   if (requests.isEmpty) return const [];
 
-  final maxEm = ringPitch(ringCount, rHub, rBands) * kArcLabelPitchFraction;
   final occupiedByRing = <int, List<ArcSpan>>{};
   // Every arc on each ring, so a name set BESIDE its own arc knows what
   // it would land on. The names alone are not enough: an unnamed
@@ -1332,7 +1337,14 @@ List<PlannedArcName> planArcNames({
   final out = <PlannedArcName>[];
   for (final r in requests) {
     final claimed = occupiedByRing.putIfAbsent(r.ring, () => []);
-    final band = ringRadii(r.ring, ringCount, rHub, rBands);
+    final full = ringRadii(r.ring, ringCount, rHub, rBands);
+    final band = bandOf?.call(r.ring) ??
+        (centre: full.centre, width: full.width);
+    // The em ceiling is the band's own pitch, which is what it always
+    // was: [ringRadii] leaves a fifth of the pitch as the gap, so
+    // `width / 0.8` is that pitch exactly — and it is now the LAYER's
+    // pitch wherever the caller has divided the ring.
+    final maxEm = band.width / 0.8 * kArcLabelPitchFraction;
     final room = arcNameRoom(r.a0, r.a1, claimed);
     var size = fitArcLabel(
       text: r.name,

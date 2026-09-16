@@ -7,6 +7,22 @@ import '../utils/font_catalog.dart';
 
 /// Both chart forms keep these same two choices in the same place.
 /// Selecting the active choice does not reset the reader's view.
+/// Whether the depth view is offered at all.
+///
+/// 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The 3D form
+/// was the striking picture and the flat one is the readable chart, and
+/// a day of use came down on the side of the chart: the depth view's
+/// own problems — faces too small for their names, a mode button before
+/// you could pan, blocks that read as floating — were being fixed one
+/// at a time without the view ever becoming the one to reach for.
+///
+/// SET TO TRUE TO GET IT BACK, and nothing else has to change. The
+/// scene builder, the painters, the hit tests, the callout banks and
+/// their tests are all still here and still run — this hides the door,
+/// not the room. `initialStacked: true` still opens a page in it, which
+/// is how those tests reach it.
+const bool kDepthViewOffered = false;
+
 class ChronologyDepthToggle extends StatelessWidget {
   const ChronologyDepthToggle({
     super.key,

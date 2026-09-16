@@ -155,6 +155,15 @@ void main() {
     testWidgets(
         'a hidden out-of-period $kind search selects its visible 3D record',
         (tester) async {
+      // 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The
+      // depth view still builds, paints and hit-tests -- this runs
+      // again the moment `kDepthViewOffered` goes back to true -- but
+      // its door is closed, so a test that presses the door cannot run.
+      if (!kDepthViewOffered) {
+        markTestSkipped('the depth view is not offered; see '
+            'kDepthViewOffered');
+        return;
+      }
       final (id, name) = switch (kind) {
         WheelHitKind.power => (
             data.powers.first.id,
@@ -320,6 +329,14 @@ void main() {
 
   testWidgets('depth round-trip keeps camera, selection, period and filters',
       (tester) async {
+    // 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The
+    // depth view still builds, paints and hit-tests -- this test runs
+    // again the moment `kDepthViewOffered` goes back to true -- but its
+    // door is closed, so a test that presses the door cannot run.
+    if (!kDepthViewOffered) {
+      markTestSkipped('the depth view is not offered; see kDepthViewOffered');
+      return;
+    }
     final period = chronologyPeriods.singleWhere((p) => p.id == 'late');
     final hidden = {'europe'};
     await pump(tester, hidden: hidden, period: period);
@@ -377,6 +394,14 @@ void main() {
   testWidgets(
       'wheel and strip preserve depth, period and explicit layer choices',
       (tester) async {
+    // 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The
+    // depth view still builds, paints and hit-tests -- this test runs
+    // again the moment `kDepthViewOffered` goes back to true -- but its
+    // door is closed, so a test that presses the door cannot run.
+    if (!kDepthViewOffered) {
+      markTestSkipped('the depth view is not offered; see kDepthViewOffered');
+      return;
+    }
     final period = chronologyPeriods.singleWhere((p) => p.id == 'late');
     final hidden = {'europe', kLineageLayerId};
     await pump(tester, hidden: hidden, period: period);

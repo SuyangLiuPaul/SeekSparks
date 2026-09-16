@@ -1167,6 +1167,8 @@ class _Arc {
     this.a0,
     this.a1,
     this.color, {
+    this.tier = 0,
+    this.tiers = 1,
     this.name = '',
     this.nameA0 = 0,
     this.nameSweep = 0,
@@ -1177,6 +1179,17 @@ class _Arc {
   final double a0;
   final double a1;
   final Color color;
+
+  /// Which layer of its stream's ring this arc sits in, and how many
+  /// layers that ring was divided into.
+  ///
+  /// 2026-09-16 「一个圈圈 但是那个每个条可以细一些多层这样 ... 这样就知道
+  /// 同一时代同时发生事情」. One ring per stream, and the powers that ran
+  /// AT THE SAME TIME stacked inside it instead of sharing a radius and
+  /// printing over each other. [tiers] is 1 wherever the ring is too
+  /// thin to divide — see [streamTierCount], which asks per chart.
+  final int tier;
+  final int tiers;
 
   final String name;
   final double nameA0;
@@ -1997,11 +2010,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                 alignment: AlignmentDirectional.centerStart,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: ChronologyDepthToggle(
-                      is3D: _stacked,
-                      onChanged: _setDepth,
-                      locale: locale,
-                      keyPrefix: 'wheelDepth'),
+                  child: kDepthViewOffered
+                      ? ChronologyDepthToggle(
+                          is3D: _stacked,
+                          onChanged: _setDepth,
+                          locale: locale,
+                          keyPrefix: 'wheelDepth')
+                      : const SizedBox.shrink(),
                 ))),
         Expanded(child: _chartBody(context, data, locale)),
         _yearDigest(context, data, locale),
@@ -2485,14 +2500,66 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     });
     if (geo.isEmpty) return const [];
 
+    // ── one ring per stream, divided into layers ──────────────────
+    //
+    // 2026-09-16 「一个圈圈 但是那个每个条可以细一些多层这样 ... 这样就知
+    // 道同一时代同时发生事情」. Powers that ran at the same time used to
+    // share one radius and print across each other; each gets its own
+    // layer of the stream's ring now, as deep as the ring can carry
+    // (see [streamTierCount]) and no deeper. What will not fit keeps
+    // the old behaviour and shares the last layer, which is what every
+    // power on the ring did before.
+    final tierOf = List<int>.filled(geo.length, 0);
+    final tiersOf = List<int>.filled(geo.length, 1);
+    final byRing = <int, List<int>>{};
+    for (var i = 0; i < geo.length; i++) {
+      byRing.putIfAbsent(geo[i].ring, () => []).add(i);
+    }
+    for (final entry in byRing.entries) {
+      // The packer is first-fit IN START ORDER, so a container takes
+      // the outer layer and what nests inside it steps in — which is
+      // the reading a reader expects and the one the depth view
+      // already gives.
+      final idx = entry.value.toList()
+        ..sort((a, b) => geo[a].a0.compareTo(geo[b].a0));
+      final starts = [for (final i in idx) geo[i].a0];
+      final ends = [for (final i in idx) geo[i].a1];
+      final deep = packIntoRings(starts, ends, idx.length, minGap: 0);
+      var wanted = 1;
+      for (final t in deep) {
+        if (t + 1 > wanted) wanted = t + 1;
+      }
+      final tiers = streamTierCount(
+          wanted: wanted, ringCount: ringCount, rHub: rHub, rMax: rBands);
+      final packed = tiers >= wanted
+          ? deep
+          : packIntoRings(starts, ends, tiers, minGap: 0);
+      for (var k = 0; k < idx.length; k++) {
+        tierOf[idx[k]] = packed[k];
+        tiersOf[idx[k]] = tiers;
+      }
+    }
+    // A composite so `planArcNames` keeps its own meaning of `ring` —
+    // the number things sharing a RADIUS share — without learning what
+    // a stream is.
+    var spread = 1;
+    for (final t in tiersOf) {
+      if (t > spread) spread = t;
+    }
+    int keyFor(int i) => geo[i].ring * spread + tierOf[i];
+    final tiersByRing = {
+      for (final entry in byRing.entries)
+        entry.key: tiersOf[entry.value.first],
+    };
+
     final planned = planArcNames(
       requests: [
-        for (final arc in geo)
+        for (var i = 0; i < geo.length; i++)
           (
-            ring: arc.ring,
-            a0: arc.a0,
-            a1: arc.a1,
-            name: arc.power.nameFor(locale)
+            ring: keyFor(i),
+            a0: geo[i].a0,
+            a1: geo[i].a1,
+            name: geo[i].power.nameFor(locale)
           )
       ],
       ringCount: ringCount,
@@ -2502,6 +2569,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       zoom: _zoom,
       floorPx: kArcLabelFloorPx,
       measure: _measureChars,
+      bandOf: (key) {
+        final ring = key ~/ spread;
+        final band = tierRadii(ring, ringCount, rHub, rBands,
+            tier: key % spread, tiers: tiersByRing[ring] ?? 1);
+        return (centre: band.centre, width: band.width);
+      },
     );
 
     return [
@@ -2512,6 +2585,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           geo[i].a0,
           geo[i].a1,
           colors[geo[i].power.stream] ?? lineColor('none', dark: _dark),
+          tier: tierOf[i],
+          tiers: tiersOf[i],
           name: planned[i].name,
           nameA0: planned[i].a0,
           nameSweep: planned[i].sweep,
@@ -4168,9 +4243,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       // band's angular extent is its span, and plenty of spans on this
       // chart are a few years inside six thousand. Exact containment
       // made those unreachable too.
+      // Against the arc's own LAYER, and with a tolerance that is
+      // still a whole ring's pitch: the layers are thinner than a
+      // finger, so a tap near one has to reach it. Which of the
+      // candidates wins is `nearestArcAt`'s question, and it answers it
+      // by containment first — see its doc.
       final inBand = [
         for (final arc in arcs)
-          if ((r - ringRadii(arc.ring, streams.length, rHub, rBands).centre)
+          if ((r -
+                      tierRadii(arc.ring, streams.length, rHub, rBands,
+                              tier: arc.tier, tiers: arc.tiers)
+                          .centre)
                   .abs() <=
               pitch / 2)
             arc
@@ -4507,7 +4590,11 @@ class _WorldWheelPainter extends CustomPainter {
   void _paintArcs(Canvas canvas, Offset c, double rHub, double rBands) {
     final has = selectedId != null;
     for (final arc in arcs) {
-      final band = ringRadii(arc.ring, streams.length, rHub, rBands);
+      // The arc's own LAYER of its stream's ring. `tiers` is 1 wherever
+      // the ring was too thin to divide, and then this is exactly the
+      // ring band it always was.
+      final band = tierRadii(arc.ring, streams.length, rHub, rBands,
+          tier: arc.tier, tiers: arc.tiers);
       // The outline marks the power itself; the dimming follows the
       // whole selection, which may be this arc's stream.
       final sel = arc.power.id == selectedId;
@@ -5058,11 +5145,50 @@ class _WorldWheelPainter extends CustomPainter {
     final tp = _painter(text, wb.text.withValues(alpha: 0.98 * dim), fontSize);
     final mid = a0 + sweep / 2;
     final centre = c + Offset(math.cos(mid), math.sin(mid)) * radius;
-    final box = Rect.fromCenter(
-        center: centre,
-        width: tp.width + 8 / zoom,
-        height: tp.height + 3 / zoom);
-    if (!_claim(box)) return;
+    final w = tp.width + 8 / zoom;
+    final h = tp.height + 3 / zoom;
+    var box = Rect.fromCenter(center: centre, width: w, height: h);
+    Offset? leader;
+    if (!_claim(box)) {
+      // ALONG THE RING, RATHER THAN NOT AT ALL.
+      //
+      // 2026-09-16 「这种也是后面有位置就应该可以放label」 and 「这个后面
+      // 应该可以有label的吧」, both of short reigns with a screenful of
+      // empty chart beside them. A name centred on a three-year span
+      // lands on its neighbour's name and this used to give up — so the
+      // short records, which are the ones a reader most needs named,
+      // were the ones that lost their names.
+      //
+      // It walks its OWN ring, forward first, because 「后面」 is where
+      // the reader is looking, and it draws a leader back to the arc
+      // whenever it had to move: a name away from the thing it names
+      // is only honest if it says which thing.
+      final step = w / (radius > 1 ? radius : 1);
+      var moved = false;
+      for (var k = 1; k <= 6 && !moved; k++) {
+        for (final dir in const [1.0, -1.0]) {
+          final at = mid + dir * step * k;
+          if (at < startRad || at > startRad + sweepRad) continue;
+          final p = c + Offset(math.cos(at), math.sin(at)) * radius;
+          final candidate = Rect.fromCenter(center: p, width: w, height: h);
+          if (_claim(candidate)) {
+            box = candidate;
+            leader = centre;
+            moved = true;
+            break;
+          }
+        }
+      }
+      if (!moved) return;
+    }
+    if (leader case final from?) {
+      canvas.drawLine(
+          from,
+          box.center,
+          Paint()
+            ..strokeWidth = 0.7 / zoom
+            ..color = wb.mutedText.withValues(alpha: 0.5 * dim));
+    }
     canvas.drawRRect(
         // The app's own control radius, divided by the zoom for the same
         // reason every stroke width on this canvas is: a 5-unit corner

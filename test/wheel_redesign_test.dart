@@ -8,6 +8,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:seeksparks/widgets/chronology_depth_toggle.dart'
+    show kDepthViewOffered;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -351,6 +354,14 @@ void main() {
 
   testWidgets('phone footer controls are named and have separate touch areas',
       (tester) async {
+    // 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The
+    // depth view still builds, paints and hit-tests -- this test runs
+    // again the moment `kDepthViewOffered` goes back to true -- but its
+    // door is closed, so a test that presses the door cannot run.
+    if (!kDepthViewOffered) {
+      markTestSkipped('the depth view is not offered; see kDepthViewOffered');
+      return;
+    }
     await mount(tester, const Size(360, 800));
     final semantics = tester.ensureSemantics();
     try {

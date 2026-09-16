@@ -736,11 +736,13 @@ class _StripChronologyPageState extends State<StripChronologyPage>
             alignment: AlignmentDirectional.centerStart,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: ChronologyDepthToggle(
-                  is3D: _stacked,
-                  onChanged: _setDepth,
-                  locale: locale,
-                  keyPrefix: 'stripDepth'),
+              child: kDepthViewOffered
+                  ? ChronologyDepthToggle(
+                      is3D: _stacked,
+                      onChanged: _setDepth,
+                      locale: locale,
+                      keyPrefix: 'stripDepth')
+                  : const SizedBox.shrink(),
             ),
           ),
         ),

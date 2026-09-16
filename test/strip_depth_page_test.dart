@@ -5,6 +5,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:seeksparks/widgets/chronology_depth_toggle.dart'
+    show kDepthViewOffered;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -104,6 +107,14 @@ void main() {
 
   testWidgets('3D retains every country, layer and event from the flat chart',
       (tester) async {
+    // 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The
+    // depth view still builds, paints and hit-tests -- this test runs
+    // again the moment `kDepthViewOffered` goes back to true -- but its
+    // door is closed, so a test that presses the door cannot run.
+    if (!kDepthViewOffered) {
+      markTestSkipped('the depth view is not offered; see kDepthViewOffered');
+      return;
+    }
     await mount(tester);
     final raised = painter(tester);
     expect(raised.is3D, isTrue);
@@ -156,6 +167,14 @@ void main() {
   testWidgets(
       'front, roof and side of a concurrent power open its original record',
       (tester) async {
+    // 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The
+    // depth view still builds, paints and hit-tests -- this test runs
+    // again the moment `kDepthViewOffered` goes back to true -- but its
+    // door is closed, so a test that presses the door cannot run.
+    if (!kDepthViewOffered) {
+      markTestSkipped('the depth view is not offered; see kDepthViewOffered');
+      return;
+    }
     await mount(tester);
     await zoomToReadable(tester);
     final p = painter(tester);
@@ -209,6 +228,14 @@ void main() {
   testWidgets(
       'phone mode targets stay reachable and keep active range and filters',
       (tester) async {
+    // 2026-09-16 「或者我觉得立体其实strip和wheel都没有必要要了」. The
+    // depth view still builds, paints and hit-tests -- this test runs
+    // again the moment `kDepthViewOffered` goes back to true -- but its
+    // door is closed, so a test that presses the door cannot run.
+    if (!kDepthViewOffered) {
+      markTestSkipped('the depth view is not offered; see kDepthViewOffered');
+      return;
+    }
     final period =
         chronologyPeriods.singleWhere((period) => period.id == 'biblical');
     const hidden = {'china', 'japan'};
