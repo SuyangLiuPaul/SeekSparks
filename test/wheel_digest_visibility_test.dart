@@ -69,8 +69,14 @@ void main() {
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
+    // THE OPTIONS LIST BY KEY, not "the first Scrollable in the sheet".
+    // 2026-09-16 the sheet gained a find box 「另外filter那边应该有个搜
+    // 索」, and a `TextField` carries an `EditableText` with a Scrollable
+    // of its own — which is now the first one, so this was scrolling a
+    // one-line text field looking for a checkbox.
     final scrolling = find.descendant(
-        of: find.byType(BottomSheet), matching: find.byType(Scrollable));
+        of: find.byKey(const ValueKey('chronologyFilterOptions')),
+        matching: find.byType(Scrollable));
     await tester.scrollUntilVisible(row, 250, scrollable: scrolling.first);
     // scrollUntilVisible stops as soon as the row is BUILT, which can
     // leave it straddling the footer; the tap then lands on the footer

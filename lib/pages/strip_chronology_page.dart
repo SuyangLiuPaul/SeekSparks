@@ -213,6 +213,14 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   final _explorer = ChronologyExplorerController();
 
   double _pxPerYear = kStripInitialPxPerYear;
+  /// The chart with the page's own chrome built away.
+  ///
+  /// 2026-09-16 「还有这个strip或者wheel应该有一个max screen把这个全屏
+  /// 模式」 — see [ChronologyExplorer.fullScreen]. The strip needs it
+  /// most: the owner's phone gave the lanes about a third of an 844 dp
+  /// window, with 「上方还有更多」 and 「下方还有更多」 both showing.
+  bool _fullScreen = false;
+
   String? _selectedId;
   late bool _stacked;
 
@@ -465,6 +473,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       final p = _touches.values.toList();
       _pinchSpread = (p[0] - p[1]).distance;
       _pinchScale = _pxPerYear;
+      if (!_pinching) setState(() => _pinching = true);
     }
   }
 
@@ -481,10 +490,34 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     _zoomAt(next / _pxPerYear, (p[0].dx + p[1].dx) / 2);
   }
 
+  /// Both ends of a touch. Up and cancel both reach here.
   void _endTouch(PointerEvent e) {
     _touches.remove(e.pointer);
-    if (_touches.length < 2) _pinchSpread = null;
+    if (_touches.length < 2) {
+      _pinchSpread = null;
+      if (_pinching) setState(() => _pinching = false);
+    }
   }
+
+  /// True while two fingers are down, and the scroll views are frozen
+  /// for exactly that long.
+  ///
+  /// 2026-09-16 「另外strip这边为什么手机上拖拉zoomin out操作不了」.
+  ///
+  /// The pinch is driven from a raw `Listener`, which is deliberate —
+  /// see the note at the Listener itself — but a `Listener` is NOT in
+  /// the gesture arena, so it cannot take the two fingers away from the
+  /// scroll views it sits inside. Both acted: the strip panned under
+  /// the reader while it zoomed, and the year under the fingers went
+  /// wherever the sum of the two put it. On a mouse there is no second
+  /// pointer and no drag to compete with, which is why every desktop
+  /// check passed.
+  ///
+  /// While this is set the two `SingleChildScrollView`s take
+  /// `NeverScrollableScrollPhysics`, so two fingers mean one thing.
+  /// `_zoomAt` still moves `_hCtl` itself — freezing the physics stops
+  /// the DRAG, not the controller.
+  bool _pinching = false;
 
   void _zoomStep(int delta) {
     final next = stripNextScale(_pxPerYear, delta, _viewportW);
@@ -579,7 +612,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
 
     return Scaffold(
       backgroundColor: wb.paneBg,
-      appBar: AppBar(
+      appBar: _fullScreen
+          ? null
+          : AppBar(
         leading: const LocalizedBackButton(),
         title: wheelChromeTitle(
             context,
@@ -628,6 +663,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           final textScale = WbType.of(context).textScale;
           return ChronologyExplorer(
             controller: _explorer,
+            fullScreen: _fullScreen,
             data: data,
             locale: locale,
             hiddenStreams: Set.of(_hidden),
@@ -930,9 +966,17 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                           controller: _hCtl,
                           scrollDirection: Axis.horizontal,
                           key: const ValueKey('stripHScroll'),
+                          // Frozen while two fingers are down — see
+                          // [_pinching].
+                          physics: _pinching
+                              ? const NeverScrollableScrollPhysics()
+                              : null,
                           child: SingleChildScrollView(
                             controller: _vCtl,
                             key: const ValueKey('stripVScroll'),
+                            physics: _pinching
+                                ? const NeverScrollableScrollPhysics()
+                                : null,
                             // WHY A RAW `Listener` AROUND THE TAP DETECTOR,
                             // and not a second `onTapDown`. Inherited whole
                             // from yswords' chronology chart, where the bug
@@ -2176,7 +2220,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// on it is, and neither touches the other. The wheel's single
   /// `InteractiveViewer` scale cannot separate them.
   Widget _zoomControls(String locale, WbType t, WbColors wb) {
-    Widget btn(IconData icon, String tip, VoidCallback? go) => IconButton(
+    Widget btn(IconData icon, String tip, VoidCallback? go, {Key? key}) =>
+        IconButton(
+          key: key,
           onPressed: go,
           tooltip: tip,
           constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -2206,6 +2252,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           btn(Icons.add, ss('stripZoomIn', locale),
               _pxPerYear < kStripZoomSteps.last ? () => _zoomStep(1) : null),
           btn(Icons.fit_screen, ss('stripFitAll', locale), _fitAll),
+          btn(
+              _fullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+              ss(_fullScreen ? 'stripExitFullScreen' : 'stripFullScreen',
+                  locale),
+              () => setState(() => _fullScreen = !_fullScreen),
+              key: const ValueKey('stripFullScreenControl')),
           Container(width: 1, height: 18, color: wb.border),
           btn(Icons.text_decrease, ss('stripTypeSmaller', locale),
               j > 0 ? () => _laneZoomStep(-1) : null),

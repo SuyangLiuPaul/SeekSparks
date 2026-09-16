@@ -13,6 +13,21 @@ const Map<String, Map<String, String>> chronologyFilterStrings = {
     'zh-Hant': '下面的列國按名稱排序。',
     'en': 'The powers below are listed A–Z.',
   },
+  // 2026-09-16 「另外filter那边应该有个搜索」. Twenty-six rows is several
+  // screenfuls on a phone; A–Z makes a row findable by scrolling and
+  // this makes it findable by naming it.
+  'findHint': {
+    'zh-Hans': '按名称查找',
+    'zh-Hant': '按名稱查找',
+    'en': 'Find a layer by name',
+  },
+  // The query narrowed the LIST, not the choices — so this says the
+  // list is empty, never that the reader has nothing selected.
+  'findNothing': {
+    'zh-Hans': '没有名称匹配的项。清空查找即可看到全部。',
+    'zh-Hant': '沒有名稱匹配的項。清空查找即可看到全部。',
+    'en': 'No layer by that name. Clear the box to see them all.',
+  },
   'apply': {
     'zh-Hans': '确认应用',
     'zh-Hant': '確認套用',

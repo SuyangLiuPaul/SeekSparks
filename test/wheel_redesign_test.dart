@@ -266,13 +266,16 @@ void main() {
     final side = tester.getSize(wheel).width;
     final explorer =
         tester.widget<ChronologyExplorer>(find.byType(ChronologyExplorer));
+    // `openingStreamCount`, not `min(ringCapacity, kOpeningStreams)`.
+    // 2026-09-16 「另外world应该的default tick」: the opening set is the
+    // owner's and is trimmed only by the floor a LAYER is held to, not
+    // by the 11 px a ring wants to be comfortable — which on a phone
+    // answered four and dropped 全世界, the one lane that was asked for
+    // by name.
     final expected = defaultVisibleStreams(
         explorer.data.streams.map((s) => s.id),
-        math.min(
-          ringCapacity(side,
-              hubFraction: 0.115, bandsFraction: bandsFractionFor(side)),
-          kOpeningStreams,
-        ));
+        openingStreamCount(side,
+            hubFraction: 0.115, bandsFraction: bandsFractionFor(side)));
     final visible = explorer.data.streams
         .where((stream) => !explorer.hiddenStreams.contains(stream.id))
         .map((stream) => stream.id)
@@ -281,11 +284,11 @@ void main() {
     // Said as a range too, not only as "whatever the helper returns" —
     // the mirror above would agree with the page if BOTH drifted.
     //
-    // Three, not four, at this size: 360 dp of window is not 360 dp of
-    // wheel, and the band annulus left of the page's chrome carries
-    // three readable rings. That is inside the range the owner asked
-    // for 「一次别超过3~5个」, and the floor is asserted because two
-    // rings is not a comparison chart any more.
+    // Five since 2026-09-16, on every canvas a phone has: the spine and
+    // 全世界. It used to be three here — 360 dp of window is not 360 dp
+    // of wheel — and three was inside the range the owner asked for
+    // 「一次别超过3~5个」, but it dropped the lane they then asked for by
+    // name. Five is still inside that range.
     expect(visible.length, lessThanOrEqualTo(kOpeningStreams));
     expect(visible.length, greaterThanOrEqualTo(3),
         reason: 'the wheel opened with ${visible.length} rings on a phone');

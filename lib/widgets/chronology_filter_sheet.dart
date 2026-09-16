@@ -11,7 +11,12 @@ import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/wheel_default_streams.dart'
     show defaultVisibleStreams;
 import 'package:seeksparks/utils/wheel_search.dart'
-    show kLifespanLayerId, kReignLayerId, kMinistryLayerId, kLineageLayerId;
+    show
+        foldForWheelSearch,
+        kLifespanLayerId,
+        kLineageLayerId,
+        kMinistryLayerId,
+        kReignLayerId;
 
 /// Only Apply returns a set, including an empty set for "All". Barrier
 /// dismissal, back navigation and Cancel return null. The page therefore
@@ -110,6 +115,41 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
   late final Set<String> _draft;
   late final List<_FilterOption> _options;
   bool _finished = false;
+
+  /// What the reader has typed into the sheet's own find box.
+  ///
+  /// 2026-09-16 「另外filter那边应该有个搜索」. Twenty-two streams plus
+  /// four layers is twenty-six rows on a phone, which is several
+  /// screenfuls: A-Z made a row findable by scrolling, and this makes
+  /// it findable by naming it.
+  ///
+  /// It filters the LIST, never the draft. A row scrolled out of sight
+  /// by a query is still ticked or unticked exactly as the reader left
+  /// it, and Apply sends the whole draft — a search box that quietly
+  /// dropped what it was not showing would be the worst possible
+  /// behaviour for this particular sheet.
+  String _query = '';
+  final TextEditingController _find = TextEditingController();
+
+  @override
+  void dispose() {
+    _find.dispose();
+    super.dispose();
+  }
+
+  /// The rows a query leaves. Matched on the displayed title in the
+  /// reader's own locale, folded the way the chart's own search folds,
+  /// so 「教会」 and `church` both reach the church.
+  List<_FilterOption> get _visibleOptions {
+    final q = foldForWheelSearch(_query);
+    if (q.isEmpty) return _options;
+    return [
+      for (final option in _options)
+        if (foldForWheelSearch(option.title).contains(q) ||
+            foldForWheelSearch(option.id).contains(q))
+          option
+    ];
+  }
 
   String _s(String key) => chronologyFilterText(key, widget.locale);
 
@@ -314,11 +354,55 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
             ),
           ),
           Divider(height: 1, color: wb.border),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: TextField(
+              key: const ValueKey('chronologyFilterFind'),
+              controller: _find,
+              onChanged: (value) => setState(() => _query = value),
+              style: buttonText.copyWith(color: wb.text),
+              decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: Icon(Icons.search, size: 18, color: wb.mutedText),
+                prefixIconConstraints:
+                    const BoxConstraints(minWidth: 34, minHeight: 34),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        key: const ValueKey('chronologyFilterFindClear'),
+                        icon: Icon(Icons.close, size: 18, color: wb.mutedText),
+                        onPressed: () => setState(() {
+                          _find.clear();
+                          _query = '';
+                        }),
+                      ),
+                hintText: _s('findHint'),
+                hintStyle: buttonText.copyWith(color: wb.mutedText),
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(WbMetrics.radiusControl),
+                  borderSide: BorderSide(color: wb.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(WbMetrics.radiusControl),
+                  borderSide: BorderSide(color: wb.border),
+                ),
+              ),
+            ),
+          ),
+          if (_query.isNotEmpty && _visibleOptions.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(_s('findNothing'),
+                  key: const ValueKey('chronologyFilterFindNothing'),
+                  style: buttonText.copyWith(color: wb.mutedText)),
+            ),
           Expanded(
             child: ListView.builder(
               key: const ValueKey('chronologyFilterOptions'),
               padding: const EdgeInsets.only(bottom: 8),
-              itemCount: _options.length + 1,
+              itemCount: _visibleOptions.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Padding(
@@ -364,7 +448,7 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
                     ),
                   );
                 }
-                final option = _options[index - 1];
+                final option = _visibleOptions[index - 1];
                 final blocked =
                     option.isStream && _atCeiling && _draft.contains(option.id);
                 return CheckboxListTile(

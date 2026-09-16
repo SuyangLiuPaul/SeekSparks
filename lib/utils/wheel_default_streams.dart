@@ -11,6 +11,9 @@ library;
 
 import 'dart:math' as math;
 
+import 'package:seeksparks/utils/radial_chronology_layout.dart'
+    show kStreamTierFloorPx, ringRadii;
+
 /// The canonical order. Earlier means kept longer when rings are scarce.
 ///
 /// The ordering is an argument, not a preference:
@@ -171,6 +174,35 @@ int ringCapacity(
 /// the edge. Keeping the lifespan annulus intact and reclaiming band
 /// space fixes the fit while preserving every independent arc layer.
 /// The axis reservation below also includes its text and hairlines.
+/// How many rings the chart OPENS with on a canvas of this size.
+///
+/// 2026-09-16 「另外world应该的default tick」, reported from a phone
+/// where it was not. [kOpeningStreams] is five and the spine plus 全世界
+/// is exactly five, but the opening set is trimmed by [ringCapacity],
+/// and on a 390 dp phone that is FOUR — so the lane the owner asked to
+/// have ticked by default was the one the geometry dropped.
+///
+/// [ringCapacity]'s 11 px is what a ring needs to be comfortable. The
+/// opening set is not a comfort question: it is the set the owner says
+/// the chart should meet a reader with, and it is allowed down to the
+/// floor a LAYER is held to — below that a ring is a hairline and the
+/// geometry is right to refuse. At five rings a 390 dp phone gives
+/// 9.7 px and a 320 dp one 7.9, both clear of [kStreamTierFloorPx], so
+/// every phone this app runs on opens with all five.
+int openingStreamCount(
+  double side, {
+  required double hubFraction,
+  required double bandsFraction,
+}) {
+  final band =
+      ringRadii(0, kOpeningStreams, side * hubFraction, side * bandsFraction)
+          .width;
+  if (band.isFinite && band >= kStreamTierFloorPx) return kOpeningStreams;
+  return ringCapacity(side,
+          hubFraction: hubFraction, bandsFraction: bandsFraction)
+      .clamp(1, kOpeningStreams);
+}
+
 double bandsFractionFor(double side, {double hubFraction = 0.115}) {
   if (side < 600) return kBandsFracNarrow;
   if (side < 1024) return kBandsFracMedium;

@@ -49,6 +49,17 @@ const Map<String, Map<String, String>> stripStrings = {
 
   /// `pxPerYearToFit` collapsed to the whole 6226-year axis — the strip's
   /// answer to the wheel's "everything is always on screen" default.
+  // 2026-09-16 「还有这个strip或者wheel应该有一个max screen把这个全屏模式」
+  'stripFullScreen': {
+    'zh-Hans': '全屏',
+    'zh-Hant': '全螢幕',
+    'en': 'Full screen',
+  },
+  'stripExitFullScreen': {
+    'zh-Hans': '退出全屏',
+    'zh-Hant': '退出全螢幕',
+    'en': 'Exit full screen',
+  },
   'stripFitAll': {
     'zh-Hans': '显示全部',
     'zh-Hant': '顯示全部',

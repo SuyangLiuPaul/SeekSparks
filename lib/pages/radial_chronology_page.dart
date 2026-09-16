@@ -682,6 +682,17 @@ const Map<String, Map<String, String>> wheelStrings = {
   },
   'wheelFilter': {'zh-Hans': '筛选', 'zh-Hant': '篩選', 'en': 'Filter'},
   'wheelReset': {'zh-Hans': '复位', 'zh-Hant': '復位', 'en': 'Reset'},
+  // 2026-09-16 「还有这个strip或者wheel应该有一个max screen把这个全屏模式」
+  'wheelFullScreen': {
+    'zh-Hans': '全屏',
+    'zh-Hant': '全螢幕',
+    'en': 'Full screen',
+  },
+  'wheelExitFullScreen': {
+    'zh-Hans': '退出全屏',
+    'zh-Hant': '退出全螢幕',
+    'en': 'Exit full screen',
+  },
   'wheelShadeNote': {
     'zh-Hans': '同一血统内，每条带一个色阶',
     'zh-Hant': '同一血統內，每條帶一個色階',
@@ -1393,17 +1404,24 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // count says how many the reader should meet, which is four on
     // every canvas so that the fifth slot is always free for the
     // comparison they came to make.
-    final capacity = math.min(
-      ringCapacity(side,
-          hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side)),
-      kOpeningStreams,
-    );
+    // The opening set is the owner's, not the geometry's — see
+    // [openingStreamCount]. On a 390 dp phone `ringCapacity` is four,
+    // which is how 全世界 came to be missing from a chart that is
+    // supposed to open with it.
+    final capacity = openingStreamCount(side,
+        hubFraction: _kHubFrac, bandsFraction: bandsFractionFor(side));
     final keep =
         defaultVisibleStreams(data.streams.map((s) => s.id), capacity).toSet();
     for (final s in data.streams) {
       if (!keep.contains(s.id)) _hidden.add(s.id);
     }
   }
+
+  /// The chart with the page's own chrome built away.
+  ///
+  /// 2026-09-16 「还有这个strip或者wheel应该有一个max screen把这个全屏
+  /// 模式」 — see [ChronologyExplorer.fullScreen].
+  bool _fullScreen = false;
 
   String? _selectedId;
   int? _rangeStart;
@@ -1767,7 +1785,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
 
     return Scaffold(
       backgroundColor: wb.paneBg,
-      appBar: AppBar(
+      appBar: _fullScreen
+          ? null
+          : AppBar(
         leading: const LocalizedBackButton(),
         title: wheelChromeTitle(
             context,
@@ -1864,6 +1884,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                 data, context.read<AppSettings>().chronologyHiddenStreams, side);
             return ChronologyExplorer(
               controller: _explorer,
+              fullScreen: _fullScreen,
               chart: _body(context, data, locale),
               data: data,
               locale: locale,
@@ -2471,6 +2492,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         Container(width: 1, height: t.scaledChrome(18), color: wb.border),
         btn('wheelResetControl', Icons.center_focus_strong,
             s('wheelReset', 'Reset', locale), _resetZoom),
+        Container(width: 1, height: t.scaledChrome(18), color: wb.border),
+        btn(
+            'wheelFullScreenControl',
+            _fullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+            s(_fullScreen ? 'wheelExitFullScreen' : 'wheelFullScreen',
+                _fullScreen ? 'Exit full screen' : 'Full screen', locale),
+            () => setState(() => _fullScreen = !_fullScreen)),
       ]),
     );
   }

@@ -43,6 +43,7 @@ class ChronologyExplorer extends StatefulWidget {
     required this.onFilter,
     this.selectedId,
     this.controller,
+    this.fullScreen = false,
   });
 
   final Widget chart;
@@ -56,6 +57,19 @@ class ChronologyExplorer extends StatefulWidget {
   final VoidCallback onFilter;
   final String? selectedId;
   final ChronologyExplorerController? controller;
+
+  /// The chart and nothing else.
+  ///
+  /// 2026-09-16 「还有这个strip或者wheel应该有一个max screen把这个全屏模
+  /// 式」, reported from a phone where the chart had about a third of the
+  /// window: an app bar, a find row, a period row, the chart, a footer,
+  /// a year cursor and a list of events, on a screen 844 dp tall. The
+  /// chart is the page; everything else is a way of getting to it.
+  ///
+  /// The controls and the event list are BUILT AWAY, not hidden, so
+  /// nothing under them lays out or paints. The page hides its app bar
+  /// to match; the way back is the button that got here.
+  final bool fullScreen;
 
   @override
   State<ChronologyExplorer> createState() => _ChronologyExplorerState();
@@ -362,6 +376,9 @@ class _ChronologyExplorerState extends State<ChronologyExplorer> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    if (widget.fullScreen) {
+      return ColoredBox(color: wb.groundBg, child: widget.chart);
+    }
     return LayoutBuilder(builder: (context, constraints) {
       final size = constraints.biggest;
       final sidePanel = chronologyExplorerUsesSidePanel(size);
