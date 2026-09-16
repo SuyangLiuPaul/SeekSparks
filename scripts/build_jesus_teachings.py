@@ -193,7 +193,52 @@ _NAVE_ZH = {
     'Teaches daily in the temple courtyard (in Jerusalem)':
         ('天天在殿院里教训人（在耶路撒冷）', '天天在殿院裡教訓人（在耶路撒冷）'),
     'Teaches people (in Jerusalem)': ('教导众人（在耶路撒冷）', '教導眾人（在耶路撒冷）'),
+    # Six more, after the entries folded together and longer Nave lines
+    # became the surviving name. 2026-09-16 「这里面语言也没用翻译好」.
+    'Eats with tax collectors and sinners, and discourses on fasting '
+    '(Capernaum)':
+        ('与税吏和罪人一同吃饭，并论禁食（在迦百农）',
+         '與稅吏和罪人一同吃飯，並論禁食（在迦百農）'),
+    'Journeys toward Jerusalem to attend the Passover; heals many who are '
+    'diseased, and teaches the people (in Peraea)':
+        ('往耶路撒冷守逾越节，医治许多病人，并教导众人（在比利亚）',
+         '往耶路撒冷守逾越節，醫治許多病人，並教導眾人（在比利亞）'),
+    'Preaches in the cities of Galilee': ('在加利利各城传道', '在加利利各城傳道'),
+    'Discourses to his disciples (in Galilee)':
+        ('对门徒的讲论（在加利利）', '對門徒的講論（在加利利）'),
+    'Visits Sychar and teaches the Samaritan woman':
+        ('到叙加，教导撒玛利亚妇人', '到敘加，教導撒瑪利亞婦人'),
+    'Teaches in Jerusalem at the Feast of Tabernacles':
+        ('住棚节时在耶路撒冷教训人', '住棚節時在耶路撒冷教訓人'),
 }
+
+
+# Sermon titles are EPISODE titles. The corpus is a preached series, so
+# a teaching that took two Sundays is 「不要忧虑（上）」 and 「不要忧虑
+# （下）」, and both sermons land on the same passage and merge into one
+# entry here. The surviving title then told the reader this was part one
+# of something whose part two is nowhere on the page.
+# 2026-09-16 「讲道分类 为什么分上下了」.
+#
+# The trailing reference goes for the same reason: 「葡萄园的工人 —
+# 马太福音二十章一至十六节」 prints the passage in the title and the page
+# prints it again on the line below.
+_PART = re.compile(
+    r'\s*[（(]\s*(?:上|中|下|續完|续完|續|续|[一二三四五六七八九十]+|'
+    r'Part\s*[0-9IVX]+|[0-9]+)\s*[)）]')
+_REF_TAIL = re.compile(r'\s*[—–]\s*[^—–]*[章][^—–]*[节節]\s*$')
+
+
+def clean_title(title):
+    """Strip episode markers and a repeated reference, in every locale."""
+    out = {}
+    for k, v in title.items():
+        v = _REF_TAIL.sub('', v)
+        v = _PART.sub('', v)
+        # 「主祷文：我们在天上的父」 — the colon survives the marker it
+        # followed, and a title must not end on it.
+        out[k] = re.sub(r'\s+', ' ', v).strip(' ：: —–-')
+    return out
 
 
 def parse_passage(text):
@@ -360,10 +405,38 @@ def section_title(sections, spans):
         return None
     book, ch, start, end = spans[0]
     marks = sections.get((book, ch)) or {}
-    for verse in sorted(marks):
-        if start <= verse <= end:
-            got = marks[verse]
-            return got if len(got) == len(SECTION_SETS) else None
+    at = sorted(marks)
+    last = load_chapter_lengths().get((book, ch), end)
+    for i, verse in enumerate(at):
+        if not (start <= verse <= end):
+            continue
+        # AND IT MUST BEGIN WHERE THE TEACHING BEGINS. Luke 12 carries
+        # one heading, 无知财主的比喻 at 12:13, and Nave's line for that
+        # chapter is the whole of it — so a fifty-nine-verse discourse
+        # came out named after the one parable in the middle of it.
+        if verse - start > 2:
+            return None
+        # AND THE TEACHING MUST BE MOST OF WHAT THE HEADING COVERS.
+        # 「begins inside the span」 alone is not enough: Nave's
+        # `Preaches in the cities of Galilee` is Luke 8:1-3, the women
+        # who provided for him, and the CUV heading that begins at 8:1
+        # runs to 8:15 and is 撒种的比喻 — so a three-verse travel note
+        # came out titled as the parable of the sower, a third time,
+        # next to the two real entries for it. A heading names this
+        # teaching only if this teaching is most of what it covers.
+        stop = at[i + 1] - 1 if i + 1 < len(at) else last
+        covered = min(end, stop) - verse + 1
+        if covered * 2 < stop - verse + 1:
+            return None
+        # AND MOST OF THE TEACHING. The other direction of the same
+        # error: Nave's `Discourses to his disciples` is the whole of
+        # Luke 12, and the first heading inside it covers 12:13-21 —
+        # so a fifty-nine-verse discourse came out named after the one
+        # parable in the middle of it.
+        if (stop - verse + 1) * 2 < end - start + 1:
+            return None
+        got = marks[verse]
+        return got if len(got) == len(SECTION_SETS) else None
     return None
 
 
@@ -554,24 +627,90 @@ def main():
     merged.sort(key=lambda e: (order[e['spans'][0][0]], e['spans'][0][1],
                                e['spans'][0][2]))
 
-    # Which discourse each teaching sits inside, if any. Containers are
-    # sorted first at the same opening verse so a reader meets the whole
-    # before its parts.
-    containers = [e for e in merged if e['origin'] == 'structure']
+    # ── fold, so that the list is a list ─────────────────────────────
+    #
+    # The first build made this two levels deep: the Sermon on the Mount
+    # held fifteen parts, indented under it, and eighty-seven rows came
+    # out of fifty-four teachings. 2026-09-16 「类似于登山宝训下面的都放
+    # 在一起 平行经文的放在一个下面但是同时要包含相关信息 所以就要非常
+    # 简单」 — one row per teaching, everything the parts knew carried
+    # INTO that row rather than shown beside it.
+    #
+    # Two entries are the same teaching when one's verses lie wholly
+    # inside the other's, or when both BEGIN at the same verse. The
+    # second test is what catches the pairs that differ only in how far
+    # a source ran on: Luke 10:1-12 and Luke 10:1-16 are both the
+    # sending of the seventy, and they sat next to each other as two
+    # teachings with almost the same name.
+    #
+    # The longest span survives, because it is the whole teaching. The
+    # best-sourced TITLE survives, which is usually a different entry:
+    # a Nave line running to Luke 10:16 should not take the name away
+    # from the passage's own. Nothing is discarded — the folded entry's
+    # own name is kept in `contains`, and its sermons, cross-references
+    # and plates were already inside the surviving span, so they are
+    # found again when that span is looked up.
+    TITLE_RANK = {'structure': 0, 'sermon': 1, 'nave': 2}
+
+    def head(e):
+        return min((order[b], c, a) for b, c, a, _ in e['spans'])
+
     for e in merged:
-        e['partOf'] = None
-        if e['origin'] == 'structure':
-            continue
-        for c in containers:
-            inside = all(any(b == b2 and c2 == ch and a2 <= a and z <= z2
-                             for b2, c2, a2, z2 in c['spans'])
-                         for b, ch, a, z in e['spans'])
-            if inside:
-                e['partOf'] = c['id']
-                break
-    merged.sort(key=lambda e: (order[e['spans'][0][0]], e['spans'][0][1],
-                               e['spans'][0][2],
-                               0 if e['origin'] == 'structure' else 1))
+        e['title'] = clean_title(e['title'])
+        e['vs'] = set(verses(e['spans']))
+        e['contains'] = []
+
+    kept = []
+    for e in sorted(merged, key=lambda e: (-len(e['vs']), head(e))):
+        for m in kept:
+            if not (e['vs'] <= m['vs'] or head(e) == head(m)):
+                continue
+            m['origins'] += e['origins']
+            m['vs'] |= e['vs']
+            # THE SURVIVING SPAN IS THE UNION. Folding by a shared first
+            # verse can meet an entry that runs further than the one it
+            # folds into: the sermon on the sower carries the synoptic
+            # parallels and starts at Matthew 13:1, the same verse as
+            # the discourse that runs to 13:52 — and keeping only the
+            # longer-by-verse-count of the two dropped half of Matthew
+            # 13 off the page.
+            grown = []
+            for b, c, a, z in m['spans']:
+                for b2, c2, a2, z2 in e['spans']:
+                    if b2 == b and c2 == c:
+                        a, z = min(a, a2), max(z, z2)
+                grown.append((b, c, a, z))
+            have = {(b, c) for b, c, _, _ in grown}
+            grown += [sp for sp in e['spans'] if (sp[0], sp[1]) not in have]
+            m['spans'] = sorted(grown, key=lambda sp: (order[sp[0]], sp[1]))
+            m['vs'] |= set(verses(m['spans']))
+            loser = e
+            if TITLE_RANK[e['origin']] < TITLE_RANK[m['origin']]:
+                loser, m['origin'], m['kind'] = m, e['origin'], e['kind']
+                # The displaced title is a description of the same
+                # passage, so it goes where descriptions of the passage
+                # go rather than into the list of what this contains.
+                m.setdefault('note', loser['title']['en'])
+                m['title'] = e['title']
+            if loser['title']['zh-Hans'] != m['title']['zh-Hans']:
+                m['contains'].append({
+                    'title': loser['title'],
+                    'label': span_label(loser['spans']),
+                    # What a tap opens. The label may name several
+                    # parallel passages and `parseReference` takes one.
+                    'ref': span_label(loser['spans'][:1])})
+            break
+        else:
+            kept.append(e)
+    merged = kept
+
+    for e in merged:
+        seen = set()
+        e['contains'] = [c for c in e['contains']
+                         if not (c['title']['zh-Hans'] in seen
+                                 or seen.add(c['title']['zh-Hans']))]
+
+    merged.sort(key=lambda e: head(e))
 
     # ── attach ───────────────────────────────────────────────────────
     plate_by_book = collections.defaultdict(list)
@@ -648,7 +787,7 @@ def main():
             'title': e['title'],
             'note': e.get('note'),
             'origins': sorted(set(e['origins'])),
-            'partOf': e['partOf'],
+            'contains': e['contains'],
             'kind': e['kind'],
             'refs': [{'book': b, 'chapter': c, 'start': a, 'end': z}
                      for b, c, a, z in e['spans']],
@@ -656,12 +795,23 @@ def main():
             'sermons': [
                 {'id': i, 'title': by_id[i]['titles'], 'date': by_id[i]['date'],
                  'topic': by_id[i].get('topic', '')}
-                for i in ids if i in by_id][:12],
+                # An entry that folded others in stands for all of them,
+                # so its sermon list has to hold all of theirs — the
+                # Sermon on the Mount alone carries more than twelve.
+                for i in ids if i in by_id][:40 if e['contains'] else 12],
             'oldTestament': cross(vs, OT)[:12],
+            # THE CAP MAY NOT TRIM A LORD'S-WORD LINK. Those are the
+            # only links on the page that assert dependence rather than
+            # relation, and it is scripture asserting it. Once the
+            # entries folded together their verse sets grew, and
+            # 1 Corinthians 9:14 — where Paul says the Lord commanded
+            # it — fell past the twelfth place and off the page.
             'apostles': [
                 {'ref': r,
                  'lordsWord': _LORDS_WORD.get(r.split('-')[0].strip())}
-                for r in apostles[:12]],
+                for r in apostles[:12] + [
+                    a for a in apostles[12:]
+                    if a.split('-')[0].strip() in _LORDS_WORD]],
             # The plate's own NAME, not its asset id. The first build
             # printed `illus_tissot_healing_of_the_lepers_at_capernaum`
             # at the reader, which is a filename wearing a chip.
@@ -687,11 +837,23 @@ def main():
                                    'with OpenBible.info votes',
                 'plates': 'assets/maps_index.json',
             },
-            'claims': (
-                'Cross-references assert that two passages are RELATED. They '
-                'do not assert that one rests on the other. The only links '
-                "marked as dependence are those where an apostle says so: "
-                '1 Cor 7:10-11, 9:14, 11:23-25; 1 Thess 4:15; Acts 20:35.'),
+            # Trilingual, because this sentence is the page's own
+            # statement of what it may claim and a reader who cannot
+            # read it is being shown a disclaimer in a language they
+            # did not ask for. 2026-09-16 「这里面语言也没用翻译好」.
+            'claims': {
+                'en': 'Cross-references assert that two passages are '
+                      'RELATED. They do not assert that one rests on the '
+                      'other. The only links marked as dependence are those '
+                      'where an apostle says so: 1 Cor 7:10-11, 9:14, '
+                      '11:23-25; 1 Thess 4:15; Acts 20:35.',
+                'zh-Hans': '串珠只说明两处经文彼此相关，并不说明其中一处以另一处为'
+                           '根基。本页只在使徒自己说明是领受主的话的地方标出这层'
+                           '关系：林前7:10-11、9:14、11:23-25；帖前4:15；徒20:35。',
+                'zh-Hant': '串珠只說明兩處經文彼此相關，並不說明其中一處以另一處為'
+                           '根基。本頁只在使徒自己說明是領受主的話的地方標出這層'
+                           '關係：林前7:10-11、9:14、11:23-25；帖前4:15；徒20:35。',
+            },
             'generator': 'scripts/build_jesus_teachings.py',
             'version': 1,
         },

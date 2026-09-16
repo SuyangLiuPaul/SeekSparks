@@ -37,6 +37,7 @@ import 'package:seeksparks/services/jesus_teachings_service.dart';
 import 'package:seeksparks/services/map_service.dart';
 import 'package:seeksparks/services/sermon_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
@@ -75,6 +76,7 @@ const Map<String, Map<String, String>> _s = {
     'en': 'In the apostles\' letters',
   },
   'plates': {'zh-Hans': '图画', 'zh-Hant': '圖畫', 'en': 'Illustrations'},
+  'contains': {'zh-Hans': '其中包括', 'zh-Hant': '其中包括', 'en': 'Includes'},
   'lordsWord': {
     'zh-Hans': '使徒自述为主的话',
     'zh-Hant': '使徒自述為主的話',
@@ -101,10 +103,9 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
   Future<JesusTeachingsData>? _future;
   final Set<String> _open = {};
 
-  /// null = everything, in canonical order with the discourses holding
-  /// their parts. A kind flattens the list to just that kind
-  /// 「类似于比喻可以放在一起」 — the parables in one place, still in the
-  /// order the gospels put them.
+  /// null = everything, in canonical order. A kind narrows the list to
+  /// that kind 「类似于比喻可以放在一起」 — the parables in one place,
+  /// still in the order the gospels put them.
   String? _kind;
 
   @override
@@ -144,7 +145,8 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
       backgroundColor: wb.paneBg,
       appBar: AppBar(
         leading: const LocalizedBackButton(),
-        title: Text(kJesusTeachingsTitle[locale] ?? kJesusTeachingsTitle['en']!),
+        title:
+            Text(kJesusTeachingsTitle[locale] ?? kJesusTeachingsTitle['en']!),
       ),
       body: FutureBuilder<JesusTeachingsData>(
         future: _future,
@@ -159,30 +161,26 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
           if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
+          // ONE LEVEL. The first build indented each discourse's parts
+          // under it, so the Sermon on the Mount was a row followed by
+          // twenty-one more rows and the list ran to eighty-seven.
+          // 2026-09-16 「我要你全部放一起 这样大家有一个overview 知道有
+          // 什么教导 ... 要清晰简单」: the parts fold into the teaching
+          // and are named inside it, so this is a list a reader can
+          // take in, not an outline they have to climb.
           final top = _kind == null
-              ? data.topLevel
-              : [for (final t in data.teachings) if (t.kind == _kind) t];
+              ? data.teachings
+              : [
+                  for (final t in data.teachings)
+                    if (t.kind == _kind) t
+                ];
           return ListView.builder(
             key: const ValueKey('jesusTeachingsList'),
             padding: const EdgeInsets.only(bottom: 24),
             itemCount: top.length + 1,
-            itemBuilder: (context, i) {
-              if (i == 0) return _preface(data, locale, wb, t);
-              final teaching = top[i - 1];
-              // Only the unfiltered view nests: a reader who asked for
-              // the parables wants the parables, not a discourse that
-              // happens to contain some.
-              final parts =
-                  _kind == null ? data.partsOf(teaching.id) : const [];
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _row(teaching, locale, wb, t, indented: false),
-                  for (final part in parts)
-                    _row(part, locale, wb, t, indented: true),
-                ],
-              );
-            },
+            itemBuilder: (context, i) => i == 0
+                ? _preface(data, locale, wb, t)
+                : _row(top[i - 1], locale, wb, t),
           );
         },
       ),
@@ -215,13 +213,15 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
           const SizedBox(height: 10),
           // The page's own limits, carried out of the dataset rather
           // than retyped here so the two cannot drift apart.
-          Text('${data.teachings.length} ${_t('count', locale)} · '
-              '${data.claims}',
+          Text(
+              '${data.teachings.length} ${_t('count', locale)} · '
+              '${data.claimsFor(locale)}',
               style: TextStyle(
                 color: wb.mutedText,
                 fontFamily: t.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
-                fontSize: _atLeast(t.scaledSmall(11), WbMetrics.smallPrintFloor),
+                fontSize:
+                    _atLeast(t.scaledSmall(11), WbMetrics.smallPrintFloor),
                 height: 1.45,
               )),
         ],
@@ -249,16 +249,15 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
               color: on ? wb.text : wb.mutedText,
               fontFamily: t.fontFamily,
               fontFamilyFallback: kCjkFontFallback,
-              fontSize: _atLeast(t.scaledSmall(11.5),
-                  WbMetrics.smallPrintFloor),
+              fontSize:
+                  _atLeast(t.scaledSmall(11.5), WbMetrics.smallPrintFloor),
               fontWeight: on ? FontWeight.w600 : FontWeight.w400,
             )),
       ),
     );
   }
 
-  Widget _row(JesusTeaching teaching, String locale, WbColors wb, WbType t,
-      {required bool indented}) {
+  Widget _row(JesusTeaching teaching, String locale, WbColors wb, WbType t) {
     final open = _open.contains(teaching.id);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -268,7 +267,7 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
           onTap: () => setState(
               () => open ? _open.remove(teaching.id) : _open.add(teaching.id)),
           child: Container(
-            padding: EdgeInsets.fromLTRB(indented ? 30 : 16, 10, 16, 10),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: wb.border)),
             ),
@@ -303,13 +302,13 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
                               color: wb.mutedText,
                               fontFamily: t.fontFamily,
                               fontFamilyFallback: kCjkFontFallback,
-                              fontSize: _atLeast(t.scaledSmall(11),
-                                  WbMetrics.smallPrintFloor),
+                              fontSize: _atLeast(
+                                  t.scaledSmall(11), WbMetrics.smallPrintFloor),
                               height: 1.35,
                             )),
                       ],
                       const SizedBox(height: 2),
-                      Text(teaching.label,
+                      Text(localizePassage(teaching.label, locale),
                           style: TextStyle(
                             color: wb.mutedText,
                             fontFamily: t.fontFamily,
@@ -327,13 +326,12 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
             ),
           ),
         ),
-        if (open) _detail(teaching, locale, wb, t, indented),
+        if (open) _detail(teaching, locale, wb, t),
       ],
     );
   }
 
-  Widget _detail(JesusTeaching teaching, String locale, WbColors wb, WbType t,
-      bool indented) {
+  Widget _detail(JesusTeaching teaching, String locale, WbColors wb, WbType t) {
     Widget section(String key, List<Widget> chips) {
       if (chips.isEmpty) return const SizedBox.shrink();
       return Padding(
@@ -395,7 +393,7 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
         );
 
     return Container(
-      padding: EdgeInsets.fromLTRB(indented ? 30 : 16, 10, 16, 6),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       decoration: BoxDecoration(
         color: wb.paneAltBg,
         border: Border(bottom: BorderSide(color: wb.border)),
@@ -405,19 +403,33 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
         children: [
           section('scripture', [
             for (final r in teaching.refs)
-              chip(r.label, () => _read(r.label)),
+              // The label a reader reads is in their own language;
+              // `parseReference` is still given the English one, which
+              // is what it was built to take.
+              chip(localizePassage(r.label, locale), () => _read(r.label)),
+          ]),
+          // What folded into this row. Named, with its own passage, so
+          // nothing the flattening absorbed became invisible.
+          section('contains', [
+            for (final c in teaching.contains)
+              chip(
+                  '${c.titleFor(locale)}  '
+                  '${localizePassage(c.label, locale)}',
+                  () => _read(c.ref)),
           ]),
           section('sermons', [
             for (final s in teaching.sermons)
-              chip('${s.titleFor(locale)}${s.date.contains('-') && !s.date.contains('mm') ? '  ${s.date}' : ''}',
+              chip(
+                  '${s.titleFor(locale)}${s.date.contains('-') && !s.date.contains('mm') ? '  ${s.date}' : ''}',
                   () => _openSermon(s.id)),
           ]),
           section('ot', [
-            for (final r in teaching.oldTestament) chip(r, () => _read(r)),
+            for (final r in teaching.oldTestament)
+              chip(localizePassage(r, locale), () => _read(r)),
           ]),
           section('apostles', [
             for (final a in teaching.apostles)
-              chip(a.ref, () => _read(a.ref),
+              chip(localizePassage(a.ref, locale), () => _read(a.ref),
                   note: a.lordsWord == null ? null : _t('lordsWord', locale)),
           ]),
           section('plates', [

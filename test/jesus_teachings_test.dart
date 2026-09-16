@@ -17,6 +17,7 @@ import 'package:seeksparks/pages/jesus_teachings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/jesus_teachings_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 
 void main() {
@@ -72,9 +73,14 @@ void main() {
     // other. The only links allowed to carry a claim of dependence are
     // the ones where an apostle says so himself.
     const declared = {
-      '1 Corinthians 7:10', '1 Corinthians 7:11', '1 Corinthians 9:14',
-      '1 Corinthians 11:23', '1 Corinthians 11:24', '1 Corinthians 11:25',
-      '1 Thessalonians 4:15', 'Acts 20:35',
+      '1 Corinthians 7:10',
+      '1 Corinthians 7:11',
+      '1 Corinthians 9:14',
+      '1 Corinthians 11:23',
+      '1 Corinthians 11:24',
+      '1 Corinthians 11:25',
+      '1 Thessalonians 4:15',
+      'Acts 20:35',
     };
     var marked = 0;
     for (final t in data.teachings) {
@@ -94,17 +100,16 @@ void main() {
 
   test('every entry has a Chinese title', () {
     // 「这些也没用根据语言翻译好」. Nave's outline is English in this
-    // dataset, so 27 of the 87 showed an English sentence to a Chinese
-    // reader. 16 take the app's own section heading, which is already
-    // trilingual; the remaining 11 are translated in the generator and
-    // kept literal, because translating a heading is localisation and
-    // the passage it names is printed beside it.
+    // dataset, so more than a quarter of the entries showed an English
+    // sentence to a Chinese reader. Some take the app's own section
+    // heading, which is already trilingual; the rest are translated in
+    // the generator and kept literal, because translating a heading is
+    // localisation and the passage it names is printed beside it.
     for (final t in data.teachings) {
-      expect(RegExp(r'[\u4e00-\u9fff]').hasMatch(t.titleFor('zh-Hans')),
-          isTrue,
+      expect(RegExp(r'[\u4e00-\u9fff]').hasMatch(t.titleFor('zh-Hans')), isTrue,
           reason: '${t.id} shows "${t.titleFor('zh-Hans')}" in a Chinese UI');
-      expect(RegExp(r'[\u4e00-\u9fff]').hasMatch(t.titleFor('zh-Hant')),
-          isTrue, reason: '${t.id} has no traditional title');
+      expect(RegExp(r'[\u4e00-\u9fff]').hasMatch(t.titleFor('zh-Hant')), isTrue,
+          reason: '${t.id} has no traditional title');
     }
   });
 
@@ -128,33 +133,72 @@ void main() {
         .toList();
     expect(multi.length, greaterThan(10),
         reason: 'only ${multi.length} teachings carry parallels');
-    // The parable, not the discourse that contains it: Matthew 13:1-52
-    // is 天国的比喻 as a whole and also begins at 13:1.
-    final sower = data.teachings.firstWhere((t) =>
-        t.kind == 'parable' &&
-        t.refs.any((r) =>
-            r.book == 'Matthew' && r.chapter == 13 && r.start == 1));
+    final sower = data.teachings.firstWhere((t) => t.refs
+        .any((r) => r.book == 'Matthew' && r.chapter == 13 && r.start == 1));
     expect(sower.refs.map((r) => r.book).toSet(),
         containsAll(<String>{'Matthew', 'Mark', 'Luke'}),
         reason: 'the sower lost its parallels: ${sower.label}');
   });
 
-  test('the discourses contain their parts, and nothing contains itself', () {
-    final byId = {for (final t in data.teachings) t.id: t};
-    var nested = 0;
+  test('the list is one level deep, and the folding lost nothing', () {
+    // 2026-09-16 「类似于登山宝训下面的都放在一起 ... 所以就要非常简单」.
+    // The first build was an outline: the Sermon on the Mount, then
+    // twenty-one rows indented under it, eighty-seven rows for
+    // fifty-odd teachings. It is a list now — so the two things that
+    // could go wrong are that a row still hides another row, and that
+    // what the folding absorbed stopped being visible anywhere.
+    expect(data.teachings.length, lessThan(60),
+        reason: '${data.teachings.length} rows — the parts did not fold');
+
+    final mount = data.teachings.firstWhere((t) => t.id.contains('mount'));
+    expect(mount.contains.length, greaterThan(10),
+        reason: 'the Sermon on the Mount names only ${mount.contains.length} '
+            'of the teachings inside it; the Beatitudes alone are eight');
+    expect(mount.sermons.length, greaterThan(12),
+        reason: 'the parts folded in but their sermons did not come with '
+            'them — the twelve-sermon cap has to lift for a row that '
+            'stands for twenty-one teachings');
+
     for (final t in data.teachings) {
-      final parent = t.partOf;
-      if (parent == null) continue;
-      nested++;
-      expect(byId[parent], isNotNull, reason: '${t.id} points at a missing '
-          'discourse $parent');
-      expect(byId[parent]!.isDiscourse, isTrue,
-          reason: '${t.id} is filed under $parent, which is not a discourse');
-      expect(parent, isNot(t.id));
+      for (final c in t.contains) {
+        expect(c.titleFor('zh-Hans'), isNot(t.titleFor('zh-Hans')),
+            reason: '${t.id} lists itself among its own parts');
+        expect(parseReference(c.ref), isNotNull,
+            reason: '${t.id}: "${c.ref}" is a dead chip');
+      }
     }
-    expect(nested, greaterThan(10),
-        reason: 'only $nested teachings are nested; the Beatitudes alone '
-            'should account for more');
+  });
+
+  test('no title says it is part one of something', () {
+    // 2026-09-16 「讲道分类 为什么分上下了」. The sermon corpus is a
+    // preached series, so a teaching that took two Sundays is titled
+    // 「不要忧虑（上）」 and 「不要忧虑（下）」 — and both sermons land on the
+    // same passage and become ONE entry here. The surviving title then
+    // told the reader this was part one of something whose part two is
+    // nowhere on the page.
+    final marker = RegExp(r'[（(]\s*(?:上|中|下|续|續|[一二三四五六七八九十]+|'
+        r'Part\s*[0-9IVX]+)\s*[)）]');
+    for (final t in data.teachings) {
+      for (final locale in ['zh-Hans', 'zh-Hant', 'en']) {
+        expect(marker.hasMatch(t.titleFor(locale)), isFalse,
+            reason: '${t.id} is titled "${t.titleFor(locale)}"');
+      }
+      // And the passage is printed on its own line, so a title that
+      // repeats it prints it twice.
+      expect(t.titleFor('zh-Hans'), isNot(contains('章')),
+          reason: '${t.id} carries its reference in its title');
+    }
+  });
+
+  test('the disclaimer is in the reader\'s language', () {
+    // 2026-09-16 「这里面语言也没用翻译好」. This sentence is the page's
+    // own statement of what it may claim; in a language the reader did
+    // not ask for it is not a disclaimer, it is decoration.
+    for (final locale in ['zh-Hans', 'zh-Hant', 'en']) {
+      expect(data.claimsFor(locale), isNotEmpty);
+    }
+    expect(
+        RegExp(r'[\u4e00-\u9fff]').hasMatch(data.claimsFor('zh-Hans')), isTrue);
   });
 
   testWidgets('the page says the arrangement is its own', (tester) async {
@@ -183,26 +227,32 @@ void main() {
     expect(find.byKey(const ValueKey('jesusTeachingsList')), findsOneWidget);
     expect(find.textContaining('从主领受的'), findsOneWidget,
         reason: 'the preface, which is where the conviction lives');
-    expect(find.textContaining('RELATED'), findsOneWidget,
+    expect(find.textContaining('串珠只说明'), findsOneWidget,
         reason: 'the page must state what a cross-reference does and does '
-            'not claim');
+            'not claim, in the language the reader is reading it in');
 
     // 「类似于比喻可以放在一起」 — the parables in one tap, and still in
     // the order the gospels put them.
     await tester.tap(find.byKey(const ValueKey('teachingKind-parable')));
     await tester.pumpAndSettle();
     final parables = data.teachings.where((t) => t.kind == 'parable');
-    expect(parables.length, greaterThan(20),
-        reason: 'only ${parables.length} parables were classified; the '
-            'sermon corpus alone has 34 on them');
+    // Fewer than the sermon corpus's 34 sermons on parables, and that
+    // is the folding working: the two on the sower are one entry, and
+    // the ones inside Matthew 13 are inside 天国的比喻.
+    expect(parables.length, greaterThan(12),
+        reason: 'only ${parables.length} parables were classified');
     expect(find.text(parables.first.titleFor('zh-Hans')), findsWidgets);
     await tester.tap(find.byKey(const ValueKey('teachingKind-all')));
     await tester.pumpAndSettle();
 
-    // And a teaching opens.
-    final first = data.topLevel.first;
+    // And a teaching opens, with its references in the reader's own
+    // language 「这里面语言也没用翻译好」.
+    final first = data.teachings.first;
     await tester.tap(find.byKey(ValueKey('teaching-${first.id}')));
     await tester.pumpAndSettle();
-    expect(find.text(first.refs.first.label), findsWidgets);
+    expect(find.text(localizePassage(first.refs.first.label, 'zh-Hans')),
+        findsWidgets);
+    expect(find.textContaining('马太福音'), findsWidgets,
+        reason: 'the chips still print English book names');
   });
 }

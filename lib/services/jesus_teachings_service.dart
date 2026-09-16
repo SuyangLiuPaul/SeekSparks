@@ -91,9 +91,39 @@ class TeachingSermon {
   final String topic;
 
   String titleFor(String locale) =>
-      title[locale == 'zh-Hant' ? 'zh-TW' : locale == 'zh-Hans' ? 'zh-CN' : 'en'] ??
+      title[locale == 'zh-Hant'
+          ? 'zh-TW'
+          : locale == 'zh-Hans'
+              ? 'zh-CN'
+              : 'en'] ??
       title['en'] ??
       '';
+}
+
+/// One teaching that folded into another — the Beatitudes inside the
+/// Sermon on the Mount, the sermon on the sower inside the parables of
+/// the kingdom. The list is one level deep on purpose; these are what
+/// that one row is made of.
+class TeachingPart {
+  const TeachingPart(
+      {required this.title, required this.label, required this.ref});
+
+  factory TeachingPart.fromJson(Map<String, dynamic> j) => TeachingPart(
+        title: Map<String, String>.from(
+            (j['title'] as Map).map((k, v) => MapEntry('$k', '$v'))),
+        label: j['label'] as String? ?? '',
+        ref: j['ref'] as String? ?? '',
+      );
+
+  final Map<String, String> title;
+  final String label;
+
+  /// The first of the passages in [label] — what a tap opens, because
+  /// a label naming three synoptic parallels is not a reference.
+  final String ref;
+
+  String titleFor(String locale) =>
+      title[locale] ?? title['en'] ?? title.values.first;
 }
 
 /// One illustration plate, with the name a reader should see.
@@ -109,8 +139,7 @@ class TeachingPlate {
   final String id;
   final Map<String, String> title;
 
-  String titleFor(String locale) =>
-      title[locale] ?? title['en'] ?? id;
+  String titleFor(String locale) => title[locale] ?? title['en'] ?? id;
 }
 
 class JesusTeaching {
@@ -121,7 +150,7 @@ class JesusTeaching {
     required this.refs,
     required this.label,
     required this.origins,
-    required this.partOf,
+    required this.contains,
     required this.kind,
     required this.sermons,
     required this.oldTestament,
@@ -140,13 +169,18 @@ class JesusTeaching {
         ],
         label: j['label'] as String? ?? '',
         origins: [for (final o in (j['origins'] as List? ?? [])) '$o'],
-        partOf: j['partOf'] as String?,
+        contains: [
+          for (final c in (j['contains'] as List? ?? []))
+            TeachingPart.fromJson(c as Map<String, dynamic>)
+        ],
         kind: j['kind'] as String? ?? 'teaching',
         sermons: [
           for (final s in (j['sermons'] as List? ?? []))
             TeachingSermon.fromJson(s as Map<String, dynamic>)
         ],
-        oldTestament: [for (final r in (j['oldTestament'] as List? ?? [])) '$r'],
+        oldTestament: [
+          for (final r in (j['oldTestament'] as List? ?? [])) '$r'
+        ],
         apostles: [
           for (final a in (j['apostles'] as List? ?? []))
             TeachingLink.fromJson(a as Map<String, dynamic>)
@@ -174,10 +208,12 @@ class JesusTeaching {
   /// which parts are editorial is not being honest about itself.
   final List<String> origins;
 
-  /// The discourse this teaching sits inside, if any. The Sermon on the
-  /// Mount contains the Beatitudes contains a sermon on a single verse;
-  /// this is what lets the page show that rather than flatten it.
-  final String? partOf;
+  /// What this row is made of. The page is ONE LEVEL DEEP — the owner
+  /// asked for a list a reader can take in at a glance, so the Sermon
+  /// on the Mount is one row and the twenty-one teachings that sit
+  /// inside it are named here, inside it, rather than indented beneath
+  /// it as twenty-one more rows.
+  final List<TeachingPart> contains;
 
   /// `discourse`, `parable` or `teaching`. Decided by the sources — the
   /// owner's own sermon series says which sermons are on parables, Nave
@@ -203,17 +239,11 @@ class JesusTeachingsData {
 
   /// `_meta.claims` — what the page is allowed to say about its links,
   /// carried out of the data rather than retyped in the UI so the two
-  /// cannot drift.
-  final String claims;
+  /// cannot drift. Trilingual: it is a disclaimer, and a disclaimer in
+  /// a language the reader did not ask for is not one.
+  final Map<String, String> claims;
 
-  /// The parts of a discourse, in canonical order.
-  List<JesusTeaching> partsOf(String id) =>
-      [for (final t in teachings) if (t.partOf == id) t];
-
-  /// Everything a reader meets at the top level: the discourses, and
-  /// the teachings that belong to none of them.
-  List<JesusTeaching> get topLevel =>
-      [for (final t in teachings) if (t.partOf == null) t];
+  String claimsFor(String locale) => claims[locale] ?? claims['en'] ?? '';
 }
 
 class JesusTeachingsService {
@@ -237,7 +267,9 @@ class JesusTeachingsService {
         for (final t in (doc['teachings'] as List))
           JesusTeaching.fromJson(t as Map<String, dynamic>)
       ],
-      claims: (doc['_meta'] as Map?)?['claims'] as String? ?? '',
+      claims: Map<String, String>.from(
+          (((doc['_meta'] as Map?)?['claims'] as Map?) ?? const {})
+              .map((k, v) => MapEntry('$k', '$v'))),
     );
   }
 }
