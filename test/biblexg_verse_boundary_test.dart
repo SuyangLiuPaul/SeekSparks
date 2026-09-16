@@ -64,7 +64,8 @@ void main() {
         final verses = await _load(asset);
         for (final v in verses) {
           final number = int.parse(v['verse'] as String);
-          expect((v['id'] as String).substring(5), number.toString().padLeft(3, '0'),
+          expect((v['id'] as String).substring(5),
+              number.toString().padLeft(3, '0'),
               reason: '${_ref(v)} id does not encode its verse number');
           final label = v['verseLabel'] as String;
           // A range label is the publisher's, and is checked separately.
@@ -83,8 +84,8 @@ void main() {
           for (final m in RegExp(r'\d+').allMatches(body)) {
             // NA28 / UBS5 name the critical editions and are real text; they
             // are the only digits this edition prints on purpose.
-            final around = body.substring(
-                (m.start - 3).clamp(0, body.length), m.start);
+            final around =
+                body.substring((m.start - 3).clamp(0, body.length), m.start);
             if (around.endsWith('NA') || around.endsWith('UBS')) continue;
             offenders.add('${_ref(v)} → ${m.group(0)}');
           }
@@ -124,14 +125,12 @@ void main() {
     });
   }
 
-  test('the seven repaired boundaries hold, in the traditional file',
-      () async {
+  test('the seven repaired boundaries hold, in the traditional file', () async {
     final verses = await _load(_traditional);
     final byRef = {for (final v in verses) _ref(v): v['text'] as String};
 
     // T1 — 16:13 exists, and 16:3 is the weather-signs saying it always was.
-    expect(byRef['馬太福音 16:13'],
-        startsWith('耶穌來到該撒利亞腓立比境內'));
+    expect(byRef['馬太福音 16:13'], startsWith('耶穌來到該撒利亞腓立比境內'));
     expect(byRef['馬太福音 16:3'], startsWith('早晨你們說'));
 
     // T2 — one row carrying both the prose and the Amos quotation.
@@ -173,17 +172,28 @@ void main() {
 
       // B7 — 「父親啊，赦免他們」 is at 23:34, where a reader looks for it,
       // rather than trailing 23:33 behind a `34a` marker.
-      expect(byRef['$luke 23:34'],
-          anyOf(contains('赦免他們'), contains('赦免他们')),
+      expect(byRef['$luke 23:34'], anyOf(contains('赦免他們'), contains('赦免他们')),
           reason: asset);
-      expect(byRef['$luke 23:33'],
-          anyOf(endsWith('左手一個。'), endsWith('左手一个。')),
+      expect(byRef['$luke 23:33'], anyOf(endsWith('左手一個。'), endsWith('左手一个。')),
           reason: asset);
     }
   });
 
-  test('馬可福音 6:8-11 remain the only gap needing a script conversion',
-      () async {
+  test('the two scripts now carry exactly the same references', () async {
+    // They did not. 馬可福音 6:8-11 were in the Traditional file and not
+    // the Simplified one, and 6:7 stopped mid-clause in both places the
+    // Simplified file could stop — because the publisher's own
+    // Simplified data had the gap and `tools/convert_ljk_v2.js` carried
+    // it across. This test used to measure that gap and say why it was
+    // left alone: filling it from the sibling file would have needed a
+    // 繁→简 conversion, and the two 梁家鏗譯本 scripts were independently
+    // revised, so the sibling is a witness to structure only.
+    //
+    // 2026-09-16 the publisher filled it, and
+    // `scripts/repair_biblexg_mark6.py` took the verses from the
+    // official build. Nothing was invented, and there is nothing left
+    // to measure.
+
     final simplified = await _load(_simplified);
     final traditional = await _load(_traditional);
 
@@ -197,20 +207,16 @@ void main() {
       return out;
     }
 
-    final pairing = Map.fromIterables(
-        booksOf(simplified), booksOf(traditional));
+    final pairing =
+        Map.fromIterables(booksOf(simplified), booksOf(traditional));
     final inSimplified = simplified
         .map((v) => '${pairing[v['book']]} ${v['chapter']}:${v['verse']}')
         .toSet();
     final inTraditional = traditional.map(_ref).toSet();
 
     expect(inSimplified.difference(inTraditional), isEmpty,
-        reason: 'the traditional file is now complete against the simplified');
-    expect(
-        inTraditional.difference(inSimplified).toList()..sort(),
-        ['馬可福音 6:10', '馬可福音 6:11', '馬可福音 6:8', '馬可福音 6:9'],
-        reason: 'the simplified file also stops mid-clause at 6:7 — restoring '
-            'these needs a 繁→简 conversion, so they stay measured, not '
-            'invented');
+        reason: 'the traditional file is short against the simplified');
+    expect(inTraditional.difference(inSimplified), isEmpty,
+        reason: 'the simplified file is short against the traditional');
   });
 }

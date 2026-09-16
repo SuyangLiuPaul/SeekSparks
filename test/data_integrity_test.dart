@@ -118,8 +118,7 @@ const _chineseVersions = <String>[
 // short forms listed, the revision made 詩篇 63:6 a marker in one
 // edition and ordinary text in another, and the cross-edition check
 // below failed on a disagreement that does not exist.
-final _mergeMarker = RegExp(
-    r'^(?:<note:\s*)?[〔\[（(]?\s*'
+final _mergeMarker = RegExp(r'^(?:<note:\s*)?[〔\[（(]?\s*'
     r'(?:见上节|見上節|见下节|見下節|合和译本并入上一节|合和譯本併入上一節)'
     r'\s*[〕\]）)]?>?$');
 
@@ -177,8 +176,8 @@ void main() {
     // looked odd; the chapter simply read one verse out of step with
     // every commentary and cross-reference pointing into it.
     final chapterLength = <String, int>{};
-    for (final v in jsonDecode(File('assets/kjv.json').readAsStringSync())
-        as List) {
+    for (final v
+        in jsonDecode(File('assets/kjv.json').readAsStringSync()) as List) {
       final m = v as Map;
       final key = '${m['book']} ${m['chapter']}';
       final n = int.parse(m['verse'] as String);
@@ -253,7 +252,8 @@ void main() {
           ? standardBookOrder
           : standardBookOrder.sublist(standardBookOrder.indexOf('Matthew'));
       final missing = expected.where((b) => !present.contains(b));
-      if (missing.isNotEmpty) failures.add('$code: missing ${missing.join(', ')}');
+      if (missing.isNotEmpty)
+        failures.add('$code: missing ${missing.join(', ')}');
     }
     expect(failures, isEmpty, reason: failures.join('\n'));
   });
@@ -295,8 +295,8 @@ void main() {
     // one verse each, so a re-scrape or a revert cannot quietly undo them.
     final byRef = <String, String>{};
     final counts = <String, int>{};
-    for (final v in jsonDecode(File('assets/leb.json').readAsStringSync())
-        as List) {
+    for (final v
+        in jsonDecode(File('assets/leb.json').readAsStringSync()) as List) {
       final m = v as Map;
       counts[m['book'] as String] = (counts[m['book'] as String] ?? 0) + 1;
       byRef['${m['book']} ${m['chapter']}:${m['verse']}'] = m['text'] as String;
@@ -377,7 +377,8 @@ void main() {
       for (final code in ['cuvs-yhwh', 'cuvs-yhwh-tr', 'cuvs-plus'])
         code: {for (final v in _edition(code)) _ref(v): v['text'] as String}
     };
-    final sites = byCode['cuvs-yhwh']!.entries
+    final sites = byCode['cuvs-yhwh']!
+        .entries
         .where((e) => _mergeMarker.hasMatch(e.value.trim()))
         .map((e) => e.key)
         .toList();
@@ -403,18 +404,17 @@ void main() {
     // never missing text at all — the traditional file had 马太福音 16:13
     // filed under 16:3, 以弗所书 3:16's number swallowed into a footnote,
     // and 彼得前书 3:11-12 merged into 3:10 — so `tools/repair_biblexg.py`
-    // put them back and this side is now empty. 马可福音 6:8-11 really are
-    // absent from the simplified file and stay frozen below: restoring them
-    // needs a 繁→简 conversion this repo will not invent. Verse boundaries
-    // are held by test/biblexg_verse_boundary_test.dart; see
+    // put them back and this side is now empty. 马可福音 6:8-11 were
+    // genuinely absent from the simplified file, and were frozen here
+    // with the reason they stayed: filling them from the sibling file
+    // would have needed a 繁→简 conversion this repo will not invent.
+    // 2026-09-16 the publisher filled the gap in the official build and
+    // `scripts/repair_biblexg_mark6.py` took the verses from there, so
+    // both sides are empty now and neither word was invented. Verse
+    // boundaries are held by test/biblexg_verse_boundary_test.dart; see
     // docs/DATA-INTEGRITY.md.
     const knownSimplifiedOnly = <String>{};
-    const knownTraditionalOnly = {
-      'Mark 6:8',
-      'Mark 6:9',
-      'Mark 6:10',
-      'Mark 6:11',
-    };
+    const knownTraditionalOnly = <String>{};
     final simplified = {for (final v in _edition('biblexg-v3')) _ref(v)};
     final traditional = {for (final v in _edition('biblexg-v3-tr')) _ref(v)};
     expect(simplified.difference(traditional), knownSimplifiedOnly);
@@ -425,8 +425,9 @@ void main() {
     // The Analysis pane prints one number ("G2962 · 64 处") and the
     // per-book breakdown prints another set; if they disagree the
     // reader is told two different things about the same word.
-    final conc = jsonDecode(
-        File('assets/strongs/concordance.json').readAsStringSync()) as Map;
+    final conc =
+        jsonDecode(File('assets/strongs/concordance.json').readAsStringSync())
+            as Map;
     expect(conc.length, greaterThan(14000));
     final bad = <String>[];
     conc.forEach((key, value) {
@@ -451,8 +452,9 @@ void main() {
     late Map<dynamic, dynamic> conc;
 
     setUpAll(() {
-      conc = jsonDecode(
-          File('assets/strongs/concordance.json').readAsStringSync()) as Map;
+      conc =
+          jsonDecode(File('assets/strongs/concordance.json').readAsStringSync())
+              as Map;
     });
 
     String bookOf(String ref) => ref.substring(0, ref.lastIndexOf(' '));
@@ -615,11 +617,32 @@ void main() {
       // reading SBLGNT does not carry has no parse to borrow. If that
       // count falls, lower the bound; if it rises, something regressed.
       const nt = {
-        'matthew', 'mark', 'luke', 'john', 'acts', 'romans',
-        '1_corinthians', '2_corinthians', 'galatians', 'ephesians',
-        'philippians', 'colossians', '1_thessalonians', '2_thessalonians',
-        '1_timothy', '2_timothy', 'titus', 'philemon', 'hebrews', 'james',
-        '1_peter', '2_peter', '1_john', '2_john', '3_john', 'jude',
+        'matthew',
+        'mark',
+        'luke',
+        'john',
+        'acts',
+        'romans',
+        '1_corinthians',
+        '2_corinthians',
+        'galatians',
+        'ephesians',
+        'philippians',
+        'colossians',
+        '1_thessalonians',
+        '2_thessalonians',
+        '1_timothy',
+        '2_timothy',
+        'titus',
+        'philemon',
+        'hebrews',
+        'james',
+        '1_peter',
+        '2_peter',
+        '1_john',
+        '2_john',
+        '3_john',
+        'jude',
         'revelation',
       };
       final hebrew = <String>[];
@@ -674,7 +697,9 @@ void main() {
       expect(blank.toSet(), {
         'john 7:53',
         for (var v = 1; v <= 11; v++) 'john 8:$v',
-        'romans 16:25', 'romans 16:26', 'romans 16:27',
+        'romans 16:25',
+        'romans 16:26',
+        'romans 16:27',
       });
     });
 
@@ -731,7 +756,9 @@ void main() {
         for (final v in _edition(code)) {
           records++;
           final kind = verseAbsenceOf(v['text'] as String? ?? '');
-          if (kind != null) census['$code/${kind.name}'] = (census['$code/${kind.name}'] ?? 0) + 1;
+          if (kind != null)
+            census['$code/${kind.name}'] =
+                (census['$code/${kind.name}'] ?? 0) + 1;
         }
       }
       // +7 over v1.6.93: tools/repair_biblexg.py split seven merged verse
@@ -749,7 +776,9 @@ void main() {
       // markers, no OMIT, no blanks — which is the interesting half:
       // these two English editions store the sixteen absent references
       // by leaving them out, not by writing a placeholder into them.
-      expect(records, 357704);
+      // +4 on 2026-09-16: 马可福音 6:8-11 restored to 梁简 from the
+      // official build, closing the last gap between the two scripts.
+      expect(records, 357708);
       expect(census, {
         // 70, not 71, since the publisher's 2026-08-29 revision: 約伯記
         // 10:21 was a 见上节 placeholder in every edition we had, and that
@@ -888,7 +917,9 @@ void main() {
         'leb': 21,
         'nasb': 13,
         'lxxwh': 302,
-        'biblexg-v3': 38,
+        // 34, not 38, since 马可福音 6:8-11 were restored — the two
+        // scripts are level again.
+        'biblexg-v3': 34,
         'biblexg-v3-tr': 34,
         // 2026-09-08: the same sixteen as `bsb`, and the same sixteen in
         // each. Both sources store the Received-Text verses empty and
@@ -901,8 +932,9 @@ void main() {
         'asv-yhwh': 16,
       });
       // Unused otherwise, but it is the count the docs quote. 424 + 32
-      // on 2026-09-08, the two new editions' sixteen apiece.
-      expect(absentByEdition.values.reduce((a, b) => a + b), 456);
+      // on 2026-09-08, the two new editions' sixteen apiece; -4 on
+      // 2026-09-16, 马可福音 6:8-11 restored to 梁简.
+      expect(absentByEdition.values.reduce((a, b) => a + b), 452);
     });
 
     test('the two transposed Septuagint passages stay repaired', () {
@@ -1012,8 +1044,8 @@ void main() {
           final missing = rest
               .where((n) => !versification.isAbsentFromOriginal(book, c, n))
               .toSet();
-          final shared = sharedOriginalHeads(missing, have,
-              (n) => versification.originalKeys(book, c, n));
+          final shared = sharedOriginalHeads(
+              missing, have, (n) => versification.originalKeys(book, c, n));
           for (final n in absent) {
             final where = !rest.contains(n)
                 ? 'range'
@@ -1070,11 +1102,14 @@ void main() {
         // 21 of the 梁家鏗譯本 absences are the publisher's own printed
         // ranges — the largest single class in the corpus and the only
         // one where the edition itself supplies the evidence.
+        // 1 unexplained, not 5: the four that were 马可福音 6:8-11 are
+        // no longer absent. What is left is 腓立比書 1:2, which both
+        // scripts lack.
         'biblexg-v3': {
           'range': 21,
           'notInOriginal': 11,
           'sharedOriginal': 1,
-          'unexplained': 5,
+          'unexplained': 1,
         },
         'biblexg-v3-tr': {
           'range': 21,
@@ -1091,13 +1126,11 @@ void main() {
         residue.addAll(classify(code)['unexplained']!);
       }
       expect(residue.toList()..sort(), [
-        // Simplified only, needing a 繁→简 conversion this repository
-        // will not invent. Already frozen in
-        // test/biblexg_verse_boundary_test.dart.
-        'Mark 6:10',
-        'Mark 6:11',
-        'Mark 6:8',
-        'Mark 6:9',
+        // 马可福音 6:8-11 stood here, simplified-only, with the note
+        // that restoring them needed a 繁→简 conversion this repository
+        // will not invent. 2026-09-16 the publisher filled the gap and
+        // they came from the official build instead.
+        //
         // Both 梁家鏗譯本 files: 1:1 ends on a dangling 「：」 and the
         // grace-and-peace greeting is nowhere. A real loss, and the only
         // one this classification found that was not already known.
@@ -1175,8 +1208,7 @@ void main() {
   // line — so nothing looked broken and nobody noticed. The relative
   // sizes are the only witness, so the sizes are what gets frozen.
   // `tools/repair_sermon_corpus.py` is the wide version of these.
-  group('the sermon corpus says as much in Chinese as it does in English',
-      () {
+  group('the sermon corpus says as much in Chinese as it does in English', () {
     final sermons = (json.decode(
       File('assets/sermons/index.json').readAsStringSync(),
     ) as List)
@@ -1185,8 +1217,7 @@ void main() {
     int han(String s) =>
         s.runes.where((r) => r >= 0x4E00 && r <= 0x9FFF).length;
 
-    test('no Traditional body is shorter than the Simplified it came from',
-        () {
+    test('no Traditional body is shorter than the Simplified it came from', () {
       // zh-TW is a script conversion of zh-CN, so a faithful pair is 1:1
       // in Han characters. Three scored 0.35 / 0.43 / 0.74 because the
       // proofreading step rewrote the sermon short. Every other pair
@@ -1252,17 +1283,18 @@ void main() {
     late Map<String, int> originalWords;
 
     setUpAll(() {
-      intros = (jsonDecode(File('assets/book_introductions.json')
-          .readAsStringSync()) as Map)['intros'] as Map<String, dynamic>;
+      intros =
+          (jsonDecode(File('assets/book_introductions.json').readAsStringSync())
+              as Map)['intros'] as Map<String, dynamic>;
       originalWords = {
         for (final f in Directory('assets/originals')
             .listSync()
             .whereType<File>()
             .where((f) => f.path.endsWith('.json')))
-          f.uri.pathSegments.last.replaceAll('.json', ''): (jsonDecode(
-                  f.readAsStringSync()) as Map)
-              .values
-              .fold<int>(0, (n, v) => n + (v as List).length),
+          f.uri.pathSegments.last.replaceAll('.json', ''):
+              (jsonDecode(f.readAsStringSync()) as Map)
+                  .values
+                  .fold<int>(0, (n, v) => n + (v as List).length),
       };
     });
 
@@ -1276,8 +1308,7 @@ void main() {
       // acrostic's shape without being one.
       final byChapter = <int, Map<int, String>>{};
       final lam = jsonDecode(
-              File('assets/originals/lamentations.json').readAsStringSync())
-          as Map;
+          File('assets/originals/lamentations.json').readAsStringSync()) as Map;
       lam.forEach((ref, words) {
         final parts = (ref as String).split(':');
         final first = (words as List).isEmpty
@@ -1286,9 +1317,8 @@ void main() {
                     .firstMatch((words.first as Map)['w'] as String)
                     ?.group(0) ??
                 '';
-        byChapter
-            .putIfAbsent(int.parse(parts[0]), () => {})[int.parse(parts[1])] =
-            first;
+        byChapter.putIfAbsent(
+            int.parse(parts[0]), () => {})[int.parse(parts[1])] = first;
       });
       final acrostics = byChapter.entries
           .where((e) => e.value.values.toSet().length == 22)
@@ -1308,8 +1338,7 @@ void main() {
       // family is 16, which a reader can confirm in the concordance.
       const joy = {'G5479', 'G5463', 'G4796'};
       final phil = jsonDecode(
-              File('assets/originals/philippians.json').readAsStringSync())
-          as Map;
+          File('assets/originals/philippians.json').readAsStringSync()) as Map;
       var n = 0;
       for (final words in phil.values) {
         for (final w in words as List) {
@@ -1333,8 +1362,7 @@ void main() {
       expect(ranked[1].key, '2_john');
       expect(ranked[2].key, 'obadiah');
 
-      expect(field('3 John', 'summary', 'en'),
-          contains('original languages'));
+      expect(field('3 John', 'summary', 'en'), contains('original languages'));
       expect(field('3 John', 'summary', 'zh-Hans'), contains('按原文字数计'));
       expect(field('Obadiah', 'subtitle', 'en'), contains('Hebrew Bible'));
       expect(field('Obadiah', 'subtitle', 'zh-Hans'), contains('希伯来圣经'));
@@ -1358,8 +1386,7 @@ void main() {
       // Jeremiah is longer on every measure the app can show: 1,364
       // verses to 1,292, and 21,580 Hebrew words to 16,672. Isaiah leads
       // only on chapter count, which is what the card now says.
-      expect(originalWords['jeremiah']!,
-          greaterThan(originalWords['isaiah']!));
+      expect(originalWords['jeremiah']!, greaterThan(originalWords['isaiah']!));
       for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
         final s = field('Isaiah', 'summary', locale);
         expect(s, isNot(contains('longest')));
@@ -1412,8 +1439,8 @@ void main() {
 /// English book -> chapter -> last verse, from the KJV.
 Map<String, Map<int, int>> _canon() {
   final canon = <String, Map<int, int>>{};
-  for (final v in jsonDecode(File('assets/kjv.json').readAsStringSync())
-      as List) {
+  for (final v
+      in jsonDecode(File('assets/kjv.json').readAsStringSync()) as List) {
     final m = v as Map;
     final book = m['book'] as String;
     final c = int.parse(m['chapter'].toString());
@@ -1425,8 +1452,8 @@ Map<String, Map<int, int>> _canon() {
 }
 
 /// Why a reference fails, or null when every verse it names exists.
-String? _resolve(Map<String, Map<int, int>> canon, String book, int c1,
-    int? v1, int c2, int? v2) {
+String? _resolve(Map<String, Map<int, int>> canon, String book, int c1, int? v1,
+    int c2, int? v2) {
   final chapters = canon[book];
   if (chapters == null) return 'no such book: $book';
   if (!chapters.containsKey(c1)) return '$book has no chapter $c1';
@@ -1512,8 +1539,12 @@ void _checkReferenceCorpus() {
           continue;
         }
         carry = ref;
-        final why = _resolve(canon, ref.englishBook, ref.chapter,
-            ref.verseStart, ref.endChapter ?? ref.chapter,
+        final why = _resolve(
+            canon,
+            ref.englishBook,
+            ref.chapter,
+            ref.verseStart,
+            ref.endChapter ?? ref.chapter,
             ref.endVerse ?? ref.verseEnd);
         if (why != null) failures.add('$asset  $where  "$raw" — $why');
       }
@@ -1570,8 +1601,7 @@ void _checkReferenceCorpus() {
   for (final k in load('hebrew_kings.json')['kings'] as List) {
     final m = k as Map<String, dynamic>;
     for (final field in ['kingsRef', 'chroniclesRef', 'accessionRef']) {
-      check('hebrew_kings.json', '${m['id']} / $field',
-          m[field] as String?);
+      check('hebrew_kings.json', '${m['id']} / $field', m[field] as String?);
     }
   }
 

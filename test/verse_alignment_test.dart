@@ -76,8 +76,7 @@ void main() {
       expect(mark['45'], clauses['cuvs-plus']!['45']);
     });
 
-    test('the omitted references carry no scripture in any edition',
-        () async {
+    test('the omitted references carry no scripture in any edition', () async {
       // The point of the whole repair: whatever the three editions put in
       // 9:44 and 9:46, none of it may read as the verse. Two print their
       // own editorial note; 和简+ has nothing to print and says so.
@@ -99,22 +98,21 @@ void main() {
       // The defect was in two assets, not one. A repair that fixed only
       // the text would leave Word Study, search and the concordance
       // reporting 和简+ hits at 9:44.
-      final raw = await rootBundle
-          .loadString('assets/tagged/cuvs-plus/mark.json');
+      final raw =
+          await rootBundle.loadString('assets/tagged/cuvs-plus/mark.json');
       final tagged = (jsonDecode(raw) as Map<String, dynamic>);
       expect(tagged.containsKey('9:44'), isFalse);
       expect(tagged.containsKey('9:46'), isFalse);
 
-      String spell(String ref) => ((tagged[ref] as List)
-              .cast<Map<String, dynamic>>())
-          .map((r) => r['w'] as String)
-          .join();
+      String spell(String ref) =>
+          ((tagged[ref] as List).cast<Map<String, dynamic>>())
+              .map((r) => r['w'] as String)
+              .join();
       expect(spell('9:43'), clauses['cuvs-plus']!['43']);
       expect(spell('9:45'), clauses['cuvs-plus']!['45']);
     });
 
-    test('every 和简+ reference with words has runs, and no others',
-        () async {
+    test('every 和简+ reference with words has runs, and no others', () async {
       // The general invariant the repair had to preserve. Tagging
       // describes words; a reference with no words must have no runs, and
       // a reference with runs must have words — otherwise the two layers
@@ -125,10 +123,58 @@ void main() {
         if ((v['text'] as String).trim().isEmpty) continue;
         worded.add('${v['chapter']}:${v['verse']}');
       }
-      final raw = await rootBundle
-          .loadString('assets/tagged/cuvs-plus/mark.json');
+      final raw =
+          await rootBundle.loadString('assets/tagged/cuvs-plus/mark.json');
       final tagged = (jsonDecode(raw) as Map<String, dynamic>).keys.toSet();
       expect(tagged, worded);
+    });
+  });
+
+  group('马可福音 6:8-11 in the Simplified 梁家鏗譯本', () {
+    // 2026-09-16, reported by the owner: 「简体梁本 MK6 v8-11 减少的」.
+    // The chapter went 7, 12 — and verse 7 stopped mid-sentence at 「并授
+    // 予他们权能」 — because the publisher's own Simplified data had the
+    // gap and `tools/convert_ljk_v2.js` carried it across faithfully.
+    // Restored from the official build by
+    // `scripts/repair_biblexg_mark6.py`; the text is the translator's,
+    // not a conversion of the Traditional file, for the reason the group
+    // below states about 腓立比書 1:2.
+    test('the chapter is whole, and so is verse 7', () async {
+      final chapter = await _chapter('biblexg-v3', '马可福音', '6');
+      for (final verse in ['8', '9', '10', '11']) {
+        expect(chapter.containsKey(verse), isTrue,
+            reason: '马可福音 6:$verse is missing from 梁简');
+        expect(chapter[verse], isNotEmpty);
+      }
+      expect(chapter['7'], endsWith('制服不洁的灵。'),
+          reason: 'verse 7 still stops where the publisher\'s file used '
+              'to: ${chapter['7']}');
+      expect(chapter.length, 56);
+    });
+
+    test('the two scripts carry the same chapter', () async {
+      // Not the same WORDS -- the two editions were independently
+      // revised -- but a reader who switches script mid-chapter may not
+      // find a verse gone.
+      final simple = await _chapter('biblexg-v3', '马可福音', '6');
+      final trad = await _chapter('biblexg-v3-tr', '馬可福音', '6');
+      expect(simple.keys.toSet(), trad.keys.toSet());
+    });
+
+    test('no verse of it carries a space between two Chinese characters',
+        () async {
+      // The official text marks editorially supplied wording
+      // `<i> 制服 </i>`, and dropping the tags leaves the padding. This
+      // edition has none of those anywhere, so a repaired verse that
+      // kept them would be the only one reading differently.
+      final chapter = await _chapter('biblexg-v3', '马可福音', '6');
+      final gap = RegExp(r'[\u4e00-\u9fff][ \t]+[\u4e00-\u9fff]');
+      for (final entry in chapter.entries) {
+        expect(
+            gap.hasMatch(entry.value.replaceAll(RegExp(r'<note:[^>]*>'), '')),
+            isFalse,
+            reason: '6:${entry.key} — ${entry.value}');
+      }
     });
   });
 
@@ -165,8 +211,7 @@ void main() {
       });
     }
 
-    test('the five letters with the same typography are untouched',
-        () async {
+    test('the five letters with the same typography are untouched', () async {
       // 羅馬書, 哥林多前書, 歌羅西書, 提摩太前書 and 提摩太後書 all open
       // with the senders block ending in ——, and in every one of them the
       // block numbered 2 really is verse 2. The em-dash was never the

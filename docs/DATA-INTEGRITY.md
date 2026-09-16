@@ -60,7 +60,7 @@ believe it is fine" and "we looked".
 | 10 | Character repertoire of the shipped text | 45,877,885 chars | 129 → **0** | **fixed**, now a test |
 | 11 | Invisible format/control characters | 45,877,885 chars | 3 → **0** | **fixed**, now a test |
 | 12 | 和合本 merge markers present in all three editions | 213 slots | 71 → **0** | **fixed**, now a test |
-| 13 | The two 梁家鏗譯本 editions cover the same references | 15,843 refs | 8 → **4** | **fixed but for 馬可福音 6:8-11**, now a test |
+| 13 | The two 梁家鏗譯本 editions cover the same references | 15,843 refs | 8 → **0** | **fixed**, 馬可福音 6:8-11 restored 2026-09-16, now a test |
 | 14 | References carrying a typographic instruction instead of scripture | 295,527 records | 233 shown as scripture → **0** | **fixed**, now a test |
 | 15 | Every reference appears exactly once, and no verse is empty | 15,850 records | 3 duplicated + 1 empty → **0** | **fixed**, now a test |
 | 16 | Verse numbers left inline, printing as scripture | 15,850 records | 6 in 5 verses → **0** | **fixed**, now a test |
@@ -835,11 +835,14 @@ flatten the publisher's 34a/34b distinction, which the schema has no way
 to express. Reversible from `tools/repair_biblexg.py` if a human decides
 otherwise.
 
-**Not repaired**, and the original reasoning still holds for it:
-馬可福音 6:8-11 are absent from the simplified file, whose 6:7 also stops
-mid-clause at 「并授予他们权能」. Only the traditional file has them, so
-restoring them needs a 繁→简 conversion. Frozen by name in
-`test/biblexg_verse_boundary_test.dart`.
+**Repaired 2026-09-16, from the publisher.** 馬可福音 6:8-11 were absent
+from the simplified file, whose 6:7 also stopped mid-clause at 「并授予他
+们权能」. The original reasoning — that only the traditional file had
+them, so restoring them needed a 繁→简 conversion this repository will
+not invent — held until the publisher filled the gap in the official
+build. `scripts/repair_biblexg_mark6.py` took the four verses and the
+completed 6:7 from there, in the Simplified translator's own words.
+Frozen by name in `test/biblexg_verse_boundary_test.dart`.
 
 **Also measured, not repaired.** Twenty-one records in each file carry a
 range label — `1-4`, `18-19`, `74-75` — because the publisher printed
@@ -2724,22 +2727,23 @@ row already ended in the comma that separates the clauses.
   exists to avoid.
 - **`3 John 1:15` and `Revelation 12:18`.** Legitimate NA28 splits,
   confirmed by content, carried by several editions.
-- **馬可福音 6:8-11.** Simplified file only; restoring them needs a
-  繁→简 conversion this repository will not invent. Already frozen in
-  `test/biblexg_verse_boundary_test.dart` and unchanged by this check.
+- **馬可福音 6:8-11.** Simplified file only; restoring them needed a
+  繁→简 conversion this repository would not invent, so this check left
+  them alone. **Repaired 2026-09-16** once the publisher filled the gap
+  in the official build — see 41f.
 - **A merge table for the four displaced references.** Considered and
   rejected: the third derivation covers all four from data already
   shipped, and a table would have been a second place for the same fact
   to rot.
 
-### The residue: 9
+### The residue: 9, now 5
 
 What no derivation reaches, and the number that must not grow.
 
 | reference | editions | what it is |
 |---|---|---|
 | Philippians 1:2 | both 梁家鏗譯本 | a real loss — 1:1 ends on a dangling 「：」 and the grace-and-peace greeting is nowhere |
-| 馬可福音 6:8-11 | simplified only | the known 繁→简 gap |
+| ~~馬可福音 6:8-11~~ | ~~simplified only~~ | the known 繁→简 gap — **restored 2026-09-16 from the publisher, see 41f** |
 | Romans 16:25-27 | `leb` | in the edition, inside the note at 16:24 |
 
 Philippians 1:2 is the only thing this check found that was not already
@@ -5153,7 +5157,7 @@ compact single-line JSON with no trailing newline, so it is rewritten
 with `separators=(",", ":")`: `git diff --stat` reads **1 insertion, 1
 deletion** for 30 real edits, rather than burying them in a reformat.
 
-### 41f — the Simplified edition is missing 馬可福音 6:8-11
+### 41f — the Simplified edition was missing 馬可福音 6:8-11 (repaired 2026-09-16)
 
 **This is a worse defect than the 30 characters, and it was found by
 accident** — in the parenthesis "(Simplified, 7,921 records) and
@@ -5185,16 +5189,44 @@ Mk 6:8-11; Traditional-only gaps = none.** (路加福音 1's apparent gaps
 at 2-4 and 75 are merged verses, correctly labelled `1-4` and `74-75`
 in *both* editions, and are not defects.)
 
-**Not repaired, deliberately.** The text exists in the Traditional
-twin, so a mechanical `t2s` looks like a free fix, and it is not one.
-`opencc -c t2s` reproduces the shipped Simplified text exactly in only
-**78.0%** of verses (41a), and the missing passage sits squarely on the
-fault line: Traditional 6:8 reads 「其餘甚麼都不帶」, while this
-Simplified edition writes 什么 for 甚麼 456 times and 着 for 著 1,012
-times. Restoring it by conversion would mean **inventing a
-translator's house-style choices inside a translator's own Bible** —
-the same call the sermon corpus was left alone for. It needs the
+**It was not repaired by conversion, deliberately.** The text exists in
+the Traditional twin, so a mechanical `t2s` looks like a free fix, and it
+is not one. `opencc -c t2s` reproduces the shipped Simplified text
+exactly in only **78.0%** of verses (41a), and the missing passage sits
+squarely on the fault line: Traditional 6:8 reads 「其餘甚麼都不帶」,
+while this Simplified edition writes 什么 for 甚麼 456 times and 着 for
+著 1,012 times. Restoring it by conversion would have meant **inventing
+a translator's house-style choices inside a translator's own Bible** —
+the same call the sermon corpus was left alone for. It needed the
 upstream source or the owner.
+
+**Repaired 2026-09-16, from the upstream source.** The owner reported
+the gap again 「简体梁本 MK6 v8-11 减少的」, and the publisher had by then
+filled it: the official 梁家鏗譯本 build in yahwehdehua — the one
+`tools/adopt_official_ljk.py` already treats as authoritative 「因为那边
+才是正式的」 — carries all four verses and the completed 6:7.
+`scripts/repair_biblexg_mark6.py` takes them from there, through that
+script's own `to_house_style`, and refuses to write anything unless the
+official build and the shipped asset already agree on **every other
+verse of Mark 6** — 51 of them, and they do. Adding rows is why it is a
+named repair rather than an adoption: `adopt_official_ljk.py` states
+that versification is ours and that it adds nothing.
+
+Two details worth keeping. The official text marks editorially supplied
+wording `<i> 制服 </i>`, and dropping the tags leaves the padding spaces
+behind; this edition has **zero** spaces between two Chinese characters
+across 7,921 verses, so the repair removes them — but not newlines,
+which 70 verses carry to mark the line groups of an Old Testament
+quotation. And `isParagraphStart`, `paragraphType` and `verseLabel` for
+the four new rows come from the **Traditional file**, which is exactly
+what the 腓立比書 1:2 rule allows the sibling to be: a witness to
+structure, never to words.
+
+A separate check to keep in mind before a future re-fetch: the
+publisher's gh-pages web-app data is NOT the same snapshot. It carries
+the four verses but **drops the translator footnotes** this edition
+ships on 6:14, 6:17, 6:35, 6:37, 6:41, 6:48 and 6:53. The official
+build has both.
 
 ## Check 42 — Nave's Topical Bible, and the five books its tagger cannot read
 

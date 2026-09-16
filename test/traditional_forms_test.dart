@@ -147,24 +147,29 @@ void main() {
       expect(all, contains('淨'));
     });
 
-    test('the Simplified twin is missing exactly 馬可福音 6:8-11', () {
-      // Check 41f. Four verses are absent from biblexg-v2.json and its
-      // 6:7 stops mid-clause. Not repaired: the editions agree only
-      // 78% under t2s, so converting the Traditional text back would
-      // invent house-style spellings in a translator's own Bible.
+    test('the Simplified twin is no longer missing anything', () {
+      // Check 41f. 馬可福音 6:8-11 were absent from the Simplified file
+      // and its 6:7 stopped mid-clause, and this test pinned that gap
+      // rather than asserting it away — saying, in as many words, that
+      // repairing it should fail here and send the reader to 41f.
       //
-      // Pinned rather than asserted-away for two reasons: a NEW gap in
-      // either edition fails this test, and repairing the known one
-      // fails it too — at which point update check 41f rather than the
-      // expectation.
+      // It was not repaired by converting the Traditional text: the two
+      // editions agree only 78% under t2s, so that would have invented
+      // house-style spellings in a translator's own Bible. 2026-09-16
+      // the publisher filled the gap in the official build and
+      // `scripts/repair_biblexg_mark6.py` took the four verses from
+      // there, in the Simplified translator's own words.
+      //
+      // A NEW gap in either direction still fails here.
       final s = _load('biblexg-v3').map((v) => v['id'] as String).toSet();
       final t = xg.map((v) => v['id'] as String).toSet();
-      expect(t.difference(s).toList()..sort(),
-          ['41006008', '41006009', '41006010', '41006011']);
+      expect(t.difference(s), isEmpty);
       expect(s.difference(t), isEmpty);
-      // The recoverable text has to stay recoverable.
       expect(_verse(xg, '馬可福音', 6, 8), contains('上路只帶一根手杖'));
       expect(_verse(xg, '馬可福音', 6, 7), contains('制服不潔的靈'));
+      final simplified = _load('biblexg-v3');
+      expect(_verse(simplified, '马可福音', 6, 8), contains('上路只带一根手杖'));
+      expect(_verse(simplified, '马可福音', 6, 7), contains('制服不洁的灵'));
     });
 
     /// THE SEVEN READINGS THAT ARE THE PUBLISHER'S, NOT OUR DEFECTS.
