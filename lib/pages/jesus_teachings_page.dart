@@ -291,7 +291,7 @@ class _JesusTeachingsPageState extends State<JesusTeachingsPage> {
                           height: 1.35,
                         ),
                       ),
-                      if (teaching.note case final note?) ...[
+                      if (teaching.noteFor(locale) case final note?) ...[
                         const SizedBox(height: 2),
                         // Nave's own sentence, kept under the app's
                         // heading because it carries what a heading

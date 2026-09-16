@@ -162,7 +162,9 @@ class JesusTeaching {
         id: j['id'] as String,
         title: Map<String, String>.from(
             (j['title'] as Map).map((k, v) => MapEntry('$k', '$v'))),
-        note: j['note'] as String?,
+        note: (j['note'] as Map?)
+            ?.map((k, v) => MapEntry('$k', '$v'))
+            .cast<String, String>(),
         refs: [
           for (final r in (j['refs'] as List))
             TeachingRef.fromJson(r as Map<String, dynamic>)
@@ -194,9 +196,16 @@ class JesusTeaching {
   final String id;
   final Map<String, String> title;
 
-  /// Nave's own sentence, where the app's section heading replaced it as
-  /// the title. Null when the title is already the source's own.
-  final String? note;
+  /// Nave's own sentence, where the app's section heading replaced it
+  /// as the title, or the name of an entry this one absorbed. Null when
+  /// the title is already the source's own.
+  ///
+  /// Keyed by locale, and NOT filled in for every locale: an English
+  /// sentence under a Chinese title is not a note, it is noise, so the
+  /// page shows nothing where there is no translation.
+  final Map<String, String>? note;
+
+  String? noteFor(String locale) => note?[locale];
   final List<TeachingRef> refs;
 
   /// The refs as one printable string, built once by the generator so

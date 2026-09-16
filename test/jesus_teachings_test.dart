@@ -147,8 +147,9 @@ void main() {
     // fifty-odd teachings. It is a list now — so the two things that
     // could go wrong are that a row still hides another row, and that
     // what the folding absorbed stopped being visible anywhere.
-    expect(data.teachings.length, lessThan(60),
-        reason: '${data.teachings.length} rows — the parts did not fold');
+    // Not a row count: the parables are each their own row, so the
+    // list is longer than it was and that is the point. What has to
+    // hold is that no row is hiding another one.
 
     final mount = data.teachings.firstWhere((t) => t.id.contains('mount'));
     expect(mount.contains.length, greaterThan(10),
@@ -169,6 +170,56 @@ void main() {
     }
   });
 
+  test('the parables are all there, and each is its own teaching', () {
+    // 2026-09-16 「Scholars generally count between 30 and 40 parables
+    // told by Jesus in the New Testament 这里却并没有看出来 好像只有15个」.
+    //
+    // Fifteen was the folding doing it: Matthew 13 is a discourse, so
+    // the sower, the tares, the mustard seed, the treasure, the pearl
+    // and the net had all disappeared into one row. A parable is not a
+    // PART of a teaching the way a sermon on Matthew 5:4 is part of the
+    // Sermon on the Mount, and the fold now refuses to put one inside
+    // anything else.
+    final parables = data.teachings.where((t) => t.kind == 'parable');
+    expect(parables.length, inInclusiveRange(30, 50),
+        reason: '${parables.length} parables — published lists count '
+            'between thirty and forty');
+
+    // The ones every list has, by the passage rather than by the name.
+    const mustHave = {
+      'Matthew 13:1': 'the sower',
+      'Matthew 13:24': 'the weeds',
+      'Matthew 13:44': 'the hidden treasure',
+      'Matthew 13:45': 'the pearl',
+      'Matthew 13:47': 'the net',
+      'Matthew 18:23': 'the unmerciful servant',
+      'Matthew 20:1': 'the workers in the vineyard',
+      'Matthew 25:1': 'the ten virgins',
+      'Matthew 25:14': 'the talents',
+      'Luke 10:30': 'the good Samaritan',
+      'Luke 15:11': 'the prodigal son',
+      'Luke 16:19': 'the rich man and Lazarus',
+      'Luke 18:9': 'the Pharisee and the tax collector',
+    };
+    final opens = {
+      for (final t in parables)
+        for (final r in t.refs) '${r.book} ${r.chapter}:${r.start}'
+    };
+    for (final entry in mustHave.entries) {
+      expect(opens, contains(entry.key),
+          reason: 'no parable begins at ${entry.key} — ${entry.value} is '
+              'not on the page');
+    }
+
+    // And a parable's reference is the parable's, not whatever a
+    // sermon on it happened to cover. The weeds came out spanning
+    // Matthew 13:24-53, which is most of the chapter.
+    final weeds = parables.firstWhere(
+        (t) => t.refs.any((r) => r.book == 'Matthew' && r.start == 24));
+    final matthew = weeds.refs.firstWhere((r) => r.book == 'Matthew');
+    expect(matthew.end, lessThan(45), reason: 'the weeds claim ${weeds.label}');
+  });
+
   test('no title says it is part one of something', () {
     // 2026-09-16 「讲道分类 为什么分上下了」. The sermon corpus is a
     // preached series, so a teaching that took two Sundays is titled
@@ -187,6 +238,14 @@ void main() {
       // repeats it prints it twice.
       expect(t.titleFor('zh-Hans'), isNot(contains('章')),
           reason: '${t.id} carries its reference in its title');
+      // The note under it is the reader's language or nothing. An
+      // English sentence under a Chinese title is not a note.
+      for (final locale in ['zh-Hans', 'zh-Hant']) {
+        if (t.noteFor(locale) case final note?) {
+          expect(RegExp(r'[\u4e00-\u9fff]').hasMatch(note), isTrue,
+              reason: '${t.id} shows the note "$note" in $locale');
+        }
+      }
     }
   });
 

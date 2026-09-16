@@ -159,6 +159,110 @@ _STRUCTURAL = [
 ]
 
 
+# THE PARABLES, WHICH ARE THE ONE STABLE CATEGORY.
+#
+# 2026-09-16 「Scholars generally count between 30 and 40 parables told
+# by Jesus in the New Testament 这里却并没有看出来 好像只有15个」 — and
+# the owner is right about the count. The other three sources cannot
+# produce it: the sermon corpus preached the parables it preached,
+# Nave's outline names some and not others, and Matthew 13 is a
+# DISCOURSE, so everything inside it arrived as one entry.
+#
+# This list is not an editorial judgement in the way the discourses are.
+# The generator's own preamble says why: there is no canonical
+# enumeration of Jesus' TEACHINGS, but the parables are a settled
+# category, and published lists differ at the edges over whether a
+# one-line simile counts, not over which passages are parables. The
+# passages here are the ones every such list has; the names are the
+# ones a Chinese reader already meets at the head of the passage.
+#
+# Each is a teaching in its own right, which is why the fold refuses to
+# put one inside anything else.
+_PARABLES = [
+    ('lamp-under-bowl', [('Matthew', 5, 14, 16), ('Mark', 4, 21, 22), ('Luke', 8, 16, 17)],
+     {'en': 'The Lamp Under a Bowl', 'zh-Hans': '灯放在灯台上', 'zh-Hant': '燈放在燈臺上'}),
+    ('wise-foolish-builders', [('Matthew', 7, 24, 27), ('Luke', 6, 47, 49)],
+     {'en': 'The Wise and Foolish Builders', 'zh-Hans': '两种根基：磐石与沙土', 'zh-Hant': '兩種根基：磐石與沙土'}),
+    ('new-cloth-old-garment', [('Matthew', 9, 16, 16), ('Mark', 2, 21, 21), ('Luke', 5, 36, 36)],
+     {'en': 'New Cloth on an Old Garment', 'zh-Hans': '新布补旧衣服', 'zh-Hant': '新布補舊衣服'}),
+    ('new-wine-old-wineskins', [('Matthew', 9, 17, 17), ('Mark', 2, 22, 22), ('Luke', 5, 37, 39)],
+     {'en': 'New Wine in Old Wineskins', 'zh-Hans': '新酒装在旧皮袋里', 'zh-Hant': '新酒裝在舊皮袋裡'}),
+    ('two-debtors', [('Luke', 7, 41, 43)],
+     {'en': 'The Two Debtors', 'zh-Hans': '两个欠债的人', 'zh-Hant': '兩個欠債的人'}),
+    ('sower', [('Matthew', 13, 1, 23), ('Mark', 4, 1, 20), ('Luke', 8, 4, 15)],
+     {'en': 'The Sower', 'zh-Hans': '撒种的比喻', 'zh-Hant': '撒種的比喻'}),
+    ('weeds', [('Matthew', 13, 24, 30), ('Matthew', 13, 36, 43)],
+     {'en': 'The Weeds Among the Wheat', 'zh-Hans': '稗子的比喻', 'zh-Hant': '稗子的比喻'}),
+    ('growing-seed', [('Mark', 4, 26, 29)],
+     {'en': 'The Growing Seed', 'zh-Hans': '种子自己长大的比喻', 'zh-Hant': '種子自己長大的比喻'}),
+    ('mustard-seed', [('Matthew', 13, 31, 32), ('Mark', 4, 30, 32), ('Luke', 13, 18, 19)],
+     {'en': 'The Mustard Seed', 'zh-Hans': '芥菜种的比喻', 'zh-Hant': '芥菜種的比喻'}),
+    ('leaven', [('Matthew', 13, 33, 33), ('Luke', 13, 20, 21)],
+     {'en': 'The Leaven', 'zh-Hans': '面酵的比喻', 'zh-Hant': '麵酵的比喻'}),
+    ('hidden-treasure', [('Matthew', 13, 44, 44)],
+     {'en': 'The Hidden Treasure', 'zh-Hans': '藏在地里的宝贝', 'zh-Hant': '藏在地裡的寶貝'}),
+    ('pearl-of-great-price', [('Matthew', 13, 45, 46)],
+     {'en': 'The Pearl of Great Price', 'zh-Hans': '重价的珠子', 'zh-Hant': '重價的珠子'}),
+    ('net', [('Matthew', 13, 47, 50)],
+     {'en': 'The Net', 'zh-Hans': '撒网的比喻', 'zh-Hant': '撒網的比喻'}),
+    ('householder-treasure', [('Matthew', 13, 51, 52)],
+     {'en': 'The Householder’s Treasure', 'zh-Hans': '家主的库房', 'zh-Hant': '家主的庫房'}),
+    ('lost-sheep', [('Matthew', 18, 12, 14), ('Luke', 15, 3, 7)],
+     {'en': 'The Lost Sheep', 'zh-Hans': '迷羊的比喻', 'zh-Hant': '迷羊的比喻'}),
+    ('unmerciful-servant', [('Matthew', 18, 23, 35)],
+     {'en': 'The Unmerciful Servant', 'zh-Hans': '不饶恕人的恶仆', 'zh-Hant': '不饒恕人的惡僕'}),
+    ('good-samaritan', [('Luke', 10, 30, 37)],
+     {'en': 'The Good Samaritan', 'zh-Hans': '好撒玛利亚人的比喻', 'zh-Hant': '好撒瑪利亞人的比喻'}),
+    ('friend-at-midnight', [('Luke', 11, 5, 8)],
+     {'en': 'The Friend at Midnight', 'zh-Hans': '半夜求饼的朋友', 'zh-Hant': '半夜求餅的朋友'}),
+    ('rich-fool', [('Luke', 12, 16, 21)],
+     {'en': 'The Rich Fool', 'zh-Hans': '无知财主的比喻', 'zh-Hant': '無知財主的比喻'}),
+    ('watchful-servants', [('Luke', 12, 35, 40)],
+     {'en': 'The Watchful Servants', 'zh-Hans': '警醒等候主人的仆人', 'zh-Hant': '警醒等候主人的僕人'}),
+    ('faithful-steward', [('Luke', 12, 42, 48), ('Matthew', 24, 45, 51)],
+     {'en': 'The Faithful and Wicked Steward', 'zh-Hans': '忠心与不忠心的管家', 'zh-Hant': '忠心與不忠心的管家'}),
+    ('barren-fig-tree', [('Luke', 13, 6, 9)],
+     {'en': 'The Barren Fig Tree', 'zh-Hans': '不结果子的无花果树', 'zh-Hant': '不結果子的無花果樹'}),
+    ('great-banquet', [('Luke', 14, 15, 24)],
+     {'en': 'The Great Banquet', 'zh-Hans': '大筵席的比喻', 'zh-Hant': '大筵席的比喻'}),
+    ('tower-and-war', [('Luke', 14, 28, 33)],
+     {'en': 'The Tower and the King Going to War', 'zh-Hans': '盖楼与出战的比喻', 'zh-Hant': '蓋樓與出戰的比喻'}),
+    ('lost-coin', [('Luke', 15, 8, 10)],
+     {'en': 'The Lost Coin', 'zh-Hans': '失钱的比喻', 'zh-Hant': '失錢的比喻'}),
+    ('prodigal-son', [('Luke', 15, 11, 32)],
+     {'en': 'The Prodigal Son', 'zh-Hans': '浪子的比喻', 'zh-Hant': '浪子的比喻'}),
+    ('shrewd-manager', [('Luke', 16, 1, 13)],
+     {'en': 'The Shrewd Manager', 'zh-Hans': '不义管家的比喻', 'zh-Hant': '不義管家的比喻'}),
+    ('rich-man-lazarus', [('Luke', 16, 19, 31)],
+     {'en': 'The Rich Man and Lazarus', 'zh-Hans': '财主和拉撒路', 'zh-Hant': '財主和拉撒路'}),
+    ('unworthy-servants', [('Luke', 17, 7, 10)],
+     {'en': 'The Unworthy Servants', 'zh-Hans': '无用的仆人', 'zh-Hant': '無用的僕人'}),
+    ('persistent-widow', [('Luke', 18, 1, 8)],
+     {'en': 'The Persistent Widow', 'zh-Hans': '不义的官与寡妇', 'zh-Hant': '不義的官與寡婦'}),
+    ('pharisee-and-tax-collector', [('Luke', 18, 9, 14)],
+     {'en': 'The Pharisee and the Tax Collector', 'zh-Hans': '法利赛人和税吏', 'zh-Hant': '法利賽人和稅吏'}),
+    ('workers-in-the-vineyard', [('Matthew', 20, 1, 16)],
+     {'en': 'The Workers in the Vineyard', 'zh-Hans': '葡萄园的工人', 'zh-Hant': '葡萄園的工人'}),
+    ('minas', [('Luke', 19, 11, 27)],
+     {'en': 'The Ten Minas', 'zh-Hans': '十锭银子的比喻', 'zh-Hant': '十錠銀子的比喻'}),
+    ('two-sons', [('Matthew', 21, 28, 32)],
+     {'en': 'The Two Sons', 'zh-Hans': '两个儿子的比喻', 'zh-Hant': '兩個兒子的比喻'}),
+    ('wicked-tenants', [('Matthew', 21, 33, 46), ('Mark', 12, 1, 12), ('Luke', 20, 9, 19)],
+     {'en': 'The Wicked Tenants', 'zh-Hans': '凶恶园户的比喻', 'zh-Hant': '兇惡園戶的比喻'}),
+    ('wedding-banquet', [('Matthew', 22, 1, 14)],
+     {'en': 'The Wedding Banquet', 'zh-Hans': '娶亲筵席的比喻', 'zh-Hant': '娶親筵席的比喻'}),
+    ('budding-fig-tree', [('Matthew', 24, 32, 35), ('Mark', 13, 28, 31), ('Luke', 21, 29, 33)],
+     {'en': 'The Budding Fig Tree', 'zh-Hans': '无花果树发嫩长叶', 'zh-Hant': '無花果樹發嫩長葉'}),
+    ('ten-virgins', [('Matthew', 25, 1, 13)],
+     {'en': 'The Ten Virgins', 'zh-Hans': '十个童女的比喻', 'zh-Hant': '十個童女的比喻'}),
+    ('talents', [('Matthew', 25, 14, 30)],
+     {'en': 'The Talents', 'zh-Hans': '按才受托的比喻', 'zh-Hant': '按才受託的比喻'}),
+    ('sheep-and-goats', [('Matthew', 25, 31, 46)],
+     {'en': 'The Sheep and the Goats', 'zh-Hans': '绵羊与山羊', 'zh-Hant': '綿羊與山羊'}),
+    ('vine-and-branches', [('John', 15, 1, 8)],
+     {'en': 'The Vine and the Branches', 'zh-Hans': '葡萄树与枝子', 'zh-Hant': '葡萄樹與枝子'}),
+]
+
 # The eleven Nave lines the app's own section headings do not cover,
 # translated. 2026-09-16 「这些也没用根据语言翻译好」.
 #
@@ -193,6 +297,36 @@ _NAVE_ZH = {
     'Teaches daily in the temple courtyard (in Jerusalem)':
         ('天天在殿院里教训人（在耶路撒冷）', '天天在殿院裡教訓人（在耶路撒冷）'),
     'Teaches people (in Jerusalem)': ('教导众人（在耶路撒冷）', '教導眾人（在耶路撒冷）'),
+    'Teaches in Galilee': ('在加利利传道', '在加利利傳道'),
+    # The eight that survive only as a NOTE under somebody else's
+    # heading. Translated for the same reason as the titles above: a
+    # note in a language the reader did not ask for is not a note.
+    'Teaches in various towns in Galilee':
+        ('在加利利各城教导人', '在加利利各城教導人'),
+    'Foretells his own death and resurrection (near Caesarea Philippi)':
+        ('预言自己的死与复活（在该撒利亚腓立比附近）',
+         '預言自己的死與復活（在該撒利亞腓立比附近）'),
+    'Foretells his own death and resurrection (in Peraea)':
+        ('预言自己的死与复活（在比利亚）', '預言自己的死與復活（在比利亞）'),
+    'Tested by the Pharisees and the Herodians, and enunciates the duty of '
+    'a citizen to his government (in Jerusalem)':
+        ('法利赛人和希律党人试探他，他讲明百姓对政府的本分（在耶路撒冷）',
+         '法利賽人和希律黨人試探他，他講明百姓對政府的本分（在耶路撒冷）'),
+    'Foretells the destruction of the temple, and of Jerusalem '
+    '(in Jerusalem)':
+        ('预言圣殿与耶路撒冷的毁灭（在耶路撒冷）',
+         '預言聖殿與耶路撒冷的毀滅（在耶路撒冷）'),
+    'Commissions the seventy disciples (in Samaria)':
+        ('差派七十个门徒（在撒玛利亚）', '差派七十個門徒（在撒瑪利亞）'),
+    'Teaches in the house of Mary, Martha, and Lazarus (in Bethany)':
+        ('在马利亚、马大和拉撒路家中教导（在伯大尼）',
+         '在馬利亞、馬大和拉撒路家中教導（在伯大尼）'),
+    'Teaches in the temple (at Jerusalem) at the Feast of Dedication':
+        ('修殿节时在殿里教训人（在耶路撒冷）', '修殿節時在殿裡教訓人（在耶路撒冷）'),
+    'Teaches his disciples concerning offenses, meekness, and humility '
+    '(in Peraea)':
+        ('教导门徒论绊倒人的事、温柔与谦卑（在比利亚）',
+         '教導門徒論絆倒人的事、溫柔與謙卑（在比利亞）'),
     # Six more, after the entries folded together and longer Nave lines
     # became the surviving name. 2026-09-16 「这里面语言也没用翻译好」.
     'Eats with tax collectors and sinners, and discourses on fasting '
@@ -440,6 +574,14 @@ def section_title(sections, spans):
     return None
 
 
+def _localised(note):
+    if not note:
+        return None
+    kept = {k: v for k, v in note.items()
+            if k == 'en' or re.search(r'[\u4e00-\u9fff]', v)}
+    return kept or None
+
+
 def main():
     sermons = json.load(open(asset('sermons', 'index.json')))
     sections = load_sections()
@@ -460,6 +602,11 @@ def main():
             spans.append((book, c1, 1, v1))
         entries.append({'id': eid, 'title': title, 'spans': clamp(spans),
                         'origin': 'structure'})
+
+    # 1b. The parables, each a teaching of its own.
+    for pid, spans, title in _PARABLES:
+        entries.append({'id': 'parable-' + pid, 'title': dict(title),
+                        'spans': clamp(list(spans)), 'origin': 'parable'})
 
     # 2. The owner's own sermon series, in its own order.
     TOPICS = {'The Parables of Jesus', 'Sermon on the Mount',
@@ -528,11 +675,22 @@ def main():
             # by a fact about the citation, not by reading it — a true
             # parallel set names AT MOST ONE passage per gospel.
             per_book = collections.Counter(b for b, _, _, _ in spans)
+            parallel = max(per_book.values()) == 1 and len(spans) > 1
+            # AND A LINE THAT IS NOT A PARALLEL SET IS NOT A SPAN SET.
+            # `Teaches in Galilee` cites Matthew 4:17, Mark 1:14, Mark
+            # 15, Luke 4:14, Luke 15:1-32 and John 4:43-45 — six places
+            # that are not one teaching. Until the parables were added
+            # this line was always absorbed by something and the damage
+            # never showed; on its own it came out as a teaching whose
+            # references include the crucifixion. Nave's lines are in
+            # canonical order, so the first is the one he is naming.
+            if not parallel and len(per_book) != len(spans):
+                spans = spans[:1]
             entries.append({
                 'id': 'nave-' + re.sub(r'[^a-z0-9]+', '-', title.lower())[:44],
                 'title': {'en': title, 'zh-Hans': title, 'zh-Hant': title},
                 'spans': spans,
-                'parallel': max(per_book.values()) == 1 and len(spans) > 1,
+                'parallel': parallel,
                 'origin': 'structure' if whole else 'nave',
             })
         break
@@ -559,12 +717,37 @@ def main():
     # discourse and the Sermon on the Mount stopped existing as an
     # entry. The containers stay whole and the parts point at them
     # through `partOf`.
-    RANK = {'sermon': 0, 'structure': 1, 'nave': 2}
+    # The parable's own name beats an exposition's title, so it is
+    # added first and keeps it.
+    RANK = {'parable': 0, 'sermon': 1, 'structure': 2, 'nave': 3}
     merged = []
     for e in sorted(entries, key=lambda e: RANK[e['origin']]):
         for m in merged:
             if (m['origin'] == 'structure') != (e['origin'] == 'structure'):
                 continue
+            # A PARABLE'S REFERENCE IS EXACT AND DOES NOT MOVE.
+            #
+            # The widening below is right for three sources that are
+            # each describing a passage loosely. It is wrong here: the
+            # parable list gives the passage itself, and letting it grow
+            # destroyed the list it was added to produce. The lamp under
+            # a bowl vanished into the sower, because a sermon had
+            # widened one of them through Mark 4 until they touched;
+            # the weeds came out spanning Matthew 13:24-53.
+            #
+            # So a parable only TAKES IN — an exposition of it, when
+            # most of that exposition lies inside it — and never
+            # changes shape. Two parables never merge at all; they are
+            # two teachings.
+            if m['origin'] == 'parable' or e['origin'] == 'parable':
+                if m['origin'] != 'parable' or e['origin'] == 'parable':
+                    continue
+                mine = set(verses(m['spans']))
+                his = verses(e['spans'])
+                if not his or sum(v in mine for v in his) * 5 < len(his) * 3:
+                    continue
+                m['origins'].append(e['origin'])
+                break
             if overlaps(m['spans'], e['spans']):
                 m['origins'].append(e['origin'])
                 # WIDEN ONLY WHERE THEY MEET. Taking the other entry's
@@ -615,7 +798,9 @@ def main():
     # are discourses by construction. Anything else is left as a plain
     # teaching rather than being forced into a category.
     for e in merged:
-        if e['origin'] == 'structure':
+        if e['origin'] == 'parable':
+            e['kind'] = 'parable'
+        elif e['origin'] == 'structure':
             e['kind'] = 'discourse'
         elif e.get('topic') == 'The Parables of Jesus' or \
                 re.search(r'parable', e['title']['en'], re.I):
@@ -650,7 +835,7 @@ def main():
     # own name is kept in `contains`, and its sermons, cross-references
     # and plates were already inside the surviving span, so they are
     # found again when that span is looked up.
-    TITLE_RANK = {'structure': 0, 'sermon': 1, 'nave': 2}
+    TITLE_RANK = {'parable': 0, 'structure': 1, 'sermon': 2, 'nave': 3}
 
     def head(e):
         return min((order[b], c, a) for b, c, a, _ in e['spans'])
@@ -660,12 +845,63 @@ def main():
         e['vs'] = set(verses(e['spans']))
         e['contains'] = []
 
+    def starts(e):
+        return {(b, c, a) for b, c, a, _ in e['spans']}
+
+    def partOf(x):
+        return {'title': x['title'], 'label': span_label(x['spans']),
+                'ref': span_label(x['spans'][:1])}
+
+    def loserOf(e, m):
+        return m if TITLE_RANK[e['origin']] < TITLE_RANK[m['origin']] else e
+
     kept = []
     for e in sorted(merged, key=lambda e: (-len(e['vs']), head(e))):
         for m in kept:
-            if not (e['vs'] <= m['vs'] or head(e) == head(m)):
+            # A PARABLE IS NEVER FOLDED INTO ANYTHING ELSE, and nothing
+            # else is folded into a parable.
+            #
+            # 2026-09-16 「Scholars generally count between 30 and 40
+            # parables told by Jesus ... 这里却并没有看出来 好像只有15个」,
+            # and that was the folding doing it: Matthew 13 is a
+            # discourse, so the sower, the tares, the mustard seed, the
+            # treasure, the pearl and the net all disappeared into one
+            # row called 天国的比喻. They are not PARTS of a teaching the
+            # way a sermon on Matthew 5:4 is part of the Sermon on the
+            # Mount — each is a teaching with its own name, and a page
+            # that exists so a reader can see what the Lord taught has
+            # to show them.
+            #
+            # Between two parables the test is stricter still: they fold
+            # only when they BEGIN at the same verse, never on
+            # containment. One sermon covers Matthew 24:45-25:30 as a
+            # set, and containment would have swallowed the ten virgins
+            # and the talents into it.
+            if (e['kind'] == 'parable') != (m['kind'] == 'parable'):
+                continue
+            if e['kind'] == 'parable':
+                if not (starts(e) & starts(m)):
+                    continue
+            elif not (e['vs'] <= m['vs'] or head(e) == head(m)):
                 continue
             m['origins'] += e['origins']
+            # A CANONICAL PARABLE STILL DOES NOT MOVE, here either.
+            # The fold runs longest-first, and a sermon whose passage
+            # the first merge had widened is longer than the parable it
+            # expounds — which is how the weeds came out spanning
+            # Matthew 13:24-53 and the ten virgins 25:1-30.
+            if m['origin'] == 'parable' or e['origin'] == 'parable':
+                par = m if m['origin'] == 'parable' else e
+                m['spans'] = par['spans']
+                m['vs'] = set(verses(par['spans']))
+                if loserOf(e, m) is not m:
+                    m['contains'].append(partOf(e))
+                else:
+                    m['contains'].append(partOf(m))
+                    m['title'], m['origin'], m['kind'] = (
+                        e['title'], e['origin'], e['kind'])
+                m['contains'] = m['contains']
+                break
             m['vs'] |= e['vs']
             # THE SURVIVING SPAN IS THE UNION. Folding by a shared first
             # verse can meet an entry that runs further than the one it
@@ -690,7 +926,16 @@ def main():
                 # The displaced title is a description of the same
                 # passage, so it goes where descriptions of the passage
                 # go rather than into the list of what this contains.
-                m.setdefault('note', loser['title']['en'])
+                # The displaced title becomes the note. If it is a
+                # Nave sentence we have a translation for, it carries
+                # that translation with it rather than showing the
+                # same English under all three locale keys.
+                note = dict(loser['title'])
+                zh = _NAVE_ZH.get(
+                    re.sub(r'\s+', ' ', note.get('en', '')).strip())
+                if zh:
+                    note['zh-Hans'], note['zh-Hant'] = zh
+                m.setdefault('note', note)
                 m['title'] = e['title']
             if loser['title']['zh-Hans'] != m['title']['zh-Hans']:
                 m['contains'].append({
@@ -747,7 +992,15 @@ def main():
             continue
         got = section_title(sections, e['spans'])
         if got:
-            e['note'] = e['title']['en']
+            # Nave's own sentence, kept underneath because it carries
+            # what a heading does not. Trilingual where we have a
+            # translation for it and English-only where we do not — the
+            # page then shows nothing rather than a sentence the reader
+            # did not ask for. 2026-09-16 「这里面语言也没用翻译好」.
+            zh = _NAVE_ZH.get(re.sub(r'\s+', ' ', e['title']['en']).strip())
+            e['note'] = {'en': e['title']['en']}
+            if zh:
+                e['note']['zh-Hans'], e['note']['zh-Hant'] = zh
             e['title'] = dict(got)
             filled += 1
             continue
@@ -785,7 +1038,12 @@ def main():
         out.append({
             'id': e['id'],
             'title': e['title'],
-            'note': e.get('note'),
+            # A note is shown in the reader's language or not at all.
+            # Some of these are a displaced title from a source that is
+            # English-only, and its map then carries the same English
+            # under every locale key — which is exactly the thing the
+            # page was told to stop doing.
+            'note': _localised(e.get('note')),
             'origins': sorted(set(e['origins'])),
             'contains': e['contains'],
             'kind': e['kind'],
