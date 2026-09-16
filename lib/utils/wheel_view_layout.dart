@@ -268,6 +268,12 @@ class WheelRenderStats {
   /// for. OFF BY DEFAULT — [trackLabels] is false in every shipped
   /// build, and the two calls below cost one boolean read per label.
   /// `wheel_paint_cost_test.dart` is the reason that matters.
+  /// How many label plates the last frame actually put on the canvas.
+  /// One int per paint, always on — the density of this chart is the
+  /// thing the owner keeps reporting, and it should be measurable
+  /// without arming anything.
+  static int labelsDrawn = 0;
+
   static bool trackLabels = false;
   static final Set<String> labelsAsked = <String>{};
   static final Set<String> labelsLost = <String>{};
@@ -283,6 +289,7 @@ class WheelRenderStats {
   static void reset() {
     sceneBuilds = 0;
     paints = 0;
+    labelsDrawn = 0;
     labelsAsked.clear();
     labelsLost.clear();
   }

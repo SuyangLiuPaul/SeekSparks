@@ -109,7 +109,16 @@ void main() {
     // 4 of 184 on the day this was written, all of them popes or
     // crusades in the church ring, where the records are three deep. A
     // regression that broke placement would put this in the dozens.
-    expect(lost, lessThan(asked ~/ 8),
+    //
+    // 2026-09-16, later the same day: 26 of 213, and the ceiling moved
+    // from an eighth to a sixth. The corpus grew by 15, and the leader
+    // a name may follow was capped — 「手机上看就很恐怖了」, of names
+    // standing over the empty middle of a phone screen with a hairline
+    // running off to an arc near the rim. The names that lose now are
+    // exactly the ones that used to be dragged furthest from what they
+    // name, and they are all in the pope ring, six deep. A name nobody
+    // can trace back is not a name that landed.
+    expect(lost, lessThan(asked ~/ 6),
         reason: '$lost of $asked names found nowhere to stand: '
             '${WheelRenderStats.labelsLost.take(12).join(", ")}');
     await tester.pumpWidget(const SizedBox.shrink());

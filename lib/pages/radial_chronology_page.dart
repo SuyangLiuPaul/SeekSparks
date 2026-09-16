@@ -4471,8 +4471,16 @@ class _WorldWheelPainter extends CustomPainter {
   /// declutters would let a power's name land squarely on a record's.
   final List<Rect> _inked = [];
 
+  /// The canvas edge, in scene units, as of this frame.
+  ///
+  /// `_side / zoom` is therefore what the reader can SEE, and that is
+  /// the number a label placement has to answer to: a name moved a
+  /// quarter of a screen from its arc is still findable, and a name
+  /// moved two screens is a name about something else.
+  double _side = 0;
+
   bool _claim(Rect box) {
-    final claim = box.inflate(2 / zoom);
+    final claim = box.inflate(math.max(2 / zoom, box.height * 0.3));
     if (_inked.any(claim.overlaps)) return false;
     _inked.add(claim);
     return true;
@@ -4484,6 +4492,7 @@ class _WorldWheelPainter extends CustomPainter {
     _inked.clear();
     if (streams.isEmpty) return;
     final side = math.min(size.width, size.height);
+    _side = side;
     final c = Offset(size.width / 2, size.height / 2);
     final rHub = side * _kHubFrac;
     final rBands = side * bandsFractionFor(side);
@@ -4504,6 +4513,7 @@ class _WorldWheelPainter extends CustomPainter {
     _paintRim(canvas, c, rBands, rRim);
     _paintHub(canvas, c, rHub);
     _paintAxisEnds(canvas, c, rHub, rRim);
+    WheelRenderStats.labelsDrawn = _inked.length;
   }
 
   void _paintSurface(Canvas canvas, Offset c, double rHub, double rRim) {
@@ -4991,9 +5001,22 @@ class _WorldWheelPainter extends CustomPainter {
   /// nothing they had.
   void _repeatBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
     if (zoom < 2) return;
-    const steps = 12;
     for (var i = 0; i < streams.length; i++) {
       final band = ringRadii(i, streams.length, rHub, rBands);
+      // ONE PER SCREENFUL, not twelve per ring. 2026-09-16, from a phone
+      // at 235%: 「手机上看就很恐怖了」, with 以色列 printed three times
+      // inside one screen. Twelve fixed bearings is a count, and what
+      // the reader needs is a DISTANCE — the name in view wherever they
+      // have panned to, and not again until they have panned away. So
+      // the copies are spaced by the width of the viewport measured
+      // along this ring, which on a wide desktop is a handful and on a
+      // phone at high zoom is one or two.
+      final visible = _side > 0 ? _side / zoom : double.infinity;
+      final steps = visible.isFinite
+          ? (sweepRad / (visible / math.max(band.centre, 1)))
+              .ceil()
+              .clamp(2, 12)
+          : 12;
       final colour =
           (colors[streams[i].id] ?? lineColor(streams[i].line, dark: wb.isDark))
               .withValues(alpha: 0.75);
@@ -5318,9 +5341,23 @@ class _WorldWheelPainter extends CustomPainter {
       // end and 约西亚 against the other, so six box-widths either way
       // is still inside somebody else's name. See [arcLabelDetours] for
       // why outward is the safer of the two moves.
+      // HOW FAR A LEADER MAY REACH. 2026-09-16, from a phone at 235%:
+      // 「手机上看就很恐怖了」 — names standing over the empty middle of
+      // the disc with a hairline running off to something near the rim.
+      // The walk was six box-widths either way, and a box-width is the
+      // NAME's width: 「Joshua son of Nun」 at the canvas size is about
+      // 120 px, so six of them is 720 px — nearly twice the width of a
+      // phone. A leader is only honest if the reader can follow it, so
+      // the reach is a fraction of what is actually on screen.
+      final reach = _side > 0 ? _side / zoom * 0.14 : double.infinity;
       final step = w / (radius > 1 ? radius : 1);
+      final along = reach.isFinite ? (reach / w).floor().clamp(1, 6) : 6;
+      final out = reach.isFinite
+          ? (reach / (h * 1.25)).floor().clamp(1, 3)
+          : 3;
       var moved = false;
-      for (final m in arcLabelDetours(step: step, rowStep: h * 1.25)) {
+      for (final m in arcLabelDetours(
+          step: step, rowStep: h * 1.25, along: along, out: out)) {
         final at = mid + m.dAngle;
         if (at < startRad || at > startRad + sweepRad) continue;
         final r = radius + m.dRadius;

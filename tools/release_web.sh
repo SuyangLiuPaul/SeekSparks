@@ -6,9 +6,28 @@
 # the fork plan's "explicitly deferred" list). Just dev + prod.
 #
 # Usage:
-#   tools/release_web.sh                   # bump patch, build, deploy dev
-#   tools/release_web.sh --no-bump         # use current pubspec version
+#   tools/release_web.sh                   # build, deploy dev (NO bump)
+#   tools/release_web.sh --bump            # bump the patch version first
 #   tools/release_web.sh --include-prod    # ALSO push to seeksparks prod (REQUIRES user OK)
+#
+# THE VERSION DOES NOT MOVE FOR A DEV DEPLOY. 2026-09-16 「除非我叫你
+# release和prod push 否则版本号码不要变 sword和words都是一样」. The
+# version number is the owner's release marker, not a progress counter:
+# the in-app update check and the changelog both read it, so a version
+# that moved without a release tells every user something shipped when
+# nothing did.
+#
+# Which left dev builds indistinguishable from each other, so 「Dev 可以
+# 有：123这样在最后」 — a dev build shows `1.6.310.12`, where the last
+# number is the commits since the last `v*` tag. It is derived, not
+# stored: nothing to bump, nothing to forget, and it cannot disagree
+# with the tree it was built from. It goes ONLY into the displayed
+# version (`--dart-define`), never into pubspec — `version.json`, the
+# APK's versionCode and the update check all go on reading the plain
+# release version, and `UpdateService._parse` takes the first three
+# segments, so `1.6.310.12` compares as 1.6.310 wherever it is compared.
+#
+# A run with --include-prod is a RELEASE and carries no dev suffix.
 set -euo pipefail
 
 PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -26,10 +45,14 @@ if [ ! -x "$NETLIFY" ]; then
   exit 1
 fi
 
-BUMP=1
+# 2026-09-16: the default flipped from bump to NO bump — see the note
+# at the top. `--no-bump` is still accepted, and is now a no-op, so
+# anything that passes it keeps working.
+BUMP=0
 INCLUDE_PROD=0
 for arg in "$@"; do
   case "$arg" in
+    --bump) BUMP=1 ;;
     --no-bump) BUMP=0 ;;
     --include-prod) INCLUDE_PROD=1 ;;
   esac
@@ -45,6 +68,22 @@ APP_VERSION="$(awk '/^version:/ {print $2; exit}' "$PROJECT/pubspec.yaml")"
 # page.
 APP_VERSION="${APP_VERSION%%+*}"
 echo "==> APP_VERSION=$APP_VERSION"
+
+# The version a READER sees. Same as APP_VERSION for a release; for a
+# dev deploy it carries the dev build number described at the top.
+# `version.json` is Flutter's own file and comes from pubspec, so
+# `verify_site` goes on checking APP_VERSION — the two are deliberately
+# different strings and only this one is compiled in.
+DISPLAY_VERSION="$APP_VERSION"
+if [[ "$INCLUDE_PROD" = "0" ]]; then
+  LAST_TAG="$(git -C "$PROJECT" describe --tags --abbrev=0 --match 'v*' \
+    2>/dev/null || true)"
+  DEV_BUILD="$(git -C "$PROJECT" rev-list --count \
+    "${LAST_TAG:+$LAST_TAG..}HEAD" 2>/dev/null || echo 0)"
+  DISPLAY_VERSION="$APP_VERSION.$DEV_BUILD"
+  echo "==> dev build $DEV_BUILD since ${LAST_TAG:-the first commit};" \
+    "readers see $DISPLAY_VERSION"
+fi
 
 cd "$PROJECT"
 
@@ -173,7 +212,7 @@ python3 "$PROJECT/tools/build_changelog.py" \
 echo "==> building web bundle"
 "$FLUTTER" build web --release \
   --no-web-resources-cdn \
-  --dart-define="APP_VERSION=$APP_VERSION"
+  --dart-define="APP_VERSION=$DISPLAY_VERSION"
 
 # "id:name:host" — the host is what verify_site re-fetches version.json
 # from after the deploy, so it must be the address readers actually
@@ -189,7 +228,7 @@ fi
 deploy_sites "${SITES[@]}"
 
 echo
-echo "✓ v$APP_VERSION deployed."
+echo "✓ v$DISPLAY_VERSION deployed."
 echo "  next: git commit + push"
 # 2026-09-08: and then the tag, which is the step that had been missing
 # since the update path shipped. Everything else in that path worked —
