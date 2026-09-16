@@ -58,11 +58,11 @@ String stackedWheelText(String key, String locale) {
     'help': {'zh-Hans': '如何阅读', 'zh-Hant': '如何閱讀', 'en': 'How to read'},
     'explain': {
       'zh-Hans':
-          '每个国家保留自己的同心环，角度表示年代。同一时期的记录向上叠放，高度只用来分开记录，不表示地位或强弱。\n\n旋转模式下，左右拖动转动整个轮盘，上下拖动改变俯仰。切换平移模式移动放大的轮盘，两种模式都可以双指缩放。点击色块或完整名称查看年代和出处。',
+          '每个国家保留自己的同心环，角度表示年代。同一时期的记录向上叠放，高度只用来分开记录，不表示地位或强弱。\n\n单指左右拖动转动整个轮盘，上下拖动改变俯仰；双指拖动移动放大的轮盘，双指捏合缩放。用鼠标时，切换平移模式来移动。点击色块或完整名称查看年代和出处。',
       'zh-Hant':
-          '每個國家保留自己的同心環，角度表示年代。同一時期的記錄向上疊放，高度只用來分開記錄，不表示地位或強弱。\n\n旋轉模式下，左右拖動轉動整個輪盤，上下拖動改變俯仰。切換平移模式移動放大的輪盤，兩種模式都可以雙指縮放。點擊色塊或完整名稱查看年代和出處。',
+          '每個國家保留自己的同心環，角度表示年代。同一時期的記錄向上疊放，高度只用來分開記錄，不表示地位或強弱。\n\n單指左右拖動轉動整個輪盤，上下拖動改變俯仰；雙指拖動移動放大的輪盤，雙指捏合縮放。用滑鼠時，切換平移模式來移動。點擊色塊或完整名稱查看年代和出處。',
       'en':
-          'Each country keeps its concentric ring; angle represents the year. Records from the same period rise into separate layers. Height does not mean rank or importance.\n\nIn rotate mode, drag sideways to turn the whole wheel and vertically to tilt it. Switch to pan mode to move the enlarged wheel. Pinch to zoom in either mode. Tap a segment or All names for dates and sources.'
+          'Each country keeps its concentric ring; angle represents the year. Records from the same period rise into separate layers. Height does not mean rank or importance.\n\nDrag with one finger to turn the wheel sideways and tilt it vertically; drag with two to move the enlarged wheel, and pinch to zoom. With a mouse, switch to pan mode to move it. Tap a segment or All names for dates and sources.'
     },
     'rotateMode': {'zh-Hans': '旋转', 'zh-Hant': '旋轉', 'en': 'Rotate'},
     'panMode': {'zh-Hans': '平移', 'zh-Hant': '平移', 'en': 'Pan'},
@@ -147,6 +147,22 @@ class _StackedChronologyWheelState extends State<StackedChronologyWheel> {
   bool _panMode = false;
   bool _applyingCamera = false;
   final Set<int> _pointers = {};
+
+  /// Whether a SECOND finger is down, which is what decides between
+  /// turning the wheel and moving it.
+  ///
+  /// 2026-09-16 「3D版本也感觉不好navigate ... 类似的方式直接在屏幕上
+  /// navigate这样我想看那个也容易」. Panning used to need the mode button:
+  /// one finger turned the wheel and nothing moved it until you had
+  /// found and pressed 旋转/平移. One finger turns it, two move it —
+  /// which is what every other chart on a touch screen does, and the
+  /// button stays for a mouse, which has only one pointer.
+  bool _twoFingers = false;
+
+  void _countPointers() {
+    final two = _pointers.length > 1;
+    if (two != _twoFingers) setState(() => _twoFingers = two);
+  }
   Offset? _dragOrigin;
   bool _dragged = false;
   String? _lastOpenedId;
@@ -546,6 +562,7 @@ class _StackedChronologyWheelState extends State<StackedChronologyWheel> {
                   child: Listener(
                 onPointerDown: (event) {
                   _pointers.add(event.pointer);
+                  _countPointers();
                   if (_pointers.length == 1) {
                     _dragOrigin = event.position;
                     _dragged = false;
@@ -586,8 +603,14 @@ class _StackedChronologyWheelState extends State<StackedChronologyWheel> {
                         _tilt + event.delta.dy * .003);
                   }
                 },
-                onPointerUp: (event) => _pointers.remove(event.pointer),
-                onPointerCancel: (event) => _pointers.remove(event.pointer),
+                onPointerUp: (event) {
+                  _pointers.remove(event.pointer);
+                  _countPointers();
+                },
+                onPointerCancel: (event) {
+                  _pointers.remove(event.pointer);
+                  _countPointers();
+                },
                 child: GestureDetector(
                   key: const ValueKey('stackedChronologyWheel'),
                   behavior: HitTestBehavior.opaque,
@@ -629,7 +652,9 @@ class _StackedChronologyWheelState extends State<StackedChronologyWheel> {
                     transformationController: _view,
                     minScale: scene.view.fitScale * .8,
                     maxScale: scene.view.fitScale * 120,
-                    panEnabled: _panMode,
+                    // The mode button still forces it on, because a
+                    // mouse has one pointer and cannot ask for two.
+                    panEnabled: _panMode || _twoFingers,
                     boundaryMargin: const EdgeInsets.all(double.infinity),
                     child: RepaintBoundary(
                         child: CustomPaint(

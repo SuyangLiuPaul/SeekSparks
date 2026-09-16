@@ -169,4 +169,33 @@ void main() {
     expect(identical(paragraph, oneLine), isFalse);
     expected.dispose();
   });
+
+  test('no card hangs off the end of the chart, at any zoom a phone sees', () {
+    // The one strip defect left over from 2026-09-15's renders was
+    // "overview cards clipped at the phone's right edge". The width is
+    // clamped to the viewport and the position to the content, so the
+    // arithmetic says it cannot happen — this is that claim, measured,
+    // rather than a note in a memory file saying it is still open.
+    for (final viewport in [360.0, 390.0, 430.0]) {
+      for (final scale in [
+        stripFitScale(viewport),
+        stripFitScale(viewport) * 4,
+        kStripZoomSteps.last,
+      ]) {
+        final cards = plan(viewport, scale);
+        final content = stripContentWidth(scale);
+        for (final row in cards.rows) {
+          for (final card in row) {
+            expect(card.x, greaterThanOrEqualTo(0.0),
+                reason: '$viewport px at $scale: ${card.title}');
+            expect(card.x + card.width, lessThanOrEqualTo(content),
+                reason: '$viewport px at $scale: ${card.title} ends at '
+                    '${card.x + card.width} of $content');
+            expect(card.width, lessThanOrEqualTo(viewport),
+                reason: 'a card wider than the screen cannot be read on it');
+          }
+        }
+      }
+    }
+  });
 }

@@ -68,6 +68,9 @@ void main() {
           home: RadialChronologyPage(
         initialPeriod: period,
         initialHiddenStreams: hidden,
+        // The page opens FLAT now 「sword wheel default应该是平面图」;
+        // this whole file is about the depth view, so it asks for it.
+        initialStacked: true,
       )),
     ));
     await settle(tester);
@@ -492,4 +495,41 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+
+  testWidgets('two fingers move the wheel, one finger turns it',
+      (tester) async {
+    // 2026-09-16 「3D版本也感觉不好navigate 我感觉可能类似的方式直接在屏幕
+    // 上navigate这样我想看那个也容易」.
+    //
+    // Panning used to need the mode button: one finger turned the wheel
+    // and nothing moved it until you had found and pressed 旋转/平移.
+    // The button stays, because a mouse has one pointer and cannot ask
+    // for two — but a second finger now says "move it" the way it does
+    // on every other chart.
+    await pump(tester, hidden: const {});
+    InteractiveViewer viewer() =>
+        tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
+    expect(viewer().panEnabled, isFalse,
+        reason: 'at rest, a drag turns the wheel');
+
+    final square = tester.getRect(find.byType(StackedChronologyWheel));
+    final first =
+        await tester.startGesture(square.center - const Offset(40, 0));
+    await tester.pump();
+    expect(viewer().panEnabled, isFalse,
+        reason: 'one finger still turns the wheel');
+
+    final second =
+        await tester.startGesture(square.center + const Offset(40, 0));
+    await tester.pump();
+    expect(viewer().panEnabled, isTrue,
+        reason: 'a second finger did not switch the wheel to moving');
+
+    await first.up();
+    await tester.pump();
+    expect(viewer().panEnabled, isFalse,
+        reason: 'lifting a finger left the wheel in pan mode');
+    await second.up();
+    await tester.pumpAndSettle();
+  });
 }

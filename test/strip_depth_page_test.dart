@@ -43,7 +43,11 @@ void main() {
         ],
         child: MaterialApp(
             home: StripChronologyPage(
-                initialHiddenStreams: hidden, initialPeriod: period))));
+                initialHiddenStreams: hidden,
+                initialPeriod: period,
+                // These tests are about the depth rendering, and the
+                // page opens FLAT now 「sword wheel default应该是平面图」.
+                initialStacked: true))));
     await tester.pumpAndSettle();
   }
 

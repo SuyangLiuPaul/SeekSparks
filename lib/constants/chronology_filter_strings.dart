@@ -4,6 +4,15 @@ const Map<String, Map<String, String>> chronologyFilterStrings = {
     'zh-Hant': '選好後點「確認套用」，圖表才會更新。',
     'en': 'Choose your layers, then apply to update the chart.',
   },
+  // 2026-09-16 「filter那里应该是alphabet order可以标注出来」 — the order
+  // is stated, because an order a reader cannot see the rule of is not
+  // an order they can use. The four layers above keep their own
+  // sequence; only the powers are sorted.
+  'sortedByName': {
+    'zh-Hans': '下面的列国按名称排序。',
+    'zh-Hant': '下面的列國按名稱排序。',
+    'en': 'The powers below are listed A–Z.',
+  },
   'apply': {
     'zh-Hans': '确认应用',
     'zh-Hant': '確認套用',

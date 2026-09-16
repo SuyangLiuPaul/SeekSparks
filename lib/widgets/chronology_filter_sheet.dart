@@ -113,8 +113,15 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
 
   String _s(String key) => chronologyFilterText(key, widget.locale);
 
+  /// THE CORPUS'S ORDER, NOT THE SHEET'S.
+  ///
+  /// The rows are listed A-Z since 2026-09-16, and for a moment this
+  /// read the ids off that list — which silently changed what 「全部」
+  /// means, because [defaultVisibleStreams] keeps the first N in
+  /// PRIORITY order and the corpus is what carries that priority.
+  /// Alphabetical is a way to find a row; it is not a ranking.
   Iterable<String> get _streamIds =>
-      _options.where((option) => option.isStream).map((option) => option.id);
+      widget.data.streams.map((stream) => stream.id);
 
   int get _shownStreams =>
       _streamIds.where((id) => !_draft.contains(id)).length;
@@ -177,16 +184,27 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
         color: widget.layerColors[kLineageLayerId],
         narrowSwatch: true,
       ),
-      for (final stream in widget.data.streams)
-        _FilterOption(
-          id: stream.id,
-          keySuffix: 'Stream-${stream.id}',
-          title: stream.nameFor(widget.locale),
-          subtitle: '${s('wheelPowers', 'Powers')} ${powers[stream.id] ?? 0} · '
-              '${s('wheelEvents', 'Events')} ${events[stream.id] ?? 0}',
-          color: widget.streamColors[stream.id],
-          isStream: true,
-        ),
+      // BY NAME, NOT BY THE ORDER THE CORPUS HAPPENS TO LIST THEM.
+      //
+      // 2026-09-16 「filter那里应该是alphabet order可以标注出来」. The
+      // corpus order is roughly the order these powers enter history,
+      // which is a reasonable thing for a chart to know and a poor way
+      // to find 埃及 in a list of twenty-two. The layers above keep
+      // their own order: there are four of them and they are not a
+      // list you search.
+      ...(<_FilterOption>[
+        for (final stream in widget.data.streams)
+          _FilterOption(
+            id: stream.id,
+            keySuffix: 'Stream-${stream.id}',
+            title: stream.nameFor(widget.locale),
+            subtitle:
+                '${s('wheelPowers', 'Powers')} ${powers[stream.id] ?? 0} · '
+                '${s('wheelEvents', 'Events')} ${events[stream.id] ?? 0}',
+            color: widget.streamColors[stream.id],
+            isStream: true,
+          ),
+      ]..sort((a, b) => a.title.compareTo(b.title))),
     ];
   }
 
@@ -269,6 +287,12 @@ class _ChronologyFilterSheetState extends State<ChronologyFilterSheet> {
                     )),
                 const SizedBox(height: 4),
                 Text(_s('draftHint'),
+                    style: buttonText.copyWith(color: wb.mutedText)),
+                const SizedBox(height: 2),
+                // Said out loud, because a reader who cannot see WHY a
+                // list is in the order it is in cannot use the order.
+                Text(_s('sortedByName'),
+                    key: const ValueKey('chronologyFilterSortNote'),
                     style: buttonText.copyWith(color: wb.mutedText)),
                 if (widget.streamCeiling != null) ...[
                   const SizedBox(height: 6),

@@ -132,13 +132,16 @@ class RadialChronologyPage extends StatefulWidget {
       {super.key,
       this.initialPeriod,
       this.initialHiddenStreams,
-      this.initialStacked = true});
+      this.initialStacked = false});
 
   /// Switching forms keeps the reader's range and layer choices. Each
   /// route still owns its controller, so replacing one cannot dispose
   /// the incoming page's navigation state.
   final ChronologyPeriod? initialPeriod;
   final Set<String>? initialHiddenStreams;
+  /// 2026-09-16 「sword wheel default应该是平面图」. The depth view is the
+  /// more striking picture and the flat one is the readable chart, so
+  /// the chart is what a reader is handed; the toggle is right there.
   final bool initialStacked;
 
   @override

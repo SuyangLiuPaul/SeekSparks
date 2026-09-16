@@ -570,8 +570,18 @@ void main() {
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    await tester
-        .tap(find.widgetWithText(CheckboxListTile, stream.nameFor('zh-Hans')));
+    // The powers are listed A-Z since 2026-09-16, so the one this test
+    // wants is not necessarily on the first screenful of the sheet.
+    final option =
+        find.widgetWithText(CheckboxListTile, stream.nameFor('zh-Hans'));
+    await tester.scrollUntilVisible(
+        option, 120,
+        scrollable: find.descendant(
+            of: find.byKey(const ValueKey('chronologyFilterOptions')),
+            matching: find.byType(Scrollable)));
+    await tester.ensureVisible(option);
+    await tester.pump();
+    await tester.tap(option);
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }

@@ -50,7 +50,10 @@ void main() {
           ChangeNotifierProvider(create: (_) => AppSettings()),
         ],
         child: const MaterialApp(
-            home: StripChronologyPage(initialHiddenStreams: {}))));
+            // The 3D page, which is what this file measures; the page
+            // itself opens flat since 2026-09-16.
+            home: StripChronologyPage(
+                initialHiddenStreams: {}, initialStacked: true))));
     await tester.pumpAndSettle();
     StripLanesPainter actual() => tester
         .widgetList<CustomPaint>(find.byType(CustomPaint))

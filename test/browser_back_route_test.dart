@@ -268,7 +268,10 @@ void main() {
 
     expect(counter.pushes, 1);
     expect(find.byType(RadialChronologyPage), findsOneWidget);
-    expect(find.byKey(const ValueKey('stackedChronologyWheel')), findsOneWidget);
+    // The flat chart, not the depth one: the page opens flat since
+    // 2026-09-16 「sword wheel default应该是平面图」. Either key proves
+    // the door opened; this is the one the reader is handed.
+    expect(find.byKey(const ValueKey('chronologyWheel')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());

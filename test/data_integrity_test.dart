@@ -252,8 +252,9 @@ void main() {
           ? standardBookOrder
           : standardBookOrder.sublist(standardBookOrder.indexOf('Matthew'));
       final missing = expected.where((b) => !present.contains(b));
-      if (missing.isNotEmpty)
+      if (missing.isNotEmpty) {
         failures.add('$code: missing ${missing.join(', ')}');
+      }
     }
     expect(failures, isEmpty, reason: failures.join('\n'));
   });
@@ -756,9 +757,10 @@ void main() {
         for (final v in _edition(code)) {
           records++;
           final kind = verseAbsenceOf(v['text'] as String? ?? '');
-          if (kind != null)
+          if (kind != null) {
             census['$code/${kind.name}'] =
                 (census['$code/${kind.name}'] ?? 0) + 1;
+          }
         }
       }
       // +7 over v1.6.93: tools/repair_biblexg.py split seven merged verse
