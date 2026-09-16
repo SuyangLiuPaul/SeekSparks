@@ -253,8 +253,37 @@ class WheelRenderStats {
   static int sceneBuilds = 0;
   static int paints = 0;
 
+  /// WHAT THE CANVAS TRIED TO SAY, FOR TESTS ONLY.
+  ///
+  /// Every word on this wheel is a `TextPainter` on a canvas: no widget,
+  /// no semantics node, nothing `find.text` can reach. That blindness is
+  /// how 亚们 could go unlabelled for a day with its own branch of code
+  /// written for him — the branch read the name AS DRAWN ALONG THE ARC,
+  /// which is empty exactly when a record is too narrow to carry it, so
+  /// the guard was false in every case it existed to serve. No test
+  /// could see it. 2026-09-16 「亚们还是没有解决」.
+  ///
+  /// So the painter reports the two things a test needs: which names it
+  /// was asked to draw, and which of those it could find no free room
+  /// for. OFF BY DEFAULT — [trackLabels] is false in every shipped
+  /// build, and the two calls below cost one boolean read per label.
+  /// `wheel_paint_cost_test.dart` is the reason that matters.
+  static bool trackLabels = false;
+  static final Set<String> labelsAsked = <String>{};
+  static final Set<String> labelsLost = <String>{};
+
+  static void noteLabelAsked(String text) {
+    if (trackLabels) labelsAsked.add(text);
+  }
+
+  static void noteLabelLost(String text) {
+    if (trackLabels) labelsLost.add(text);
+  }
+
   static void reset() {
     sceneBuilds = 0;
     paints = 0;
+    labelsAsked.clear();
+    labelsLost.clear();
   }
 }

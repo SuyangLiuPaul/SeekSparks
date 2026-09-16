@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart'
+    show centuryTickLabel, yearLabel;
 import 'package:seeksparks/pages/strip_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -189,6 +191,96 @@ void main() {
     expect(
         stripPaintLabelFits(labelStart: 105, previousLabelEnd: 100), isFalse);
     expect(stripPaintLabelFits(labelStart: 108, previousLabelEnd: 100), isTrue);
+  });
+
+  test('a ruler tick standing on the axis end gives its word up', () {
+    // The axis ends at x = 230. A tick 5 px short of it, whose own word
+    // is 46 px wide, is the 主后2000 that made the ruler read
+    // 「主后2000直接跳到2026年了」.
+    expect(
+        stripTickLabelClearsEnds(
+            tickX: 225, halfWidth: 23, endXs: const [230]),
+        isFalse);
+    // 主后1750, a quarter of the axis-end label further back. The
+    // right-aligned end label still REACHES over this one; it is not
+    // standing on it, and it keeps its word.
+    expect(
+        stripTickLabelClearsEnds(
+            tickX: 173, halfWidth: 23, endXs: const [230]),
+        isTrue);
+    // Both ends are consulted, not just the far one.
+    expect(
+        stripTickLabelClearsEnds(
+            tickX: 5, halfWidth: 23, endXs: const [0, 230]),
+        isFalse);
+    // An end scrolled off screen constrains nothing.
+    expect(
+        stripTickLabelClearsEnds(
+            tickX: 225, halfWidth: 23, endXs: const []),
+        isTrue);
+  });
+
+  test('at whole-history fit the 主后2000 tick really does stand on 主后2026',
+      () {
+    // The predicate above is only worth having if it FIRES on the real
+    // ruler. These are the owner's own numbers: 6226 years fitted to a
+    // 1280 px viewport, the shipped 11 px ruler type, the shipped
+    // labels. 2026-09-16 「主后2000直接跳到2026年了」.
+    final scale = pxPerYearToFit(kStripMinYear, kStripMaxYear, 1280);
+    const style = TextStyle(fontSize: 11);
+    final endXs = [0.0, stripContentWidth(scale)];
+    bool clears(int year) => stripTickLabelClearsEnds(
+          tickX: xForYear(year, scale),
+          halfWidth: StripPaintTextCache.layout(
+                  text: centuryTickLabel(year, 'zh-Hans'), style: style)
+                  .width /
+              2,
+          endXs: endXs,
+        );
+    expect(clears(2000), isFalse,
+        reason: 'this is the tick whose word the axis end takes over');
+    expect(clears(1750), isTrue,
+        reason: 'and the grid either side of it is untouched');
+    // The other end is 200 years from its nearest tick rather than 26,
+    // which at this scale is 41 px — far enough apart to read as two
+    // labels, so nothing there gives way.
+    expect(clears(-4000), isTrue);
+  });
+
+  test('the ruler really does drop the word and keep the mark', () {
+    // The wiring, not the rule: paint the shipped ruler at the fit the
+    // owner's screenshot was taken at and read back what reached the
+    // canvas. 2026-09-16 「主后2000直接跳到2026年了」.
+    final scale = pxPerYearToFit(kStripMinYear, kStripMaxYear, 1280);
+    StripPaintTextCache.trackPainted = true;
+    addTearDown(() {
+      StripPaintTextCache.trackPainted = false;
+      StripPaintTextCache.resetForTest();
+    });
+    StripPaintTextCache.paintedForTest.clear();
+    _paint(
+      StripRulerPainter(
+        pxPerYear: scale,
+        locale: 'zh-Hans',
+        wb: WbColors.light,
+        tickFontPx: 11,
+        visibleX0: 0,
+        visibleX1: 1280,
+      ),
+      const Size(1280, 26),
+    );
+    final painted = StripPaintTextCache.paintedForTest;
+    expect(painted, contains(yearLabel(kStripMaxYear, 'zh-Hans')),
+        reason: 'the axis still says where it ends');
+    expect(painted, isNot(contains(centuryTickLabel(2000, 'zh-Hans'))),
+        reason: '主后2000 stands on 主后2026 and gives its word up');
+    // 1280 px of 6226 years puts the ruler on its 500-year rung, so
+    // 主后1500 is the neighbour that must survive.
+    expect(rulerStep(scale), 500);
+    expect(painted, contains(centuryTickLabel(1500, 'zh-Hans')),
+        reason: 'only the crowded tick gives way, not the grid');
+    expect(painted, contains(centuryTickLabel(-4000, 'zh-Hans')),
+        reason: 'the far end is 200 years from its tick, not 26');
   });
 
   test('the high-zoom ruler lays out only the visible years, then reuses them',

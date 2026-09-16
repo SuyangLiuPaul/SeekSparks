@@ -1550,3 +1550,48 @@ double fingerHalfWidth(double radius, {double fingerPx = 9}) =>
   if (nested != null) return (index: nested, score: nestedScore);
   return best == null ? null : (index: best, score: bestScore);
 }
+
+/// Where a name may stand when the middle of its own arc is taken.
+///
+/// 2026-09-16 「亚们还是没有解决」 — Amon of Judah, 主前643 to 主前641,
+/// with 玛拿西's fifty-five years hard against one end and 约西亚's
+/// thirty-one against the other. He fits inside nothing, there is no
+/// room after him and none before him, and at 3404% the reader was
+/// looking at a bare strip with a dot in it.
+///
+/// Two kinds of detour, in this order:
+///
+///   ALONG THE RING FIRST, forward before back, because 「后面」 is
+/// where the reader is already looking and a name a little further
+/// along the same lane still reads as belonging to that lane.
+///
+///   THEN OUT OF THE RING, at the arc's own angle. This is the one that
+/// saves a name wedged between two long neighbours, and it is the safer
+/// of the two about the thing this chart cares most about: moving a
+/// name sideways moves it to a different YEAR, while moving it outward
+/// keeps the year exactly and only leaves the lane. Out before in, so
+/// the name lands in the margin rather than deeper into the wheel.
+///
+/// Offsets only — whether any of them is free is the painter's
+/// business, and so is the leader line back to the arc. [step] is one
+/// box width as an angle at the label's own radius; [rowStep] is one
+/// box height in the same units as the radius.
+List<({double dAngle, double dRadius})> arcLabelDetours({
+  required double step,
+  required double rowStep,
+  int along = 6,
+  int out = 3,
+}) {
+  final moves = <({double dAngle, double dRadius})>[];
+  for (var k = 1; k <= along; k++) {
+    for (final dir in const [1.0, -1.0]) {
+      moves.add((dAngle: dir * step * k, dRadius: 0.0));
+    }
+  }
+  for (var k = 1; k <= out; k++) {
+    for (final dir in const [1.0, -1.0]) {
+      moves.add((dAngle: 0.0, dRadius: dir * rowStep * k));
+    }
+  }
+  return moves;
+}

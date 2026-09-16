@@ -7,14 +7,22 @@ import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// One immutable paragraph, reusable by the strip's three canvases.
 class StripPaintText {
-  StripPaintText._(this._paragraph, this.width, this.height);
+  StripPaintText._(this._paragraph, this.text, this.width, this.height);
 
   final ui.Paragraph _paragraph;
+
+  /// What this line says. Carried so a test can see it: strip text is
+  /// drawn as a Paragraph on a canvas, which leaves no widget and no
+  /// semantics node, so without this there is no way to assert that a
+  /// word the ruler decided to drop was actually dropped.
+  final String text;
   final double width;
   final double height;
 
-  void paint(Canvas canvas, Offset offset) =>
-      canvas.drawParagraph(_paragraph, offset);
+  void paint(Canvas canvas, Offset offset) {
+    StripPaintTextCache.notePainted(text);
+    canvas.drawParagraph(_paragraph, offset);
+  }
 }
 
 /// Bounded layout cache for straight timeline labels.
@@ -40,6 +48,17 @@ class StripPaintTextCache {
   static int _layouts = 0;
 
   static int get layoutsForTest => _layouts;
+
+  /// WHAT ACTUALLY REACHED THE CANVAS, FOR TESTS ONLY.
+  ///
+  /// Off in every shipped build; one boolean read per painted line when
+  /// it is off. See [StripPaintText.text] for why it exists at all.
+  static bool trackPainted = false;
+  static final Set<String> paintedForTest = <String>{};
+
+  static void notePainted(String text) {
+    if (trackPainted) paintedForTest.add(text);
+  }
   static int get entriesForTest => _entries.length;
 
   static void resetForTest() {
@@ -48,6 +67,7 @@ class StripPaintTextCache {
     }
     _entries.clear();
     _layouts = 0;
+    paintedForTest.clear();
   }
 
   static void zeroCounterForTest() => _layouts = 0;
@@ -88,8 +108,8 @@ class StripPaintTextCache {
     final paragraph = builder.build()
       ..layout(ui.ParagraphConstraints(width: maxWidth));
     _layouts++;
-    final line = StripPaintText._(
-        paragraph, math.min(paragraph.longestLine, maxWidth), paragraph.height);
+    final line = StripPaintText._(paragraph, text,
+        math.min(paragraph.longestLine, maxWidth), paragraph.height);
     if (_entries.length >= maxEntries) {
       _entries.remove(_entries.keys.first)!._paragraph.dispose();
     }

@@ -1219,6 +1219,7 @@ class _Life {
     required this.pitch,
     required this.color,
     required this.name,
+    required this.fullName,
     required this.nameA0,
     required this.nameSweep,
     required this.nameSize,
@@ -1248,6 +1249,19 @@ class _Life {
 
   /// Empty when no legible name would fit the free part of the arc.
   final String name;
+
+  /// THE RECORD'S OWN NAME, whether or not [name] could carry it.
+  ///
+  /// 2026-09-16 「亚们还是没有解决」. The callout beside a record too
+  /// narrow to hold its own name was written to read [name] — which is
+  /// the name AS DRAWN ALONG THE ARC, and is set only when the planner
+  /// found room for it. So the branch that exists for the records with
+  /// no room was guarded on the one field that is empty exactly then:
+  /// dead code from the day it was written, and 亚们 (主前643-641, with
+  /// 玛拿西 one side and 约西亚 the other) was never so much as asked
+  /// for a label. This field is what the record is called; [name] stays
+  /// what the arc can print.
+  final String fullName;
   final double nameA0;
   final double nameSweep;
   final double nameSize;
@@ -2986,6 +3000,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           _ => lineColor('shem', dark: _dark),
         },
         name: drawn,
+        fullName: name,
         nameA0: a0,
         nameSweep: sweep,
         nameSize: size,
@@ -4794,10 +4809,10 @@ class _WorldWheelPainter extends CustomPainter {
         // wrong one for a callout, which is what this is: it is set at
         // the canvas size, upright, and the walk in `_uprightArcLabel`
         // finds it somewhere free and draws a leader back to the mark.
-        if (l.name.isNotEmpty &&
+        if (l.fullName.isNotEmpty &&
             wheelShowsEventText(zoom: zoom, selected: sel)) {
-          _uprightArcLabel(canvas, c, l.centre, l.name, l.arc.a0, l.arc.sweep,
-              rimFont / _labelScale(zoom), sel ? 1.0 : 0.7);
+          _uprightArcLabel(canvas, c, l.centre, l.fullName, l.arc.a0,
+              l.arc.sweep, rimFont / _labelScale(zoom), sel ? 1.0 : 0.7);
         }
       }
     }
@@ -5235,6 +5250,7 @@ class _WorldWheelPainter extends CustomPainter {
     // was to tap it and read the panel. It gets a name like everything
     // else now; the walk below finds it somewhere free.
     if (sweep < 0 || fontSize <= 0 || text.isEmpty) return;
+    WheelRenderStats.noteLabelAsked(text);
     final tp = _painter(text, wb.text.withValues(alpha: 0.98 * dim), fontSize);
     final mid = a0 + sweep / 2;
     final centre = c + Offset(math.cos(mid), math.sin(mid)) * radius;
@@ -5256,23 +5272,31 @@ class _WorldWheelPainter extends CustomPainter {
       // the reader is looking, and it draws a leader back to the arc
       // whenever it had to move: a name away from the thing it names
       // is only honest if it says which thing.
+      // And OUT OF the ring when the lane itself is full, which is the
+      // case the ring walk could not answer: 亚们 has 玛拿西 against one
+      // end and 约西亚 against the other, so six box-widths either way
+      // is still inside somebody else's name. See [arcLabelDetours] for
+      // why outward is the safer of the two moves.
       final step = w / (radius > 1 ? radius : 1);
       var moved = false;
-      for (var k = 1; k <= 6 && !moved; k++) {
-        for (final dir in const [1.0, -1.0]) {
-          final at = mid + dir * step * k;
-          if (at < startRad || at > startRad + sweepRad) continue;
-          final p = c + Offset(math.cos(at), math.sin(at)) * radius;
-          final candidate = Rect.fromCenter(center: p, width: w, height: h);
-          if (_claim(candidate)) {
-            box = candidate;
-            leader = centre;
-            moved = true;
-            break;
-          }
+      for (final m in arcLabelDetours(step: step, rowStep: h * 1.25)) {
+        final at = mid + m.dAngle;
+        if (at < startRad || at > startRad + sweepRad) continue;
+        final r = radius + m.dRadius;
+        if (r <= 0) continue;
+        final p = c + Offset(math.cos(at), math.sin(at)) * r;
+        final candidate = Rect.fromCenter(center: p, width: w, height: h);
+        if (_claim(candidate)) {
+          box = candidate;
+          leader = centre;
+          moved = true;
+          break;
         }
       }
-      if (!moved) return;
+      if (!moved) {
+        WheelRenderStats.noteLabelLost(text);
+        return;
+      }
     }
     if (leader case final from?) {
       canvas.drawLine(
@@ -5426,3 +5450,4 @@ class _YearSpokePainter extends CustomPainter {
       old.color != color ||
       old.zoom != zoom;
 }
+

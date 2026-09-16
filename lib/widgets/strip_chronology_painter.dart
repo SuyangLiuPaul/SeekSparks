@@ -989,6 +989,31 @@ class StripRulerPainter extends CustomPainter {
     final major = Paint()
       ..color = wb.border.withValues(alpha: 0.5)
       ..strokeWidth = 0.9;
+    // WHERE THE AXIS ENDS, SETTLED BEFORE THE TICKS ARE LABELLED. A
+    // tick whose mark sits on one of these is what made the ruler read
+    // 「主后2000直接跳到2026年了」 — see [stripTickLabelClearsEnds] for
+    // why the end keeps its word and the tick gives its up.
+    final endLabels = <({int year, double x, TextAlign align})>[
+      (year: kStripMinYear, x: 0, align: TextAlign.left),
+      // `stripContentWidth`, not `size.width`. They were the same
+      // number while this painter's canvas WAS the whole timeline;
+      // since 2026-09-15 the canvas is the viewport, and the last year
+      // belongs at the end of the strip rather than at the right edge
+      // of whatever happens to be on screen. The two are the same
+      // function — `stripContentWidth` is defined as
+      // `xForYear(kStripMaxYear)` — so this is the identity that was
+      // always meant, spelled out.
+      (
+        year: kStripMaxYear,
+        x: stripContentWidth(pxPerYear),
+        align: TextAlign.right
+      ),
+    ];
+    final endXs = [
+      for (final e in endLabels)
+        if (visible(e.x)) e.x
+    ];
+
     var previousLabelEnd = double.negativeInfinity;
     for (final year in rulerTicks(step)) {
       final x = xForYear(year, pxPerYear);
@@ -1007,9 +1032,14 @@ class StripRulerPainter extends CustomPainter {
       // that cannot clear the previous one. Both axis ends remain on
       // their own lower row, and tapping any tick reads its exact year.
       if (stripPaintLabelFits(
-        labelStart: labelX,
-        previousLabelEnd: previousLabelEnd,
-      )) {
+            labelStart: labelX,
+            previousLabelEnd: previousLabelEnd,
+          ) &&
+          stripTickLabelClearsEnds(
+            tickX: x,
+            halfWidth: tp.width / 2,
+            endXs: endXs,
+          )) {
         tp.paint(canvas, Offset(labelX, 2));
         previousLabelEnd = labelX + tp.width;
       }
@@ -1017,26 +1047,18 @@ class StripRulerPainter extends CustomPainter {
 
     // The two axis ends, brighter — "these two say what the chart's
     // range IS," the wheel's own `_paintAxisEnds` reasoning, unchanged.
-    void end(int year, double x, TextAlign align) {
-      if (!visible(x)) return;
+    // Drawn from the SAME list the tick labels dodged above, so the
+    // extent a tick gave way to is the extent that then gets painted.
+    for (final e in endLabels) {
+      if (!visible(e.x)) continue;
       final tp = StripPaintTextCache.layout(
-        text: yearLabel(year, locale),
+        text: yearLabel(e.year, locale),
         style: canvasTextStyle(
             fontSize: tickFontPx, color: wb.text, fontWeight: FontWeight.w600),
       );
-      final dx = align == TextAlign.left ? x : x - tp.width;
+      final dx = e.align == TextAlign.left ? e.x : e.x - tp.width;
       tp.paint(canvas, Offset(dx, size.height - tp.height - 1));
     }
-
-    end(kStripMinYear, 0, TextAlign.left);
-    // `stripContentWidth`, not `size.width`. They were the same number
-    // while this painter's canvas WAS the whole timeline; since
-    // 2026-09-15 the canvas is the viewport, and the last year belongs
-    // at the end of the strip rather than at the right edge of whatever
-    // happens to be on screen. The two are the same function —
-    // `stripContentWidth` is defined as `xForYear(kStripMaxYear)` — so
-    // this is the identity that was always meant, spelled out.
-    end(kStripMaxYear, stripContentWidth(pxPerYear), TextAlign.right);
   }
 
   @override
