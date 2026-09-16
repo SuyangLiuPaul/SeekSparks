@@ -1019,7 +1019,8 @@ class _StackedWheelPainter extends CustomPainter {
           padding: 2 / zoom,
           pointRadius: 3 / zoom,
           occluders: scene.prisms.skip(i + 1),
-          occupied: occupied);
+          occupied: occupied,
+          beside: scene.prisms);
       if (placement == null || !_inside(placement.bounds, visible)) continue;
       admitted++;
       occupied.add(placement.bounds.inflate(3 / zoom));

@@ -443,6 +443,57 @@ class StripLanesPainter extends CustomPainter {
     }
   }
 
+  /// One bar's name: inside the bar when it fits, and immediately AFTER
+  /// the bar when it does not.
+  ///
+  /// 2026-09-16 「如果框框放不下 就放在那个线或者窄框框后面 如果后面有位
+  /// 置」. A seven-year reign at the zoom that shows four centuries is
+  /// three pixels wide, so [fitBarLabel] answers — correctly — that no
+  /// name fits inside it, and the reader was left with a coloured
+  /// sliver and no way to learn what it was without tapping it. A lane
+  /// is a packing of NON-OVERLAPPING spans, so the room to the right of
+  /// that sliver is usually empty for decades.
+  ///
+  /// The name stops clear of the next span in the lane, because a name
+  /// touching the following bar reads as that bar's name.
+  ({String text, double x, bool after})? _barLabel(
+      StripSpan span, StripLane lane, String name, double x0, double x1) {
+    if (name.isEmpty) return null;
+    final visStart = math.max(x0, visibleX0);
+    final visEnd = math.min(x1, visibleX1);
+    final fit = fitBarLabel(
+        text: name,
+        roomPx: math.max(0.0, visEnd - visStart),
+        size: laneFontPx,
+        measure: _measure);
+    if (fit.text.isNotEmpty) {
+      return (
+        text: fit.text,
+        x: barLabelX(
+            barX0: x0,
+            barX1: x1,
+            labelW: _measure(fit.text, laneFontPx),
+            viewX0: visibleX0,
+            viewX1: visibleX1),
+        after: false,
+      );
+    }
+    var nextX0 = double.infinity;
+    for (final other in lane.spans) {
+      if (other.id == span.id) continue;
+      final ox = xForYear(other.startYear, pxPerYear);
+      if (ox >= x1 && ox < nextX0) nextX0 = ox;
+    }
+    final x = trailingLabelX(
+      barX1: x1,
+      labelW: _measure(name, laneFontPx),
+      nextX0: nextX0,
+      viewX0: visibleX0,
+      viewX1: visibleX1,
+    );
+    return x == null ? null : (text: name, x: x, after: true);
+  }
+
   double _rowFor(StripSpan span, StripRow row) => row.top + row.height / 2;
 
   /// Group headings provide structure without colouring the entire
@@ -525,12 +576,17 @@ class StripLanesPainter extends CustomPainter {
       // spans`' "nameless arc" branch: it is the same mechanism this
       // spec's zero-length example (Zimri, Huldah, Ahaziah of Judah,
       // Jehoahaz of Judah) names.
+      final dot = math.min(1.6, fillHeight * 0.28);
       canvas.drawCircle(
         Offset(x0, _rowFor(span, row)),
-        math.min(1.6, fillHeight * 0.28),
+        dot,
         Paint()
           ..color = color.withValues(alpha: (0.78 * dim * 2.6).clamp(0.0, 1.0)),
       );
+      // 「就放在那个线或者窄框框后面」 — a zero-length reign is the
+      // narrowest case of all, and it is the one a reader is most
+      // likely to want named.
+      _paintBarName(canvas, span, lane, row, x0, x0 + dot, dim);
       return;
     }
 
@@ -551,27 +607,25 @@ class StripLanesPainter extends CustomPainter {
         ..color = color.withValues(alpha: (sel ? 0.95 : 0.55) * dim),
     );
 
-    final name = palette.spanLabel[span.id] ?? '';
-    if (name.isEmpty) return;
-    final visStart = math.max(x0, visibleX0);
-    final visEnd = math.min(x1, visibleX1);
-    final roomPx = math.max(0.0, visEnd - visStart);
-    final fit = fitBarLabel(
-        text: name, roomPx: roomPx, size: laneFontPx, measure: _measure);
-    if (fit.text.isEmpty) return;
-    final labelW = _measure(fit.text, laneFontPx);
-    final labelX = barLabelX(
-        barX0: x0,
-        barX1: x1,
-        labelW: labelW,
-        viewX0: visibleX0,
-        viewX1: visibleX1);
+    _paintBarName(canvas, span, lane, row, x0, x1, dim);
+  }
+
+  void _paintBarName(Canvas canvas, StripSpan span, StripLane lane,
+      StripRow row, double x0, double x1, double dim,
+      {double alpha = 0.98}) {
+    final placed =
+        _barLabel(span, lane, palette.spanLabel[span.id] ?? '', x0, x1);
+    if (placed == null) return;
     final tp = StripPaintTextCache.layout(
-      text: fit.text,
+      text: placed.text,
       style: canvasTextStyle(
-          fontSize: laneFontPx, color: wb.text.withValues(alpha: 0.98 * dim)),
+          fontSize: laneFontPx,
+          // A name standing beside its bar rather than on it is a
+          // little quieter, so the eye still reads the bars first.
+          color: wb.text
+              .withValues(alpha: (placed.after ? alpha * 0.8 : alpha) * dim)),
     );
-    tp.paint(canvas, Offset(labelX, _rowFor(span, row) - tp.height / 2));
+    tp.paint(canvas, Offset(placed.x, _rowFor(span, row) - tp.height / 2));
   }
 
   /// The Genesis lifespans — §3.3, descended from the wheel's
@@ -632,26 +686,16 @@ class StripLanesPainter extends CustomPainter {
 
     final name = palette.spanLabel[span.id] ?? '';
     if (name.isEmpty) return;
-    final visStart = math.max(x0, visibleX0);
-    final visEnd = math.min(x1, visibleX1);
-    final roomPx = math.max(0.0, visEnd - visStart);
-    final fit = fitBarLabel(
-        text: name, roomPx: roomPx, size: laneFontPx, measure: _measure);
-    if (fit.text.isEmpty) return;
-    final labelW = _measure(fit.text, laneFontPx);
-    final labelX = barLabelX(
-        barX0: x0,
-        barX1: x1,
-        labelW: labelW,
-        viewX0: visibleX0,
-        viewX1: visibleX1);
+    final placed = _barLabel(span, lane, name, x0, x1);
+    if (placed == null) return;
     final tp = StripPaintTextCache.layout(
-      text: fit.text,
+      text: placed.text,
       style: canvasTextStyle(
           fontSize: laneFontPx,
-          color: wb.text.withValues(alpha: has && !sel ? 0.45 : 0.95)),
+          color: wb.text.withValues(
+              alpha: (has && !sel ? 0.45 : 0.95) * (placed.after ? 0.8 : 1.0))),
     );
-    tp.paint(canvas, Offset(labelX, y - tp.height / 2));
+    tp.paint(canvas, Offset(placed.x, y - tp.height / 2));
   }
 
   /// The genealogy rail — §3.4, descended from the wheel's own
@@ -1089,8 +1133,8 @@ class StripLaneHeaderPainter extends CustomPainter {
             ..colorFilter = ColorFilter.mode(color, BlendMode.srcIn),
         );
       }
-      tp.paint(
-          canvas, Offset(_padding + 10, row.top + (row.height - tp.height) / 2));
+      tp.paint(canvas,
+          Offset(_padding + 10, row.top + (row.height - tp.height) / 2));
     }
   }
 

@@ -55,15 +55,16 @@ void main() {
   });
 
   group('stripContentWidth', () {
-    test('the whole 6226-year axis is 934 px at the smallest zoom step, '
+    test(
+        'the whole 6226-year axis is 934 px at the smallest zoom step, '
         'as the library doc claims', () {
       expect(stripContentWidth(0.15), closeTo(933.9, 0.1));
     });
 
     test('equals xForYear at the max year', () {
       for (final pxPerYear in kStripZoomSteps) {
-        expect(stripContentWidth(pxPerYear),
-            xForYear(kStripMaxYear, pxPerYear));
+        expect(
+            stripContentWidth(pxPerYear), xForYear(kStripMaxYear, pxPerYear));
       }
     });
   });
@@ -89,14 +90,16 @@ void main() {
   });
 
   group('pxPerYearToFit', () {
-    test('fitting the whole axis into a viewport gives back the same '
+    test(
+        'fitting the whole axis into a viewport gives back the same '
         'ratio stripContentWidth would need to be undone', () {
       const viewport = 900.0;
       final fit = pxPerYearToFit(kStripMinYear, kStripMaxYear, viewport);
       expect(stripContentWidth(fit), closeTo(viewport, 1e-6));
     });
 
-    test('a degenerate zero-year request falls back to the top of the '
+    test(
+        'a degenerate zero-year request falls back to the top of the '
         'ladder rather than dividing by zero', () {
       expect(pxPerYearToFit(500, 500, 900), kStripZoomSteps.last);
       expect(() => pxPerYearToFit(500, 500, 900), returnsNormally);
@@ -116,8 +119,7 @@ void main() {
       expect(snapZoom(0.5), 0.6);
     });
 
-    test('always returns a real ladder member, for values far outside it',
-        () {
+    test('always returns a real ladder member, for values far outside it', () {
       expect(kStripZoomSteps, contains(snapZoom(-5)));
       expect(kStripZoomSteps, contains(snapZoom(1000)));
     });
@@ -165,8 +167,7 @@ void main() {
       expect(ticks.last, lessThanOrEqualTo(kStripMaxYear));
     });
 
-    test('lands on absolute multiples of step, not offsets from minYear',
-        () {
+    test('lands on absolute multiples of step, not offsets from minYear', () {
       final ticks = rulerTicks(500);
       for (final y in ticks) {
         expect(y % 500, 0);
@@ -175,7 +176,8 @@ void main() {
       expect(ticks, contains(2000));
     });
 
-    test('a step that does not divide the range still terminates and '
+    test(
+        'a step that does not divide the range still terminates and '
         'stays in range', () {
       final ticks = rulerTicks(137);
       expect(ticks, isNotEmpty);
@@ -195,7 +197,8 @@ void main() {
       expect(lanes[0], isNot(lanes[1]));
     });
 
-    test('the lane count is exactly what the overlaps demand: four '
+    test(
+        'the lane count is exactly what the overlaps demand: four '
         'spans all mutually overlapping need four lanes, not the '
         'ring-count ceiling packIntoRings would have imposed', () {
       final lanes = packIntoLanes([0, 0, 0, 0], [100, 100, 100, 100]);
@@ -203,24 +206,22 @@ void main() {
     });
 
     test('a span reuses a lane once the gap clears minGapPx', () {
-      final lanes =
-          packIntoLanes([0, 20], [10, 30], minGapPx: 5); // gap = 10
+      final lanes = packIntoLanes([0, 20], [10, 30], minGapPx: 5); // gap = 10
       expect(lanes, [0, 0]);
     });
 
     test('a span does NOT reuse a lane when the gap is under minGapPx', () {
-      final lanes =
-          packIntoLanes([0, 12], [10, 30], minGapPx: 5); // gap = 2
+      final lanes = packIntoLanes([0, 12], [10, 30], minGapPx: 5); // gap = 2
       expect(lanes, [0, 1]);
     });
 
-    test('never overprints: no two spans sharing a lane come closer '
+    test(
+        'never overprints: no two spans sharing a lane come closer '
         'than minGapPx, over a randomised property check', () {
       final rand = math.Random(7);
       for (var trial = 0; trial < 50; trial++) {
         final n = 5 + rand.nextInt(20);
-        final starts = List.generate(n, (_) => rand.nextDouble() * 500)
-          ..sort();
+        final starts = List.generate(n, (_) => rand.nextDouble() * 500)..sort();
         final ends = [
           for (final s in starts) s + rand.nextDouble() * 40,
         ];
@@ -249,9 +250,9 @@ void main() {
   });
 
   group('hitTargetFor', () {
-    test('a span already wider than a finger is returned unchanged — '
-        'the target never shrinks the ink, and never widens it either',
-        () {
+    test(
+        'a span already wider than a finger is returned unchanged — '
+        'the target never shrinks the ink, and never widens it either', () {
       final t = hitTargetFor(0, 20, fingerPx: 9);
       expect(t.x0, 0);
       expect(t.x1, 20);
@@ -263,8 +264,7 @@ void main() {
       expect((t.x0 + t.x1) / 2, closeTo(100, 1e-9));
     });
 
-    test('a span narrower than a finger is widened to exactly a finger',
-        () {
+    test('a span narrower than a finger is widened to exactly a finger', () {
       final t = hitTargetFor(10, 13, fingerPx: 9); // 3 px wide
       expect(t.x1 - t.x0, 9);
       expect((t.x0 + t.x1) / 2, closeTo(11.5, 1e-9));
@@ -272,7 +272,8 @@ void main() {
   });
 
   group('nearestSpanAt', () {
-    test('every one of the 42 real kings is hittable at the smallest '
+    test(
+        'every one of the 42 real kings is hittable at the smallest '
         'zoom step, ONE LANE AT A TIME — the same precondition '
         '`nearestArcAt` states ("already filtered to ONE ring")', () {
       // A flat, unpacked tap test fails for a real and interesting
@@ -321,9 +322,9 @@ void main() {
       expect(nearestSpanAt(50, spans), isNull);
     });
 
-    test('of two overlapping widened targets, the point with the '
-        'smaller NORMALISED distance wins, not the raw-closer one',
-        () {
+    test(
+        'of two overlapping widened targets, the point with the '
+        'smaller NORMALISED distance wins, not the raw-closer one', () {
       // A: narrow (0..2, own floors to 4.5). B: wide (0..20, own 10).
       // x=3 is 2 px from A's centre and 7 px from B's — nearer in raw
       // terms too, but the claim being tested is the normalised score,
@@ -365,7 +366,9 @@ void main() {
       // word or an ellipsis.
       for (final room in [0.0, 5, 12, 24, 36, 48, 100, 1000]) {
         final res = fitBarLabel(
-            text: '大英帝国', roomPx: room.toDouble(), size: 12,
+            text: '大英帝国',
+            roomPx: room.toDouble(),
+            size: 12,
             measure: cjkAwareMeasure);
         expect(res.ellipsised, isFalse);
         expect(res.text, anyOf('', '大英帝国'));
@@ -381,26 +384,26 @@ void main() {
       );
       expect(r.text, isNotEmpty);
       expect(r.text.endsWith('…'), isTrue);
-      expect('Holy Roman Empire'.startsWith(r.text.replaceAll('…', '')),
-          isTrue);
+      expect(
+          'Holy Roman Empire'.startsWith(r.text.replaceAll('…', '')), isTrue);
     });
 
     test('nothing legible fits: empty text, not a crash', () {
-      final r = fitBarLabel(
-          text: 'Rome', roomPx: 0, size: 10, measure: latinMeasure);
+      final r =
+          fitBarLabel(text: 'Rome', roomPx: 0, size: 10, measure: latinMeasure);
       expect(r.text, '');
     });
   });
 
   group('barLabelX', () {
-    test('a bar entirely inside the viewport starts at its own left edge',
-        () {
-      final x = barLabelX(
-          barX0: 100, barX1: 200, labelW: 40, viewX0: 0, viewX1: 900);
+    test('a bar entirely inside the viewport starts at its own left edge', () {
+      final x =
+          barLabelX(barX0: 100, barX1: 200, labelW: 40, viewX0: 0, viewX1: 900);
       expect(x, 100);
     });
 
-    test('a bar much wider than the viewport pins its label to the '
+    test(
+        'a bar much wider than the viewport pins its label to the '
         'visible left edge, not the bar\'s own start off-screen', () {
       // A 400-year empire at 6 px/year is 2400 px wide; the viewport
       // is scrolled to its middle.
@@ -409,7 +412,8 @@ void main() {
       expect(x, 800);
     });
 
-    test('the label never runs past the bar\'s own right edge, even '
+    test(
+        'the label never runs past the bar\'s own right edge, even '
         'when the visible slice would push it there', () {
       final x = barLabelX(
           barX0: 0, barX1: 2400, labelW: 100, viewX0: 2350, viewX1: 2750);
@@ -417,8 +421,8 @@ void main() {
     });
 
     test('the label never starts left of the bar\'s own start', () {
-      final x = barLabelX(
-          barX0: 500, barX1: 600, labelW: 40, viewX0: 0, viewX1: 300);
+      final x =
+          barLabelX(barX0: 500, barX1: 600, labelW: 40, viewX0: 0, viewX1: 300);
       expect(x, greaterThanOrEqualTo(500));
     });
   });
@@ -437,7 +441,8 @@ void main() {
       expect(out.first.representative, 0);
     });
 
-    test('a new cluster starts once an x clears the FIRST member, even '
+    test(
+        'a new cluster starts once an x clears the FIRST member, even '
         'if it is close to the most recent one', () {
       // 0, 4, 8: each 4 from the last, but 8 is 8 from the first (0),
       // so it starts a new cluster once the gap to the anchor clears 5.
@@ -479,7 +484,8 @@ void main() {
 
   // Guard on the guards above: if the corpus stops having zero-width
   // reigns, the tests that lean on that fact are proving nothing.
-  test('the corpus really does still have zero-width reigns and '
+  test(
+      'the corpus really does still have zero-width reigns and '
       'zero-width ministries', () {
     final zeroKings =
         _kings().where((k) => k.reignStart == k.reignEnd).map((k) => k.id);
@@ -488,5 +494,62 @@ void main() {
     final zeroMinistries =
         _ministries().where((m) => m.start == m.end).map((m) => m.id);
     expect(zeroMinistries, contains('huldah_prophet'));
+  });
+
+  group('a name that will not fit inside its bar', () {
+    // 2026-09-16 「如果框框放不下 就放在那个线或者窄框框后面 如果后面有位
+    // 置」. A seven-year reign at the zoom that shows four centuries is
+    // three pixels wide; `fitBarLabel` answers correctly that no name
+    // fits inside it, and the reader was left with a coloured sliver
+    // and no way to learn what it was without tapping it. A lane is a
+    // packing of NON-OVERLAPPING spans, so the room to the right of
+    // that sliver is usually empty for decades.
+
+    test('stands just after the bar when the lane is clear there', () {
+      final x = trailingLabelX(
+          barX1: 100,
+          labelW: 40,
+          nextX0: double.infinity,
+          viewX0: 0,
+          viewX1: 800);
+      expect(x, isNotNull);
+      expect(x!, greaterThan(100),
+          reason: 'the name has to start after the bar, not on it');
+      expect(x, lessThan(112), reason: 'and stay next to it');
+    });
+
+    test('never touches the span that comes next in the lane', () {
+      // A name that reaches the following bar reads as that bar's name,
+      // which is worse than no name at all.
+      expect(
+          trailingLabelX(
+              barX1: 100, labelW: 40, nextX0: 130, viewX0: 0, viewX1: 800),
+          isNull);
+      expect(
+          trailingLabelX(
+              barX1: 100, labelW: 40, nextX0: 400, viewX0: 0, viewX1: 800),
+          isNotNull);
+    });
+
+    test('is not drawn off the edge of the viewport', () {
+      expect(
+          trailingLabelX(
+              barX1: 795,
+              labelW: 40,
+              nextX0: double.infinity,
+              viewX0: 0,
+              viewX1: 800),
+          isNull,
+          reason: 'a bar at the right edge has no room after it on screen');
+      expect(
+          trailingLabelX(
+              barX1: -300,
+              labelW: 40,
+              nextX0: double.infinity,
+              viewX0: 0,
+              viewX1: 800),
+          isNull,
+          reason: 'and one scrolled off to the left is not worth shaping');
+    });
   });
 }

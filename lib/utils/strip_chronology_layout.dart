@@ -368,6 +368,40 @@ typedef LabelMeasure = double Function(String text, double size);
   return nothing;
 }
 
+/// Where a bar's name goes when the bar itself is too narrow to hold
+/// it: immediately AFTER the bar, in the empty part of the lane.
+///
+/// 2026-09-16 「如果框框放不下 就放在那个线或者窄框框后面 如果后面有位置」.
+/// A seven-year reign at the zoom that shows four centuries is three
+/// pixels wide, and [fitBarLabel] answers correctly that no name fits
+/// inside it — so the reader got a coloured sliver and no way to learn
+/// what it was without tapping. The lane to its right is usually empty,
+/// because a lane is a packing of non-overlapping spans and the next
+/// one may be decades away.
+///
+/// [nextX0] is the left edge of the next span in this same lane, or
+/// infinity when there is none. The name may not reach it: a name that
+/// touches the following bar reads as that bar's.
+///
+/// Returns null when the name fits inside (the caller keeps its own
+/// placement) and when there is no room after it either.
+double? trailingLabelX({
+  required double barX1,
+  required double labelW,
+  required double nextX0,
+  required double viewX0,
+  required double viewX1,
+  double gap = 5,
+}) {
+  if (labelW <= 0 || !barX1.isFinite) return null;
+  final x = barX1 + gap;
+  // It has to be on screen to be worth drawing, and it has to stop
+  // clear of whatever comes next.
+  if (x >= viewX1 || x + labelW <= viewX0) return null;
+  if (x + labelW > nextX0 - gap) return null;
+  return x;
+}
+
 /// Where a bar's label starts, so a label on a bar that runs off both
 /// edges of the viewport stays visible.
 ///

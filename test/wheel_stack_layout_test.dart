@@ -284,6 +284,11 @@ void main() {
         () {
       final lower = prism('lower');
       final upper = prism('upper', bottom: 7, top: 12);
+      // A name may stand just past the end of its own face when nothing
+      // fits ON it (2026-09-16 「如果框框放不下 就放在那个线或者窄框框后
+      // 面」) — but not here: `upper` covers this sector at a greater
+      // height, and its side walls sweep down across the room past the
+      // end of `lower` too.
       expect(
           wheelStackLabelPlacement(lower, const Size(28, 12),
               occluders: [upper]),
@@ -299,6 +304,31 @@ void main() {
       expect(next!.bounds.inflate(2).overlaps(first.bounds), isFalse);
     });
 
+    test('a face too small for its name is named just past its end', () {
+      // 2026-09-16 「如果框框放不下 就放在那个线或者窄框框后面 如果后面有
+      // 位置」 and 「这样wheel strip就一致了」. A three-degree sliver cannot
+      // carry a name; the ring beside it usually can, and the strip
+      // already does exactly this for a bar too narrow to hold one.
+      final sliver = prism('sliver', start: 0, end: .05);
+      final placed = wheelStackLabelPlacement(sliver, const Size(30, 11));
+      expect(placed, isNotNull,
+          reason: 'a sliver with an empty ring beside it got no name');
+      expect(placed!.beyondFace, isTrue);
+
+      // It stays on the record's OWN ring, so which ring it belongs to
+      // is never in doubt.
+      const projection = WheelStackProjection();
+      final ring = (placed.centre - projection.centre).distance;
+      expect(ring, greaterThan(sliver.innerRadius * .55));
+
+      // And it gives way to whatever is already there.
+      final neighbour = prism('neighbour', start: .06, end: math.pi);
+      expect(
+          wheelStackLabelPlacement(sliver, const Size(30, 11),
+              beside: [sliver, neighbour]),
+          isNull);
+    });
+
     test('visible point markers also reserve their ink above rear labels', () {
       // The placement search walks several points along the arc
       // (2026-09-16 「这些放得了放得下的都应该放」), so a marker sitting on
@@ -312,25 +342,27 @@ void main() {
       ];
       final moved = wheelStackLabelPlacement(lower, const Size(28, 12),
           occluders: points, pointRadius: 3);
-      if (moved != null) {
-        for (final point in points) {
-          expect(
-              moved.bounds.overlaps(
-                  wheelStackPointFootprint(point, radius: 3).getBounds()),
-              isFalse,
+      expect(moved, isNotNull);
+      for (final point in points) {
+        final ink = wheelStackPointFootprint(point, radius: 3);
+        for (final corner in moved!.corners) {
+          expect(ink.contains(corner), isFalse,
               reason: 'the name was placed over ${point.id}');
         }
       }
 
-      // And when every place it could go is taken, it still refuses.
+      // And when everywhere on the face AND the room past its end are
+      // both taken, it still refuses rather than drawing over them.
       final everywhere = [
-        for (final fraction in [.12, .25, .37, .5, .63, .75, .88])
+        for (final fraction in [.12, .25, .37, .5, .63, .75, .88, 1.1])
           prism('point-$fraction',
               start: math.pi * fraction, end: math.pi * fraction),
       ];
       expect(
           wheelStackLabelPlacement(lower, const Size(28, 12),
-              occluders: everywhere, pointRadius: 3),
+              occluders: everywhere,
+              beside: [lower, ...everywhere],
+              pointRadius: 3),
           isNull);
     });
   });

@@ -282,19 +282,31 @@ class WheelStackLabelPlacement {
     required this.rotation,
     required this.bounds,
     required this.corners,
+    this.beyondFace = false,
   });
 
   final Offset centre;
   final double rotation;
   final Rect bounds;
   final List<Offset> corners;
+
+  /// True when the name could not fit on the record's own face and is
+  /// standing just past the end of it instead, on the same ring.
+  final bool beyondFace;
 }
 
-/// A readable straight tangent on this tier's top face, or no label.
-/// Size comes from the actual shaped text. All of its padded rectangle
-/// must fit the annular sector, clear already placed text and avoid the
-/// footprints painted in front. Hiding a name never hides the record's
-/// prism or its tap target; the event explorer supplies the full wording.
+/// A readable straight tangent on this tier's top face — or, when
+/// nothing fits there, just past the end of that face on the same ring.
+///
+/// Size comes from the actual shaped text. On the face, all of its
+/// padded rectangle must fit the annular sector, clear already placed
+/// text and avoid the footprints painted in front. Past the end of it,
+/// the rectangle must additionally clear every other record in
+/// [beside], because a name lying on the next record's face reads as
+/// that record's name — which is worse than no name at all.
+///
+/// Hiding a name never hides the record's prism or its tap target; the
+/// event explorer supplies the full wording.
 WheelStackLabelPlacement? wheelStackLabelPlacement(
   WheelStackPrism prism,
   Size textSize, {
@@ -302,6 +314,7 @@ WheelStackLabelPlacement? wheelStackLabelPlacement(
   double pointRadius = 0,
   Iterable<WheelStackPrism> occluders = const [],
   Iterable<Rect> occupied = const [],
+  Iterable<WheelStackPrism> beside = const [],
 }) {
   if (textSize.isEmpty || prism.sweep == 0) return null;
   // SEVEN PLACES ALONG THE ARC, NOT THREE.
@@ -346,7 +359,63 @@ WheelStackLabelPlacement? wheelStackLabelPlacement(
         bounds: bounds,
         corners: List.unmodifiable(corners));
   }
-  return null;
+
+  // NOTHING FITS ON THE FACE. Put the name just past the end of it.
+  //
+  // 2026-09-16 「如果框框放不下 就放在那个线或者窄框框后面 如果后面有位
+  // 置」, and 「这样wheel strip就一致了」 — the strip does the same thing
+  // for a bar too narrow to hold its own name, and the two views of one
+  // corpus must not disagree about what an unnameable record looks
+  // like.
+  //
+  // The name stays on the record's OWN ring, at its own radius, so
+  // which ring it belongs to is never in doubt; it simply starts where
+  // the face ends. [beside] is the rest of the chart: a name that lands
+  // on the next record's face reads as that record's name, which is
+  // worse than no name at all.
+  if (prism.middleRadius <= 0) return null;
+  final needed = (textSize.width + padding * 2) / prism.middleRadius;
+  if (needed > math.pi / 2) return null;
+  final angle = prism.endAngle + needed / 2;
+  var rotation =
+      math.atan2(prism.projection.squash * math.cos(angle), -math.sin(angle));
+  if (rotation > math.pi / 2) rotation -= math.pi;
+  if (rotation < -math.pi / 2) rotation += math.pi;
+  final centre = prism.projection
+      .polar(prism.middleRadius, angle, height: prism.topHeight);
+  final corners = _labelCorners(centre, rotation, textSize);
+  final padded = _labelCorners(centre, rotation,
+      Size(textSize.width + padding * 2, textSize.height + padding * 2));
+  final paddedPath = _polygon(padded);
+  final bounds = _polygon(corners).getBounds();
+  if (occupied.any((other) => bounds.inflate(padding).overlaps(other))) {
+    return null;
+  }
+  // Everything painted in front of this record still hides ink past
+  // the end of its face, exactly as it does on the face.
+  for (final other in [...occluders, ...beside]) {
+    if (identical(other, prism) || other.id == prism.id) continue;
+    // The cheap rectangle test first — but NOT for a point marker,
+    // whose `footprint` is empty and whose bounds are therefore
+    // Rect.zero. It has ink all the same.
+    if (other.sweep != 0 && !other.bounds.overlaps(bounds)) continue;
+    if (!Path.combine(
+            PathOperation.intersect,
+            paddedPath,
+            other.sweep == 0
+                ? wheelStackPointFootprint(other, radius: pointRadius)
+                : other.footprint)
+        .getBounds()
+        .isEmpty) {
+      return null;
+    }
+  }
+  return WheelStackLabelPlacement(
+      centre: centre,
+      rotation: rotation,
+      bounds: bounds,
+      corners: List.unmodifiable(corners),
+      beyondFace: true);
 }
 
 enum WheelStackCalloutSide { left, right }
