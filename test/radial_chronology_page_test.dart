@@ -1106,9 +1106,29 @@ void main() {
         (tester) async {
       await pump(tester, const Size(1440, 900));
       await openPower(tester, 'Kingdom of Judah', '南国犹大');
-      final text = sheetText(tester);
 
+      // SCROLLED, because the panel is half the window rather than
+      // seven tenths of it since 2026-09-16 — it stopped being modal
+      // 「我发现这种pop up给人的体验感很不好」 and a panel the reader can
+      // no longer dismiss by accident has to leave the chart room. The
+      // list is a `ListView`, so a king below the fold is not built and
+      // `find.text` cannot see him. Reading the WHOLE list is what this
+      // test is about, so it reads the whole list.
       final judah = kings.ofKingdom(Kingdom.judah);
+      final seen = StringBuffer(sheetText(tester));
+      final sheetList = find.descendant(
+          of: find.byType(BottomSheet).last,
+          matching: find.byType(Scrollable));
+      for (var i = 0; i < 12; i++) {
+        if (judah.every((k) => seen.toString().contains(k.nameFor('zh-Hans')))) {
+          break;
+        }
+        await tester.drag(sheetList.first, const Offset(0, -220));
+        await tester.pump();
+        seen.writeln(sheetText(tester));
+      }
+      final text = seen.toString();
+
       expect(text, contains('列王 · ${judah.length}'));
       for (final k in judah) {
         expect(text, contains(k.nameFor('zh-Hans')),

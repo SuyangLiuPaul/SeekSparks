@@ -269,14 +269,38 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
   /// the panel is bounded rather than spanning the window, so it sits
   /// in a corner of the chart instead of across it.
   ///
-  /// It is still a bottom sheet. Docking it to the side was tried and
-  /// reverted the same hour: it is the right shape, and it changes the
-  /// widget every one of twenty-six tests reaches for by type — a
-  /// presentation change should not cost that, and buying it properly
-  /// means giving the panel an identity of its own first.
+  /// 2026-09-16, the third change and the one that answers the
+  /// complaint: it is NOT MODAL any more. 「我发现这种pop up给人的体验感
+  /// 很不好，可以换个吗？或者hover 然后按的时候就freeze在那里之类的」.
+  ///
+  /// A modal sheet takes the whole screen's input. Everything the
+  /// reader might want to do next — pan to the century beside this one,
+  /// tap the band above it, zoom to see what this one overlaps — had to
+  /// be bought by dismissing the answer first. That is the bad
+  /// experience: not the shape of the panel, the fact that it FREEZES
+  /// THE CHART rather than freezing beside it.
+  ///
+  /// `showBottomSheet` is the persistent one. The chart stays live
+  /// underneath; a tap on another record REPLACES what is in the panel
+  /// instead of stacking a second route on top of the first; and the
+  /// panel stays until the reader closes it, which is 「freeze在那里」
+  /// read literally.
+  ///
+  /// It is still a `BottomSheet` in the tree, which is what the
+  /// thirty-one assertions that reach for it by type are looking at —
+  /// the side dock that was reverted in an hour changed that, and this
+  /// does not.
+  ///
+  /// The height cap moves with it: a panel that cannot be dismissed by
+  /// accident may not take seven tenths of a phone either, so it takes
+  /// half and the chart keeps the rest.
   Future<void> _present(BuildContext context, WbColors wb,
-          {required WidgetBuilder builder}) =>
-      showModalBottomSheet<void>(
+      {required WidgetBuilder builder}) async {
+    final scaffold = Scaffold.maybeOf(context);
+    if (scaffold == null) {
+      // No Scaffold in scope means no persistent sheet is possible.
+      // Modal is the honest fallback rather than dropping the answer.
+      return showModalBottomSheet<void>(
         context: context,
         backgroundColor: wb.paneBg,
         isScrollControlled: true,
@@ -286,13 +310,37 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
             : const BoxConstraints(maxWidth: 560),
         builder: builder,
       );
+    }
+    closeDetailPanel();
+    final controller = scaffold.showBottomSheet(
+      builder,
+      backgroundColor: wb.paneBg,
+      constraints: MediaQuery.sizeOf(context).width < 720
+          ? null
+          : const BoxConstraints(maxWidth: 560),
+    );
+    _detailPanel = controller;
+    await controller.closed;
+    if (identical(_detailPanel, controller)) _detailPanel = null;
+  }
+
+  PersistentBottomSheetController? _detailPanel;
+
+  /// Shut the detail panel, if one is open. Safe to call when none is.
+  void closeDetailPanel() {
+    _detailPanel?.close();
+    _detailPanel = null;
+  }
 
   Widget buildSheet(BuildContext sheet, List<Widget> children) {
     final wb = WbColors.of(sheet);
     final t = WbType.of(sheet);
     return ConstrainedBox(
+      // Half, not seven tenths — see [_present]. The panel no longer
+      // goes away when the reader touches the chart, so it has to leave
+      // the chart something to touch.
       constraints:
-          BoxConstraints(maxHeight: MediaQuery.of(sheet).size.height * 0.7),
+          BoxConstraints(maxHeight: MediaQuery.of(sheet).size.height * 0.5),
       child: Stack(children: [
         ListView(
           shrinkWrap: true,
@@ -308,7 +356,17 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
             visualDensity: VisualDensity.compact,
             tooltip: MaterialLocalizations.of(sheet).closeButtonTooltip,
             icon: Icon(Icons.close, color: wb.mutedText),
-            onPressed: () => Navigator.of(sheet).maybePop(),
+            // A persistent sheet is not a route, so `maybePop` would
+            // pop the PAGE. Closing the panel is the panel's own job;
+            // the modal fallback is popped by the same call because
+            // `closeDetailPanel` is a no-op when nothing is registered.
+            onPressed: () {
+              if (_detailPanel != null) {
+                closeDetailPanel();
+              } else {
+                Navigator.of(sheet).maybePop();
+              }
+            },
           ),
         ),
       ]),

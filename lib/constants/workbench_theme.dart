@@ -1251,9 +1251,29 @@ ThemeData workbenchTheme(
         side: BorderSide(color: wb.border),
       ),
     ),
+    // A TOOLTIP IS A SURFACE LIKE ANY OTHER SURFACE IN THIS APP.
+    //
+    // 2026-09-16 「看不清」, with the chart's own 「拖动图表 · 点事件查看
+    // 依据」 photographed as pale grey on near-white. This set the TEXT
+    // to white and left the background to Material, whose default is
+    // `Colors.grey[700]` in a light theme and `Colors.white` at 90% in
+    // a DARK one — so every tooltip in the app was white on white for
+    // any reader in dark mode. Not the chart's bug, and not one tooltip:
+    // the theme's.
+    //
+    // Painted from the same pair every card, sheet and menu here uses,
+    // so it cannot disagree with them and cannot be legible in one
+    // theme and not the other.
     tooltipTheme: TooltipThemeData(
       waitDuration: const Duration(milliseconds: 400),
-      textStyle: body(WbMetrics.chrome, c: Colors.white),
+      textStyle: body(WbMetrics.chrome, c: wb.text),
+      decoration: BoxDecoration(
+        color: wb.paneBg,
+        borderRadius:
+            BorderRadius.all(Radius.circular(WbMetrics.radiusControl)),
+        border: Border.all(color: wb.border),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     ),
     // A dense text field with a hairline box, not a filled pill.
     inputDecorationTheme: InputDecorationTheme(
