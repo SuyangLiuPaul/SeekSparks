@@ -162,12 +162,18 @@ void main() {
     final src =
         File('lib/pages/radial_chronology_page.dart').readAsStringSync();
     final count = 'canvasTextStyle('.allMatches(src).length;
-    expect(count, 7,
+    expect(count, 8,
         reason:
-            'expected 7 canvasTextStyle( call sites (measure, band name, '
-            'spoke title, spoke ref, spoke badge, arc text, shared painter) '
+            'expected 8 canvasTextStyle( call sites (measure, band name, '
+            'REPEATED band name, spoke title, spoke ref, spoke badge, arc '
+            'text, shared painter) '
             '— a genuine new canvas label should raise this number in the '
             'same commit that adds it.\n'
+            '\n'
+            '2026-09-16: 7 → 8. The eighth is the ring name repeated round '
+            'its own ring once the reader has zoomed past the single '
+            'anchored one — 「另外这里没有说是代表的什么像中国 之类的了」, of '
+            'a ring filling the view with nothing to say whose it was.\n'
             '\n'
             '2026-09-15: 8 → 7. The eighth was measure-chars, which fed '
             '`_charsOnArc` — the per-character arc layout that set every '

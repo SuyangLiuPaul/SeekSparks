@@ -453,14 +453,22 @@ class StripLanesPainter extends CustomPainter {
         // the path this was missing: a seven-year reign drawn as a prism
         // carried no name at all while the lane to its right was empty.
         var nextX0 = double.infinity;
+        var previousX1 = double.negativeInfinity;
         for (final other in row.depthShapes) {
+          if (identical(other, shape)) continue;
           final left = other.bounds.left;
+          final right = other.bounds.right;
           if (left >= shape.bounds.right && left < nextX0) nextX0 = left;
+          if (right <= shape.bounds.left && right > previousX1) {
+            previousX1 = right;
+          }
         }
         final at = trailingLabelX(
           barX1: shape.bounds.right,
+          barX0: shape.bounds.left,
           labelW: _measure(name, laneFontPx),
           nextX0: nextX0,
+          previousX1: previousX1,
           viewX0: visibleX0,
           viewX1: visibleX1,
         );
@@ -511,15 +519,20 @@ class StripLanesPainter extends CustomPainter {
       );
     }
     var nextX0 = double.infinity;
+    var previousX1 = double.negativeInfinity;
     for (final other in lane.spans) {
       if (other.id == span.id) continue;
       final ox = xForYear(other.startYear, pxPerYear);
+      final oz = xForYear(other.endYear, pxPerYear);
       if (ox >= x1 && ox < nextX0) nextX0 = ox;
+      if (oz <= x0 && oz > previousX1) previousX1 = oz;
     }
     final x = trailingLabelX(
       barX1: x1,
+      barX0: x0,
       labelW: _measure(name, laneFontPx),
       nextX0: nextX0,
+      previousX1: previousX1,
       viewX0: visibleX0,
       viewX1: visibleX1,
     );

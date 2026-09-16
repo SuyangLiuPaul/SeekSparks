@@ -4311,7 +4311,29 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           best = i;
         }
       }
-      if (best >= 0) {
+      // AND ONLY IF THAT STREAM IS ACTUALLY THERE.
+      //
+      // 2026-09-16 「我要按这空白处，却显示这个，experience就很不好」 — a
+      // press on an empty part of the disc opened 犹大 with five powers
+      // and forty-seven events in it. The radius rounds into SOME ring
+      // wherever it lands between the hub and the bands, so a tap on
+      // blank paper was being read as a question about whichever ring
+      // happened to be nearest, and answered with everything that ring
+      // has ever held.
+      //
+      // A ring is a thing to ask about where it HAS something at the
+      // year under the finger. Where it does not, the press is what the
+      // page already says it is — 「点一下图表，读出那一年」 — and the
+      // year cursor, which the Listener has already placed, is the
+      // whole answer.
+      // A finger's worth of padding at this radius, the same allowance
+      // `nearestArcAt` gives every arc, so a hairline span is still
+      // something a reader can be asking about.
+      final pad = fingerHalfWidth(math.max(r, 1));
+      final onIt = best >= 0 &&
+          arcs.any((arc) =>
+              arc.ring == best && a >= arc.a0 - pad && a <= arc.a1 + pad);
+      if (onIt) {
         _select(streams[best].id);
         showStream(context, streams[best], data, locale, _select);
         return;
@@ -4891,6 +4913,56 @@ class _WorldWheelPainter extends CustomPainter {
             ..strokeWidth = 0.8 / zoom
             ..color = colour.withValues(alpha: 0.55));
       canvas.drawCircle(anchor, 1.6 / zoom, Paint()..color = colour);
+    }
+    _repeatBandNames(canvas, c, rHub, rBands);
+  }
+
+  /// The ring's name again, further round it, once the reader has zoomed
+  /// past the point where the one anchored label is still on screen.
+  ///
+  /// 2026-09-16 「另外这里没有说是代表的什么像中国 之类的了」, of a ring
+  /// filling the view with nothing to say whose it was. Every ring IS
+  /// named — once, at a fixed bearing near the left of the disc, which
+  /// at 574% is somewhere off the side of the window. A reader looking
+  /// at a band cannot be asked to pan across the chart to find out what
+  /// they are looking at.
+  ///
+  /// So the name repeats around its own ring, quietly, and only when
+  /// zoomed in: at the resting zoom the single anchored label with its
+  /// leader is right, and twelve copies of 教会 would be noise. The
+  /// declutter list keeps each copy off everything else, so where a
+  /// ring is busy the copy simply does not appear — the reader loses
+  /// nothing they had.
+  void _repeatBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
+    if (zoom < 2) return;
+    const steps = 12;
+    for (var i = 0; i < streams.length; i++) {
+      final band = ringRadii(i, streams.length, rHub, rBands);
+      final colour =
+          (colors[streams[i].id] ?? lineColor(streams[i].line, dark: wb.isDark))
+              .withValues(alpha: 0.75);
+      final tp = _WheelText(
+        streams[i].nameFor(locale),
+        canvasTextStyle(
+          color: colour,
+          fontSize: bandFont / _labelScale(zoom),
+          fontWeight: FontWeight.w600,
+        ),
+      );
+      for (var k = 1; k < steps; k++) {
+        final at = startRad + sweepRad * k / steps;
+        final p = c + Offset(math.cos(at), math.sin(at)) * band.centre;
+        final box = Rect.fromCenter(
+            center: p,
+            width: tp.width + 6 / zoom,
+            height: tp.height + 2 / zoom);
+        if (!_claim(box)) continue;
+        canvas.drawRRect(
+            RRect.fromRectAndRadius(
+                box, Radius.circular(WbMetrics.radiusControl / zoom)),
+            Paint()..color = wb.paneBg.withValues(alpha: 0.7));
+        tp.paint(canvas, box.center - Offset(tp.width / 2, tp.height / 2));
+      }
     }
   }
 

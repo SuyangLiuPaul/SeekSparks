@@ -98,10 +98,39 @@ void main() {
 
     expect(selectedId(tester), isNull, reason: 'nothing is selected at rest');
 
-    // Select something: the middle of the annulus, halfway round the
-    // sweep, which is a band whatever the corpus happens to hold there.
-    final rBand = side * (_hubFrac + bandsFractionFor(side)) / 2;
-    await tester.tapAt(at(rBand, startRad + sweepRad / 2));
+    // Select something — and on a RECORD, not just on a radius.
+    //
+    // 2026-09-16 「我要按这空白处，却显示这个，experience就很不好」: a press
+    // on an empty part of a ring used to round into whichever ring was
+    // nearest and open everything that ring has ever held. It does not
+    // any more, so this test asks its question where there is something
+    // to ask about: the widest arc the chart drew, at its own middle.
+    // ignore: avoid_dynamic_calls
+    final drawn = (tester.widget<CustomPaint>(painterOf()).painter as dynamic)
+        .arcs as List<dynamic>;
+    expect(drawn, isNotEmpty, reason: 'the chart drew no power bands at all');
+    dynamic widest = drawn.first;
+    for (final arc in drawn) {
+      // ignore: avoid_dynamic_calls
+      if ((arc.a1 as double) - (arc.a0 as double) >
+          // ignore: avoid_dynamic_calls
+          (widest.a1 as double) - (widest.a0 as double)) {
+        widest = arc;
+      }
+    }
+    // ignore: avoid_dynamic_calls
+    final ring = widest.ring as int;
+    // ignore: avoid_dynamic_calls
+    final mid = ((widest.a0 as double) + (widest.a1 as double)) / 2;
+    // ignore: avoid_dynamic_calls
+    final streamCount = (tester.widget<CustomPaint>(painterOf()).painter
+            as dynamic)
+        .streams
+        .length as int;
+    final rBand = ringRadii(ring, streamCount, side * _hubFrac,
+            side * bandsFractionFor(side))
+        .centre;
+    await tester.tapAt(at(rBand, mid));
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }

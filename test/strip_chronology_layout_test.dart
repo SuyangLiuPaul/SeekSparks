@@ -531,6 +531,54 @@ void main() {
           isNotNull);
     });
 
+    test('looks in FRONT of the bar when the lane behind it is packed', () {
+      // 2026-09-16 「后面很多你都还没加进去呢」, of a run of popes packed
+      // close enough that each one's "after" is the next one's bar. The
+      // room in front of the FIRST of such a run is usually empty.
+      final x = trailingLabelX(
+        barX1: 200,
+        barX0: 190,
+        labelW: 40,
+        nextX0: 205,
+        previousX1: 100,
+        viewX0: 0,
+        viewX1: 800,
+      );
+      expect(x, isNotNull);
+      expect(x!, lessThan(190), reason: 'it should be in front of the bar');
+      expect(x, greaterThanOrEqualTo(100), reason: 'and clear of the one '
+          'before it');
+    });
+
+    test('and nowhere when both sides are taken', () {
+      expect(
+          trailingLabelX(
+            barX1: 200,
+            barX0: 190,
+            labelW: 40,
+            nextX0: 205,
+            previousX1: 185,
+            viewX0: 0,
+            viewX1: 800,
+          ),
+          isNull);
+    });
+
+    test('after still wins when both sides are free', () {
+      final x = trailingLabelX(
+        barX1: 200,
+        barX0: 190,
+        labelW: 40,
+        nextX0: double.infinity,
+        previousX1: double.negativeInfinity,
+        viewX0: 0,
+        viewX1: 800,
+      );
+      expect(x, isNotNull);
+      expect(x!, greaterThan(200),
+          reason: '「后面」 is where the reader is looking');
+    });
+
     test('is not drawn off the edge of the viewport', () {
       expect(
           trailingLabelX(

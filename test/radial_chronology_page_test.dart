@@ -180,7 +180,11 @@ void main() {
     // a pin on the data. A sheet is a scroll view, so the sweep sees the
     // references that are on screen and not the ones below the fold —
     // which is the right reach for a test asking what a reader is shown.
-    expect(sheets, greaterThan(40),
+    // 56 when a tap on an empty part of a ring still opened that ring's
+    // whole contents; 27 since 2026-09-16, when it stopped
+    // (「我要按这空白处，却显示这个」). The sweep is a grid, so most of its
+    // points land on blank chart and correctly open nothing now.
+    expect(sheets, greaterThan(20),
         reason: 'the sweep opened almost nothing, so it proved almost nothing');
     expect(refsSeen, greaterThan(25),
         reason: 'the sweep opened $sheets sheets and found next to no verse in '

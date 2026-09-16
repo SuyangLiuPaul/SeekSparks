@@ -392,14 +392,28 @@ double? trailingLabelX({
   required double viewX0,
   required double viewX1,
   double gap = 5,
+  /// The right edge of the span BEFORE this one in the lane, or
+  /// negative infinity when there is none — so a name with no room
+  /// after it can look in front of it instead.
+  double previousX1 = double.negativeInfinity,
+  /// This bar's own left edge, needed only for the backward attempt.
+  double barX0 = double.nan,
 }) {
   if (labelW <= 0 || !barX1.isFinite) return null;
-  final x = barX1 + gap;
-  // It has to be on screen to be worth drawing, and it has to stop
-  // clear of whatever comes next.
-  if (x >= viewX1 || x + labelW <= viewX0) return null;
-  if (x + labelW > nextX0 - gap) return null;
-  return x;
+  bool onScreen(double x) => x < viewX1 && x + labelW > viewX0;
+  // AFTER FIRST, because 「后面」 is where the reader is looking, and a
+  // name that follows its bar reads as that bar's.
+  final after = barX1 + gap;
+  if (onScreen(after) && after + labelW <= nextX0 - gap) return after;
+  // 2026-09-16 「后面很多你都还没加进去呢」, of a run of popes packed close
+  // enough that each one's "after" is the next one's bar. The room in
+  // front of the FIRST of a run is usually empty, and a name there is
+  // still beside the thing it names — the leader the caller draws is
+  // what says which way to read it.
+  if (!barX0.isFinite) return null;
+  final before = barX0 - gap - labelW;
+  if (onScreen(before) && before >= previousX1 + gap) return before;
+  return null;
 }
 
 /// Where a bar's label starts, so a label on a bar that runs off both
