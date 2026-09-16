@@ -618,6 +618,14 @@ class _StackedChronologyWheelState extends State<StackedChronologyWheel> {
                     }
                   },
                   child: InteractiveViewer(
+                    // A TRACKPAD'S TWO FINGERS ZOOM, like the wheel's.
+                    // 2026-09-16 「wheel strip可以鼠标上下滑zoom in out吗
+                    // 然后ipad可以两个手指zoom in out这样」. A mouse wheel
+                    // already scaled; a trackpad's two-finger scroll
+                    // arrives as a pan gesture instead and was panning a
+                    // chart nobody wanted to pan. A pinch on a touch
+                    // screen was always a scale and is unaffected.
+                    trackpadScrollCausesScale: true,
                     transformationController: _view,
                     minScale: scene.view.fitScale * .8,
                     maxScale: scene.view.fitScale * 120,

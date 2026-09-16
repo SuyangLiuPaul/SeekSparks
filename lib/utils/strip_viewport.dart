@@ -37,3 +37,34 @@ double stripZoomOffset({
 double stripOffsetForYear(double year, double viewportWidth, double scale) =>
     ((year - kStripMinYear) * scale - viewportWidth / 2)
         .clamp(0.0, math.max(0.0, stripContentWidth(scale) - viewportWidth));
+
+/// A CONTINUOUS zoom, for a pinch and for a scroll wheel.
+///
+/// The ladder in [stripNextScale] belongs to the two buttons, where a
+/// press should land somewhere predictable. A pinch is not a press: the
+/// reader is describing a magnification with their fingers, and
+/// snapping it to the nearest rung throws that away.
+double stripScaleBy(double current, double factor, double viewportWidth) {
+  if (!factor.isFinite || factor <= 0) return current;
+  return (current * factor)
+      .clamp(stripFitScale(viewportWidth), kStripZoomSteps.last);
+}
+
+/// Keep the year under [focusX] where it is, [focusX] being measured
+/// from the left edge of the time viewport.
+///
+/// Zooming about the centre is right for a button and wrong for a
+/// pinch or a wheel: there the reader is pointing at the thing they
+/// want to keep, and moving it out from under them is the whole
+/// complaint about charts that zoom.
+double stripZoomOffsetAt({
+  required double offset,
+  required double focusX,
+  required double viewportWidth,
+  required double oldScale,
+  required double newScale,
+}) {
+  final year = yearForX(offset + focusX, oldScale);
+  return ((year - kStripMinYear) * newScale - focusX)
+      .clamp(0.0, math.max(0.0, stripContentWidth(newScale) - viewportWidth));
+}

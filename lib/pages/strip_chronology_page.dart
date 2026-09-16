@@ -106,8 +106,18 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart' show PointerDeviceKind, kTouchSlop;
+import 'package:flutter/gestures.dart'
+    show
+        GestureBinding,
+        PointerDeviceKind,
+        PointerDownEvent,
+        PointerEvent,
+        PointerMoveEvent,
+        PointerScrollEvent,
+        PointerSignalEvent,
+        kTouchSlop;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HardwareKeyboard;
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/strip_strings.dart';
@@ -247,9 +257,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     // each is a limit a reader has to learn twice. That is the stronger
     // argument about the thing that actually matters, so the ceiling is
     // shared — and the count is still what is DRAWN, never what exists.
-    final keep = defaultVisibleStreams(
-            data.streams.map((s) => s.id), kOpeningStreams)
-        .toSet();
+    final keep =
+        defaultVisibleStreams(data.streams.map((s) => s.id), kOpeningStreams)
+            .toSet();
     for (final s in data.streams) {
       if (!keep.contains(s.id)) _hidden.add(s.id);
     }
@@ -282,6 +292,19 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// cursor commits on UP rather than DOWN, and why global is the right
   /// frame for the question "did the finger travel".
   Offset? _pressOrigin;
+
+  /// The pointers currently down on the strip, in CONTENT coordinates,
+  /// and the finger spread they started at.
+  ///
+  /// 2026-09-16 「wheel strip可以鼠标上下滑zoom in out吗 然后ipad可以两
+  /// 个手指zoom in out这样」. This is done with raw pointers rather than
+  /// a `GestureDetector`'s scale callbacks for the reason this page
+  /// already gives twice over: a scale recogniser enters the arena and
+  /// takes single-pointer drags away from the two scroll views that
+  /// carry this page's panning. A `Listener` is not in the arena.
+  final Map<int, Offset> _touches = {};
+  double? _pinchSpread;
+  double _pinchScale = 0;
 
   /// The SECOND zoom, and the reason this page exists.
   ///
@@ -384,6 +407,71 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         _vCtl.jumpTo(offset.clamp(0.0, _vCtl.position.maxScrollExtent));
       }
     });
+  }
+
+  /// A pinch or a wheel, zooming about the point the reader is at.
+  void _zoomAt(double factor, double focusContentX) {
+    if (_viewportW <= 0) return;
+    final next = stripScaleBy(_pxPerYear, factor, _viewportW);
+    if ((next - _pxPerYear).abs() < 0.000001) return;
+    final offset = _hCtl.hasClients ? _hCtl.offset : 0.0;
+    _setTimeViewport(
+        next,
+        stripZoomOffsetAt(
+          offset: offset,
+          focusX: (focusContentX - offset).clamp(0.0, _viewportW),
+          viewportWidth: _viewportW,
+          oldScale: _pxPerYear,
+          newScale: next,
+        ));
+  }
+
+  /// The mouse wheel and a trackpad's two fingers, zoomed rather than
+  /// scrolled — 「鼠标上下滑zoom in out」, and the same answer the sibling
+  /// wheel page gives, so the two do not disagree about what a scroll
+  /// means. Holding shift hands the event back to the lane column,
+  /// which is the only other thing a vertical scroll could mean here.
+  void _onSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    if (HardwareKeyboard.instance.isShiftPressed) return;
+    final dy = event.scrollDelta.dy;
+    if (dy == 0) return;
+    // Registering is what stops the scroll view underneath from also
+    // acting on it: the resolver runs the first handler registered, and
+    // this Listener sits inside both scroll views, so it registers
+    // first.
+    GestureBinding.instance.pointerSignalResolver.register(event, (_) {
+      _zoomAt(math.exp(-dy / 320), event.localPosition.dx);
+    });
+  }
+
+  void _onPointerDown(PointerDownEvent e) {
+    _touches[e.pointer] = e.localPosition;
+    if (_touches.length == 2) {
+      // A second finger means a pinch, not a press.
+      _pressOrigin = null;
+      final p = _touches.values.toList();
+      _pinchSpread = (p[0] - p[1]).distance;
+      _pinchScale = _pxPerYear;
+    }
+  }
+
+  void _onPointerMove(PointerMoveEvent e) {
+    if (!_touches.containsKey(e.pointer)) return;
+    _touches[e.pointer] = e.localPosition;
+    if (_touches.length != 2) return;
+    final p = _touches.values.toList();
+    final spread = (p[0] - p[1]).distance;
+    final started = _pinchSpread;
+    if (started == null || started < 24 || spread < 24) return;
+    final next = stripScaleBy(_pinchScale, spread / started, _viewportW);
+    if ((next - _pxPerYear).abs() < 0.000001) return;
+    _zoomAt(next / _pxPerYear, (p[0].dx + p[1].dx) / 2);
+  }
+
+  void _endTouch(PointerEvent e) {
+    _touches.remove(e.pointer);
+    if (_touches.length < 2) _pinchSpread = null;
   }
 
   void _zoomStep(int delta) {
@@ -762,120 +850,132 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                       // gestures and the hit testing; what they no
                       // longer keep is a picture the size of history.
                       child: Stack(children: [
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: StripLanesPainter(
-                              // From `codex/wheel-strip-redesign`: the
-                              // raised mode. It moved here with the
-                              // painter, which that branch had left
-                              // inside the scroll view.
-                              is3D: _stacked,
-                              rows: rows,
-                              pxPerYear: _pxPerYear,
-                              locale: locale,
-                              selectedId: _selectedId,
-                              wb: wb,
-                              laneFontPx: laneFontPx,
-                              palette: palette,
-                              visibleX0: visibleX0,
-                              visibleX1: visibleX1,
-                              visibleY0: visibleY0,
-                              visibleY1: visibleY1,
-                              contentWidth: contentW,
-                              contentHeight: contentH,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Keep the year rule visible through the data
-                      // lanes, but below opaque callouts: a selection
-                      // must not strike through the words the reader
-                      // just chose. In viewport coordinates now.
-                      if (_cursorYear case final int y)
-                        Positioned(
-                          key: const ValueKey('stripYearCursor'),
-                          left: xForYear(y, _pxPerYear) -
-                              visibleX0 -
-                              _kCursorHalfWidth,
-                          top: 0,
-                          bottom: 0,
-                          width: _kCursorHalfWidth * 2,
+                        Positioned.fill(
                           child: IgnorePointer(
-                            child: ColoredBox(color: wb.accent),
-                          ),
-                        ),
-                      SingleChildScrollView(
-                        controller: _hCtl,
-                        scrollDirection: Axis.horizontal,
-                        key: const ValueKey('stripHScroll'),
-                        child: SingleChildScrollView(
-                          controller: _vCtl,
-                          key: const ValueKey('stripVScroll'),
-                          // WHY A RAW `Listener` AROUND THE TAP DETECTOR,
-                          // and not a second `onTapDown`. Inherited whole
-                          // from yswords' chronology chart, where the bug
-                          // was found on a device and could not be
-                          // reproduced in a widget test: a
-                          // `TapGestureRecognizer` fires `onTapDown` when
-                          // it WINS the arena or when 100 ms elapse,
-                          // whichever comes first — so press-and-hold set
-                          // the cursor and a quick tap did nothing at all,
-                          // because the arena resolved first and an inner
-                          // recogniser took the press. `tapAt` sends down
-                          // and up with nothing between, so both paths
-                          // pass in a test.
-                          //
-                          // A `Listener` is not in the arena, so nothing
-                          // can take the press away from it. Committing on
-                          // UP within `kTouchSlop` is what keeps a scroll
-                          // drag from dragging the cursor along with it,
-                          // and is why this COEXISTS with the tap detector
-                          // below rather than competing: tapping an event
-                          // opens its sheet AND lands the cursor on that
-                          // year, which is what a reader means by pointing
-                          // at something.
-                          child: Listener(
-                            onPointerDown: (e) => _pressOrigin = e.position,
-                            onPointerUp: (e) => _commitPress(e, () {
-                              final card = _eventCardAt(e.localPosition, rows);
-                              if (card == null) {
-                                final depthHit = _stacked
-                                    ? _depthSpanAt(e.localPosition, rows)
-                                    : null;
-                                if (depthHit == null) {
-                                  _placeCursorAtX(e.localPosition.dx);
-                                } else {
-                                  _placeCursor(
-                                      yearForX(e.localPosition.dx, _pxPerYear)
-                                          .round()
-                                          .clamp(depthHit.span.startYear,
-                                              depthHit.span.endYear));
-                                }
-                              } else if (card.firstYear == card.lastYear) {
-                                _placeCursor(card.firstYear);
-                              }
-                            }),
-                            onPointerCancel: (_) => _pressOrigin = null,
-                            child: GestureDetector(
-                              key: const ValueKey('chronologyStrip'),
-                              behavior: HitTestBehavior.opaque,
-                              onTapUp: (e) => _handleTap(
-                                  context,
-                                  e.localPosition,
-                                  data,
-                                  kings,
-                                  patriarchs,
-                                  locale,
-                                  rows),
-                              child: SizedBox(
-                                width: contentW,
-                                height: contentH,
+                            child: CustomPaint(
+                              painter: StripLanesPainter(
+                                // From `codex/wheel-strip-redesign`: the
+                                // raised mode. It moved here with the
+                                // painter, which that branch had left
+                                // inside the scroll view.
+                                is3D: _stacked,
+                                rows: rows,
+                                pxPerYear: _pxPerYear,
+                                locale: locale,
+                                selectedId: _selectedId,
+                                wb: wb,
+                                laneFontPx: laneFontPx,
+                                palette: palette,
+                                visibleX0: visibleX0,
+                                visibleX1: visibleX1,
+                                visibleY0: visibleY0,
+                                visibleY1: visibleY1,
+                                contentWidth: contentW,
+                                contentHeight: contentH,
                               ),
                             ),
                           ),
                         ),
-                      ),
+                        // Keep the year rule visible through the data
+                        // lanes, but below opaque callouts: a selection
+                        // must not strike through the words the reader
+                        // just chose. In viewport coordinates now.
+                        if (_cursorYear case final int y)
+                          Positioned(
+                            key: const ValueKey('stripYearCursor'),
+                            left: xForYear(y, _pxPerYear) -
+                                visibleX0 -
+                                _kCursorHalfWidth,
+                            top: 0,
+                            bottom: 0,
+                            width: _kCursorHalfWidth * 2,
+                            child: IgnorePointer(
+                              child: ColoredBox(color: wb.accent),
+                            ),
+                          ),
+                        SingleChildScrollView(
+                          controller: _hCtl,
+                          scrollDirection: Axis.horizontal,
+                          key: const ValueKey('stripHScroll'),
+                          child: SingleChildScrollView(
+                            controller: _vCtl,
+                            key: const ValueKey('stripVScroll'),
+                            // WHY A RAW `Listener` AROUND THE TAP DETECTOR,
+                            // and not a second `onTapDown`. Inherited whole
+                            // from yswords' chronology chart, where the bug
+                            // was found on a device and could not be
+                            // reproduced in a widget test: a
+                            // `TapGestureRecognizer` fires `onTapDown` when
+                            // it WINS the arena or when 100 ms elapse,
+                            // whichever comes first — so press-and-hold set
+                            // the cursor and a quick tap did nothing at all,
+                            // because the arena resolved first and an inner
+                            // recogniser took the press. `tapAt` sends down
+                            // and up with nothing between, so both paths
+                            // pass in a test.
+                            //
+                            // A `Listener` is not in the arena, so nothing
+                            // can take the press away from it. Committing on
+                            // UP within `kTouchSlop` is what keeps a scroll
+                            // drag from dragging the cursor along with it,
+                            // and is why this COEXISTS with the tap detector
+                            // below rather than competing: tapping an event
+                            // opens its sheet AND lands the cursor on that
+                            // year, which is what a reader means by pointing
+                            // at something.
+                            child: Listener(
+                              onPointerSignal: _onSignal,
+                              onPointerDown: (e) {
+                                _pressOrigin = e.position;
+                                _onPointerDown(e);
+                              },
+                              onPointerMove: _onPointerMove,
+                              onPointerUp: (e) {
+                                _endTouch(e);
+                                _commitPress(e, () {
+                                  final card =
+                                      _eventCardAt(e.localPosition, rows);
+                                  if (card == null) {
+                                    final depthHit = _stacked
+                                        ? _depthSpanAt(e.localPosition, rows)
+                                        : null;
+                                    if (depthHit == null) {
+                                      _placeCursorAtX(e.localPosition.dx);
+                                    } else {
+                                      _placeCursor(yearForX(
+                                              e.localPosition.dx, _pxPerYear)
+                                          .round()
+                                          .clamp(depthHit.span.startYear,
+                                              depthHit.span.endYear));
+                                    }
+                                  } else if (card.firstYear == card.lastYear) {
+                                    _placeCursor(card.firstYear);
+                                  }
+                                });
+                              },
+                              onPointerCancel: (e) {
+                                _pressOrigin = null;
+                                _endTouch(e);
+                              },
+                              child: GestureDetector(
+                                key: const ValueKey('chronologyStrip'),
+                                behavior: HitTestBehavior.opaque,
+                                onTapUp: (e) => _handleTap(
+                                    context,
+                                    e.localPosition,
+                                    data,
+                                    kings,
+                                    patriarchs,
+                                    locale,
+                                    rows),
+                                child: SizedBox(
+                                  width: contentW,
+                                  height: contentH,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ]),
                     ),
                   ),

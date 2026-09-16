@@ -247,7 +247,6 @@ const double kAxisEndSwing = 0.10;
 Color lineColor(String line, {required bool dark}) =>
     familyColor(line, dark: dark);
 
-
 /// Arc ids for the reign band carry this, because [buildSpanArcs] packs
 /// every span in ONE id space and a king and a patriarch could
 /// otherwise answer to the same name. Nothing in `chronology.json`
@@ -454,8 +453,7 @@ List<SpanInput> kingReignSpans(List<HebrewKing> kings) => [
     ];
 
 /// The colour of one band, given its position among its own family.
-Color streamColor(String line, int index, int count,
-        {required bool dark}) =>
+Color streamColor(String line, int index, int count, {required bool dark}) =>
     streamBandColor(line, index, count, dark: dark);
 
 /// Strings this page owns. Kept local rather than appended to
@@ -2070,8 +2068,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           final rRim = side * rimFractionFor(side);
           _restoreFlatCamera(_viewportSize!, rRim);
 
-          final scene =
-              _sceneFor(data, side, locale, _wheelFont(t, _kLabelPx));
+          final scene = _sceneFor(data, side, locale, _wheelFont(t, _kLabelPx));
           final streams = scene.streams;
           final colors = scene.colors;
           final arcs = scene.arcs;
@@ -2082,6 +2079,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           return Stack(children: [
             Positioned.fill(
               child: InteractiveViewer(
+                // A TRACKPAD'S TWO FINGERS ZOOM, like the wheel's.
+                // 2026-09-16 「wheel strip可以鼠标上下滑zoom in out吗
+                // 然后ipad可以两个手指zoom in out这样」. A mouse wheel
+                // already scaled; a trackpad's two-finger scroll
+                // arrives as a pan gesture instead and was panning a
+                // chart nobody wanted to pan. A pinch on a touch
+                // screen was always a scale and is unaffected.
+                trackpadScrollCausesScale: true,
                 transformationController: _viewer,
                 maxScale: kWheelMaxScale,
                 minScale: 0.8,
@@ -2287,8 +2292,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                 // caught 9.5 here within minutes of it being written —
                 // which is the same defect, in a widget, that the
                 // canvas type had in `scaledChrome` an hour earlier.
-                fontSize: math.max(
-                    t.scaledChrome(11), WbMetrics.smallPrintFloor),
+                fontSize:
+                    math.max(t.scaledChrome(11), WbMetrics.smallPrintFloor),
                 height: 1.25,
               ),
             ),
@@ -2618,13 +2623,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     }
     final clusters = <SpokeCluster>[];
     for (final entry in byRing.entries) {
-      final radius = math.max(
-          ringRadii(entry.key, rings, rHub, rBands).centre, 1.0);
+      final radius =
+          math.max(ringRadii(entry.key, rings, rHub, rBands).centre, 1.0);
       final gap = (onScreenPx / _labelScale(_zoom)) / radius;
       final idx = entry.value;
       final pinned = idx.indexWhere((i) => all[i].id == _selectedId);
-      for (final c in clusterByAngle(
-          [for (final i in idx) angles[i]], gap,
+      for (final c in clusterByAngle([for (final i in idx) angles[i]], gap,
           pinned: pinned)) {
         clusters.add(SpokeCluster(
           members: [for (final m in c.members) idx[m]],
@@ -2633,8 +2637,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       }
     }
     // `planRadialSpokes` needs its requests in ascending angle.
-    clusters.sort((a, b) =>
-        angles[a.representative].compareTo(angles[b.representative]));
+    clusters.sort(
+        (a, b) => angles[a.representative].compareTo(angles[b.representative]));
     final kept = [for (final c in clusters) all[c.representative]];
 
     // ── THE SCRIPTURE BASELINE ────────────────────────────────────
@@ -4526,15 +4530,8 @@ class _WorldWheelPainter extends CustomPainter {
         // A callout is allowed to be longer than the thing it points
         // at. There is exactly one on screen, so it cannot collide with
         // another, and it carries its own plate.
-        _uprightArcLabel(
-            canvas,
-            c,
-            band.centre,
-            arc.power.nameFor(locale),
-            arc.a0,
-            arc.a1 - arc.a0,
-            rimFont / _labelScale(zoom),
-            dim);
+        _uprightArcLabel(canvas, c, band.centre, arc.power.nameFor(locale),
+            arc.a0, arc.a1 - arc.a0, rimFont / _labelScale(zoom), dim);
       }
     }
   }
@@ -4577,8 +4574,7 @@ class _WorldWheelPainter extends CustomPainter {
         c + dir * (r.centre + half),
         Paint()
           ..strokeWidth = (sel ? 1.8 : 1.0) / zoom
-          ..color = lineageRailColor(dark: wb.isDark)
-              .withValues(alpha: alpha),
+          ..color = lineageRailColor(dark: wb.isDark).withValues(alpha: alpha),
       );
     }
   }
@@ -4710,9 +4706,9 @@ class _WorldWheelPainter extends CustomPainter {
     // and the ring closest to the rim keeps the y it was born with.
     for (var i = streams.length - 1; i >= 0; i--) {
       final band = ringRadii(i, streams.length, rHub, rBands);
-      final colour = (colors[streams[i].id] ??
-              lineColor(streams[i].line, dark: wb.isDark))
-          .withValues(alpha: 0.98);
+      final colour =
+          (colors[streams[i].id] ?? lineColor(streams[i].line, dark: wb.isDark))
+              .withValues(alpha: 0.98);
       final tp = _WheelText(
         streams[i].nameFor(locale),
         canvasTextStyle(
@@ -4726,8 +4722,7 @@ class _WorldWheelPainter extends CustomPainter {
       final pitch = tp.height + 4 / zoom;
       if (ceiling.isFinite && y > ceiling - pitch) y = ceiling - pitch;
       ceiling = y;
-      final right =
-          math.max(anchor.dx - 9 / zoom, leftEdge + tp.width);
+      final right = math.max(anchor.dx - 9 / zoom, leftEdge + tp.width);
       final box = Rect.fromLTWH(
           right - tp.width, y - tp.height / 2, tp.width, tp.height);
       // A plate, for the same reason the selected callout has one: a
@@ -4799,8 +4794,8 @@ class _WorldWheelPainter extends CustomPainter {
       if (size <= 1) continue;
       final dir = Offset(math.cos(first), math.sin(first));
       final centre = c + dir * band.centre;
-      final colour = colors[streams[i].id] ??
-          lineColor(streams[i].line, dark: wb.isDark);
+      final colour =
+          colors[streams[i].id] ?? lineColor(streams[i].line, dark: wb.isDark);
       canvas.drawImageRect(
         image,
         Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
@@ -4815,9 +4810,7 @@ class _WorldWheelPainter extends CustomPainter {
 
   void _paintSpokes(Canvas canvas, Offset c, double rHub, double rBands) {
     final has = selectedId != null;
-    final ringOf = {
-      for (var i = 0; i < streams.length; i++) streams[i].id: i
-    };
+    final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
     // The tick sits ON THE BAND, for every event, whichever end of the
     // annulus its words are flush with. That is what it is for — the
     // year's mark on its own stream — and it is now the only thing
@@ -4950,9 +4943,10 @@ class _WorldWheelPainter extends CustomPainter {
     final refTp = s.ref.isEmpty ? null : _WheelText(' ${s.ref}', refStyle);
     final badgeTp =
         s.badge.isEmpty ? null : _WheelText(' ${s.badge}', badgeStyle);
-    final width = (tp?.width ?? 0) + (refTp?.width ?? 0) + (badgeTp?.width ?? 0);
-    final height = math.max(tp?.height ?? 0,
-        math.max(refTp?.height ?? 0, badgeTp?.height ?? 0));
+    final width =
+        (tp?.width ?? 0) + (refTp?.width ?? 0) + (badgeTp?.width ?? 0);
+    final height = math.max(
+        tp?.height ?? 0, math.max(refTp?.height ?? 0, badgeTp?.height ?? 0));
     if (width <= 0 || height <= 0) return;
 
     final a = s.label.angle;
@@ -5025,10 +5019,11 @@ class _WorldWheelPainter extends CustomPainter {
     if (sweep <= 0 || fontSize <= 0 || text.isEmpty) return;
     final tp = _painter(text, wb.text.withValues(alpha: 0.98 * dim), fontSize);
     final mid = a0 + sweep / 2;
-    final centre =
-        c + Offset(math.cos(mid), math.sin(mid)) * radius;
+    final centre = c + Offset(math.cos(mid), math.sin(mid)) * radius;
     final box = Rect.fromCenter(
-        center: centre, width: tp.width + 8 / zoom, height: tp.height + 3 / zoom);
+        center: centre,
+        width: tp.width + 8 / zoom,
+        height: tp.height + 3 / zoom);
     if (!_claim(box)) return;
     canvas.drawRRect(
         // The app's own control radius, divided by the zoom for the same
@@ -5039,7 +5034,6 @@ class _WorldWheelPainter extends CustomPainter {
         Paint()..color = wb.paneBg.withValues(alpha: 0.86 * dim));
     tp.paint(canvas, box.center - Offset(tp.width / 2, tp.height / 2));
   }
-
 
   void _paintHub(Canvas canvas, Offset c, double rHub) {
     canvas.drawCircle(c, rHub, Paint()..color = wb.paneAltBg);
