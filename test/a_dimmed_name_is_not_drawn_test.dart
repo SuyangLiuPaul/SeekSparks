@@ -18,6 +18,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/utils/chronology_palette.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
 
 /// WCAG relative luminance.
@@ -93,4 +95,50 @@ void main() {
         reason: 'one of the two label painters no longer refuses to draw '
             'an unreadable name');
   });
+  group('and a MARK stays a mark when it recedes', () {
+    // 2026-09-17, second round on the same photograph: after the names
+    // were fixed the owner circled the same spot again — 「还有啊在那 你好好
+    // 查一下以色列和以撒中间」 — so the region was RENDERED to an image
+    // rather than reasoned about. Between the 以色列 ring and 以撒's arc
+    // lie the other lifespans, and with 以撒 selected they were drawn
+    // at 0.22 x 0.35 = 0.077 alpha. Measured against the ground the
+    // annulus is painted on, in both palettes:
+    //
+    //                    rest 0.22    receded 0.077    now: rest 0.36  receded 0.18
+    //   dark  (shem)       1.27:1        1.07:1              ~1.6:1        ~1.25:1
+    //   light (shem)       1.36:1        1.11:1              ~1.7:1        ~1.30:1
+    //
+    // 1.07:1 is present enough to notice and too faint to be anything —
+    // a stain shaped like an arc. The receded state is now what the
+    // resting state used to be, and the resting state can be seen.
+    final grounds = {
+      'dark': Color.lerp(WbColors.dark.paneBg, WbColors.dark.paneAltBg, 0.65)!,
+      'light':
+          Color.lerp(WbColors.light.paneBg, WbColors.light.paneAltBg, 0.65)!,
+    };
+
+    test('the old receded alpha was invisible on both grounds', () {
+      for (final e in grounds.entries) {
+        final c = familyColor('shem', dark: e.key == 'dark');
+        expect(_ratio(_over(c, 0.22 * 0.35, e.value), e.value), lessThan(1.15),
+            reason: '${e.key}: if this is now readable the palette moved '
+                'and the numbers above are stale');
+      }
+    });
+
+    test('a receded lifespan still reads as a shape, at rest more so', () {
+      for (final e in grounds.entries) {
+        final c = familyColor('shem', dark: e.key == 'dark');
+        expect(_ratio(_over(c, kLifespanRecededAlpha, e.value), e.value),
+            greaterThanOrEqualTo(1.2),
+            reason: '${e.key}: receded below the point of being a shape');
+        expect(_ratio(_over(c, kLifespanRestAlpha, e.value), e.value),
+            greaterThanOrEqualTo(1.5),
+            reason: '${e.key}: at rest a lifespan must be visibly there');
+        expect(kLifespanRecededAlpha, lessThan(kLifespanRestAlpha),
+            reason: 'receding must still recede');
+      }
+    });
+  });
+
 }

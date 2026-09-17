@@ -87,6 +87,19 @@ bool wheelShowsEventText({required double zoom, required bool selected}) =>
 /// (`palette_legibility_walk_test`).
 const double kLegibleLabelDim = 0.55;
 
+/// A LIFESPAN ARC AT REST, and one receding behind a selection, as
+/// alphas on the annulus ground.
+///
+/// Measured 2026-09-17 against `Color.lerp(paneBg, paneAltBg, 0.65)`,
+/// which is what `_paintSurface` lays under the annulus, in both
+/// palettes. The old values were 0.22 and 0.22 x 0.35 = 0.077, which
+/// read at 1.27:1 and 1.07:1 on the dark ground: the first barely a
+/// shape, the second a stain — and the stain is what the owner circled
+/// beside a selected 以撒, twice. See `a_dimmed_name_is_not_drawn_test`
+/// for the arithmetic; the receded state is now what rest used to be.
+const double kLifespanRestAlpha = 0.36;
+const double kLifespanRecededAlpha = 0.18;
+
 /// One million square pixels — the unit the detail table's densities are
 /// quoted in. A 1280x663 pane is 0.85 of one; a 390x620 phone is 0.24.
 const double kWheelLabelArea = 1000000;

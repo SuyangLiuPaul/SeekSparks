@@ -5635,7 +5635,8 @@ class _WorldWheelPainter extends CustomPainter {
     final has = selectedId != null;
     for (final r in rail) {
       final sel = selectedId == '$kLineageArcPrefix${r.cohort.year}';
-      final alpha = sel ? 0.9 : (has ? 0.30 * 0.35 : 0.30);
+      // Same floor as the lifespans, same reason: 0.105 was a stain.
+      final alpha = sel ? 0.9 : (has ? kLifespanRecededAlpha : 0.30);
       // 1 person is a third of the ring, 8 or more fills it, clamped so
       // the 44-person year does not print into its neighbours — and the
       // hit test reads the same function, so what is drawn is what
@@ -5659,10 +5660,19 @@ class _WorldWheelPainter extends CustomPainter {
     final names = <_NamePlan>[];
     for (final l in lives) {
       final sel = l.id == selectedId;
-      // 0.22 at rest, so spoke titles stay legible over it; 0.85 for
-      // the one selected; a third for everything else once something
-      // is.
-      final alpha = sel ? 0.85 : (has ? 0.22 * 0.35 : 0.22);
+      // MEASURED, 2026-09-17, against the ground the annulus is painted
+      // on, both palettes: at the old 0.22 a lifespan read at 1.27:1
+      // (dark) and 1.36:1 (light) — barely a shape — and once anything
+      // was selected the rest fell to 0.077, which is 1.07:1: present
+      // enough to notice, too faint to be anything. That is what the
+      // owner circled twice beside a selected 以撒 and called 「线」.
+      //
+      // So the receded state is now what the resting state used to be,
+      // and the resting state can be seen: 0.36 is about 1.6:1 on both
+      // grounds, 0.18 about 1.25:1. The labels that 0.22 was chosen to
+      // protect sit on their own plates and never touch this fill.
+      final alpha =
+          sel ? 0.85 : (has ? kLifespanRecededAlpha : kLifespanRestAlpha);
       canvas.drawArc(
         Rect.fromCircle(center: c, radius: l.centre),
         l.arc.a0,
