@@ -1467,6 +1467,22 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// own choices back on.
   bool _defaultsApplied = false;
 
+  /// WHERE EACH RECORD'S NAME WAS ACTUALLY DRAWN, last frame.
+  ///
+  /// The painter fills it; the hit test reads it. 2026-09-17 「鼠标在下面
+  /// 为什么上面highlight了？」 — a pointer out in the empty annulus, and
+  /// the record it lit up was on the band above.
+  ///
+  /// The label gate used to ask `wheelShowsEventText`, which answers
+  /// "are record names on at this zoom" — and since the detail table
+  /// arrived that is no longer the same question as "was THIS record's
+  /// name drawn". Most are not, and each one went on claiming the whole
+  /// radial corridor its text WOULD have occupied. So the reader
+  /// pointed at blank paper and was handed a record whose only ink is a
+  /// tick some distance away, which is exactly what the highlight then
+  /// drew.
+  final Map<String, Rect> _nameBoxes = <String, Rect>{};
+
   /// Fill [_hidden] with everything the wheel has no room for.
   void _applyDefaultHidden(WheelHistoryData data, Set<String>? kept,
       double side) {
@@ -2367,6 +2383,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                                   endFont: _wheelFont(t, 13),
                                   bandFont: _wheelFont(t, 12),
                                   visible: _visibleCanvasRect(side),
+                                  nameBoxes: _nameBoxes,
                                 ),
                               ),
                             ),
@@ -4638,11 +4655,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         // label nobody can see. The arcs were already the smaller
         // target; that is the complaint 「我要按那个环而不是字」 that set
         // the precedence rule in the first place.
-        final drawsName = wheelShowsEventText(
-            zoom: _zoom, selected: s.event.id == _selectedId);
-        final atLabel = drawsName &&
-            r >= s.label.rStart - 6 / _zoom &&
-            r <= s.label.rEnd + 6 / _zoom;
+        // THE NAME THAT IS THERE, not the names that are switched on.
+        final drawn = _nameBoxes[s.event.id];
+        final atLabel = drawn != null &&
+            drawn.inflate(6 / _zoom).contains(local);
         if (!atTick && !atLabel) continue;
         // NORMALISED, not absolute: how far into its own target the
         // finger fell, 0 dead centre and 1 at the edge. That is what
@@ -4662,11 +4678,29 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             bestSpokeInk = tickInk;
           } else {
             bestSpokeGate = 'spoke:label';
-            final lo = s.label.rStart - 6 / _zoom;
-            final hi = s.label.rEnd + 6 / _zoom;
+            // THE BOX THAT WAS DRAWN, in radial terms: the nearest and
+            // furthest its corners reach from the wheel's centre. The
+            // probe compares an answer against the target that admitted
+            // it, so this has to BE that target — it used to record the
+            // planner's corridor, which is not what the gate reads any
+            // more and was never where the plate went.
+            final centre = Offset(c, c);
+            var lo = double.infinity;
+            var hi = 0.0;
+            final box = drawn!;
+            for (final corner in [
+              box.topLeft,
+              box.topRight,
+              box.bottomLeft,
+              box.bottomRight,
+            ]) {
+              final d = (corner - centre).distance;
+              if (d < lo) lo = d;
+              if (d > hi) hi = d;
+            }
             bestSpokeCentre = (lo + hi) / 2;
-            bestSpokeHalfDepth = (hi - lo).abs() / 2;
-            bestSpokeInk = bestSpokeHalfDepth;
+            bestSpokeHalfDepth = (hi - lo).abs() / 2 + 6 / _zoom;
+            bestSpokeInk = (hi - lo).abs() / 2;
           }
         }
       }
@@ -5151,6 +5185,7 @@ class _WorldWheelPainter extends CustomPainter {
     required this.endFont,
     required this.bandFont,
     required this.visible,
+    required this.nameBoxes,
   });
 
   final List<WheelStream> streams;
@@ -5176,6 +5211,13 @@ class _WorldWheelPainter extends CustomPainter {
   /// What the reader can see, in canvas units; null before the first
   /// layout. See [_RadialChronologyPageState._visibleCanvasRect].
   final Rect? visible;
+
+  /// WHICH RECORDS GOT THEIR NAME DRAWN, and where — filled by this
+  /// painter, read by the hit test.
+  ///
+  /// The same instance every frame: it is an OUTPUT, not an input, so
+  /// `shouldRepaint` compares it by identity and never repaints for it.
+  final Map<String, Rect> nameBoxes;
 
   /// Passed through wheelLabelScale: screen type grows to twice its
   /// resting size, then further zoom buys additional detail.
@@ -5245,6 +5287,7 @@ class _WorldWheelPainter extends CustomPainter {
     _inked.clear();
     if (WheelRenderStats.trackHits) WheelRenderStats.labelBoxesForTest.clear();
     _drawn.clear();
+    nameBoxes.clear();
     _detail = wheelDetailFor(zoom);
     if (streams.isEmpty) return;
     final side = math.min(size.width, size.height);
@@ -5309,6 +5352,7 @@ class _WorldWheelPainter extends CustomPainter {
     _paintAxisEnds(canvas, c, rHub, rRim);
     WheelRenderStats.labelsDrawn = _inked.length;
     WheelRenderStats.noteFrameKinds(_drawn);
+    WheelRenderStats.noteRecordNameBoxes(nameBoxes);
     if (WheelRenderStats.trackHits) WheelRenderStats.frameAreaForTest = _areaPx;
     if (WheelRenderStats.trackHits) WheelRenderStats.cameraForTest = visible;
   }
@@ -6240,6 +6284,9 @@ class _WorldWheelPainter extends CustomPainter {
     final box = Rect.fromCenter(
         center: centre, width: width + 6 / zoom, height: height + 2 / zoom);
     if (!_claim(box, WheelLabelKind.record)) return;
+    // WHAT WAS DRAWN, FOR THE HIT TEST TO ANSWER FROM. See
+    // `_RadialChronologyPageState._nameBoxes`.
+    nameBoxes[s.event.id] = box;
 
     canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -6487,7 +6534,8 @@ class _WorldWheelPainter extends CustomPainter {
       // `wheel_repaint_coverage_test` caught it, which is what that
       // test is for: a painter field that nothing compares is a stale
       // frame waiting to happen, and it never throws.
-      old.visible != visible;
+      old.visible != visible ||
+      old.nameBoxes != nameBoxes;
 }
 
 /// The year spoke — the wheel's own year cursor.

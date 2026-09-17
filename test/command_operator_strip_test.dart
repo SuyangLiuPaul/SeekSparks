@@ -16,6 +16,8 @@
 /// both are pinned below.
 library;
 
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -396,6 +398,43 @@ void main() {
 
     String lineOf(WidgetTester tester) =>
         tester.widget<TextField>(find.byType(TextField)).controller!.text;
+
+    testWidgets('on a touch device the strip is still a strip',
+        (tester) async {
+      // 2026-09-17 「sword为什么iPad上看这样」, with the iPad beside a Mac:
+      // twelve pane-wide bars stacked into a column on one, two tidy
+      // rows of chips on the other, same build.
+      //
+      // `alignment: Alignment.center` on the button's Container is what
+      // made the 24px touch target — and a Container with an alignment
+      // takes ALL the width it is offered. The strip is a `Wrap`, which
+      // offers each child the whole row. On the desktop `minTarget` is
+      // 0, the alignment is null, and the bug could not appear.
+      // Reset inside the body, not in a tearDown: the binding checks
+      // this variable before tearDowns run.
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      try {
+        await pump(tester, width: 700);
+        final strip = tester.getSize(find.byType(Wrap).first);
+        for (final label in ['.', 'AND', 'NEAR5', 'BEFORE5', '?']) {
+          final chip = find.ancestor(
+              of: find.text(label), matching: find.byType(InkWell));
+          expect(chip, findsOneWidget, reason: 'no chip for "$label"');
+          final size = tester.getSize(chip.first);
+          expect(size.width, lessThan(strip.width / 2),
+              reason: '"$label" is ${size.width.toStringAsFixed(0)}px wide '
+                  'in a ${strip.width.toStringAsFixed(0)}px strip — it has '
+                  'taken the whole row, and twelve of those are a column, '
+                  'not a strip');
+          // The touch minimum is the reason the alignment was there, so
+          // it has to survive the fix that removes it.
+          expect(size.width, greaterThanOrEqualTo(24.0));
+          expect(size.height, greaterThanOrEqualTo(24.0));
+        }
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
 
     testWidgets('the NEAR button is not dead — it inserts', (tester) async {
       // The report said clicking it did nothing. It does not do nothing;

@@ -1013,17 +1013,38 @@ void main() {
     // twenty minutes.
     //
     // The rule: the tap follows the ink.
+    // 2026-09-17: THE GUARD IT USED TO PIN WAS A PROXY, and it stopped
+    // standing for the thing. It read `drawsName = wheelShowsEventText(
+    // zoom, selected)` — "are record names on at this zoom" — which was
+    // the same question as "is THIS name drawn" only while every record
+    // that could be named was. The detail table ended that: most names
+    // are now dropped for room, and each dropped one went on claiming
+    // its corridor. 「鼠标在下面为什么上面highlight了？」
+    //
+    // Worse, the corridor was never where the name went: measured, a
+    // pointer ON a record's own drawn name did not answer with it,
+    // because `label.rStart..rEnd` comes from the planner and the
+    // painter places the plate from the tick outward.
+    //
+    // So the painter publishes the boxes it drew and the gate tests
+    // those. The rule is unchanged and is now literally true: THE TAP
+    // FOLLOWS THE INK. `wheel_hit_accuracy_test`'s 'a record answers for
+    // its name only where the name is' drives it through the real
+    // pointer; this stays as the one-line-regression alarm it was
+    // written to be.
     final src = File('lib/pages/radial_chronology_page.dart').readAsStringSync();
-    expect(src, contains('final drawsName = wheelShowsEventText('),
-        reason: 'the spoke tap rule stopped asking whether the name is '
-            'drawn — every spoke is claiming its label extent again, '
-            'visible or not');
-    final atLabel = RegExp(r'final atLabel = ([A-Za-z]+) &&').firstMatch(src);
+    expect(src, contains('final drawn = _nameBoxes[s.event.id];'),
+        reason: 'the spoke tap rule stopped asking where the name was '
+            'actually drawn');
+    final atLabel = RegExp(r'final atLabel = ([A-Za-z]+) !=').firstMatch(src);
     expect(atLabel, isNotNull,
-        reason: 'atLabel is no longer guarded by anything');
-    expect(atLabel!.group(1), 'drawsName',
+        reason: 'atLabel is no longer guarded by a drawn box');
+    expect(atLabel!.group(1), 'drawn',
         reason: 'atLabel is guarded by ${atLabel.group(1)}, which is not '
-            'the question "is this name on screen"');
+            'the box this record\'s name was drawn in');
+    expect(src.contains('r >= s.label.rStart - 6 / _zoom'), isFalse,
+        reason: 'the planner\'s corridor is back — that is the invisible '
+            'bar across the annulus, taking taps for text nobody can see');
   });
 
   testWidgets('the layer switch hides all 25 and brings them back',

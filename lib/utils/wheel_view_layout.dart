@@ -557,6 +557,20 @@ class WheelRenderStats {
     if (trackHits) labelBoxesForTest.add(box);
   }
 
+  /// WHERE EACH RECORD'S NAME WAS DRAWN on the last frame, by id.
+  ///
+  /// The hit test answers from these boxes, so a test that wants to
+  /// know whether an answer came from a name the reader could see has
+  /// to be able to see them too. Armed with `trackHits`.
+  static final Map<String, Rect> recordNameBoxesForTest = <String, Rect>{};
+
+  static void noteRecordNameBoxes(Map<String, Rect> boxes) {
+    if (!trackHits) return;
+    recordNameBoxesForTest
+      ..clear()
+      ..addAll(boxes);
+  }
+
   static void noteFrameKinds(Map<WheelLabelKind, int> drawn) {
     if (!trackHits) return;
     labelKindsForTest
@@ -604,6 +618,7 @@ class WheelRenderStats {
     labelSizesForTest.clear();
     labelKindsForTest.clear();
     labelBoxesForTest.clear();
+    recordNameBoxesForTest.clear();
     cameraForTest = null;
     frameAreaForTest = 0;
   }

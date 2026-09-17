@@ -418,4 +418,113 @@ void main() {
     }
   });
 
+  testWidgets('a record answers for its name only where the name is',
+      (tester) async {
+    // 2026-09-17 「鼠标在下面为什么上面highlight了？」 — a pointer out in
+    // the empty annulus, and the record that lit up was on the band
+    // above it.
+    //
+    // A spoke has two ways in: its tick, and the radial corridor its
+    // TEXT occupies. The second gate asked `wheelShowsEventText`, which
+    // answers "are record names on at this zoom" — and since the detail
+    // table arrived that stopped being the same question as "was THIS
+    // record's name drawn". Most are not, and every one of them went on
+    // claiming its corridor, so a pointer on blank paper was handed a
+    // record whose only ink is a tick some distance away.
+    WheelRenderStats.reset();
+    WheelRenderStats.trackHits = true;
+    addTearDown(() {
+      WheelRenderStats.trackHits = false;
+      WheelRenderStats.reset();
+    });
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(900, 900);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MainProvider()),
+        ChangeNotifierProvider(create: (_) => AppSettings()),
+      ],
+      child:
+          const MaterialApp(home: RadialChronologyPage(initialStacked: false)),
+    ));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(() => gesture.removePointer());
+
+    final iv = tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
+    final vp = tester.getSize(find.byType(InteractiveViewer));
+    final viewer = tester.getRect(find.byType(InteractiveViewer));
+    final canvasSize =
+        tester.getSize(find.byKey(const ValueKey('wheelSceneBoundary')));
+    final side = canvasSize.width < canvasSize.height
+        ? canvasSize.width
+        : canvasSize.height;
+    // 200%: the band stack fills the pane and a dozen names are
+    // drawn, so there is something to point AT and something to point
+    // past. At 400% on this pane exactly one name lands, and it lands
+    // six pixels off the top edge.
+    const zoom = 2.0;
+    final off = Offset((vp.width - side) / 2, (vp.height - side) / 2);
+    final q = Offset(side / 2 + side * 0.21 + off.dx, side / 2 + off.dy);
+    final t = Offset(vp.width / 2 - zoom * q.dx, vp.height / 2 - zoom * q.dy);
+    final m = Matrix4.identity();
+    m.setEntry(0, 0, zoom);
+    m.setEntry(1, 1, zoom);
+    m.setEntry(2, 2, zoom);
+    m.setEntry(0, 3, t.dx);
+    m.setEntry(1, 3, t.dy);
+    iv.transformationController!.value = m;
+    await tester.pumpAndSettle();
+
+    /// A point in the painter's own coordinates, as a point on screen.
+    Offset onScreen(Offset canvas) =>
+        viewer.topLeft + (canvas + off) * zoom + t;
+
+    // A NAME THAT IS ACTUALLY ON THIS SCREEN. Picked from what the
+    // painter published rather than guessed at, and skipping any whose
+    // centre the viewer cannot show.
+    final boxes = Map.of(WheelRenderStats.recordNameBoxesForTest);
+    expect(boxes, isNotEmpty,
+        reason: 'no record name was drawn at all, so there is nothing to '
+            'point at and this measures nothing');
+    final named = boxes.entries.firstWhere(
+        (e) => viewer.deflate(24).contains(onScreen(e.value.center)),
+        orElse: () => throw StateError('no drawn name is inside the viewer'));
+
+    WheelRenderStats.hitsForTest.clear();
+    await gesture.moveTo(onScreen(named.value.center));
+    await tester.pump();
+    expect(WheelRenderStats.hitsForTest.map((p) => p.id), contains(named.key),
+        reason: 'the pointer was on "${named.key}"\'s own drawn name and the '
+            'chart did not answer with it');
+
+    // AND THE CORRIDOR IT USED TO CLAIM. Same bearing, further out —
+    // where that record's text would have run if it had been drawn
+    // longer, and where the reader sees nothing at all.
+    final centre = Offset(side / 2, side / 2);
+    final away = named.value.center - centre;
+    final far = centre + away * (1 + 40 / away.distance);
+    final farPoint = onScreen(far);
+    if (viewer.contains(farPoint)) {
+      WheelRenderStats.hitsForTest.clear();
+      await gesture.moveTo(farPoint);
+      await tester.pump();
+      final answered = WheelRenderStats.hitsForTest
+          .where((p) => p.kind == 'spoke:label')
+          .map((p) => p.id)
+          .toList();
+      expect(answered, isNot(contains(named.key)),
+          reason: 'the pointer was 40 units past the end of "${named.key}"\'s '
+              'name and the chart still answered with it — that is the '
+              'invisible corridor, and the highlight lands back at the '
+              'record');
+    }
+  });
+
 }

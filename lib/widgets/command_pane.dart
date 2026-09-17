@@ -2278,8 +2278,8 @@ class _MiniIcon extends StatelessWidget {
         child: minTarget == 0
             ? glyph
             : ConstrainedBox(
-                constraints: BoxConstraints(
-                    minWidth: minTarget, minHeight: minTarget),
+                constraints:
+                    BoxConstraints(minWidth: minTarget, minHeight: minTarget),
                 child: Align(widthFactor: 1, heightFactor: 1, child: glyph),
               ),
       ),
@@ -2395,9 +2395,20 @@ class _OperatorButton extends StatelessWidget {
     // operator strip measured 25x21 (and 93x21 for `NEARn`) on the
     // Browse screen, and this app ships to Android and the iPad. See
     // `WbMetrics.minTarget` for why 24 rather than Apple's 44, and why
-    // the rule keys off the platform. Same `Align`-inside-a-
-    // `ConstrainedBox` shape as the workbench's own chrome box: an
-    // aligned Container would try to fill an unbounded Row.
+    // the rule keys off the platform.
+    //
+    // 2026-09-17, AND THIS IS THE CORRECTION. `alignment: center` on the
+    // Container is what made the target big, and a `Container` with an
+    // alignment takes ALL the width it is offered. The strip is a
+    // `Wrap`, which offers each child the whole row — so on the iPad
+    // every operator became a pane-wide bar and the twelve of them
+    // stacked into a column, while the same build on a Mac (where
+    // `minTarget` is 0 and the alignment is null) wrapped into two tidy
+    // rows. 「sword为什么iPad上看这样」, with both screenshots side by side.
+    //
+    // The centring moves INSIDE, as a `Center` with both factors at 1:
+    // it still centres the label inside whatever the minimum makes the
+    // box, and it shrink-wraps instead of claiming the row.
     final minTarget = WbMetrics.minTarget(Theme.of(context).platform);
     final button = InkWell(
       onTap: onTap,
@@ -2405,7 +2416,6 @@ class _OperatorButton extends StatelessWidget {
         constraints: minTarget == 0
             ? null
             : BoxConstraints(minWidth: minTarget, minHeight: minTarget),
-        alignment: minTarget == 0 ? null : Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color: selected ? wbc.hoverBg : wbc.chromeBg,
@@ -2416,36 +2426,40 @@ class _OperatorButton extends StatelessWidget {
                       ? wbc.border.withValues(alpha: 0.45)
                       : wbc.border),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: t.chrome,
-            fontWeight: FontWeight.w600,
-            // 2026-09-08: was `mutedText.withValues(alpha: 0.55)`, which
-            // measured 1.97:1 on the chrome — and 2.03:1 before the
-            // modern pass, so this is an old defect rather than a new
-            // one, found by `palette_legibility_walk_test.dart` once the
-            // walk was widened to reach the workbench.
-            //
-            // The button is NOT disabled. `onTap` is live whatever
-            // `dimmed` says, and the class doc above is explicit about
-            // it: *drawn back rather than disabled*. So the WCAG
-            // exemption for inactive components does not apply, and a
-            // control a reader can press but cannot read is the worst of
-            // the three states this button has.
-            //
-            // The dim signal does not need the label to carry it. Plain
-            // `mutedText` is 4.03:1 — readable — and still a full step
-            // back from `text` at ~13:1, so "this operator will not do
-            // anything to the line as it stands" still reads at a
-            // glance. The border beside it already fades to 45%, which
-            // is where a hint of that kind belongs: on the edge, where
-            // nothing has to be legible.
-            color: selected
-                ? wbc.link
-                : dimmed
-                    ? wbc.mutedText
-                    : wbc.text,
+        child: Center(
+          widthFactor: 1,
+          heightFactor: 1,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: t.chrome,
+              fontWeight: FontWeight.w600,
+              // 2026-09-08: was `mutedText.withValues(alpha: 0.55)`, which
+              // measured 1.97:1 on the chrome — and 2.03:1 before the
+              // modern pass, so this is an old defect rather than a new
+              // one, found by `palette_legibility_walk_test.dart` once the
+              // walk was widened to reach the workbench.
+              //
+              // The button is NOT disabled. `onTap` is live whatever
+              // `dimmed` says, and the class doc above is explicit about
+              // it: *drawn back rather than disabled*. So the WCAG
+              // exemption for inactive components does not apply, and a
+              // control a reader can press but cannot read is the worst of
+              // the three states this button has.
+              //
+              // The dim signal does not need the label to carry it. Plain
+              // `mutedText` is 4.03:1 — readable — and still a full step
+              // back from `text` at ~13:1, so "this operator will not do
+              // anything to the line as it stands" still reads at a
+              // glance. The border beside it already fades to 45%, which
+              // is where a hint of that kind belongs: on the edge, where
+              // nothing has to be legible.
+              color: selected
+                  ? wbc.link
+                  : dimmed
+                      ? wbc.mutedText
+                      : wbc.text,
+            ),
           ),
         ),
       ),
