@@ -150,6 +150,7 @@ import 'package:seeksparks/utils/strip_viewport.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
 import 'package:seeksparks/utils/strip_event_cards.dart';
 import 'package:seeksparks/utils/strip_depth_layout.dart';
+import 'package:seeksparks/widgets/chart_hover_plate.dart';
 import 'package:seeksparks/widgets/chronology_depth_toggle.dart';
 import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
@@ -185,6 +186,33 @@ const Map<String, String> _kPageTitle = {
   'zh-Hant': '世界歷史時間條',
   'en': 'World History Strip',
 };
+
+/// WHO IS UNDER A POINT, AND WHAT OPENING THEM DOES.
+///
+/// 2026-09-17 「when hovering over the line or strip can you have
+/// hovering pop up label or something and when click then pop up
+/// window?」. The hover label and the tap must answer with the same
+/// record, so there is one resolver — [_StripChronologyPageState
+/// ._resolveAt] — and it returns this instead of acting. The tap calls
+/// [open]; the hover reads [label] and calls nothing.
+///
+/// [label] is the record's OWN name, never the string the painter drew:
+/// a span's text is elided to the width the span had, and a span too
+/// narrow for its name is exactly the one a reader hovers to ask about.
+typedef _StripHit = ({String id, String label, void Function() open});
+
+/// The three answers a point can have, which are NOT two.
+///
+/// A record to open is one. Paper is another, and paper deselects —
+/// 「按空白地方不能取消选中」 is how the wheel learned that. The third is
+/// a span whose record has gone missing from the data underneath it:
+/// there is nothing to open and nothing was asked, so the reader's
+/// selection must be left exactly as it was. Folding that into "paper"
+/// would silently clear a selection because of a lookup failure.
+typedef _StripAnswer = ({_StripHit? hit, bool blank});
+
+const _StripAnswer _stripBlank = (hit: null, blank: true);
+const _StripAnswer _stripNothing = (hit: null, blank: false);
 
 class StripChronologyPage extends StatefulWidget {
   const StripChronologyPage(
@@ -222,6 +250,20 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   bool _fullScreen = false;
 
   String? _selectedId;
+
+  /// WHAT THE POINTER IS OVER, for the floating name — see
+  /// [ChartHoverPlate]. Null on every touch device, which has no hover.
+  ///
+  /// [at] is in the OUTER viewport's coordinates, not the chart's: the
+  /// chart is `contentW` wide (hundreds of thousands of pixels at deep
+  /// zoom) and scrolled underneath, so a plate placed in its space
+  /// would be off-screen almost everywhere.
+  ({Offset at, String label})? _hover;
+
+  /// The outer Stack, so a global pointer position can be turned into
+  /// that Stack's own coordinates whatever the scroll views have done
+  /// to the chart underneath.
+  final GlobalKey _viewportKey = GlobalKey();
   late bool _stacked;
 
   /// Streams the reader has switched off — the wheel's own field
@@ -793,7 +835,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           ),
         ),
         Expanded(
-            child: Stack(children: [
+            child: Stack(key: _viewportKey, children: [
           Column(children: [
             Row(children: [
               SizedBox(width: headerW, height: rulerH),
@@ -1034,20 +1076,42 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                                 _pressOrigin = null;
                                 _endTouch(e);
                               },
-                              child: GestureDetector(
-                                key: const ValueKey('chronologyStrip'),
-                                behavior: HitTestBehavior.opaque,
-                                onTapUp: (e) => _handleTap(
-                                    context,
-                                    e.localPosition,
-                                    data,
-                                    kings,
-                                    patriarchs,
-                                    locale,
-                                    rows),
-                                child: SizedBox(
-                                  width: contentW,
-                                  height: contentH,
+                              // A MOUSE CAN ASK WITHOUT COMMITTING.
+                              // The SAME resolver the tap uses answers
+                              // here, so the name that floats up is the
+                              // record the click would open.
+                              //
+                              // This box is `contentW` x `contentH`, so
+                              // `localPosition` is already in the
+                              // coordinates `_resolveAt` works in — the
+                              // same reason the tap above can hand its
+                              // own straight over.
+                              child: MouseRegion(
+                                cursor: _hover == null
+                                    ? MouseCursor.defer
+                                    : SystemMouseCursors.click,
+                                onHover: (e) => _setHover(
+                                    _resolveAt(context, e.localPosition, data,
+                                            kings, patriarchs, locale, rows)
+                                        .hit
+                                        ?.label,
+                                    e.position),
+                                onExit: (_) => _setHover(null, null),
+                                child: GestureDetector(
+                                  key: const ValueKey('chronologyStrip'),
+                                  behavior: HitTestBehavior.opaque,
+                                  onTapUp: (e) => _handleTap(
+                                      context,
+                                      e.localPosition,
+                                      data,
+                                      kings,
+                                      patriarchs,
+                                      locale,
+                                      rows),
+                                  child: SizedBox(
+                                    width: contentW,
+                                    height: contentH,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1060,6 +1124,20 @@ class _StripChronologyPageState extends State<StripChronologyPage>
               ]),
             ),
           ]),
+          // THE NAME, in the viewport's coordinates rather than the
+          // chart's — see [_hover]. Hit-transparent, because a plate
+          // that took the pointer would move itself out from under the
+          // pointer and flicker between two answers.
+          if (_hover case final h?)
+            Positioned.fill(
+              key: const ValueKey('stripHoverLabel'),
+              child: IgnorePointer(
+                child: CustomSingleChildLayout(
+                  delegate: ChartHoverPlateLayout(h.at),
+                  child: ChartHoverPlate(h.label),
+                ),
+              ),
+            ),
           ..._scrollIndicators(
             headerW: headerW,
             wb: wb,
@@ -1284,6 +1362,48 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     String locale,
     List<StripRow> rows,
   ) {
+    final answer =
+        _resolveAt(context, pos, data, kings, patriarchs, locale, rows);
+    if (answer.hit case final hit?) {
+      hit.open();
+      return;
+    }
+    if (answer.blank && _selectedId != null) _select(null);
+  }
+
+  /// Remember what the pointer is over, cheaply.
+  ///
+  /// The early return is not an optimisation to be trimmed later: a
+  /// mouse crossing the chart delivers a hover event every few pixels,
+  /// and each `setState` rebuilds this page's whole subtree. The state
+  /// only moves when the ANSWER moves.
+  void _setHover(String? label, Offset? global) {
+    if (label == null || label.isEmpty || global == null) {
+      if (_hover != null) setState(() => _hover = null);
+      return;
+    }
+    final box = _viewportKey.currentContext?.findRenderObject();
+    if (box is! RenderBox) return;
+    final at = box.globalToLocal(global);
+    final was = _hover;
+    if (was != null && was.label == label && (was.at - at).distance < 2) {
+      return;
+    }
+    setState(() => _hover = (at: at, label: label));
+  }
+
+  /// Resolve the point [pos] WITHOUT touching selection or opening
+  /// anything. See [_StripAnswer] for why the answer has three shapes
+  /// and [_StripHit] for why there is only one of these methods.
+  _StripAnswer _resolveAt(
+    BuildContext context,
+    Offset pos,
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+    String locale,
+    List<StripRow> rows,
+  ) {
     final depthHit = _stacked ? _depthSpanAt(pos, rows) : null;
     StripRow? hit = depthHit?.row;
     for (final row in rows) {
@@ -1293,38 +1413,49 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         break;
       }
     }
-    if (hit == null || hit.isHeading) {
-      if (_selectedId != null) _select(null);
-      return;
-    }
+    if (hit == null || hit.isHeading) return _stripBlank;
     final lane = hit.lane!;
     if (lane.kind == StripLaneKind.events) {
       final card = _eventCardAt(pos, rows);
-      if (card != null) {
-        _openEventCard(context, card, data, locale);
-      } else if (_selectedId != null) {
-        _select(null);
-      }
-      return;
+      if (card == null) return _stripBlank;
+      final first = card.events.first;
+      return (
+        blank: false,
+        hit: (
+          id: first.id,
+          // The card's own drawn text is elided to whatever width the
+          // callout had; this is the event's title.
+          label: card.events.length > 1
+              ? '${first.titleFor(locale)} +${card.events.length - 1}'
+              : first.titleFor(locale),
+          open: () => _openEventCard(context, card, data, locale),
+        ),
+      );
     }
 
-    void openStreamBackground() {
+    _StripAnswer streamBackground() {
       final stream = find(data.streams, (s) => s.id == lane.ownerId);
-      if (stream == null) return;
-      _select(stream.id);
-      showStream(context, stream, data, locale, _select);
+      if (stream == null) return _stripNothing;
+      return (
+        blank: false,
+        hit: (
+          id: stream.id,
+          label: stream.nameFor(locale),
+          open: () {
+            _select(stream.id);
+            showStream(context, stream, data, locale, _select);
+          },
+        ),
+      );
     }
 
     if (lane.spans.isEmpty) {
       // Only a stream's own `ensureAtLeastOne` lane is ever empty
       // (`strip_lanes.dart`'s own doc) — the empty-lane note IS its
       // sheet, so a tap anywhere on the row still opens the stream.
-      if (lane.kind == StripLaneKind.stream) {
-        openStreamBackground();
-      } else if (_selectedId != null) {
-        _select(null);
-      }
-      return;
+      return lane.kind == StripLaneKind.stream
+          ? streamBackground()
+          : _stripBlank;
     }
 
     final targets = [
@@ -1342,40 +1473,73 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       // The tap missed every span's target — a stream's OWN band still
       // answers, the same fallback the wheel gives an empty stretch of
       // ring; the other kinds have no such background record.
-      if (lane.kind == StripLaneKind.stream) {
-        openStreamBackground();
-      } else if (_selectedId != null) {
-        _select(null);
-      }
-      return;
+      return lane.kind == StripLaneKind.stream
+          ? streamBackground()
+          : _stripBlank;
     }
 
     switch (span.kind) {
       case StripLaneKind.events:
         // Event callouts were resolved against their rectangles above.
-        return;
+        return _stripNothing;
       case StripLaneKind.lives:
         final man = ChronologyService.instance.cached?.byId(span.id);
-        if (man == null) return;
-        _select(man.id);
-        showPatriarch(context, man, locale);
+        if (man == null) return _stripNothing;
+        return (
+          blank: false,
+          hit: (
+            id: man.id,
+            label: man.nameFor(locale),
+            open: () {
+              _select(man.id);
+              showPatriarch(context, man, locale);
+            },
+          ),
+        );
       case StripLaneKind.kings:
         final id = span.id.substring(kStripKingPrefix.length);
         final king = find(kings, (k) => k.id == id);
-        if (king == null) return;
-        _select(span.id);
-        showKing(context, king, locale);
+        if (king == null) return _stripNothing;
+        return (
+          blank: false,
+          hit: (
+            id: span.id,
+            label: king.nameFor(locale),
+            open: () {
+              _select(span.id);
+              showKing(context, king, locale);
+            },
+          ),
+        );
       case StripLaneKind.ministries:
         final id = span.id.substring(kStripMinistryPrefix.length);
         final ministry = find(data.ministries, (m) => m.id == id);
-        if (ministry == null) return;
-        _select(span.id);
-        showMinistry(context, ministry, locale);
+        if (ministry == null) return _stripNothing;
+        return (
+          blank: false,
+          hit: (
+            id: span.id,
+            label: ministry.nameFor(locale),
+            open: () {
+              _select(span.id);
+              showMinistry(context, ministry, locale);
+            },
+          ),
+        );
       case StripLaneKind.stream:
         final power = find(data.powers, (p) => p.id == span.id);
-        if (power == null) return;
-        _select(power.id);
-        showPower(context, power, data, locale, _select);
+        if (power == null) return _stripNothing;
+        return (
+          blank: false,
+          hit: (
+            id: power.id,
+            label: power.nameFor(locale),
+            open: () {
+              _select(power.id);
+              showPower(context, power, data, locale, _select);
+            },
+          ),
+        );
       case StripLaneKind.rail:
         // The rail's sheet is the wheel's own `showCohort`, and it must
         // be: the first thing it says is that the year is the
@@ -1390,7 +1554,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         // duplication, and `showCohort` belongs to neither form.
         final year =
             int.tryParse(span.id.substring(kStripLineagePrefix.length));
-        if (year == null) return;
+        if (year == null) return _stripNothing;
         final visible = _visibleInputs(data, kings, patriarchs);
         final drawn = <String>{
           for (final p in visible.patriarchs) p.id,
@@ -1406,12 +1570,23 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           ),
           (c) => c.year == year,
         );
-        if (cohort == null) return;
-        _select(span.id);
-        showCohort(context,
-            LineageCohort(year: cohort.year, people: cohort.people), locale);
+        if (cohort == null) return _stripNothing;
+        return (
+          blank: false,
+          hit: (
+            id: span.id,
+            label: yearLabel(cohort.year, locale),
+            open: () {
+              _select(span.id);
+              showCohort(
+                  context,
+                  LineageCohort(year: cohort.year, people: cohort.people),
+                  locale);
+            },
+          ),
+        );
       case StripLaneKind.ruler:
-        break;
+        return _stripNothing;
     }
   }
 

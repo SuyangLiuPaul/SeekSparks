@@ -32,6 +32,7 @@ import 'package:seeksparks/utils/strip_chronology_layout.dart'
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
+import 'package:seeksparks/widgets/chart_hover_plate.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/year_digest.dart'
     show buildYearDigest, YearDigestItem, YearMoment;
@@ -1171,6 +1172,27 @@ String centuryTickLabel(int year, String locale) => year == 0
 /// the arc keeps its colour and its tap target, and loses only its word.
 /// See [_RadialChronologyPageState._buildArcs] for how [name]/[nameA0]/
 /// [nameSweep]/[nameSize] are decided.
+/// WHO IS UNDER A POINT, AND WHAT OPENING THEM DOES.
+///
+/// 2026-09-17 「when hovering over the line or strip can you have
+/// hovering pop up label or something and when click then pop up
+/// window?」. The hover label and the tap MUST answer with the same
+/// record or the feature is worse than not having it: a name that
+/// floats up for one band while the click underneath opens another is
+/// a chart that lies about itself.
+///
+/// So there is one resolver — [_RadialChronologyPageState._resolveAt] —
+/// and it returns this instead of acting. The tap calls [open]; the
+/// hover reads [label] and calls nothing. Neither can drift from the
+/// other, because there is nothing to keep in step.
+///
+/// [label] is the record's OWN name, never the name as drawn: the arc
+/// and the spoke both carry a display string that is empty exactly when
+/// there was no room to print it, which is exactly when a reader needs
+/// to hover. That is the 亚们 defect (see [_Life.fullName]) and it is
+/// the reason this hands back `fullName` and `event.titleFor`.
+typedef _WheelHit = ({String id, String label, void Function() open});
+
 class _Arc {
   const _Arc(
     this.power,
@@ -1424,6 +1446,24 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   bool _fullScreen = false;
 
   String? _selectedId;
+
+  /// WHAT THE POINTER IS OVER, for the floating name. Null on every
+  /// touch device, which has no hover and loses nothing: this exists
+  /// because a mouse can ask a question without committing to it, and
+  /// at the zoom levels these bands are read at, most of them are too
+  /// thin to carry their own name.
+  ///
+  /// [at] is in the OUTER viewport's coordinates, not the wheel's. The
+  /// wheel lives inside an InteractiveViewer, so a plate positioned in
+  /// its space would be scaled by the zoom with it — 36x at the zoom
+  /// the owner reported this from.
+  ({Offset at, String label})? _hover;
+
+  /// The outer Stack, so a global pointer position can be turned into
+  /// that Stack's own coordinates whatever the viewer has done to the
+  /// wheel underneath.
+  final GlobalKey _viewportKey = GlobalKey();
+
   int? _rangeStart;
   int? _rangeEnd;
   Object? _sceneKey;
@@ -2142,7 +2182,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           final lives = scene.lives;
           final rail = scene.rail;
 
-          return Stack(children: [
+          return Stack(key: _viewportKey, children: [
             Positioned.fill(
               child: InteractiveViewer(
                 // A TRACKPAD'S TWO FINGERS ZOOM, like the wheel's.
@@ -2170,97 +2210,135 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                         if (year != null) _placeCursor(year);
                       }),
                       onPointerCancel: (_) => _pressOrigin = null,
-                      child: GestureDetector(
-                        // The wheel is one square canvas and every band, arc
-                        // and spoke is painted, not laid out, so a test can
-                        // only reach a detail sheet by tapping a computed
-                        // point. This key is how it finds the square and its
-                        // centre — same reason as `chronologyAxis` on the
-                        // sibling page.
-                        key: const ValueKey('chronologyWheel'),
-                        behavior: HitTestBehavior.opaque,
-                        onTapUp: (e) => _handleTap(
-                            context,
-                            e.localPosition,
-                            side,
-                            data,
-                            streams,
-                            arcs,
-                            spokes,
-                            lives,
-                            rail,
-                            locale),
-                        child: Stack(children: [
-                          RepaintBoundary(
-                            key: const ValueKey('wheelSceneBoundary'),
-                            child: CustomPaint(
-                              size: Size(side, side),
-                              painter: _WorldWheelPainter(
-                                streams: streams,
-                                colors: colors,
-                                arcs: arcs,
-                                spokes: spokes,
-                                lives: lives,
-                                rail: rail,
-                                locale: locale,
-                                selectedId: _selectedId,
-                                rangeStart: _rangeStart,
-                                rangeEnd: _rangeEnd,
-                                wb: wb,
-                                zoom: _zoom,
-                                symbols: ChartSymbolService.instance.cached,
-                                rimFont: _wheelFont(t, _kLabelPx),
-                                endFont: _wheelFont(t, 13),
-                                bandFont: _wheelFont(t, 12),
-                              ),
-                            ),
-                          ),
-                          // THE LINE, and on a wheel it is a spoke: year is
-                          // angle here, so the rule that says "this year"
-                          // runs hub to rim. Hit-transparent, because a rule
-                          // that swallowed taps would answer 「没有线根本不
-                          // 知道哪一年」 by breaking the chart underneath it.
-                          if (_cursorYear case final int y)
-                            Positioned.fill(
-                              child: IgnorePointer(
-                                child: CustomPaint(
-                                  key: const ValueKey('wheelYearCursor'),
-                                  painter: _YearSpokePainter(
-                                    year: y,
-                                    side: side,
-                                    rHub: rHub,
-                                    rRim: rRim,
-                                    color: wb.accent,
-                                    zoom: _zoom,
-                                  ),
+                      // A MOUSE CAN ASK WITHOUT COMMITTING, and until
+                      // now it could not. 2026-09-17 「when hovering over
+                      // the line or strip can you have hovering pop up
+                      // label or something and when click then pop up
+                      // window?」 — reported from the wheel at 3614%,
+                      // where the bands under the pointer are a few
+                      // pixels deep and carry no name at all.
+                      //
+                      // The SAME resolver the tap uses answers here, so
+                      // the name that floats up is the record the click
+                      // would open. The cursor changes with it: a plate
+                      // appearing is also the only signal that there is
+                      // anything here to press.
+                      child: MouseRegion(
+                        cursor: _hover == null
+                            ? MouseCursor.defer
+                            : SystemMouseCursors.click,
+                        onHover: (e) => _setHover(
+                            _resolveAt(context, e.localPosition, side, data,
+                                    streams, arcs, spokes, lives, rail, locale)
+                                ?.label,
+                            e.position),
+                        onExit: (_) => _setHover(null, null),
+                        child: GestureDetector(
+                          // The wheel is one square canvas and every band, arc
+                          // and spoke is painted, not laid out, so a test can
+                          // only reach a detail sheet by tapping a computed
+                          // point. This key is how it finds the square and its
+                          // centre — same reason as `chronologyAxis` on the
+                          // sibling page.
+                          key: const ValueKey('chronologyWheel'),
+                          behavior: HitTestBehavior.opaque,
+                          onTapUp: (e) => _handleTap(
+                              context,
+                              e.localPosition,
+                              side,
+                              data,
+                              streams,
+                              arcs,
+                              spokes,
+                              lives,
+                              rail,
+                              locale),
+                          child: Stack(children: [
+                            RepaintBoundary(
+                              key: const ValueKey('wheelSceneBoundary'),
+                              child: CustomPaint(
+                                size: Size(side, side),
+                                painter: _WorldWheelPainter(
+                                  streams: streams,
+                                  colors: colors,
+                                  arcs: arcs,
+                                  spokes: spokes,
+                                  lives: lives,
+                                  rail: rail,
+                                  locale: locale,
+                                  selectedId: _selectedId,
+                                  rangeStart: _rangeStart,
+                                  rangeEnd: _rangeEnd,
+                                  wb: wb,
+                                  zoom: _zoom,
+                                  symbols: ChartSymbolService.instance.cached,
+                                  rimFont: _wheelFont(t, _kLabelPx),
+                                  endFont: _wheelFont(t, 13),
+                                  bandFont: _wheelFont(t, 12),
                                 ),
                               ),
                             ),
-                          // The hub says where you are; it is not part of the
-                          // chart. Inside the zoomable child it was magnified
-                          // with everything else and swallowed the middle of
-                          // the screen at 384%. It now shrinks against the
-                          // zoom and fades out entirely once the reader has
-                          // zoomed in to read — by then they know what they
-                          // are looking at, and the space is worth more than
-                          // the caption.
-                          Center(
-                            child: Opacity(
-                              opacity: (1.6 - _zoom).clamp(0.0, 1.0),
-                              child: Transform.scale(
-                                scale: 1 / _zoom,
-                                child: _hubCaption(context, locale, t, wb, hubD,
-                                    streams, data, lives),
+                            // THE LINE, and on a wheel it is a spoke: year is
+                            // angle here, so the rule that says "this year"
+                            // runs hub to rim. Hit-transparent, because a rule
+                            // that swallowed taps would answer 「没有线根本不
+                            // 知道哪一年」 by breaking the chart underneath it.
+                            if (_cursorYear case final int y)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: CustomPaint(
+                                    key: const ValueKey('wheelYearCursor'),
+                                    painter: _YearSpokePainter(
+                                      year: y,
+                                      side: side,
+                                      rHub: rHub,
+                                      rRim: rRim,
+                                      color: wb.accent,
+                                      zoom: _zoom,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            // The hub says where you are; it is not part of the
+                            // chart. Inside the zoomable child it was magnified
+                            // with everything else and swallowed the middle of
+                            // the screen at 384%. It now shrinks against the
+                            // zoom and fades out entirely once the reader has
+                            // zoomed in to read — by then they know what they
+                            // are looking at, and the space is worth more than
+                            // the caption.
+                            Center(
+                              child: Opacity(
+                                opacity: (1.6 - _zoom).clamp(0.0, 1.0),
+                                child: Transform.scale(
+                                  scale: 1 / _zoom,
+                                  child: _hubCaption(context, locale, t, wb, hubD,
+                                      streams, data, lives),
+                                ),
                               ),
                             ),
-                          ),
-                        ]),
+                          ]),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
+            // THE NAME, in the viewport's coordinates rather than the
+            // wheel's — see [_hover]. Hit-transparent, because a plate
+            // that took the pointer would move itself out from under
+            // the pointer and flicker between two answers.
+            if (_hover case final h?)
+              Positioned.fill(
+                key: const ValueKey('wheelHoverLabel'),
+                child: IgnorePointer(
+                  child: CustomSingleChildLayout(
+                    delegate: ChartHoverPlateLayout(h.at),
+                    child: ChartHoverPlate(h.label),
+                  ),
+                ),
+              ),
           ]);
         }),
       ),
@@ -4075,7 +4153,65 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     List<_Rail> rail,
     String locale,
   ) {
+    // Kept here as well as in the resolver: with no data at all there
+    // is nothing to select OR deselect, and routing that case through
+    // the "nothing under the finger" branch below would clear a
+    // selection the reader made before the streams were filtered away.
     if (streams.isEmpty) return;
+    final hit = _resolveAt(context, local, side, data, streams, arcs, spokes,
+        lives, rail, locale);
+    // NOTHING UNDER THE FINGER MEANS DESELECT, and that rule lives here
+    // rather than in the resolver: the resolver is also asked by the
+    // hover, which must be able to say "nothing" without changing what
+    // the reader has selected.
+    if (hit == null) {
+      if (_selectedId != null) _select(null);
+      return;
+    }
+    hit.open();
+  }
+
+  /// Remember what the pointer is over, cheaply.
+  ///
+  /// [global] is a screen position and is converted here rather than by
+  /// the caller, because only this method knows which box the plate is
+  /// positioned in.
+  ///
+  /// The early return is not an optimisation to be trimmed later: a
+  /// mouse crossing the wheel delivers a hover event every few pixels,
+  /// and each `setState` rebuilds this page's whole subtree. Repainting
+  /// is spared by the scene cache and the RepaintBoundary, but the
+  /// rebuild is not, so the state only moves when the ANSWER moves.
+  void _setHover(String? label, Offset? global) {
+    if (label == null || label.isEmpty || global == null) {
+      if (_hover != null) setState(() => _hover = null);
+      return;
+    }
+    final box = _viewportKey.currentContext?.findRenderObject();
+    if (box is! RenderBox) return;
+    final at = box.globalToLocal(global);
+    final was = _hover;
+    if (was != null && was.label == label && (was.at - at).distance < 2) {
+      return;
+    }
+    setState(() => _hover = (at: at, label: label));
+  }
+
+  /// Resolve the point [local] to a record, WITHOUT touching selection
+  /// or opening anything. See [_WheelHit] for why this is one method.
+  _WheelHit? _resolveAt(
+    BuildContext context,
+    Offset local,
+    double side,
+    WheelHistoryData data,
+    List<WheelStream> streams,
+    List<_Arc> arcs,
+    List<_Spoke> spokes,
+    List<_Life> lives,
+    List<_Rail> rail,
+    String locale,
+  ) {
+    if (streams.isEmpty) return null;
     final c = side / 2;
     final dx = local.dx - c, dy = local.dy - c;
     final r = math.sqrt(dx * dx + dy * dy);
@@ -4100,10 +4236,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // the rim. This makes the empty wedge the same kind of nothing,
     // rather than a hole the gesture fell into before it could get
     // there.
-    if (a - startRad > sweepRad) {
-      if (_selectedId != null) _select(null);
-      return;
-    }
+    if (a - startRad > sweepRad) return null;
 
     final rHub = side * _kHubFrac;
     final rBands = side * bandsFractionFor(side);
@@ -4168,14 +4301,21 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       }
     }
 
-    void openSpoke(_Spoke s) {
-      _select(s.event.id);
-      if (s.members.length > 1) {
-        showCluster(context, s.members, data, locale, _select);
-      } else {
-        showEvent(context, s.event, data, locale);
-      }
-    }
+    // `s.title` is NOT the label. It is the string the painter drew,
+    // and it is empty whenever the label would not have been legible —
+    // which is precisely the spoke a reader hovers to ask about.
+    _WheelHit spokeHit(_Spoke s) => (
+          id: s.event.id,
+          label: s.event.titleFor(locale),
+          open: () {
+            _select(s.event.id);
+            if (s.members.length > 1) {
+              showCluster(context, s.members, data, locale, _select);
+            } else {
+              showEvent(context, s.event, data, locale);
+            }
+          },
+        );
 
     // A life, and THE SMALLER NORMALISED DISTANCE WINS — not the spoke.
     //
@@ -4218,12 +4358,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         final into = (a - m.angle).abs() / tolerance;
         if (into <= 1) {
           if (bestSpoke case final s? when spokeScore < into) {
-            openSpoke(s);
-            return;
+            return spokeHit(s);
           }
-          _select('$kLineageArcPrefix${m.cohort.year}');
-          showCohort(context, m.cohort, locale);
-          return;
+          final cohortId = '$kLineageArcPrefix${m.cohort.year}';
+          return (
+            id: cohortId,
+            label: yearLabel(m.cohort.year, locale),
+            open: () {
+              _select(cohortId);
+              showCohort(context, m.cohort, locale);
+            },
+          );
         }
       }
     }
@@ -4255,29 +4400,35 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           final into = pick.score;
           // The one place the two shapes are compared.
           if (bestSpoke case final s? when spokeScore < into) {
-            openSpoke(s);
-            return;
+            return spokeHit(s);
           }
-          _select(l.id);
-          final man = l.man;
-          final king = l.king;
-          final ministry = l.ministry;
-          if (man != null) {
-            showPatriarch(context, man, locale);
-          } else if (king != null) {
-            showKing(context, king, locale);
-          } else if (ministry != null) {
-            showMinistry(context, ministry, locale);
-          }
-          return;
+          return (
+            id: l.id,
+            // `l.name` is what the arc could print; `l.fullName` is what
+            // the record is called. 亚们 has the second and not the
+            // first — see [_Life.fullName].
+            label: l.fullName,
+            open: () {
+              _select(l.id);
+              final man = l.man;
+              final king = l.king;
+              final ministry = l.ministry;
+              if (man != null) {
+                showPatriarch(context, man, locale);
+              } else if (king != null) {
+                showKing(context, king, locale);
+              } else if (ministry != null) {
+                showMinistry(context, ministry, locale);
+              }
+            },
+          );
         }
       }
     }
 
     // No arc took it, so a spoke that was in range does.
     if (bestSpoke case final s?) {
-      openSpoke(s);
-      return;
+      return spokeHit(s);
     }
 
     // Otherwise a band: a power arc if one is under the tap, else the
@@ -4377,12 +4528,16 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         // SCREEN pixels: zooming pulls the ticks apart and opens the
         // band between them.
         if (bestSpoke case final s? when spokeScore <= 1) {
-          openSpoke(s);
-          return;
+          return spokeHit(s);
         }
-        _select(arc.power.id);
-        showPower(context, arc.power, data, locale, _select);
-        return;
+        return (
+          id: arc.power.id,
+          label: arc.power.nameFor(locale),
+          open: () {
+            _select(arc.power.id);
+            showPower(context, arc.power, data, locale, _select);
+          },
+        );
       }
       // Nearest band centre, so the outermost and innermost edges of
       // the annulus round INTO their band rather than falling through.
@@ -4418,12 +4573,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           arcs.any((arc) =>
               arc.ring == best && a >= arc.a0 - pad && a <= arc.a1 + pad);
       if (onIt) {
-        _select(streams[best].id);
-        showStream(context, streams[best], data, locale, _select);
-        return;
+        final stream = streams[best];
+        return (
+          id: stream.id,
+          label: stream.nameFor(locale),
+          open: () {
+            _select(stream.id);
+            showStream(context, stream, data, locale, _select);
+          },
+        );
       }
     }
-    if (_selectedId != null) _select(null);
+    return null;
   }
 }
 
