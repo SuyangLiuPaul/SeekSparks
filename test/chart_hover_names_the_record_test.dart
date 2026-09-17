@@ -194,6 +194,46 @@ void main() {
             'repeating what is already legible and is worth nothing');
   });
 
+  testWidgets('the wheel SHOWS what it claims, and says the year either way',
+      (tester) async {
+    // 2026-09-17, after Fable 5.1's reading of the same report: a word
+    // beside the cursor is feedback about identity, and identity with
+    // no visible extent cannot be checked. At 4050% a band is deeper
+    // than a phone and longer than the viewport, with its name painted
+    // once somewhere along it — so the outline is not decoration, it is
+    // the evidence.
+    await pump(tester, const RadialChronologyPage(initialStacked: false),
+        const Size(900, 900));
+    final g = await mouse(tester);
+    final rect = tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
+    final named = await sweep(tester, g, rect);
+    expect(named, isNotEmpty);
+
+    final at = named.keys.first;
+    await g.moveTo(at);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('wheelClaimOutline')), findsOneWidget,
+        reason: 'a named record must be drawn, not only spelled');
+
+    // The hub is inside the chart and holds no record. The plate must
+    // still appear — with the year and no name — because a hover that
+    // simply vanishes reads as broken, and 「you are at this year,
+    // between bands」 is the true answer.
+    final hub = rect.center;
+    await g.moveTo(hub);
+    await tester.pump();
+    final plates = find.byType(ChartHoverPlate);
+    if (plates.evaluate().isNotEmpty) {
+      final plate = tester.widget<ChartHoverPlate>(plates.first);
+      expect(plate.year, isNotEmpty,
+          reason: 'a plate with no name must carry the year instead');
+      if (plate.text.isEmpty) {
+        expect(find.byKey(const ValueKey('wheelClaimOutline')), findsNothing,
+            reason: 'nothing was claimed, so nothing may be outlined');
+      }
+    }
+  });
+
   testWidgets('the strip names what is under the pointer', (tester) async {
     await pump(tester, const StripChronologyPage(), const Size(900, 700));
     final g = await mouse(tester);

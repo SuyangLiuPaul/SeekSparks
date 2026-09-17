@@ -1191,7 +1191,28 @@ String centuryTickLabel(int year, String locale) => year == 0
 /// there was no room to print it, which is exactly when a reader needs
 /// to hover. That is the 亚们 defect (see [_Life.fullName]) and it is
 /// the reason this hands back `fullName` and `event.titleFor`.
-typedef _WheelHit = ({String id, String label, void Function() open});
+typedef _WheelHit = ({
+  String id,
+  String label,
+  void Function() open,
+
+  /// THE REGION THIS ANSWER IS A CLAIM ABOUT, in canvas polar
+  /// coordinates, so the reader can be shown it.
+  ///
+  /// 2026-09-17. A resolver answer is a claim about a region, and at
+  /// 4050% a band is three hundred pixels deep and thousands long, with
+  /// its name painted once somewhere along it. A word beside the cursor
+  /// is feedback about IDENTITY; identity with no visible extent cannot
+  /// be checked, so a correct answer and a wrong one look the same to
+  /// the reader. Drawing the claimed shape is the only honest feedback
+  /// for a claim about a shape — and it is the same four numbers the
+  /// accuracy probe already needed, so the plate, the outline and the
+  /// tap all consume ONE result and cannot disagree.
+  _HitShape shape,
+});
+
+/// The region a [_WheelHit] claims: an annular sector, in canvas units.
+typedef _HitShape = ({double a0, double a1, double centre, double halfDepth});
 
 class _Arc {
   const _Arc(
@@ -1457,7 +1478,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// wheel lives inside an InteractiveViewer, so a plate positioned in
   /// its space would be scaled by the zoom with it — 36x at the zoom
   /// the owner reported this from.
-  ({Offset at, String label})? _hover;
+  ({Offset at, String label, String year, _HitShape? shape})? _hover;
 
   /// The outer Stack, so a global pointer position can be turned into
   /// that Stack's own coordinates whatever the viewer has done to the
@@ -2227,22 +2248,24 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                         cursor: _hover == null
                             ? MouseCursor.defer
                             : SystemMouseCursors.click,
-                        onHover: (e) => _setHover(
-                            _resolveAt(
-                                    context,
-                                    e.localPosition,
-                                    side,
-                                    data,
-                                    streams,
-                                    arcs,
-                                    spokes,
-                                    lives,
-                                    rail,
-                                    locale,
-                                    e.kind)
-                                ?.label,
-                            e.position),
-                        onExit: (_) => _setHover(null, null),
+                        onHover: (e) {
+                          final hit = _resolveAt(
+                              context,
+                              e.localPosition,
+                              side,
+                              data,
+                              streams,
+                              arcs,
+                              spokes,
+                              lives,
+                              rail,
+                              locale,
+                              e.kind);
+                          final y = _yearAt(e.localPosition, side);
+                          _setHover(hit, y == null ? '' : yearLabel(y, locale),
+                              e.position);
+                        },
+                        onExit: (_) => _setHover(null, '', null),
                         child: GestureDetector(
                           // The wheel is one square canvas and every band, arc
                           // and spoke is painted, not laid out, so a test can
@@ -2291,6 +2314,38 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                                 ),
                               ),
                             ),
+                            // WHAT THE ANSWER IS A CLAIM ABOUT, drawn.
+                            //
+                            // 2026-09-17. At 4050% a band is three
+                            // hundred pixels deep and thousands long,
+                            // and its name is painted once somewhere
+                            // along it — so a word beside the cursor is
+                            // unverifiable, and a correct answer looks
+                            // exactly like a wrong one. 「hover over那个
+                            // 不准确」 was partly a real defect (fixed in
+                            // the resolver) and partly this: no evidence.
+                            //
+                            // In the TRANSFORMED child, because the
+                            // shape is in canvas coordinates; its own
+                            // CustomPaint rather than the scene's, so a
+                            // mouse crossing the chart never repaints a
+                            // 4000% wheel; and hit-transparent, like
+                            // the year rule below it.
+                            if (_hover?.shape case final claim?)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: CustomPaint(
+                                    key: const ValueKey('wheelClaimOutline'),
+                                    painter: _ClaimOutlinePainter(
+                                      claim: claim,
+                                      side: side,
+                                      zoom: _zoom,
+                                      color: wb.accent,
+                                      halo: wb.paneBg,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             // THE LINE, and on a wheel it is a spoke: year is
                             // angle here, so the rule that says "this year"
                             // runs hub to rim. Hit-transparent, because a rule
@@ -2348,7 +2403,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                 child: IgnorePointer(
                   child: CustomSingleChildLayout(
                     delegate: ChartHoverPlateLayout(h.at),
-                    child: ChartHoverPlate(h.label),
+                    child: ChartHoverPlate(h.label, year: h.year),
                   ),
                 ),
               ),
@@ -4270,8 +4325,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// and each `setState` rebuilds this page's whole subtree. Repainting
   /// is spared by the scene cache and the RepaintBoundary, but the
   /// rebuild is not, so the state only moves when the ANSWER moves.
-  void _setHover(String? label, Offset? global) {
-    if (label == null || label.isEmpty || global == null) {
+  void _setHover(_WheelHit? hit, String year, Offset? global) {
+    // THE YEAR ALONE IS STILL AN ANSWER. With nothing under the pointer
+    // the plate used to vanish, which reads as a dead hover; on a
+    // timeline "you are at 主后1204, between two bands" is exactly what
+    // the reader wants to know, and it is also what tells them the
+    // silence is deliberate.
+    final label = hit?.label ?? '';
+    if (global == null || (label.isEmpty && year.isEmpty)) {
       if (_hover != null) setState(() => _hover = null);
       return;
     }
@@ -4279,10 +4340,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     if (box is! RenderBox) return;
     final at = box.globalToLocal(global);
     final was = _hover;
-    if (was != null && was.label == label && (was.at - at).distance < 2) {
+    if (was != null &&
+        was.label == label &&
+        was.year == year &&
+        (was.at - at).distance < 2) {
       return;
     }
-    setState(() => _hover = (at: at, label: label));
+    setState(() =>
+        _hover = (at: at, label: label, year: year, shape: hit?.shape));
   }
 
   /// Resolve the point [local] to a record, WITHOUT touching selection
@@ -4313,7 +4378,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // "the hit test is inaccurate" can be a number instead of an
     // opinion. See [WheelHitProbe]. Off in every shipped build.
     _WheelHit answer(
-      _WheelHit hit, {
+      ({String id, String label, void Function() open}) hit, {
       required String kind,
       required double a0,
       required double a1,
@@ -4336,7 +4401,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         halfAngle: halfAngle,
         inkHalf: inkHalf,
       ));
-      return hit;
+      return (
+        id: hit.id,
+        label: hit.label,
+        open: hit.open,
+        // The INK, not the target: the outline is drawn for the reader,
+        // and a reader cannot be shown the slack they were allowed.
+        shape: (a0: a0, a1: a1, centre: centre, halfDepth: inkHalf),
+      );
     }
 
     _WheelHit? nothing(String why) {
@@ -5975,3 +6047,80 @@ class _YearSpokePainter extends CustomPainter {
       old.zoom != zoom;
 }
 
+/// The outline of the region a hover answer claims.
+///
+/// Drawn in canvas coordinates inside the zoomable child, so the shape
+/// sits exactly on the ink it describes. Everything about its
+/// APPEARANCE is divided by the zoom instead, so the line stays one
+/// line however far the reader has gone in — a 1.5-unit stroke at
+/// 4050% would be a sixty-pixel bar across the band it is meant to
+/// outline.
+///
+/// The halo underneath is not decoration: these bands are twenty-two
+/// different colours and a single-colour outline disappears into some
+/// of them. Two strokes, the wider one in the panel's own background,
+/// read on all of them.
+class _ClaimOutlinePainter extends CustomPainter {
+  const _ClaimOutlinePainter({
+    required this.claim,
+    required this.side,
+    required this.zoom,
+    required this.color,
+    required this.halo,
+  });
+
+  final _HitShape claim;
+  final double side;
+  final double zoom;
+  final Color color;
+  final Color halo;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(side / 2, side / 2);
+    final outer = claim.centre + claim.halfDepth;
+    final inner = math.max(0.0, claim.centre - claim.halfDepth);
+    final sweep = claim.a1 - claim.a0;
+    final w = 1.6 / zoom;
+
+    final path = Path();
+    if (claim.halfDepth < 0.01 || sweep < 1e-4) {
+      // A point-like target — a tick, a rail mark. There is no sector
+      // to outline, so mark the place instead: a ring the size of the
+      // target a finger was given, which is the honest picture of what
+      // was claimed.
+      final at = Offset(
+        c.dx + claim.centre * math.cos(claim.a0),
+        c.dy + claim.centre * math.sin(claim.a0),
+      );
+      path.addOval(Rect.fromCircle(center: at, radius: math.max(7 / zoom, claim.halfDepth)));
+    } else {
+      path
+        ..arcTo(Rect.fromCircle(center: c, radius: outer), claim.a0, sweep,
+            true)
+        ..arcTo(Rect.fromCircle(center: c, radius: inner), claim.a1, -sweep,
+            false)
+        ..close();
+    }
+
+    canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 2.6
+          ..color = halo.withValues(alpha: 0.85));
+    canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w
+          ..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_ClaimOutlinePainter old) =>
+      old.claim != claim ||
+      old.side != side ||
+      old.zoom != zoom ||
+      old.color != color;
+}

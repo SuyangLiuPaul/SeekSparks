@@ -21,9 +21,20 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 /// Touch devices have no hover and see none of this; they lose nothing,
 /// since a tap has always opened the sheet.
 class ChartHoverPlate extends StatelessWidget {
-  const ChartHoverPlate(this.text, {super.key});
+  const ChartHoverPlate(this.text, {this.year = '', super.key});
 
   final String text;
+
+  /// The year under the pointer, when the chart has one.
+  ///
+  /// The plate then carries its own proof. A name on its own asks the
+  /// reader to already know what year they are pointing at; with the
+  /// year beside it, "主后1204 · 大韩帝国" can be checked against the
+  /// outline drawn on the chart without opening anything. And when
+  /// nothing is under the pointer the year appears alone, so an empty
+  /// answer reads as "you are between bands here" rather than as a
+  /// hover that stopped working.
+  final String year;
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +54,40 @@ class ChartHoverPlate extends StatelessWidget {
         // enforces per file.
         borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
       ),
-      child: Text(
-        text,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: wb.text,
-          fontSize: math.max(t.scaledChrome(13), WbMetrics.smallPrintFloor),
-          fontWeight: FontWeight.w600,
-          height: 1.2,
-        ),
-      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (year.isNotEmpty)
+          Text(
+            year,
+            style: TextStyle(
+              color: wb.mutedText,
+              fontSize:
+                  math.max(t.scaledChrome(13), WbMetrics.smallPrintFloor),
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        if (year.isNotEmpty && text.isNotEmpty)
+          Text(
+            '  ·  ',
+            style: TextStyle(color: wb.border, height: 1.2),
+          ),
+        if (text.isNotEmpty)
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: wb.text,
+                fontSize:
+                    math.max(t.scaledChrome(13), WbMetrics.smallPrintFloor),
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+          ),
+      ]),
     );
   }
 }
