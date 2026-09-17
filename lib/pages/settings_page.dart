@@ -367,7 +367,16 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                               ),
                             ),
                             SizedBox(height: 8 * s),
+                            // Full width, not the width of its widest
+                            // item. 「Devotional Format」 wants 366 px,
+                            // and the Display card gets 258 on a 320 px
+                            // phone — this overflowed by 109 there in
+                            // English (the Chinese labels are short
+                            // enough that it never showed at home).
+                            // Found by the Projector row's fit test,
+                            // same disease one card up.
                             DropdownButton<String>(
+                              isExpanded: true,
                               value: settings.copyFormat,
                               onChanged: (val) {
                                 if (val != null) settings.setCopyFormat(val);
@@ -1803,18 +1812,81 @@ class _ProjectorCard extends StatelessWidget {
     String? inList(String? code, List<BibleVersionInfo> list) =>
         list.any((v) => v.value == code) ? code : null;
 
-    List<DropdownMenuItem<String>> items(List<BibleVersionInfo> list) => [
-          for (final v in list)
-            DropdownMenuItem(value: v.value, child: Text(v.menuLabel, style: label())),
-        ];
+    List<(String, String)> versionOptions(List<BibleVersionInfo> list) =>
+        [for (final v in list) (v.value, v.menuLabel)];
 
+    /// One dropdown, built from its (value, label) pairs so the closed
+    /// button and the open menu can differ.
+    ///
+    /// `isExpanded` makes the button fill whatever share of the row it
+    /// was given instead of sizing to its widest item — 「American
+    /// Standard Version (Yahweh)」 and its neighbours wanted 709 px of a
+    /// 552 px column. That alone would only move the problem: the
+    /// button's own text would wrap to three lines inside the share.
+    /// So `selectedItemBuilder` gives the CLOSED button one ellipsized
+    /// line, while `items` keeps the full label, which the menu wraps
+    /// and the reader can still finish reading.
+    Widget picker<T>(
+      T? value,
+      List<(T, String)> options,
+      ValueChanged<T?> onChanged, {
+      Widget? hint,
+    }) =>
+        DropdownButton<T>(
+          isExpanded: true,
+          value: value,
+          hint: hint,
+          onChanged: onChanged,
+          selectedItemBuilder: (_) => [
+            for (final (_, text) in options)
+              // Against the chevron, where a settings row's answer
+              // belongs — and where this one sat before it was given a
+              // share of the row to fill.
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  text,
+                  style: label(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+          items: [
+            for (final (v, text) in options)
+              DropdownMenuItem(value: v, child: Text(text, style: label())),
+          ],
+        );
+
+    // The control gets a SHARE of the row, not whatever it asks for.
+    //
+    // It used to be `Expanded(label), SizedBox, control` — the label
+    // flexed, the control took its natural width. A DropdownButton's
+    // natural width is the width of its WIDEST item, and the companion
+    // dropdown lists every English edition this build ships, which on a
+    // 640 px settings column wanted 709 px. The label's Expanded was
+    // then handed what was left — nothing — so it wrapped to twelve
+    // lines and the row overflowed by 169 px.
+    //
+    // Two flexes instead of one, so neither side can take the row:
+    // three fifths to the label, two to the control, and the control
+    // sits against the right edge where it sat before. Every dropdown
+    // below passes `isExpanded: true` so it fills that share and
+    // ellipsizes inside it rather than sizing to its longest item.
+    // Same rule as the Cross-version search row, one card up.
     Widget row(String key, String fallback, Widget control) => Padding(
           padding: EdgeInsets.only(top: 10 * s),
           child: Row(
             children: [
-              Expanded(child: Text(t(key, fallback), style: label())),
+              Expanded(flex: 3, child: Text(t(key, fallback), style: label())),
               const SizedBox(width: 12),
-              control,
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: control,
+                ),
+              ),
             ],
           ),
         );
@@ -1839,91 +1911,81 @@ class _ProjectorCard extends StatelessWidget {
             row(
               'projectorTypeSize',
               'Type size',
-              DropdownButton<int>(
-                value: settings.projectionTypeStep,
-                onChanged: (v) {
+              picker<int>(
+                settings.projectionTypeStep,
+                [
+                  for (var i = 0; i < kProjectionTypeSteps.length; i++)
+                    (i, '${kProjectionTypeSteps[i].round()} px'),
+                ],
+                (v) {
                   if (v != null) settings.setProjectionTypeStep(v);
                 },
-                items: [
-                  for (var i = 0; i < kProjectionTypeSteps.length; i++)
-                    DropdownMenuItem(
-                        value: i,
-                        child: Text('${kProjectionTypeSteps[i].round()} px',
-                            style: label())),
-                ],
               ),
             ),
             row(
               'projectorGround',
               'Background',
-              DropdownButton<ProjectionGround>(
-                value: ground,
-                onChanged: (g) {
-                  if (g != null) settings.setProjectionGround(g);
-                },
-                items: [
+              picker<ProjectionGround>(
+                ground,
+                [
                   for (final g in ProjectionGround.values)
-                    DropdownMenuItem(
-                      value: g,
-                      child: Text(
-                        projectionStrings['projectionGround'
-                                    '${g.name[0].toUpperCase()}${g.name.substring(1)}']
-                                ?[locale] ??
-                            g.name,
-                        style: label(),
-                      ),
+                    (
+                      g,
+                      projectionStrings['projectionGround'
+                                  '${g.name[0].toUpperCase()}${g.name.substring(1)}']
+                              ?[locale] ??
+                          g.name
                     ),
                 ],
+                (g) {
+                  if (g != null) settings.setProjectionGround(g);
+                },
               ),
             ),
             row(
               'projectorAlign',
               'Alignment',
-              DropdownButton<ProjectionAlign>(
-                value: settings.projectionLayout.align,
-                onChanged: (v) {
+              picker<ProjectionAlign>(
+                settings.projectionLayout.align,
+                [
+                  for (final v in ProjectionAlign.values)
+                    (
+                      v,
+                      projectionStrings['projectionAlign'
+                                  '${v.name[0].toUpperCase()}${v.name.substring(1)}']
+                              ?[locale] ??
+                          v.name
+                    ),
+                ],
+                (v) {
                   if (v != null) {
                     settings.setProjectionLayout(
                         settings.projectionLayout.copyWith(align: v));
                   }
                 },
-                items: [
-                  for (final v in ProjectionAlign.values)
-                    DropdownMenuItem(
-                      value: v,
-                      child: Text(
-                          projectionStrings['projectionAlign'
-                                      '${v.name[0].toUpperCase()}${v.name.substring(1)}']
-                                  ?[locale] ??
-                              v.name,
-                          style: label()),
-                    ),
-                ],
               ),
             ),
             row(
               'projectorFlow',
               'Verses',
-              DropdownButton<ProjectionFlow>(
-                value: settings.projectionLayout.flow,
-                onChanged: (v) {
+              picker<ProjectionFlow>(
+                settings.projectionLayout.flow,
+                [
+                  for (final v in ProjectionFlow.values)
+                    (
+                      v,
+                      projectionStrings['projectionFlow'
+                                  '${v.name[0].toUpperCase()}${v.name.substring(1)}']
+                              ?[locale] ??
+                          v.name
+                    ),
+                ],
+                (v) {
                   if (v != null) {
                     settings.setProjectionLayout(
                         settings.projectionLayout.copyWith(flow: v));
                   }
                 },
-                items: [
-                  for (final v in ProjectionFlow.values)
-                    DropdownMenuItem(
-                      value: v,
-                      child: Text(
-                          projectionStrings['projectionFlow'
-                                      '${v.name[0].toUpperCase()}${v.name.substring(1)}']
-                                  ?[locale] ??
-                              v.name,
-                          style: label()),
-                    ),
-                ],
               ),
             ),
             row(
@@ -1938,26 +2000,24 @@ class _ProjectorCard extends StatelessWidget {
             row(
               'projectorReferencePlace',
               'Reference',
-              DropdownButton<ProjectionReferencePlace>(
-                value: settings.projectionLayout.reference,
-                onChanged: (v) {
+              picker<ProjectionReferencePlace>(
+                settings.projectionLayout.reference,
+                [
+                  for (final v in ProjectionReferencePlace.values)
+                    (
+                      v,
+                      projectionStrings['projectionReference'
+                                  '${v.name[0].toUpperCase()}${v.name.substring(1)}']
+                              ?[locale] ??
+                          v.name
+                    ),
+                ],
+                (v) {
                   if (v != null) {
                     settings.setProjectionLayout(
                         settings.projectionLayout.copyWith(reference: v));
                   }
                 },
-                items: [
-                  for (final v in ProjectionReferencePlace.values)
-                    DropdownMenuItem(
-                      value: v,
-                      child: Text(
-                          projectionStrings['projectionReference'
-                                      '${v.name[0].toUpperCase()}${v.name.substring(1)}']
-                                  ?[locale] ??
-                              v.name,
-                          style: label()),
-                    ),
-                ],
               ),
             ),
             // Says what the three above ADD UP TO, rather than offering
@@ -1986,29 +2046,29 @@ class _ProjectorCard extends StatelessWidget {
             row(
               'projectorCompanionForZh',
               'Beside a Chinese passage, show',
-              DropdownButton<String>(
-                value: inList(settings.projectionCompanionFor('zh-Hans'), english),
-                hint: Text('—', style: label()),
-                onChanged: (code) {
+              picker<String>(
+                inList(settings.projectionCompanionFor('zh-Hans'), english),
+                versionOptions(english),
+                (code) {
                   if (code == null) return;
                   // One choice covers both Chinese scripts: the wall does
                   // not care whether the passage was Simplified.
                   settings.setProjectionCompanion('zh-Hans', code);
                   settings.setProjectionCompanion('zh-Hant', code);
                 },
-                items: items(english),
+                hint: Text('—', style: label()),
               ),
             ),
             row(
               'projectorCompanionForEn',
               'Beside an English passage, show',
-              DropdownButton<String>(
-                value: inList(settings.projectionCompanionFor('en'), chinese),
-                hint: Text('—', style: label()),
-                onChanged: (code) {
+              picker<String>(
+                inList(settings.projectionCompanionFor('en'), chinese),
+                versionOptions(chinese),
+                (code) {
                   if (code != null) settings.setProjectionCompanion('en', code);
                 },
-                items: items(chinese),
+                hint: Text('—', style: label()),
               ),
             ),
             if (previewVerses.isNotEmpty) ...[
@@ -3090,252 +3150,265 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
     final svc = OfflinePackService.instance;
     final s = widget.s;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh.withValues(alpha: 0.45),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-          width: WbMetrics.hairline,
-        ),
+    // A Material, not a Container.
+    //
+    // This block is a SURFACE — it has its own fill and its own border,
+    // and it holds five CheckboxListTiles. A ListTile paints its
+    // background and its ink splash on the nearest Material ancestor,
+    // which here was the Card two levels up, UNDERNEATH this box's
+    // translucent fill. The tap on a category therefore had no splash
+    // to show for itself, and Flutter said so five times over: "ListTile
+    // background color or ink splashes may be invisible."
+    //
+    // Putting the fill and the border on a Material instead of on a
+    // DecoratedBox makes this box the nearest Material, so the splashes
+    // land on it and are seen. Same pixels, one ink surface lower.
+    return Material(
+      color: scheme.surfaceContainerHigh.withValues(alpha: 0.45),
+      shape: Border.all(
+        color: scheme.outlineVariant.withValues(alpha: 0.5),
+        width: WbMetrics.hairline,
       ),
-      padding: EdgeInsets.fromLTRB(12 * s, 10 * s, 12 * s, 10 * s),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.cloud_download_outlined,
-                  size: 18, color: scheme.primary),
-              SizedBox(width: 8 * s),
-              Expanded(
-                child: Text(
-                  uiStrings['offlinePackTitle']?[locale] ?? 'Offline pack',
-                  style: TextStyle(
-                    fontFamily: widget.settings.fontFamily,
-                    fontSize: widget.settings.smallPrint(17),
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12 * s, 10 * s, 12 * s, 10 * s),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.cloud_download_outlined,
+                    size: 18, color: scheme.primary),
+                SizedBox(width: 8 * s),
+                Expanded(
+                  child: Text(
+                    uiStrings['offlinePackTitle']?[locale] ?? 'Offline pack',
+                    style: TextStyle(
+                      fontFamily: widget.settings.fontFamily,
+                      fontSize: widget.settings.smallPrint(17),
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4 * s),
-          // Status line. When a completed download exists we prepend
-          // a green check icon so "Ready offline" reads as a
-          // positive state, not just another italic line.
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!svc.downloading &&
-                  svc.lastCompletedAt != null &&
-                  svc.lastDownloaded.isNotEmpty) ...[
-                Icon(
-                  Icons.check_circle_rounded,
-                  size: 16,
-                  // Theme-aware green: paletteAccent gives shade700
-                  // light, shade300 dark — visible in both modes.
-                  color: paletteAccent(context, Colors.green),
-                ),
-                SizedBox(width: 6 * s),
               ],
-              Expanded(
-                child: Text(
-                  _statusLine(locale, svc),
-                  style: TextStyle(
-                    fontFamily: widget.settings.fontFamily,
-                    fontSize: widget.settings.smallPrint(13),
-                    color: !svc.downloading &&
-                            svc.lastCompletedAt != null &&
-                            svc.lastDownloaded.isNotEmpty
-                        // Same fix for the "Ready offline" status text.
-                        ? paletteFg(context, Colors.green)
-                        : scheme.onSurface.withValues(alpha: 0.7),
-                    fontStyle: svc.downloading
-                        ? FontStyle.normal
-                        : (svc.lastCompletedAt != null
-                            ? FontStyle.normal
-                            : FontStyle.italic),
-                    fontWeight: !svc.downloading &&
-                            svc.lastCompletedAt != null &&
-                            svc.lastDownloaded.isNotEmpty
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    height: 1.35,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Live progress bar while downloading.
-          if (svc.downloading) ...[
-            SizedBox(height: 8 * s),
-            ClipRRect(
-              borderRadius: BorderRadius.zero,
-              child: LinearProgressIndicator(
-                value: svc.progress,
-                minHeight: 4,
-                backgroundColor:
-                    scheme.surfaceContainerHighest.withValues(alpha: 0.7),
-                valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
-              ),
             ),
-            if (svc.failed > 0) ...[
-              SizedBox(height: 4 * s),
-              Text(
-                (uiStrings['offlinePackSomeFailed']?[locale] ??
-                        '{n} files skipped (will retry on next download).')
-                    .replaceAll('{n}', '${svc.failed}'),
-                style: TextStyle(
-                  fontFamily: widget.settings.fontFamily,
-                  fontSize: widget.settings.smallPrint(12),
-                  color: scheme.error,
-                ),
-              ),
-            ],
-          ],
-          SizedBox(height: 8 * s),
-          // Category checkboxes (hidden during download to keep the
-          // card calm).
-          if (!svc.downloading)
-            ...OfflinePackCategory.values.map((c) {
-              return CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                title: Text(
-                  _categoryLabel(c, locale),
-                  style: TextStyle(
-                    fontFamily: widget.settings.fontFamily,
-                    fontSize: widget.settings.smallPrint(15),
+            SizedBox(height: 4 * s),
+            // Status line. When a completed download exists we prepend
+            // a green check icon so "Ready offline" reads as a
+            // positive state, not just another italic line.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!svc.downloading &&
+                    svc.lastCompletedAt != null &&
+                    svc.lastDownloaded.isNotEmpty) ...[
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    // Theme-aware green: paletteAccent gives shade700
+                    // light, shade300 dark — visible in both modes.
+                    color: paletteAccent(context, Colors.green),
+                  ),
+                  SizedBox(width: 6 * s),
+                ],
+                Expanded(
+                  child: Text(
+                    _statusLine(locale, svc),
+                    style: TextStyle(
+                      fontFamily: widget.settings.fontFamily,
+                      fontSize: widget.settings.smallPrint(13),
+                      color: !svc.downloading &&
+                              svc.lastCompletedAt != null &&
+                              svc.lastDownloaded.isNotEmpty
+                          // Same fix for the "Ready offline" status text.
+                          ? paletteFg(context, Colors.green)
+                          : scheme.onSurface.withValues(alpha: 0.7),
+                      fontStyle: svc.downloading
+                          ? FontStyle.normal
+                          : (svc.lastCompletedAt != null
+                              ? FontStyle.normal
+                              : FontStyle.italic),
+                      fontWeight: !svc.downloading &&
+                              svc.lastCompletedAt != null &&
+                              svc.lastDownloaded.isNotEmpty
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      height: 1.35,
+                    ),
                   ),
                 ),
-                subtitle: Text(
-                  '~${svc.approximateMbFor(c)} MB',
+              ],
+            ),
+            // Live progress bar while downloading.
+            if (svc.downloading) ...[
+              SizedBox(height: 8 * s),
+              ClipRRect(
+                borderRadius: BorderRadius.zero,
+                child: LinearProgressIndicator(
+                  value: svc.progress,
+                  minHeight: 4,
+                  backgroundColor:
+                      scheme.surfaceContainerHighest.withValues(alpha: 0.7),
+                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+                ),
+              ),
+              if (svc.failed > 0) ...[
+                SizedBox(height: 4 * s),
+                Text(
+                  (uiStrings['offlinePackSomeFailed']?[locale] ??
+                          '{n} files skipped (will retry on next download).')
+                      .replaceAll('{n}', '${svc.failed}'),
                   style: TextStyle(
                     fontFamily: widget.settings.fontFamily,
                     fontSize: widget.settings.smallPrint(12),
-                    color: scheme.onSurface.withValues(alpha: 0.6),
+                    color: scheme.error,
                   ),
-                ),
-                value: _selected.contains(c),
-                onChanged: (v) {
-                  setState(() {
-                    if (v == true) {
-                      _selected.add(c);
-                    } else {
-                      _selected.remove(c);
-                    }
-                  });
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-              );
-            }),
-          SizedBox(height: 4 * s),
-          Row(
-            children: [
-              Expanded(
-                child: Builder(builder: (_) {
-                  if (svc.downloading) {
-                    return OutlinedButton.icon(
-                      icon: const Icon(Icons.close_rounded, size: 18),
-                      label: Text(
-                        uiStrings['cancel']?[locale] ?? 'Cancel',
-                      ),
-                      onPressed: () => svc.cancel(),
-                    );
-                  }
-                  if (_selected.isEmpty) {
-                    return FilledButton.icon(
-                      icon: const Icon(Icons.download_rounded, size: 18),
-                      label: Text(uiStrings['offlinePackPickCategory']
-                              ?[locale] ??
-                          'Pick a category'),
-                      onPressed: null,
-                    );
-                  }
-                  // 2026-05-07: differentiate the action based on
-                  // whether everything in the user's current
-                  // selection has already been downloaded. When
-                  // selection ⊆ lastDownloaded → button reads
-                  // "Already downloaded · Re-download to refresh"
-                  // (outlined, not filled) so the user sees they
-                  // don't need to do anything; tapping still
-                  // re-downloads which is useful for picking up
-                  // updated assets after a deploy. When selection
-                  // contains anything NEW → button reads
-                  // "Download new (~X MB)" (filled, prominent) so
-                  // the user knows there's actual work to do.
-                  final allDownloaded = svc.lastDownloaded.isNotEmpty &&
-                      _selected.every(svc.lastDownloaded.contains);
-                  if (allDownloaded) {
-                    return OutlinedButton.icon(
-                      icon: const Icon(Icons.refresh_rounded, size: 18),
-                      label: Text(uiStrings['offlinePackRedownload']?[locale] ??
-                          'Re-download to refresh'),
-                      onPressed: () => svc.download(categories: _selected),
-                    );
-                  }
-                  return FilledButton.icon(
-                    icon: const Icon(Icons.download_rounded, size: 18),
-                    label: Text(
-                      '${uiStrings['offlinePackDownload']?[locale] ?? 'Download'} '
-                      '(~${_selectedTotalMb()} MB)',
-                    ),
-                    onPressed: () => svc.download(categories: _selected),
-                  );
-                }),
-              ),
-              if (!svc.downloading &&
-                  svc.lastCompletedAt != null &&
-                  svc.lastDownloaded.isNotEmpty) ...[
-                SizedBox(width: 8 * s),
-                IconButton(
-                  tooltip: uiStrings['offlinePackClear']?[locale] ??
-                      'Clear offline pack',
-                  icon: Icon(Icons.delete_outline_rounded,
-                      size: 20, color: scheme.error),
-                  onPressed: () => svc.clear(),
                 ),
               ],
             ],
-          ),
-          // Round 56 day-3 (2026-05-06): network-only feature note.
-          // Some features genuinely cannot be cached because they
-          // depend on a live API call — be upfront about that so the
-          // "ready offline" label isn't read as "everything works".
-          SizedBox(height: 8 * s),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 8 * s),
-            decoration: BoxDecoration(
-              color: scheme.tertiaryContainer.withValues(alpha: 0.35),
-              border: Border.all(
-                  color: scheme.outlineVariant, width: WbMetrics.hairline),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.cloud_outlined, size: 14, color: scheme.tertiary),
-                SizedBox(width: 6 * s),
-                Expanded(
-                  child: Text(
-                    uiStrings['offlinePackNetworkNote']?[locale] ??
-                        'Network is still required for AI explanations / '
-                            'search, and refreshing the news digest. '
-                            'Everything else, fonts included, is bundled '
-                            'with the app and works offline.',
+            SizedBox(height: 8 * s),
+            // Category checkboxes (hidden during download to keep the
+            // card calm).
+            if (!svc.downloading)
+              ...OfflinePackCategory.values.map((c) {
+                return CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  title: Text(
+                    _categoryLabel(c, locale),
+                    style: TextStyle(
+                      fontFamily: widget.settings.fontFamily,
+                      fontSize: widget.settings.smallPrint(15),
+                    ),
+                  ),
+                  subtitle: Text(
+                    '~${svc.approximateMbFor(c)} MB',
                     style: TextStyle(
                       fontFamily: widget.settings.fontFamily,
                       fontSize: widget.settings.smallPrint(12),
-                      color: scheme.onSurface.withValues(alpha: 0.78),
-                      height: 1.45,
+                      color: scheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
+                  value: _selected.contains(c),
+                  onChanged: (v) {
+                    setState(() {
+                      if (v == true) {
+                        _selected.add(c);
+                      } else {
+                        _selected.remove(c);
+                      }
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                );
+              }),
+            SizedBox(height: 4 * s),
+            Row(
+              children: [
+                Expanded(
+                  child: Builder(builder: (_) {
+                    if (svc.downloading) {
+                      return OutlinedButton.icon(
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        label: Text(
+                          uiStrings['cancel']?[locale] ?? 'Cancel',
+                        ),
+                        onPressed: () => svc.cancel(),
+                      );
+                    }
+                    if (_selected.isEmpty) {
+                      return FilledButton.icon(
+                        icon: const Icon(Icons.download_rounded, size: 18),
+                        label: Text(uiStrings['offlinePackPickCategory']
+                                ?[locale] ??
+                            'Pick a category'),
+                        onPressed: null,
+                      );
+                    }
+                    // 2026-05-07: differentiate the action based on
+                    // whether everything in the user's current
+                    // selection has already been downloaded. When
+                    // selection ⊆ lastDownloaded → button reads
+                    // "Already downloaded · Re-download to refresh"
+                    // (outlined, not filled) so the user sees they
+                    // don't need to do anything; tapping still
+                    // re-downloads which is useful for picking up
+                    // updated assets after a deploy. When selection
+                    // contains anything NEW → button reads
+                    // "Download new (~X MB)" (filled, prominent) so
+                    // the user knows there's actual work to do.
+                    final allDownloaded = svc.lastDownloaded.isNotEmpty &&
+                        _selected.every(svc.lastDownloaded.contains);
+                    if (allDownloaded) {
+                      return OutlinedButton.icon(
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: Text(uiStrings['offlinePackRedownload']?[locale] ??
+                            'Re-download to refresh'),
+                        onPressed: () => svc.download(categories: _selected),
+                      );
+                    }
+                    return FilledButton.icon(
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: Text(
+                        '${uiStrings['offlinePackDownload']?[locale] ?? 'Download'} '
+                        '(~${_selectedTotalMb()} MB)',
+                      ),
+                      onPressed: () => svc.download(categories: _selected),
+                    );
+                  }),
                 ),
+                if (!svc.downloading &&
+                    svc.lastCompletedAt != null &&
+                    svc.lastDownloaded.isNotEmpty) ...[
+                  SizedBox(width: 8 * s),
+                  IconButton(
+                    tooltip: uiStrings['offlinePackClear']?[locale] ??
+                        'Clear offline pack',
+                    icon: Icon(Icons.delete_outline_rounded,
+                        size: 20, color: scheme.error),
+                    onPressed: () => svc.clear(),
+                  ),
+                ],
               ],
             ),
-          ),
-        ],
+            // Round 56 day-3 (2026-05-06): network-only feature note.
+            // Some features genuinely cannot be cached because they
+            // depend on a live API call — be upfront about that so the
+            // "ready offline" label isn't read as "everything works".
+            SizedBox(height: 8 * s),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 8 * s),
+              decoration: BoxDecoration(
+                color: scheme.tertiaryContainer.withValues(alpha: 0.35),
+                border: Border.all(
+                    color: scheme.outlineVariant, width: WbMetrics.hairline),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.cloud_outlined, size: 14, color: scheme.tertiary),
+                  SizedBox(width: 6 * s),
+                  Expanded(
+                    child: Text(
+                      uiStrings['offlinePackNetworkNote']?[locale] ??
+                          'Network is still required for AI explanations / '
+                              'search, and refreshing the news digest. '
+                              'Everything else, fonts included, is bundled '
+                              'with the app and works offline.',
+                      style: TextStyle(
+                        fontFamily: widget.settings.fontFamily,
+                        fontSize: widget.settings.smallPrint(12),
+                        color: scheme.onSurface.withValues(alpha: 0.78),
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

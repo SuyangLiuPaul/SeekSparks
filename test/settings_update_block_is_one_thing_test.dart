@@ -67,17 +67,7 @@ Future<void> _pumpSettings(WidgetTester tester) async {
     scrollable: find.byType(Scrollable).first,
   );
   await tester.pumpAndSettle();
-
-  // A ListView builds a cache extent beyond the viewport, so scrolling
-  // to this block also builds the Dashboard Layout section below it —
-  // which, at the 552 px its cards get on this surface, overflows a Row
-  // by 169 px and trips four `ListTile ... DecoratedBox` assertions.
-  // Those are real and they are SOMEBODY ELSE'S: they reproduce with
-  // this file's changes reverted, and they are recorded as their own
-  // piece of work. Draining them here rather than asserting on them
-  // keeps this test about the block it is named after; the assertion
-  // above proves the page itself came up clean.
-  tester.takeException();
+  expect(tester.takeException(), isNull);
 }
 
 /// The size a `Text` was actually painted at — read off the `RichText`

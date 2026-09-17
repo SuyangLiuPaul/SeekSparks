@@ -136,6 +136,8 @@ void main() {
     var answered = 0;
     var fromAir = 0;
     var worstAir = 0.0;
+    var silentOnInk = 0;
+    var silent = 0;
     for (var pan = 0; pan < 8; pan++) {
       WheelRenderStats.hitsForTest.clear();
       const rect = Rect.fromLTRB(20, 150, 880, 800);
@@ -148,7 +150,14 @@ void main() {
         }
       }
       for (final p in WheelRenderStats.hitsForTest) {
-        if (p.id.isEmpty) continue;
+        if (p.id.isEmpty) {
+          silent++;
+          if (p.kind == 'nothingButOnArcInk' ||
+              p.kind == 'nothingButOnRingInk') {
+            silentOnInk++;
+          }
+          continue;
+        }
         answered++;
         if (WheelRenderStats.hitWasOnInk(p)) continue;
         fromAir++;
@@ -174,5 +183,21 @@ void main() {
         reason: '$fromAir of $answered answers were about a band the '
             'pointer was not on, the worst by ${worstAir.round()} px. '
             'That is 「hover over那个不准确」 coming back.');
+
+    // AND THE OTHER HALF OF THE SAME PROPERTY. Silence over air is the
+    // right answer; silence over a band that is plainly painted under
+    // the pointer is the same defect facing the other way, and it is
+    // the one 「有时候在这根线上却不会出现圈圈」 reported.
+    //
+    // MEASURED 2026-09-17 at 4050%, before the stream branch stopped
+    // also demanding a power arc at the angle: two of the eight camera
+    // positions had 144 of 193 and 269 of 325 silent points standing on
+    // ink — one of them answered NOTHING anywhere on the screen. After:
+    // 49 and 56 silent, none of them on ink, and the answers went from
+    // 132 and 0 to 276 and 269.
+    expect(silentOnInk, 0,
+        reason: '$silentOnInk of $silent silent points were standing on a '
+            'painted band. A reader pointing at ink and being told '
+            'nothing cannot tell that from the feature being broken.');
   });
 }

@@ -38,6 +38,22 @@ const Map<String, Map<String, String>> chronologyExplorerStrings = {
     'en': '1500 — Present',
   },
   'events': {'zh-Hans': '事件', 'zh-Hant': '事件', 'en': 'Events'},
+
+  // 2026-09-17 「而且需要有search吧」. NOT the same thing as the page's
+  // own find box: that one searches every record there is and moves the
+  // chart to what you pick. This one narrows the list in front of you
+  // and moves nothing.
+  'listFind': {
+    'zh-Hans': '在这些事件里找',
+    'zh-Hant': '在這些事件裡找',
+    'en': 'Filter these events',
+  },
+  'listFindNone': {
+    'zh-Hans': '没有匹配的事件',
+    'zh-Hant': '沒有匹配的事件',
+    'en': 'No event matches',
+  },
+  'clearFind': {'zh-Hans': '清除', 'zh-Hant': '清除', 'en': 'Clear'},
   'browse': {
     'zh-Hans': '按时间浏览',
     'zh-Hant': '按時間瀏覽',

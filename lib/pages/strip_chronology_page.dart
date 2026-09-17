@@ -706,6 +706,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           return ChronologyExplorer(
             controller: _explorer,
             fullScreen: _fullScreen,
+            // The two halves of the screen tell the same time.
+            // 2026-09-17 「这两边是不是时间需要一致」.
+            focusYear: _cursorYear,
             data: data,
             locale: locale,
             hiddenStreams: Set.of(_hidden),

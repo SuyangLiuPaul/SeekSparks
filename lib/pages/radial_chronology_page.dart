@@ -1946,6 +1946,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             return ChronologyExplorer(
               controller: _explorer,
               fullScreen: _fullScreen,
+              // The two halves of the screen tell the same time.
+              // 2026-09-17 「这两边是不是时间需要一致」.
+              focusYear: _cursorYear,
               chart: _body(context, data, locale),
               data: data,
               locale: locale,
@@ -4905,13 +4908,34 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                 share: ringPitch(streams.length, rHub, rBands) / 2,
                 kind: kind,
               );
+      // STANDING ON THE BAND IS ENOUGH. It did not use to be: this
+      // also required a power arc within `pad` of the angle, and that
+      // requirement was right when it was written (2026-09-16, 「我要按
+      // 这空白处，却显示这个，experience就很不好」 — a press on an empty
+      // part of the disc opening 犹大 with forty-seven events) because
+      // there was then NO radial bound at all. Any point between the
+      // hub and the bands rounded into the nearest ring, so "is there
+      // an arc at this angle" was the only thing standing between blank
+      // paper and an answer.
+      //
+      // `onRing` is that bound now, and it is the better one: it asks
+      // whether the point is on the ring's own INK. So the angular
+      // requirement had stopped guarding anything and had started
+      // costing. Measured at 4050% across eight camera positions: 144
+      // of 193 silent points in one, 269 of 325 in another, were
+      // standing on a band that is plainly painted under the pointer.
+      // 「有时候在这根线上却不会出现圈圈」 — that is this, and it is most
+      // of the silence at that zoom.
+      //
+      // A stream's band is drawn across the whole sweep whether or not
+      // a power sits there. If it is painted, it can be asked about.
       final under = !onRing || best < 0
           ? null
           : arcs
               .where((arc) =>
                   arc.ring == best && a >= arc.a0 - pad && a <= arc.a1 + pad)
               .firstOrNull;
-      if (under != null) {
+      if (onRing && best >= 0) {
         final stream = streams[best];
         return answer(
           (
@@ -4923,11 +4947,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             },
           ),
           kind: 'stream',
-          // The stream's target at this angle is the arc that made it
-          // answerable — not the whole ring, which would report every
-          // miss as a hit.
-          a0: under.a0,
-          a1: under.a1,
+          // The shape claimed is the arc under the pointer when there
+          // is one — that is the more specific truth and the better
+          // outline — and otherwise the band itself, which is what is
+          // painted there and what the answer is actually about.
+          a0: under?.a0 ?? startRad,
+          a1: under?.a1 ?? startRad + sweepRad,
           centre: ringRadii(best, streams.length, rHub, rBands).centre,
           halfDepth: _radialTarget(
             ink: ringRadii(best, streams.length, rHub, rBands).width / 2,
@@ -4939,7 +4964,38 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         );
       }
     }
-    return nothing('nothingUnderIt');
+    // WAS THE POINTER ON INK WHEN THIS SAID NOTHING?
+    //
+    // 2026-09-17 「有时候在这根线上却不会出现圈圈」. Silence is the right
+    // answer over air and the wrong one over a painted band, and the
+    // two are indistinguishable from the outside — which is why this
+    // asks the question at the moment it gives up, rather than leaving
+    // it to be argued about later.
+    final onArcInk = arcs.any((arc) {
+      final tier = tierRadii(arc.ring, streams.length, rHub, rBands,
+          tier: arc.tier, tiers: arc.tiers);
+      return (r - tier.centre).abs() <= tier.width / 2 &&
+          a >= arc.a0 &&
+          a <= arc.a1;
+    });
+    // And the second kind of ink, which is the one the report is most
+    // likely about: a STREAM's own band is painted across the whole
+    // sweep — the hatched stretches — whether or not it has a power
+    // there. Standing on that and being told nothing is the same
+    // surprise, from a different rule.
+    var onRingInk = false;
+    for (var i = 0; i < streams.length; i++) {
+      final ring = ringRadii(i, streams.length, rHub, rBands);
+      if ((r - ring.centre).abs() <= ring.width / 2) {
+        onRingInk = true;
+        break;
+      }
+    }
+    return nothing(onArcInk
+        ? 'nothingButOnArcInk'
+        : onRingInk
+            ? 'nothingButOnRingInk'
+            : 'nothingUnderIt');
   }
 }
 
@@ -5061,6 +5117,13 @@ class _WorldWheelPainter extends CustomPainter {
     // zoomed in, the ring has become the thing the reader has lost
     // track of. There is at most one of these per ring per viewport, so
     // what it costs the arcs is about twenty small plates.
+    // BOTH KINDS OF RING NAME BEFORE THE ARCS' OWN, for one reason:
+    // whichever way a ring is named, that name is the reader's answer
+    // to "where am I", and the declutter list is first-come-first-
+    // served. Measured at 196%: with the arcs claiming first, NOT ONE
+    // ring was named anywhere on the screen — every anchored label had
+    // lost its plate to a power name — while the pointer was by then
+    // answering 犹大 and 圣经.
     _repeatBandNames(canvas, c, rHub, rBands);
     _paintArcs(canvas, c, rHub, rBands);
     _paintBandNames(canvas, c, rHub, rBands, rRim);
@@ -5565,10 +5628,23 @@ class _WorldWheelPainter extends CustomPainter {
   /// ring is busy the copy simply does not appear — the reader loses
   /// nothing they had.
   void _repeatBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
-    if (zoom < 2) return;
     final v = visible;
+    // WHEN THE ANCHORED LABEL HAS LEFT THE SCREEN, and not at some
+    // number of percent.
+    //
+    // This used to open at `zoom < 2`, which was a guess at when the
+    // one anchored label with its leader stops being enough. The guess
+    // was wrong in a way a test found: at 196% nothing was named at
+    // all, and the pointer was by then answering with rings. The real
+    // condition is not a zoom, it is whether the reader can still see
+    // the anchored label — so ask that, per ring, and the rest follows.
+    // At rest the whole chart is visible, every anchor is on screen,
+    // and no copy is drawn: exactly the behaviour this had before.
+    final dir =
+        Offset(math.cos(_kBandNameBearing), math.sin(_kBandNameBearing));
     for (var i = 0; i < streams.length; i++) {
       final band = ringRadii(i, streams.length, rHub, rBands);
+      if (v != null && v.contains(c + dir * band.centre)) continue;
       final arc = _visibleArc(c, band.centre, v);
       if (arc == null) continue;
       final colour =

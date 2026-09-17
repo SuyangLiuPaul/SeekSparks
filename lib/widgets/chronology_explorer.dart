@@ -5,6 +5,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:seeksparks/constants/chronology_explorer_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart' show yearLabel;
 import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/version_mapper.dart'
@@ -44,6 +45,7 @@ class ChronologyExplorer extends StatefulWidget {
     this.selectedId,
     this.controller,
     this.fullScreen = false,
+    this.focusYear,
   });
 
   final Widget chart;
@@ -57,6 +59,20 @@ class ChronologyExplorer extends StatefulWidget {
   final VoidCallback onFilter;
   final String? selectedId;
   final ChronologyExplorerController? controller;
+
+  /// THE YEAR THE CHART IS SHOWING, so this list can show the same one.
+  ///
+  /// 2026-09-17 「这两边是不是时间需要一致 右边是动态更新的」. The wheel
+  /// said 主后1632 in its hub while this list began at 主前4114 — five
+  /// and a half thousand years apart, two halves of one screen talking
+  /// about different times.
+  ///
+  /// It SCROLLS, it does not filter. Filtering here would fight the
+  /// period menu above it and would take rows away from a reader who
+  /// did not ask; scrolling puts the same moment in front of them and
+  /// leaves everything reachable. A selection still wins: someone who
+  /// opened a record is looking at that record, not at the cursor.
+  final int? focusYear;
 
   /// The chart and nothing else.
   ///
@@ -309,6 +325,7 @@ class _ChronologyExplorerState extends State<ChronologyExplorer> {
         locale: widget.locale,
         streamColors: widget.streamColors,
         selectedId: widget.selectedId,
+        focusYear: widget.focusYear,
         onEvent: (event) {
           onClose?.call();
           widget.onEvent(event);
@@ -451,6 +468,7 @@ class _ChronologyEventList extends StatefulWidget {
     required this.selection,
     required this.data,
     required this.locale,
+    this.focusYear,
     required this.streamColors,
     required this.selectedId,
     required this.onEvent,
@@ -465,35 +483,80 @@ class _ChronologyEventList extends StatefulWidget {
   final ValueChanged<WheelHistoryEvent> onEvent;
   final VoidCallback? onClose;
 
+  /// See [ChronologyExplorer.focusYear].
+  final int? focusYear;
+
   @override
   State<_ChronologyEventList> createState() => _ChronologyEventListState();
 }
 
 class _ChronologyEventListState extends State<_ChronologyEventList> {
   final _scroll = ItemScrollController();
+  final _findCtl = TextEditingController();
+  String _query = '';
 
   String _s(String key) => chronologyExplorerText(key, widget.locale);
 
+  /// The rows actually on show: the period's selection, narrowed by
+  /// whatever the reader typed into this list's own box.
+  List<WheelHistoryEvent> get _rows {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return widget.selection.events;
+    final streams = {
+      for (final stream in widget.data.streams) stream.id: stream
+    };
+    return [
+      for (final e in widget.selection.events)
+        if (e.titleFor(widget.locale).toLowerCase().contains(q) ||
+            yearLabel(e.year, widget.locale).toLowerCase().contains(q) ||
+            (streams[e.stream]?.nameFor(widget.locale) ?? e.stream)
+                .toLowerCase()
+                .contains(q))
+          e
+    ];
+  }
+
   int get _selectedIndex {
-    final index = widget.selection.events
-        .indexWhere((event) => event.id == widget.selectedId);
+    final index = _rows.indexWhere((event) => event.id == widget.selectedId);
     return index < 0 ? 0 : index;
+  }
+
+  /// The first row at or after the year the chart is showing.
+  ///
+  /// At or AFTER, not nearest: the list reads forward in time, so the
+  /// year under the cursor belongs at the top of the window with what
+  /// follows it below, exactly as a reader scrolling would expect.
+  int get _focusIndex {
+    final year = widget.focusYear;
+    if (year == null) return 0;
+    final rows = _rows;
+    final index = rows.indexWhere((event) => event.year >= year);
+    if (index >= 0) return index;
+    return rows.isEmpty ? 0 : rows.length - 1;
+  }
+
+  @override
+  void dispose() {
+    _findCtl.dispose();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant _ChronologyEventList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedId != widget.selectedId ||
-        !identical(oldWidget.selection, widget.selection)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted ||
-            !_scroll.isAttached ||
-            widget.selection.events.isEmpty) {
-          return;
-        }
-        _scroll.jumpTo(index: _selectedIndex);
-      });
-    }
+    // A SELECTION WINS OVER THE CURSOR. Someone who opened a record is
+    // looking at that record; moving the list out from under them
+    // because the chart's year cursor also moved would be the feature
+    // working against them.
+    final selectionMoved = oldWidget.selectedId != widget.selectedId ||
+        !identical(oldWidget.selection, widget.selection);
+    final yearMoved = oldWidget.focusYear != widget.focusYear;
+    if (!selectionMoved && !yearMoved) return;
+    final toSelection = selectionMoved && widget.selectedId != null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.isAttached || _rows.isEmpty) return;
+      _scroll.jumpTo(index: toSelection ? _selectedIndex : _focusIndex);
+    });
   }
 
   @override
@@ -501,6 +564,7 @@ class _ChronologyEventListState extends State<_ChronologyEventList> {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final selection = widget.selection;
+    final rows = _rows;
     final streams = {
       for (final stream in widget.data.streams) stream.id: stream
     };
@@ -525,7 +589,7 @@ class _ChronologyEventListState extends State<_ChronologyEventList> {
                     children: [
                       Text(
                         chronologyExplorerEventCount(
-                            selection.events.length, widget.locale),
+                            rows.length, widget.locale),
                         key: const ValueKey('chronology-event-count'),
                         style: TextStyle(
                           color: wb.text,
@@ -558,11 +622,65 @@ class _ChronologyEventListState extends State<_ChronologyEventList> {
               ],
             ),
           ),
+          // THIS LIST'S OWN BOX, which is not the page's find box.
+          //
+          // 2026-09-17 「而且需要有search吧」. The one in the page chrome
+          // searches every record there is and MOVES THE CHART to what
+          // you choose; this one narrows the rows already in front of
+          // you and moves nothing. Someone looking at 394 events in a
+          // period wants the second thing, and until now the only way
+          // to get it was to read all 394.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: TextField(
+              key: const ValueKey('chronology-event-find'),
+              controller: _findCtl,
+              onChanged: (v) => setState(() => _query = v),
+              textInputAction: TextInputAction.search,
+              style: TextStyle(
+                  fontSize: t.scaledSmall(13),
+                  color: wb.text,
+                  fontFamilyFallback: kCjkFontFallback),
+              decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: Icon(Icons.search, size: 18, color: wb.mutedText),
+                prefixIconConstraints:
+                    const BoxConstraints(minWidth: 34, minHeight: 34),
+                hintText: _s('listFind'),
+                hintStyle:
+                    TextStyle(fontSize: t.scaledSmall(13), color: wb.mutedText),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: _s('clearFind'),
+                        icon: const Icon(Icons.close, size: 16),
+                        onPressed: () {
+                          _findCtl.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
+                filled: true,
+                fillColor: wb.paneAltBg,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(WbMetrics.radiusControl),
+                  borderSide: BorderSide(color: wb.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(WbMetrics.radiusControl),
+                  borderSide: BorderSide(color: wb.border),
+                ),
+              ),
+            ),
+          ),
           Expanded(
-            child: selection.events.isEmpty
+            child: rows.isEmpty
                 ? SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
-                    child: Text(_s('empty'),
+                    child: Text(
+                        _query.isEmpty ? _s('empty') : _s('listFindNone'),
                         style: TextStyle(
                             fontSize: t.scaledSmall(13),
                             color: wb.mutedText,
@@ -572,9 +690,9 @@ class _ChronologyEventListState extends State<_ChronologyEventList> {
                     key: const ValueKey('chronology-event-list'),
                     itemScrollController: _scroll,
                     initialScrollIndex: _selectedIndex,
-                    itemCount: selection.events.length,
+                    itemCount: rows.length,
                     itemBuilder: (context, index) {
-                      final event = selection.events[index];
+                      final event = rows[index];
                       return _ChronologyEventRow(
                         event: event,
                         locale: widget.locale,
