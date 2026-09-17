@@ -64,6 +64,10 @@ double wheelLabelScale(double zoom) {
 bool wheelShowsEventText({required double zoom, required bool selected}) =>
     selected || wheelDetailFor(zoom).records > 0;
 
+/// One million square pixels — the unit the detail table's densities are
+/// quoted in. A 1280x663 pane is 0.85 of one; a 390x620 phone is 0.24.
+const double kWheelLabelArea = 1000000;
+
 /// The kinds of name this wheel can put on the canvas.
 ///
 /// One enum rather than four booleans scattered through the painter,
@@ -119,18 +123,38 @@ class WheelDetailLevel {
   /// The magnification at which this row takes over.
   final double minZoom;
 
-  /// How many of each kind may reach the canvas on one screen.
-  final int rings;
-  final int powers;
-  final int lives;
-  final int records;
+  /// Names of each kind per [kWheelLabelArea] of visible chart.
+  ///
+  /// A DENSITY, not a count, and that is the correction of 2026-09-17:
+  /// the first version of this table was a flat count, and 「很多这些也
+  /// 看不见了」 was the owner watching dynasty names disappear from a
+  /// desktop pane that had plenty of room for them. How many names a
+  /// screen can carry is a question about the SCREEN. A phone and a
+  /// 27-inch monitor do not have the same answer, and a table that
+  /// gives them the same one is wrong on one of them — it was wrong on
+  /// the big one, where nothing was crowded and names went missing.
+  final double rings;
+  final double powers;
+  final double lives;
+  final double records;
 
-  int capFor(WheelLabelKind kind) => switch (kind) {
+  double densityFor(WheelLabelKind kind) => switch (kind) {
         WheelLabelKind.ring => rings,
         WheelLabelKind.power => powers,
         WheelLabelKind.life => lives,
         WheelLabelKind.record => records,
       };
+
+  /// How many names of [kind] a pane of [areaPx] square pixels may
+  /// carry. A kind this row does not draw at all stays at zero;
+  /// everything else gets at least one, because a chart that names
+  /// nothing at all is not calmer, it is mute.
+  int capFor(WheelLabelKind kind, {required double areaPx}) {
+    final density = densityFor(kind);
+    if (density <= 0) return 0;
+    final count = (density * (areaPx / kWheelLabelArea)).round();
+    return count < 1 ? 1 : count;
+  }
 }
 
 /// The table. Ordered by [WheelDetailLevel.minZoom]; the last row whose
@@ -144,22 +168,28 @@ const List<WheelDetailLevel> kWheelDetailLevels = [
   // spans. The only words are the rings' own names and the century
   // axis, which is what the eye needs to know what it is looking at.
   WheelDetailLevel(
-      name: 'fit', minZoom: 0, rings: 10, powers: 0, lives: 0, records: 0),
-  // The first zoom is a reader asking "what is in here". Names arrive,
-  // but a screenful of them is a dozen, not thirty.
+      name: 'fit', minZoom: 0, rings: 16, powers: 0, lives: 0, records: 0),
+  // The first zoom is a reader asking "what is in here". Measured on a
+  // 1280x663 pane at 200%: 0.57 million square pixels of chart (the
+  // disc does not fill a wide pane), carrying 22 power names, 24
+  // lifespan names and 5 record names before any of this existed.
+  // These densities come to 22, 19 and 19 there — the powers are
+  // exactly what a desktop reader already had, the lifespans give some
+  // of their room to the records, and nothing a big screen was showing
+  // goes missing. On a 390x620 phone the same row says 10, 8 and 8.
   WheelDetailLevel(
-      name: 'survey', minZoom: 1.6, rings: 10, powers: 14, lives: 10,
-      records: 12),
-  // Closer in, the same screen covers fewer years, so the same number
-  // of labels is a lower density. The cap rises with the room.
+      name: 'survey', minZoom: 1.6, rings: 16, powers: 40, lives: 34,
+      records: 34),
+  // Closer in, the same screen covers fewer years, so the same names
+  // are further apart and more of them fit without crowding.
   WheelDetailLevel(
-      name: 'read', minZoom: 5, rings: 10, powers: 20, lives: 14,
-      records: 18),
+      name: 'read', minZoom: 5, rings: 16, powers: 52, lives: 44,
+      records: 52),
   // Far enough in that a screen holds a handful of records: whatever
   // fits, fits. The declutter list is the only limit left.
   WheelDetailLevel(
-      name: 'close', minZoom: 16, rings: 12, powers: 28, lives: 20,
-      records: 28),
+      name: 'close', minZoom: 16, rings: 18, powers: 72, lives: 60,
+      records: 72),
 ];
 
 /// Which row of [kWheelDetailLevels] is in force at [zoom].
@@ -510,6 +540,11 @@ class WheelRenderStats {
   /// a number. Armed with `trackHits`.
   static Rect? cameraForTest;
 
+  /// The visible area the caps were computed from, in screen pixels
+  /// squared. A cap is a density times this number, so a test that
+  /// asserts on caps needs it.
+  static double frameAreaForTest = 0;
+
   /// EVERY PLATE THE LAST FRAME PUT ON THE CANVAS, in canvas units.
   ///
   /// With [cameraForTest] this is what makes "the reader can see it" a
@@ -570,5 +605,6 @@ class WheelRenderStats {
     labelKindsForTest.clear();
     labelBoxesForTest.clear();
     cameraForTest = null;
+    frameAreaForTest = 0;
   }
 }

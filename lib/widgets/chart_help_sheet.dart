@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/models/app_settings.dart';
 
 /// HOW TO USE THE TWO CHARTS, said once, on the way in.
 ///
@@ -41,12 +43,19 @@ class ChartHelp {
 
 /// Open the card. Marks it seen, so the automatic first-run call and a
 /// reader who opened it themselves both spend the same flag.
-Future<void> showChartHelp(BuildContext context, String locale) async {
+///
+/// It takes no locale ON PURPOSE. The first-run call happens in
+/// `initState`, and [AppSettings] starts at its compile-time default
+/// (zh-Hans) until `loadSettings()` has run — so a locale captured then
+/// and frozen into the card showed an English reader a Chinese card,
+/// which is what the first deploy of this did. The card watches the
+/// settings instead, and follows a locale that arrives after it opens.
+Future<void> showChartHelp(BuildContext context) async {
   await ChartHelp.markSeen();
   if (!context.mounted) return;
   await showDialog<void>(
     context: context,
-    builder: (_) => _ChartHelpCard(locale: locale),
+    builder: (_) => const _ChartHelpCard(),
   );
 }
 
@@ -64,12 +73,11 @@ bool _touchFirst() =>
     defaultTargetPlatform == TargetPlatform.android;
 
 class _ChartHelpCard extends StatelessWidget {
-  const _ChartHelpCard({required this.locale});
-
-  final String locale;
+  const _ChartHelpCard();
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<AppSettings>().locale;
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final devices = [
@@ -176,6 +184,8 @@ class _ChartHelpCard extends StatelessWidget {
                   body('helpStripBody'),
                   heading('helpDevicesTitle'),
                   for (final d in devices) device(d.$1, d.$2),
+                  heading('helpLayersTitle'),
+                  body('helpLayersBody'),
                   heading('helpListTitle'),
                   body('helpListBody'),
                   heading('helpZoomTitle'),
@@ -280,6 +290,29 @@ const Map<String, Map<String, String>> chartHelpStrings = {
     'zh-Hant': '觸控螢幕：兩指捏合放大縮小，一指拖動平移，輕點一條記錄打開它。',
     'en': 'Touch: pinch to zoom, drag with one finger to move, tap a record '
         'to open it.',
+  },
+  // 2026-09-17 「是不是很多世界上发生的你都没有包含进去」, asked of a chart
+  // showing four rings while the line above it said 769 more records
+  // were hidden. They are not missing; they are switched off, because a
+  // ring has to stay thick enough to read and twenty-two of them on a
+  // phone is a barcode. The card says so, with the numbers.
+  'helpLayersTitle': {
+    'zh-Hans': '没看到的那些',
+    'zh-Hant': '沒看到的那些',
+    'en': 'What you are not seeing',
+  },
+  'helpLayersBody': {
+    'zh-Hans': '这张图有 22 条线索、780 多条记录。一开始只打开其中四条 —— '
+        '圈太多就细到看不清 —— 其余的在「图层」里随时打开。图上方那一行会'
+        '告诉你，这个年代范围里还有多少条被图层收着。',
+    'zh-Hant': '這張圖有 22 條線索、780 多條記錄。一開始只打開其中四條 —— '
+        '圈太多就細到看不清 —— 其餘的在「圖層」裡隨時打開。圖上方那一行會'
+        '告訴你，這個年代範圍裡還有多少條被圖層收著。',
+    'en': 'The chart holds 22 threads and more than 780 records. Four are '
+        'open to begin with — more rings than that and none of them is '
+        'thick enough to read — and the rest are one tap away under '
+        'Layers. The line above the chart says how many the layers are '
+        'holding back in the years you are looking at.',
   },
   'helpListTitle': {
     'zh-Hans': '旁边那一列',

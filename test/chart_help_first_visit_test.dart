@@ -22,6 +22,23 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
+/// Settings whose locale can be moved WITHOUT `setLocale`'s side
+/// effects — that setter reschedules notifications behind an
+/// `unawaited`, and the timer it leaves outlives the widget tree. All
+/// this test needs is the one thing `loadSettings` does that matters
+/// here: the locale arriving a moment after the page was built.
+class _LateLocaleSettings extends AppSettings {
+  String _locale = 'zh-Hans';
+
+  @override
+  String get locale => _locale;
+
+  void arriveAt(String value) {
+    _locale = value;
+    notifyListeners();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -133,4 +150,45 @@ void main() {
       }
     }
   });
+  testWidgets('it speaks the language the reader ends up in', (tester) async {
+    // THE RACE, AND THE FIRST DEPLOY LOST IT. `AppSettings` starts at
+    // its compile-time default — zh-Hans — and learns the real locale
+    // when `loadSettings()` lands. The first-run call happens in
+    // `initState`, BEFORE that, so a card handed a locale at that
+    // moment and frozen was a Chinese card in front of an English
+    // reader. Verified on seeksparks-dev, 2026-09-17, in a browser
+    // that had never seen the site.
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(1440, 900);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MainProvider()),
+        ChangeNotifierProvider<AppSettings>(
+            create: (_) => _LateLocaleSettings()),
+      ],
+      child: const MaterialApp(
+          home: RadialChronologyPage(initialStacked: false)),
+    ));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byKey(const ValueKey('chartHelpBody')), findsOneWidget);
+    // The locale arrives with the card already open, which is the
+    // order the web app actually produces on a deep link.
+    final settings = tester
+        .element(find.byType(RadialChronologyPage))
+        .read<AppSettings>() as _LateLocaleSettings;
+    settings.arriveAt('en');
+    await tester.pumpAndSettle();
+    expect(settings.locale, 'en', reason: 'the premise of this test');
+    expect(find.text(chartHelpStrings['helpTitle']!['en']!), findsOneWidget,
+        reason: 'the card is still in the language it opened in');
+    expect(find.text(chartHelpStrings['helpTitle']!['zh-Hans']!), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('chartHelpDone')));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
 }

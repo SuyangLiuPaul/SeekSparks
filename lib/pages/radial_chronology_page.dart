@@ -1646,7 +1646,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   Future<void> _offerHelpOnFirstVisit() async {
     if (await ChartHelp.hasSeen()) return;
     if (!mounted) return;
-    await showChartHelp(context, context.read<AppSettings>().locale);
+    await showChartHelp(context);
   }
 
   void _onZoom() {
@@ -1920,7 +1920,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           onFind: () => _showSearch(context, locale),
           onFilter: () => _showFilter(context, locale),
           onAbout: () => _showAbout(context, locale),
-          onHelp: () => showChartHelp(context, locale),
+          onHelp: () => showChartHelp(context),
           // The wheel and the strip are one chart in two forms, so this
           // is a SWITCH between the two rather than a second "open the
           // strip" button — tapping the already-selected 'wheel'
@@ -5170,6 +5170,14 @@ class _WorldWheelPainter extends CustomPainter {
   /// How many of each kind have taken room, this frame.
   final Map<WheelLabelKind, int> _drawn = <WheelLabelKind, int>{};
 
+  /// How much chart the reader can see, in SCREEN pixels squared.
+  ///
+  /// The camera is in canvas units and the caps are about the reader's
+  /// screen, so this is the camera's area magnified — which comes to
+  /// the pane's own area wherever the chart fills the pane, and to less
+  /// than that at rest, when the disc does not reach the corners.
+  double _areaPx = 0;
+
   bool _claim(Rect box, WheelLabelKind kind) {
     // OFF SCREEN IS NOT A LABEL, AND MUST NOT SPEND A SCREEN'S BUDGET.
     //
@@ -5185,7 +5193,7 @@ class _WorldWheelPainter extends CustomPainter {
     // place a cap is read, and the rank that decides WHICH names get
     // the room lives with each kind's own painter.
     final taken = _drawn[kind] ?? 0;
-    if (taken >= _detail.capFor(kind)) return false;
+    if (taken >= _detail.capFor(kind, areaPx: _areaPx)) return false;
     final claim = box.inflate(math.max(2 / zoom, box.height * 0.3));
     if (_inked.any(claim.overlaps)) return false;
     _inked.add(claim);
@@ -5204,6 +5212,13 @@ class _WorldWheelPainter extends CustomPainter {
     if (streams.isEmpty) return;
     final side = math.min(size.width, size.height);
     _side = side;
+    final seen = visible == null
+        ? Rect.fromLTWH(0, 0, size.width, size.height)
+        : visible!.intersect(Rect.fromLTWH(0, 0, size.width, size.height));
+    _areaPx = math.max(0.0, seen.width) *
+        math.max(0.0, seen.height) *
+        zoom *
+        zoom;
     final c = Offset(size.width / 2, size.height / 2);
     final rHub = side * _kHubFrac;
     final rBands = side * bandsFractionFor(side);
@@ -5245,6 +5260,7 @@ class _WorldWheelPainter extends CustomPainter {
     _paintAxisEnds(canvas, c, rHub, rRim);
     WheelRenderStats.labelsDrawn = _inked.length;
     WheelRenderStats.noteFrameKinds(_drawn);
+    if (WheelRenderStats.trackHits) WheelRenderStats.frameAreaForTest = _areaPx;
     if (WheelRenderStats.trackHits) WheelRenderStats.cameraForTest = visible;
   }
 

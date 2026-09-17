@@ -96,7 +96,8 @@ void main() {
         final row = kWheelDetailLevels[i];
         expect(row.minZoom, greaterThan(prev.minZoom));
         for (final kind in WheelLabelKind.values) {
-          expect(row.capFor(kind), greaterThanOrEqualTo(prev.capFor(kind)),
+          expect(row.densityFor(kind),
+              greaterThanOrEqualTo(prev.densityFor(kind)),
               reason: '${row.name} allows fewer ${kind.name} names than '
                   '${prev.name}. Zooming in is a reader asking for MORE.');
         }
@@ -167,12 +168,15 @@ void main() {
     for (final zoom in [1.0, 2.0, 4.0, 8.0]) {
       await park(zoom);
       final row = wheelDetailFor(zoom);
+      final area = WheelRenderStats.frameAreaForTest;
+      expect(area, greaterThan(0), reason: 'no frame was measured');
       final drawn = Map.of(WheelRenderStats.labelKindsForTest);
       for (final kind in WheelLabelKind.values) {
-        expect(drawn[kind] ?? 0, lessThanOrEqualTo(row.capFor(kind)),
+        final cap = row.capFor(kind, areaPx: area);
+        expect(drawn[kind] ?? 0, lessThanOrEqualTo(cap),
             reason: 'at ${(zoom * 100).round()}% the wheel put '
                 '${drawn[kind]} ${kind.name} names on one screen, and row '
-                '"${row.name}" allows ${row.capFor(kind)}');
+                '"${row.name}" allows $cap there');
       }
     }
   });
@@ -229,4 +233,37 @@ void main() {
             'outside the camera. A label the reader cannot see still takes '
             'the room beside one they can.');
   });
+  group('a cap is about the screen, not a number in a table', () {
+    test('a phone is told less than a desktop by the same row', () {
+      final row = wheelDetailFor(2.0);
+      // A 1280x663 pane against a 390x620 phone. 「很多这些也看不见了」 was
+      // the first version of this table applying the phone's answer to
+      // the desktop.
+      final desktop = row.capFor(WheelLabelKind.power, areaPx: 1280 * 663);
+      final phone = row.capFor(WheelLabelKind.power, areaPx: 390 * 620);
+      expect(phone, lessThan(desktop));
+      expect(desktop, greaterThanOrEqualTo(22),
+          reason: 'measured before any of this existed: a 1280x663 pane at '
+              '200% drew 22 power names. A rule that takes those away is '
+              'not decluttering, it is deleting.');
+      expect(phone, lessThanOrEqualTo(10));
+    });
+
+    test('a kind this row draws never falls to none', () {
+      final row = wheelDetailFor(2.0);
+      for (final kind in WheelLabelKind.values) {
+        expect(row.capFor(kind, areaPx: 120 * 120), greaterThan(0),
+            reason: 'a chart that names nothing at all is not calmer, it '
+                'is mute');
+      }
+    });
+
+    test('and a kind it does not draw stays at none, however big', () {
+      expect(
+          wheelDetailFor(1.0)
+              .capFor(WheelLabelKind.record, areaPx: 4000 * 3000),
+          0);
+    });
+  });
+
 }
