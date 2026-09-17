@@ -57,7 +57,7 @@ class UpdateInfo {
 class UpdateService {
   UpdateService._();
 
-  static const String repo = 'SuyangLiuPaul/SeekSparks';
+  static const String repo = 'SuyangLiuPaul/Yahwehs-Sword';
   static const String _latestApi =
       'https://api.github.com/repos/$repo/releases/latest';
   static const String releasesPage =

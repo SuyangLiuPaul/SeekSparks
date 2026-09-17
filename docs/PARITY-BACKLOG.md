@@ -1157,7 +1157,7 @@ static website and `yswords-data` is a data/CDN repo; neither contains a
 repo's own history** — SeekSparks' initial commit is the YsWords tree at
 v1.3.144, and `655002a` (2026-08-05) ported v1.3.145–v1.4.6. Anything
 YsWords has shipped since then is **unknown here**. To do this axis
-properly, clone `github.com/SuyangLiuPaul/YsWords` first; if it is
+properly, clone `github.com/SuyangLiuPaul/Yahwehs-Words` first; if it is
 unreachable, say so and skip, exactly as #309 instructs for the CDC site.
 
 **The rule, written down once so it is not re-litigated:** *the workbench

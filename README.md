@@ -22,7 +22,7 @@
 
 ## What this is
 
-SeekSparks is a sibling of [YsWords](https://github.com/SuyangLiuPaul/YsWords), forked to
+SeekSparks is a sibling of [YsWords](https://github.com/SuyangLiuPaul/Yahwehs-Words), forked to
 serve a different reader: someone doing serious original-language Bible study on an iPad, a
 Mac, or a Windows desktop — a bigger screen than a phone, used for longer. Where YsWords is
 phone-first and general-audience, SeekSparks defaults to a wide-screen layout (a three-pane
@@ -63,7 +63,7 @@ way anyone else runs this app.
 
 ### For developers — clone, run, ship
 ```bash
-git clone https://github.com/SuyangLiuPaul/SeekSparks
+git clone https://github.com/SuyangLiuPaul/Yahwehs-Sword
 cd SeekSparks
 flutter pub get
 flutter run -d chrome

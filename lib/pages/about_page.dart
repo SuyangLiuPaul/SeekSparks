@@ -787,7 +787,7 @@ class _AppLicenseCard extends StatelessWidget {
 
   Future<void> _openRepo(BuildContext context) async {
     if (!LinkOpener.isAvailable) return;
-    await LinkOpener.open('https://github.com/SuyangLiuPaul/SeekSparks');
+    await LinkOpener.open('https://github.com/SuyangLiuPaul/Yahwehs-Sword');
   }
 
   @override
