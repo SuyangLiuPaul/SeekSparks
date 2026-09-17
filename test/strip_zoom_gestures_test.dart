@@ -41,6 +41,7 @@ import 'package:seeksparks/utils/strip_chronology_layout.dart'
     show kStripMinYear, kStripZoomSteps, yearForX;
 import 'package:seeksparks/utils/strip_viewport.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart' show YearDigestBar;
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -104,7 +105,8 @@ void main() {
   });
 
   Future<void> pump(WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(900, 900);
     addTearDown(tester.view.reset);

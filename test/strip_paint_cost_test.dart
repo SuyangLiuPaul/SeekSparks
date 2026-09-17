@@ -27,6 +27,7 @@ import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
 import 'package:seeksparks/utils/strip_paint_visibility.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void _paint(CustomPainter painter, Size size) {
   final recorder = ui.PictureRecorder();
@@ -42,7 +43,8 @@ void main() {
   testWidgets('the real 3D page culls before layout and reuses its warm frame',
       (tester) async {
     await tester.runAsync(() => WheelHistoryService.instance.load());
-    SharedPreferences.setMockInitialValues({'locale': 'en'});
+    SharedPreferences.setMockInitialValues(
+        {'locale': 'en', ChartHelp.seenKey: true});
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(1000, 800);
     addTearDown(tester.view.reset);

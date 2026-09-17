@@ -34,6 +34,7 @@ import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -106,7 +107,8 @@ void main() {
   }
 
   Future<void> pump(WidgetTester tester, Size size) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;

@@ -36,13 +36,15 @@ import 'package:seeksparks/pages/strip_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 /// What the whole timeline measures at the deepest zoom the ladder
 /// offers — the number that aborted CanvasKit.
 double get _timelineAtMaxZoom => stripContentWidth(kStripZoomSteps.last);
 
 Future<void> _pump(WidgetTester tester, Size size) async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
+  SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
   addTearDown(tester.view.reset);
   tester.view.devicePixelRatio = 1.0;
   tester.view.physicalSize = size;

@@ -19,6 +19,7 @@ import 'package:seeksparks/utils/strip_depth_layout.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +32,8 @@ void main() {
       {Size size = const Size(1000, 800),
       Set<String> hidden = const {},
       ChronologyPeriod? period}) async {
-    SharedPreferences.setMockInitialValues({'locale': 'en'});
+    SharedPreferences.setMockInitialValues(
+        {'locale': 'en', ChartHelp.seenKey: true});
     // AppSettings does not load persisted preferences in its constructor.
     // This fixture promises English, so initialise the live setting too.
     final settings = AppSettings();

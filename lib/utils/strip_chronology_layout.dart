@@ -307,6 +307,23 @@ List<int> packIntoLanes(List<double> starts, List<double> ends,
 /// Ties go to the nearer centre, normalised against each span's own
 /// target — so a reader aiming at a hairline between two long reigns
 /// gets the hairline, not whichever long reign was first in the list.
+/// The narrowest a record may be DRAWN before the strip gives it a dot
+/// instead of a bar, in content pixels.
+///
+/// The rule is the wheel's, and 2026-09-17 「strip也是一样」 asked for it
+/// here: a target the reader cannot see is not a target. [nearestSpanAt]
+/// already gives every span at least a nine-pixel finger, so a
+/// one-year reign at a fit-all scale — about a third of a pixel wide —
+/// was answerable, openable, and effectively invisible. It had ink; it
+/// did not have enough to aim at.
+///
+/// A dot is not a widened bar, which matters on a chart whose whole
+/// claim is that width means duration: it says "there is something
+/// here" without saying anything false about how long it lasted. Until
+/// today only an EXACTLY zero-length record got one, which is the one
+/// case arithmetic can spot and not the one a reader can.
+const double kStripMinBarInkPx = 1.5;
+
 ({int index, double score})? nearestSpanAt(
     double x, List<({double x0, double x1})> spans,
     {double fingerPx = 9}) {

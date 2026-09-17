@@ -600,4 +600,44 @@ void main() {
           reason: 'and one scrolled off to the left is not worth shaping');
     });
   });
+  group('a record too narrow to see', () {
+    test('is answerable long before it is visible — which is the defect',
+        () {
+      // A one-year reign at a fit-all scale is about a third of a pixel
+      // wide. `nearestSpanAt` gives it a nine-pixel finger, so it can be
+      // hovered, opened and read about; the reader simply has nothing to
+      // aim at. That gap between INK and TARGET is what
+      // [kStripMinBarInkPx] closes, from the ink side.
+      final hit = nearestSpanAt(100, [(x0: 100.0, x1: 100.3)]);
+      expect(hit, isNotNull,
+          reason: 'the target was always there — it is the ink that was '
+              'missing');
+      expect(0.3, lessThan(kStripMinBarInkPx),
+          reason: 'and this is the width the reader was given for it');
+    });
+
+    test('the threshold sits between a hairline and a finger', () {
+      expect(kStripMinBarInkPx, greaterThan(1.0),
+          reason: 'below a pixel is not ink a reader can find');
+      expect(kStripMinBarInkPx, lessThan(9.0),
+          reason: 'above a finger it would start replacing bars people '
+              'can already see, and a dot says nothing about duration');
+    });
+
+    test('both painters branch on it, so ink and target cannot drift', () {
+      // The two branches were `x1 - x0 < 0.01` — exactly zero in
+      // floating point — and a source check is the only way to hold
+      // them together: nothing in a widget test can read a dot off a
+      // canvas.
+      final src = File('lib/widgets/strip_chronology_painter.dart')
+          .readAsStringSync();
+      expect('kStripMinBarInkPx'.allMatches(src).length, greaterThanOrEqualTo(2),
+          reason: 'a bar and a lifespan must agree about how narrow is too '
+              'narrow to draw');
+      expect(src.contains('x1 - x0 < 0.01'), isFalse,
+          reason: 'the old exactly-zero threshold is back; it spots the one '
+              'case arithmetic can see and not the one a reader has');
+    });
+  });
+
 }

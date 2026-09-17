@@ -615,12 +615,17 @@ class StripLanesPainter extends CustomPainter {
     final fillHeight = row.height * 0.68;
     final top = row.top + (row.height - fillHeight) / 2;
 
-    if (x1 - x0 < 0.01) {
-      // Rule 1: a zero-length reign keeps its ink — a dot, never a
+    if (x1 - x0 < kStripMinBarInkPx) {
+      // Rule 1: a reign too short to SEE keeps its ink — a dot, never a
       // widened bar. Verbatim from the wheel's own dot, `_paintLife
       // spans`' "nameless arc" branch: it is the same mechanism this
       // spec's zero-length example (Zimri, Huldah, Ahaziah of Judah,
       // Jehoahaz of Judah) names.
+      //
+      // The threshold was `0.01` — exactly zero, in floating point —
+      // until 2026-09-17. Zero is the case arithmetic can spot; the
+      // case a READER has is a bar a third of a pixel wide, which is
+      // not zero and is not visible either. See [kStripMinBarInkPx].
       final dot = math.min(1.6, fillHeight * 0.28);
       canvas.drawCircle(
         Offset(x0, _rowFor(span, row)),
@@ -704,7 +709,11 @@ class StripLanesPainter extends CustomPainter {
     final stroke = row.height * 0.55;
     final y = _rowFor(span, row);
 
-    if (x1 - x0 < 0.01) {
+    if (x1 - x0 < kStripMinBarInkPx) {
+      // The same threshold as a filled bar, and the same reason: a
+      // lifespan drawn a third of a pixel wide is a record with a
+      // nine-pixel target and nothing to aim at. See
+      // [kStripMinBarInkPx].
       canvas.drawCircle(
         Offset(x0, y),
         math.min(1.6, stroke * 0.28),
