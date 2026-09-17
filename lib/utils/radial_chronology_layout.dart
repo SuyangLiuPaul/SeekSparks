@@ -39,6 +39,7 @@
 /// Kept free of widgets because it is the part worth testing.
 library;
 
+import 'dart:ui' show Offset, Path, Rect;
 import 'dart:math' as math;
 
 import 'package:seeksparks/models/chronology.dart' show Patriarch;
@@ -1629,4 +1630,54 @@ List<({double dAngle, double dRadius})> arcLabelDetours({
     }
   }
   return moves;
+}
+
+/// THE OUTLINE OF A CLAIM: the shape a hit answer is about, as a path.
+///
+/// 2026-09-17. Pulled out of the painter so its one decision can be
+/// tested, because that decision was wrong in a way nothing could catch:
+/// a target with no angular sweep was drawn as a CIRCLE whose radius was
+/// the target's DEPTH, and for an event tick whose text label is drawn
+/// that depth is half the radial run of the label. At 332% it put a
+/// 270-pixel ring over blank paper — a picture of the claim that was not
+/// the claim, which is worse than no picture, being the same lie the
+/// plate used to tell but drawn on the chart.
+///
+/// Three shapes, one per kind of claim:
+///
+///   * a sweep and a depth  → the annular sector, which is the band
+///   * a depth, no sweep    → a line along that one bearing, which is
+///                            what a tick claims
+///   * neither              → a small ring at the pointer's own scale,
+///                            which is the only honest size for a mark
+///                            with no extent of its own
+Path claimOutlinePath({
+  required Offset centre,
+  required double a0,
+  required double a1,
+  required double radius,
+  required double halfDepth,
+  required double zoom,
+}) {
+  final outer = radius + halfDepth;
+  final inner = math.max(0.0, radius - halfDepth);
+  final sweep = a1 - a0;
+  final path = Path();
+  if (sweep < 1e-4) {
+    final dir = Offset(math.cos(a0), math.sin(a0));
+    if (halfDepth < 0.5 / zoom) {
+      return path
+        ..addOval(
+            Rect.fromCircle(center: centre + dir * radius, radius: 7 / zoom));
+    }
+    final from = centre + dir * inner;
+    final to = centre + dir * outer;
+    return path
+      ..moveTo(from.dx, from.dy)
+      ..lineTo(to.dx, to.dy);
+  }
+  return path
+    ..arcTo(Rect.fromCircle(center: centre, radius: outer), a0, sweep, true)
+    ..arcTo(Rect.fromCircle(center: centre, radius: inner), a1, -sweep, false)
+    ..close();
 }

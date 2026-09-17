@@ -6280,42 +6280,49 @@ class _ClaimOutlinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(side / 2, side / 2);
-    final outer = claim.centre + claim.halfDepth;
-    final inner = math.max(0.0, claim.centre - claim.halfDepth);
-    final sweep = claim.a1 - claim.a0;
     final w = 1.6 / zoom;
 
-    final path = Path();
-    if (claim.halfDepth < 0.01 || sweep < 1e-4) {
-      // A point-like target — a tick, a rail mark. There is no sector
-      // to outline, so mark the place instead: a ring the size of the
-      // target a finger was given, which is the honest picture of what
-      // was claimed.
-      final at = Offset(
-        c.dx + claim.centre * math.cos(claim.a0),
-        c.dy + claim.centre * math.sin(claim.a0),
-      );
-      path.addOval(Rect.fromCircle(center: at, radius: math.max(7 / zoom, claim.halfDepth)));
-    } else {
-      path
-        ..arcTo(Rect.fromCircle(center: c, radius: outer), claim.a0, sweep,
-            true)
-        ..arcTo(Rect.fromCircle(center: c, radius: inner), claim.a1, -sweep,
-            false)
-        ..close();
-    }
+    final path = claimOutlinePath(
+      centre: c,
+      a0: claim.a0,
+      a1: claim.a1,
+      radius: claim.centre,
+      halfDepth: claim.halfDepth,
+      zoom: zoom,
+    );
 
+    // LIGHT THE RECORD, DO NOT RING THE REGION.
+    //
+    // 2026-09-17, on Fable 5.1's reading of 「为什么很多没有做好」: a ring
+    // drawn around a claim is a QA instrument. Nobody has a concept of
+    // "the area this answer is about"; they have a concept of "that
+    // band". An outline also reads as a NEW object on a chart that
+    // already has too many, where a wash reads as the same object,
+    // brighter.
+    //
+    // A wash and an edge, not one or the other: the wash says which
+    // shape, the edge keeps it legible where the wash falls on a band
+    // of a similar colour — there are twenty-two of those.
+    final sector =
+        claim.halfDepth >= 0.5 / zoom && (claim.a1 - claim.a0) >= 1e-4;
+    if (sector) {
+      canvas.drawPath(path, Paint()..color = color.withValues(alpha: 0.22));
+    }
     canvas.drawPath(
         path,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 2.6
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = (sector ? w * 2.6 : w * 4.2)
           ..color = halo.withValues(alpha: 0.85));
     canvas.drawPath(
         path,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = w
+          ..strokeCap = StrokeCap.round
+          // A mark with no area is lit by being DRAWN HEAVIER, which is
+          // the only way to brighten something that has no inside.
+          ..strokeWidth = sector ? w : w * 2
           ..color = color);
   }
 
