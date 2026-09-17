@@ -4171,6 +4171,35 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     hit.open();
   }
 
+  /// A FINGER IS NINE PIXELS ON THE SCREEN, NOT ON THE CANVAS.
+  ///
+  /// `fingerHalfWidth` and `nearestArcAt` default to 9, and every call
+  /// here used the default — which is nine CANVAS units, a length the
+  /// zoom then multiplies. The spoke branch above never had this bug:
+  /// it writes its own tolerance as `9.0 / (_zoom * r)` and so has
+  /// always meant nine pixels of screen.
+  ///
+  /// What that cost, measured at the zoom it was reported from
+  /// (2026-09-17, 3660% on a 900 px canvas): a half-width of 4.5 canvas
+  /// units becomes **165 screen pixels** of slack past each end of every
+  /// band. So a point sitting in plainly empty paper, a finger's width
+  /// away at 100% and a hand's width away at 3660%, still counted as
+  /// inside the nearest band — which is why hovering blank space beside
+  /// 大韩帝国 named 大韩帝国, and why tapping there had been opening it
+  /// all along without anyone being able to see why.
+  ///
+  /// Dividing by the zoom keeps the target exactly nine screen pixels
+  /// at every scale, which is what the padding was for: it rescues a
+  /// hairline arc at 100%, where a hairline is genuinely unhittable,
+  /// and stops pretending a band is 330 px wide at 3660%, where it is
+  /// already enormous.
+  double get _fingerPx => 9 / _zoom;
+
+  /// The angular slack the spoke branch allowed on the last resolve,
+  /// for the probe only — the branch computes it from the radius under
+  /// the pointer, which the recorder cannot recompute.
+  double _probeSpokeTol = 0;
+
   /// Remember what the pointer is over, cheaply.
   ///
   /// [global] is a screen position and is converted here rather than by
@@ -4212,6 +4241,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     String locale,
   ) {
     if (streams.isEmpty) return null;
+
     final c = side / 2;
     final dx = local.dx - c, dy = local.dy - c;
     final r = math.sqrt(dx * dx + dy * dy);
@@ -4219,6 +4249,52 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     while (a < startRad) {
       a += 2 * math.pi;
     }
+    // EVERY ANSWER IS RECORDED WITH THE SHAPE IT CAME FROM, so that
+    // "the hit test is inaccurate" can be a number instead of an
+    // opinion. See [WheelHitProbe]. Off in every shipped build.
+    _WheelHit answer(
+      _WheelHit hit, {
+      required String kind,
+      required double a0,
+      required double a1,
+      required double centre,
+      required double halfDepth,
+      required double halfAngle,
+    }) {
+      WheelRenderStats.noteHit((
+        r: r,
+        a: a,
+        zoom: _zoom,
+        id: hit.id,
+        label: hit.label,
+        kind: kind,
+        a0: a0,
+        a1: a1,
+        centre: centre,
+        halfDepth: halfDepth,
+        halfAngle: halfAngle,
+      ));
+      return hit;
+    }
+
+    _WheelHit? nothing(String why) {
+      WheelRenderStats.noteHit((
+        r: r,
+        a: a,
+        zoom: _zoom,
+        id: '',
+        label: '',
+        kind: why,
+        a0: 0,
+        a1: 0,
+        centre: 0,
+        halfDepth: 0,
+        halfAngle: 0,
+      ));
+      return null;
+    }
+
+
     // OUTSIDE THE SWEEP IS BLANK PAPER, AND BLANK PAPER DESELECTS.
     //
     // The wheel sweeps 320 degrees, so a 40-degree wedge carries no
@@ -4236,7 +4312,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // the rim. This makes the empty wedge the same kind of nothing,
     // rather than a hole the gesture fell into before it could get
     // there.
-    if (a - startRad > sweepRad) return null;
+    if (a - startRad > sweepRad) return nothing('outsideSweep');
 
     final rHub = side * _kHubFrac;
     final rBands = side * bandsFractionFor(side);
@@ -4252,6 +4328,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // spoke within it wins.
     _Spoke? bestSpoke;
     var spokeScore = double.infinity;
+    // The radius of the winning spoke's own tick, kept for the probe:
+    // without it a spoke's answer could only be scored on angle, and
+    // half of what this instrument is for is radial mistakes.
+    var bestSpokeR = 0.0;
     // From the hub outward, not from the bands outward. The gate used
     // to start at `rBands - 6` because every tick was outside the band
     // stack; with the ticks moved onto their own rings, that gate
@@ -4259,6 +4339,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // never ran for them.
     if (r >= rHub - 6 && r <= rRim + 8) {
       final tol = r > 0 ? (9.0 / (_zoom * r)) : 0.05;
+      _probeSpokeTol = tol;
       final ringOf = {
         for (var i = 0; i < streams.length; i++) streams[i].id: i
       };
@@ -4297,6 +4378,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         if (d <= 1 && d < spokeScore) {
           bestSpoke = s;
           spokeScore = d;
+          bestSpokeR = rOwn;
         }
       }
     }
@@ -4304,17 +4386,27 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // `s.title` is NOT the label. It is the string the painter drew,
     // and it is empty whenever the label would not have been legible —
     // which is precisely the spoke a reader hovers to ask about.
-    _WheelHit spokeHit(_Spoke s) => (
-          id: s.event.id,
-          label: s.event.titleFor(locale),
-          open: () {
-            _select(s.event.id);
-            if (s.members.length > 1) {
-              showCluster(context, s.members, data, locale, _select);
-            } else {
-              showEvent(context, s.event, data, locale);
-            }
-          },
+    _WheelHit spokeHit(_Spoke s) => answer(
+          (
+            id: s.event.id,
+            label: s.event.titleFor(locale),
+            open: () {
+              _select(s.event.id);
+              if (s.members.length > 1) {
+                showCluster(context, s.members, data, locale, _select);
+              } else {
+                showEvent(context, s.event, data, locale);
+              }
+            },
+          ),
+          kind: 'spoke',
+          a0: s.label.angle,
+          a1: s.label.angle,
+          centre: bestSpokeR,
+          // A tick has no radial extent; the branch gates on
+          // `(r - rOwn).abs() <= 9 / _zoom`, nine screen pixels.
+          halfDepth: 9 / _zoom,
+          halfAngle: _probeSpokeTol,
         );
 
     // A life, and THE SMALLER NORMALISED DISTANCE WINS — not the spoke.
@@ -4361,13 +4453,21 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             return spokeHit(s);
           }
           final cohortId = '$kLineageArcPrefix${m.cohort.year}';
-          return (
-            id: cohortId,
-            label: yearLabel(m.cohort.year, locale),
-            open: () {
-              _select(cohortId);
-              showCohort(context, m.cohort, locale);
-            },
+          return answer(
+            (
+              id: cohortId,
+              label: yearLabel(m.cohort.year, locale),
+              open: () {
+                _select(cohortId);
+                showCohort(context, m.cohort, locale);
+              },
+            ),
+            kind: 'rail',
+            a0: m.angle,
+            a1: m.angle,
+            centre: m.centre,
+            halfDepth: m.pitch / 2,
+            halfAngle: math.max(9 / m.centre, 0.004),
           );
         }
       }
@@ -4393,7 +4493,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           if ((r - l.centre).abs() / (l.pitch / 2) <= 1) l
       ];
       final pick = nearestArcAt(
-          a, r, [for (final l in inRing) (a0: l.arc.a0, a1: l.arc.a1)]);
+          a, r, [for (final l in inRing) (a0: l.arc.a0, a1: l.arc.a1)],
+          fingerPx: _fingerPx);
       if (pick != null) {
         final l = inRing[pick.index];
         {
@@ -4402,25 +4503,33 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           if (bestSpoke case final s? when spokeScore < into) {
             return spokeHit(s);
           }
-          return (
-            id: l.id,
-            // `l.name` is what the arc could print; `l.fullName` is what
-            // the record is called. 亚们 has the second and not the
-            // first — see [_Life.fullName].
-            label: l.fullName,
-            open: () {
-              _select(l.id);
-              final man = l.man;
-              final king = l.king;
-              final ministry = l.ministry;
-              if (man != null) {
-                showPatriarch(context, man, locale);
-              } else if (king != null) {
-                showKing(context, king, locale);
-              } else if (ministry != null) {
-                showMinistry(context, ministry, locale);
-              }
-            },
+          return answer(
+            (
+              id: l.id,
+              // `l.name` is what the arc could print; `l.fullName` is
+              // what the record is called. 亚们 has the second and not
+              // the first — see [_Life.fullName].
+              label: l.fullName,
+              open: () {
+                _select(l.id);
+                final man = l.man;
+                final king = l.king;
+                final ministry = l.ministry;
+                if (man != null) {
+                  showPatriarch(context, man, locale);
+                } else if (king != null) {
+                  showKing(context, king, locale);
+                } else if (ministry != null) {
+                  showMinistry(context, ministry, locale);
+                }
+              },
+            ),
+            kind: 'life',
+            a0: l.arc.a0,
+            a1: l.arc.a1,
+            centre: l.centre,
+            halfDepth: l.pitch / 2,
+            halfAngle: fingerHalfWidth(r, fingerPx: _fingerPx),
           );
         }
       }
@@ -4488,7 +4597,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           if (offRing(arc) <= pitch / 2) arc
       ];
       ({int index, double score})? pickIn(List<_Arc> pool) => nearestArcAt(
-          a, r, [for (final arc in pool) (a0: arc.a0, a1: arc.a1)]);
+          a, r, [for (final arc in pool) (a0: arc.a0, a1: arc.a1)],
+          fingerPx: _fingerPx);
       var candidates = onLayer;
       var pick = pickIn(candidates);
       if (pick == null) {
@@ -4530,13 +4640,23 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         if (bestSpoke case final s? when spokeScore <= 1) {
           return spokeHit(s);
         }
-        return (
-          id: arc.power.id,
-          label: arc.power.nameFor(locale),
-          open: () {
-            _select(arc.power.id);
-            showPower(context, arc.power, data, locale, _select);
-          },
+        return answer(
+          (
+            id: arc.power.id,
+            label: arc.power.nameFor(locale),
+            open: () {
+              _select(arc.power.id);
+              showPower(context, arc.power, data, locale, _select);
+            },
+          ),
+          kind: 'power',
+          a0: arc.a0,
+          a1: arc.a1,
+          centre: tierRadii(arc.ring, streams.length, rHub, rBands,
+                  tier: arc.tier, tiers: arc.tiers)
+              .centre,
+          halfDepth: pitch / (2 * math.max(1, arc.tiers)),
+          halfAngle: fingerHalfWidth(r, fingerPx: _fingerPx),
         );
       }
       // Nearest band centre, so the outermost and innermost edges of
@@ -4568,23 +4688,37 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       // A finger's worth of padding at this radius, the same allowance
       // `nearestArcAt` gives every arc, so a hairline span is still
       // something a reader can be asking about.
-      final pad = fingerHalfWidth(math.max(r, 1));
-      final onIt = best >= 0 &&
-          arcs.any((arc) =>
-              arc.ring == best && a >= arc.a0 - pad && a <= arc.a1 + pad);
-      if (onIt) {
+      final pad = fingerHalfWidth(math.max(r, 1), fingerPx: _fingerPx);
+      final under = best < 0
+          ? null
+          : arcs
+              .where((arc) =>
+                  arc.ring == best && a >= arc.a0 - pad && a <= arc.a1 + pad)
+              .firstOrNull;
+      if (under != null) {
         final stream = streams[best];
-        return (
-          id: stream.id,
-          label: stream.nameFor(locale),
-          open: () {
-            _select(stream.id);
-            showStream(context, stream, data, locale, _select);
-          },
+        return answer(
+          (
+            id: stream.id,
+            label: stream.nameFor(locale),
+            open: () {
+              _select(stream.id);
+              showStream(context, stream, data, locale, _select);
+            },
+          ),
+          kind: 'stream',
+          // The stream's target at this angle is the arc that made it
+          // answerable — not the whole ring, which would report every
+          // miss as a hit.
+          a0: under.a0,
+          a1: under.a1,
+          centre: ringRadii(best, streams.length, rHub, rBands).centre,
+          halfDepth: ringPitch(streams.length, rHub, rBands) / 2,
+          halfAngle: pad,
         );
       }
     }
-    return null;
+    return nothing('nothingUnderIt');
   }
 }
 

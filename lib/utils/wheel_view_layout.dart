@@ -245,6 +245,64 @@ List<AxisLabel> retainSeparatedWheelAxisLabels({
   ];
 }
 
+/// ONE ANSWER THE HIT TEST GAVE, AND THE SHAPE IT CLAIMED TO BE IN.
+///
+/// 2026-09-17 「我的意思就是hover over那个不准确」 — reported from the
+/// wheel at 3660%, where hovering blank paper named a band three hundred
+/// pixels away.
+///
+/// The problem with that report is not the report, it is that nothing
+/// in this codebase could answer it. The hit test is three hundred lines
+/// of ring-before-angle, normalised distance and finger-width-in-radians,
+/// every clause of it written against a real complaint, and the only
+/// instrument anyone has ever had for it is a person looking at a screen
+/// and saying "that's wrong". Two theories were tried against this
+/// particular report before this record existed; the first was measured
+/// and found to account for 1 point in 169, which is to say it was
+/// wrong, and the second would have been another guess.
+///
+/// So: the resolver now reports, for every question it is asked, what it
+/// answered AND the true extent of the thing it answered with. That
+/// turns "is the hit test accurate" from an opinion into arithmetic —
+/// how far outside its own target, in SCREEN pixels, was the point it
+/// claimed?
+///
+/// Off in every shipped build; one boolean read per resolve when off.
+typedef WheelHitProbe = ({
+  /// What was asked: the point, in canvas polar coordinates, and the
+  /// scale it was asked at.
+  double r,
+  double a,
+  double zoom,
+
+  /// What was answered. [id] is empty when the answer was "nothing".
+  String id,
+  String label,
+  String kind,
+
+  /// The answer's own true extent — the unpadded geometry, exactly as
+  /// the painter drew it. [a0]/[a1] are its angular run and are equal
+  /// for a point-like target (a tick, a rail mark); [centre] and
+  /// [halfDepth] are its radial band.
+  double a0,
+  double a1,
+  double centre,
+  double halfDepth,
+
+  /// The slack the branch ITSELF allowed, in radians either side of
+  /// [a0]/[a1]. Recorded rather than assumed, because every branch
+  /// computes its own and they do not agree: a tick allows
+  /// `9 / (zoom * r)`, an arc allows `fingerHalfWidth`, a rail mark
+  /// allows `max(9 / centre, 0.004)`.
+  ///
+  /// Without it the instrument would report a tick as wrong whenever
+  /// the pointer was not exactly on it — measuring the target as a
+  /// point when it was never meant to be one, and burying the real
+  /// mistakes under a pile of false ones. (It did, on the first run:
+  /// 14 of the 15 "errors" at 100% were ticks behaving correctly.)
+  double halfAngle,
+});
+
 /// Deterministic work counters for the real page, independent of device
 /// speed. They measure scene planning and painter invocations separately.
 class WheelRenderStats {
@@ -286,11 +344,39 @@ class WheelRenderStats {
     if (trackLabels) labelsLost.add(text);
   }
 
+  /// WHAT THE HIT TEST ANSWERED, FOR TESTS ONLY. See [WheelHitProbe].
+  static bool trackHits = false;
+  static final List<WheelHitProbe> hitsForTest = <WheelHitProbe>[];
+
+  static void noteHit(WheelHitProbe probe) {
+    if (trackHits) hitsForTest.add(probe);
+  }
+
+  /// How far the point was from the answer's own target, in SCREEN
+  /// pixels — 0 when the point is genuinely inside it.
+  ///
+  /// The two errors are reported as one number because they are the
+  /// same kind of wrongness: the reader pointed at something and was
+  /// given something they were not pointing at. Angular distance is
+  /// converted at the point's own radius, which is what makes it
+  /// comparable with the radial one.
+  static double hitErrorPx(WheelHitProbe p) {
+    if (p.id.isEmpty) return 0;
+    final outward = (p.r - p.centre).abs() - p.halfDepth;
+    final radial = outward > 0 ? outward : 0.0;
+    final before = p.a0 - p.halfAngle - p.a;
+    final after = p.a - (p.a1 + p.halfAngle);
+    final gap = before > after ? before : after;
+    final angular = gap > 0 ? gap * p.r : 0.0;
+    return (radial > angular ? radial : angular) * p.zoom;
+  }
+
   static void reset() {
     sceneBuilds = 0;
     paints = 0;
     labelsDrawn = 0;
     labelsAsked.clear();
     labelsLost.clear();
+    hitsForTest.clear();
   }
 }
