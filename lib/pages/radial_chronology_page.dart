@@ -4328,10 +4328,16 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // spoke within it wins.
     _Spoke? bestSpoke;
     var spokeScore = double.infinity;
-    // The radius of the winning spoke's own tick, kept for the probe:
-    // without it a spoke's answer could only be scored on angle, and
-    // half of what this instrument is for is radial mistakes.
-    var bestSpokeR = 0.0;
+    // THE RADIAL GATE THAT ADMITTED THE WINNING SPOKE, for the probe.
+    //
+    // A spoke has two ways in and they are not the same shape: the tick
+    // (nine screen pixels around its own ring) or, once the label is
+    // being drawn, the whole radial run of that label. Recording only
+    // the tick reported every label-claimed answer as a mistake — 35 of
+    // them at 196% on the first run — which is the instrument lying
+    // about the code rather than measuring it.
+    var bestSpokeCentre = 0.0;
+    var bestSpokeHalfDepth = 0.0;
     // From the hub outward, not from the bands outward. The gate used
     // to start at `rBands - 6` because every tick was outside the band
     // stack; with the ticks moved onto their own rings, that gate
@@ -4353,7 +4359,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         final rOwn = ring == null
             ? scriptureLabelBase(rBands)
             : ringRadii(ring, streams.length, rHub, rBands).centre;
-        final atTick = (r - rOwn).abs() <= 9 / _zoom;
+        final tickHalf = 9 / _zoom;
+        final atTick = (r - rOwn).abs() <= tickHalf;
         // THE TAP FOLLOWS THE INK. `s.label.rStart..rEnd` is the radial
         // run a spoke's TEXT occupies, and claiming it was right while
         // that text was on screen: the reader was aiming at a word.
@@ -4378,7 +4385,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         if (d <= 1 && d < spokeScore) {
           bestSpoke = s;
           spokeScore = d;
-          bestSpokeR = rOwn;
+          // Whichever gate let it in is the target it should be judged
+          // against. When both do, the tick is the tighter claim and
+          // the one the reader was aiming at.
+          if (atTick) {
+            bestSpokeCentre = rOwn;
+            bestSpokeHalfDepth = tickHalf;
+          } else {
+            final lo = s.label.rStart - 6 / _zoom;
+            final hi = s.label.rEnd + 6 / _zoom;
+            bestSpokeCentre = (lo + hi) / 2;
+            bestSpokeHalfDepth = (hi - lo).abs() / 2;
+          }
         }
       }
     }
@@ -4402,10 +4420,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           kind: 'spoke',
           a0: s.label.angle,
           a1: s.label.angle,
-          centre: bestSpokeR,
-          // A tick has no radial extent; the branch gates on
-          // `(r - rOwn).abs() <= 9 / _zoom`, nine screen pixels.
-          halfDepth: 9 / _zoom,
+          centre: bestSpokeCentre,
+          halfDepth: bestSpokeHalfDepth,
           halfAngle: _probeSpokeTol,
         );
 
@@ -4601,9 +4617,16 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           fingerPx: _fingerPx);
       var candidates = onLayer;
       var pick = pickIn(candidates);
+      // Which POOL answered is the radial tolerance that answered, and
+      // the two differ by a factor of `tiers` — up to seven. Recorded
+      // rather than assumed: reporting an `inBand` answer against the
+      // `onLayer` target counted 31 correct answers as mistakes at
+      // 384% on the first run.
+      var viaBand = false;
       if (pick == null) {
         candidates = inBand;
         pick = pickIn(candidates);
+        viaBand = true;
       }
       if (pick != null) {
         final arc = candidates[pick.index];
@@ -4655,7 +4678,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           centre: tierRadii(arc.ring, streams.length, rHub, rBands,
                   tier: arc.tier, tiers: arc.tiers)
               .centre,
-          halfDepth: pitch / (2 * math.max(1, arc.tiers)),
+          halfDepth:
+              viaBand ? pitch / 2 : pitch / (2 * math.max(1, arc.tiers)),
           halfAngle: fingerHalfWidth(r, fingerPx: _fingerPx),
         );
       }
