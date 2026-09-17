@@ -449,21 +449,33 @@ void main() {
           reason: 'with room to spare, the page\'s own size');
     });
 
-    test('a tight arc shrinks rather than overrunning', () {
-      // Narrow enough that the em cap is not what binds. Whatever comes
-      // back must actually fit, which the linear guess alone did not
-      // guarantee.
-      double? shrunk;
-      for (final sweep in [0.20, 0.15, 0.12, 0.10]) {
+    test('a tight arc steps down or says nothing, and never overruns', () {
+      // REWRITTEN 2026-09-17, and the old name is the point: this used
+      // to require that a tight arc SHRANK — because it used to, by any
+      // factor at all, until the words fitted. That is what put 56
+      // distinct font sizes on one screen at 1476%, and the size of a
+      // name is now its class's size or one of two steps below it (see
+      // `fitArcLabel`). "Shrank" is no longer a property to assert.
+      //
+      // What survives is the property that mattered underneath it:
+      // WHATEVER COMES BACK MUST ACTUALLY FIT. The linear guess alone
+      // did not guarantee that — it overran for one power at 700 px —
+      // and a ladder does not guarantee it either without this check,
+      // which is why the check outlives the mechanism.
+      const steps = [8.0, 8.0 * 0.86, 8.0 * 0.74];
+      for (final sweep in [0.20, 0.15, 0.12, 0.10, 0.06, 0.03]) {
         final s = fit('Assyria', sweep, 1);
-        if (s > 0 && s < 8) {
-          shrunk = s;
-          expect(_measureChars('Assyria', s) / 200,
-              lessThanOrEqualTo(sweep * 0.92 + 1e-9),
-              reason: 'sweep=$sweep came back at $s and does not fit');
-        }
+        if (s == 0) continue;
+        expect(steps.any((step) => (step - s).abs() < 1e-9), isTrue,
+            reason: 'sweep=$sweep came back at $s, which is between the '
+                'steps — the continuous shrink is back');
+        expect(_measureChars('Assyria', s) / 200,
+            lessThanOrEqualTo(sweep * 0.92 + 1e-9),
+            reason: 'sweep=$sweep came back at $s and does not fit');
       }
-      expect(shrunk, isNotNull, reason: 'no sweep in the range shrank at all');
+      expect(fit('Assyria', 0.001, 1), 0,
+          reason: 'an arc that carries no step is left unnamed on the '
+              'canvas — the hover names it instead');
       expect(fit('Assyria', 2.0, 1), 8, reason: 'a wide arc keeps the cap');
     });
 

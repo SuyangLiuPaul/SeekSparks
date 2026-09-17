@@ -6150,8 +6150,10 @@ class _WorldWheelPainter extends CustomPainter {
   /// A laid-out run. Everything outside the hub now needs the SIZE of
   /// its text before it can decide where the text goes, so measuring
   /// and painting are two steps rather than one.
-  _WheelText _painter(String text, Color color, double size) =>
-      _WheelText(text, canvasTextStyle(color: color, fontSize: size));
+  _WheelText _painter(String text, Color color, double size) {
+    WheelRenderStats.noteLabelSize(size);
+    return _WheelText(text, canvasTextStyle(color: color, fontSize: size));
+  }
 
   /// Scene lists are reused until their inputs change. Identity catches
   /// same-count stream swaps and costs one comparison per list; counting

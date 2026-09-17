@@ -369,6 +369,18 @@ class WheelRenderStats {
     if (trackHits) bandNamesForTest.add((text: text, x: x, y: y));
   }
 
+  /// EVERY FONT SIZE THAT REACHED THE CANVAS, for tests only.
+  ///
+  /// The count of DISTINCT values is the measurement: a chart whose
+  /// labels are sized by how much room happened to be free has as many
+  /// sizes as it has labels, and a reader cannot then tell a container
+  /// from a point by looking.
+  static final List<double> labelSizesForTest = <double>[];
+
+  static void noteLabelSize(double size) {
+    if (trackHits) labelSizesForTest.add(size);
+  }
+
   static void noteHit(WheelHitProbe probe) {
     if (trackHits) hitsForTest.add(probe);
   }
@@ -406,5 +418,6 @@ class WheelRenderStats {
     labelsLost.clear();
     hitsForTest.clear();
     bandNamesForTest.clear();
+    labelSizesForTest.clear();
   }
 }

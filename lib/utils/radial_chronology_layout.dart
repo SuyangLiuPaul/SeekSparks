@@ -926,21 +926,35 @@ double fitArcLabel({
   if (text.isEmpty || sweep <= 0 || radius <= 0 || zoom <= 0) return 0;
   final smallest = floorPx / zoom;
   final room = sweep * fillFraction * radius;
-  var size = math.min(desiredSize, maxEm);
 
-  // Scaling the size by room/width is a good guess and not an answer:
-  // glyph advances are hinted and quantised, so a string is not exactly
-  // proportional to its size and the guess can still overrun. Measured
-  // over the real corpus it overran for one power at 700 px. So the
-  // guess is re-measured, with at least 2% taken off each pass to
-  // guarantee it terminates, and a label that still will not fit keeps
-  // its arc and loses its words.
-  for (var attempt = 0; attempt < 6; attempt++) {
+  // A LADDER, NOT A SLIDER. 2026-09-17.
+  //
+  // This used to shrink the size continuously until the words fitted —
+  // `size * room / w`, re-measured up to six times — which meant the
+  // size of a name was a reading of HOW MUCH ROOM HAPPENED TO BE FREE
+  // beside it. Measured on one 900 px screen: 4 distinct label sizes at
+  // 196%, 13 at 384%, 32 at 753% and 56 at 1476%. Fifty-six sizes is
+  // not a type hierarchy; it is noise that looks like one, and a reader
+  // cannot tell a kingdom from a king by looking because the difference
+  // in their type is telling them about spacing instead.
+  //
+  // Now there are three steps and the class's own size is the first of
+  // them. A name that will not fit at the smallest step is not shrunk
+  // to a fourth — it is DROPPED, and the hover names it instead, which
+  // is a thing the chart could not do until today and is the reason
+  // this trade is now payable.
+  //
+  // The two limits that remain are geometric and stay: `maxEm` keeps a
+  // label out of the neighbouring stream's row, and `floorPx` is the
+  // size below which nobody could read it anyway.
+  const steps = [1.0, 0.86, 0.74];
+  final top = math.min(desiredSize, maxEm);
+  for (final step in steps) {
+    final size = top * step;
     if (size < smallest) return 0;
     final w = measure(text, size);
     if (w <= 0) return 0;
     if (w <= room) return size;
-    size = math.min(size * room / w, size * 0.98);
   }
   return 0;
 }
