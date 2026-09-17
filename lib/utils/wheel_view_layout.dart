@@ -64,6 +64,29 @@ double wheelLabelScale(double zoom) {
 bool wheelShowsEventText({required double zoom, required bool selected}) =>
     selected || wheelDetailFor(zoom).records > 0;
 
+/// THE FAINTEST A NAME MAY BE DRAWN, as a multiplier on its colour.
+///
+/// When one record is selected the rest are dimmed, and that is right
+/// for MARKS — a tick at 28% is still a tick. It is not right for
+/// WORDS. Measured on the dark palette, compositing the label's own
+/// plate over the chart and the text over that:
+///
+///     dim 1.00   13.23:1
+///     dim 0.75    7.75:1
+///     dim 0.55    4.73:1   ← the floor
+///     dim 0.35    2.70:1   ← an unselected arc's name
+///     dim 0.28    2.20:1   ← an unselected record's name
+///
+/// The last two are not words. They are smudges shaped like words,
+/// inside a plate the reader CAN still see — which is why the owner
+/// circled them twice and called them 「线」: 2026-09-17 「中间这些线你
+/// 还是没有fix啊」, of two faint boxes beside a selected 以撒.
+///
+/// So a name is drawn legibly or not at all, and what a dimmed record
+/// keeps is its mark. 4.5:1 is the app's own standard everywhere else
+/// (`palette_legibility_walk_test`).
+const double kLegibleLabelDim = 0.55;
+
 /// One million square pixels — the unit the detail table's densities are
 /// quoted in. A 1280x663 pane is 0.85 of one; a 390x620 phone is 0.24.
 const double kWheelLabelArea = 1000000;

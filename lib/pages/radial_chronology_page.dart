@@ -6250,6 +6250,10 @@ class _WorldWheelPainter extends CustomPainter {
   void _uprightSpokeLabel(Canvas canvas, Offset c, _Spoke s, double dim,
       bool sel, double fromRadius) {
     if (s.title.isEmpty && s.badge.isEmpty) return;
+    // Legible or not at all — see [kLegibleLabelDim]. The tick stays:
+    // a dimmed record keeps its mark, it just stops carrying a word
+    // nobody can read.
+    if (dim < kLegibleLabelDim) return;
     final size = rimFont / _labelScale(zoom);
     final style = canvasTextStyle(
       color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
@@ -6355,6 +6359,8 @@ class _WorldWheelPainter extends CustomPainter {
     // was to tap it and read the panel. It gets a name like everything
     // else now; the walk below finds it somewhere free.
     if (sweep < 0 || fontSize <= 0 || text.isEmpty) return;
+    // Legible or not at all — see [kLegibleLabelDim].
+    if (dim < kLegibleLabelDim) return;
     WheelRenderStats.noteLabelAsked(text);
     // WHERE ON THE RECORD THE READER CAN SEE, and nowhere if that is
     // nowhere.
