@@ -301,6 +301,13 @@ typedef WheelHitProbe = ({
   /// mistakes under a pile of false ones. (It did, on the first run:
   /// 14 of the 15 "errors" at 100% were ticks behaving correctly.)
   double halfAngle,
+
+  /// Half the depth of the record's own INK — what the painter actually
+  /// drew. [halfDepth] is the target; this is the part of it a reader
+  /// can see. The difference is the air, and the air is where an answer
+  /// is not merely surprising but wrong: the eye says "I am between two
+  /// bands" and the plate names one of them.
+  double inkHalf,
 });
 
 /// Deterministic work counters for the real page, independent of device
@@ -360,6 +367,12 @@ class WheelRenderStats {
   /// given something they were not pointing at. Angular distance is
   /// converted at the point's own radius, which is what makes it
   /// comparable with the radial one.
+  /// Whether the point was on the record's own ink, rather than in the
+  /// air its target also claims. False for a point-like target, which
+  /// has no ink to be on.
+  static bool hitWasOnInk(WheelHitProbe p) =>
+      p.id.isNotEmpty && (p.r - p.centre).abs() <= p.inkHalf;
+
   static double hitErrorPx(WheelHitProbe p) {
     if (p.id.isEmpty) return 0;
     final outward = (p.r - p.centre).abs() - p.halfDepth;

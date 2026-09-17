@@ -4260,6 +4260,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       required double centre,
       required double halfDepth,
       required double halfAngle,
+      required double inkHalf,
     }) {
       WheelRenderStats.noteHit((
         r: r,
@@ -4273,6 +4274,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         centre: centre,
         halfDepth: halfDepth,
         halfAngle: halfAngle,
+        inkHalf: inkHalf,
       ));
       return hit;
     }
@@ -4290,6 +4292,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         centre: 0,
         halfDepth: 0,
         halfAngle: 0,
+        inkHalf: 0,
       ));
       return null;
     }
@@ -4423,6 +4426,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           centre: bestSpokeCentre,
           halfDepth: bestSpokeHalfDepth,
           halfAngle: _probeSpokeTol,
+          inkHalf: bestSpokeHalfDepth,
         );
 
     // A life, and THE SMALLER NORMALISED DISTANCE WINS — not the spoke.
@@ -4484,6 +4488,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             centre: m.centre,
             halfDepth: m.pitch / 2,
             halfAngle: math.max(9 / m.centre, 0.004),
+            inkHalf: m.pitch / 2,
           );
         }
       }
@@ -4546,6 +4551,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             centre: l.centre,
             halfDepth: l.pitch / 2,
             halfAngle: fingerHalfWidth(r, fingerPx: _fingerPx),
+            inkHalf: l.stroke / 2,
           );
         }
       }
@@ -4681,6 +4687,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           halfDepth:
               viaBand ? pitch / 2 : pitch / (2 * math.max(1, arc.tiers)),
           halfAngle: fingerHalfWidth(r, fingerPx: _fingerPx),
+          inkHalf: tierRadii(arc.ring, streams.length, rHub, rBands,
+                      tier: arc.tier, tiers: arc.tiers)
+                  .width /
+              2,
         );
       }
       // Nearest band centre, so the outermost and innermost edges of
@@ -4739,6 +4749,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           centre: ringRadii(best, streams.length, rHub, rBands).centre,
           halfDepth: ringPitch(streams.length, rHub, rBands) / 2,
           halfAngle: pad,
+          inkHalf: ringRadii(best, streams.length, rHub, rBands).width / 2,
         );
       }
     }
