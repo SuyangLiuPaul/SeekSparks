@@ -21,6 +21,17 @@ String get platformName {
   return 'unknown';
 }
 
+/// Whether this process is `flutter test`.
+///
+/// The test runner sets FLUTTER_TEST, and nothing else does. It is asked
+/// here rather than in the reporter so the web build — which has no
+/// `Platform.environment` — can answer the same question with a const
+/// false. See [ErrorReporter] for why it matters: on 2026-09-18 the
+/// owner's inbox took an "Exception: boom" from an Azure runner with an
+/// 800x600 screen, which is `error_reporter_test.dart` proving that
+/// `report()` does not throw — by mailing him.
+bool get isTestRun => Platform.environment.containsKey('FLUTTER_TEST');
+
 Map<String, dynamic> collectDeviceInfo() {
   String screen = '';
   double? dpr;

@@ -261,6 +261,19 @@ class ErrorReporter {
   }
 
   static Future<void> _postSafely(Map<String, dynamic> payload) async {
+    // A TEST'S CRASH IS NOT A USER'S CRASH.
+    //
+    // Under `flutter test` this used to POST for real: the endpoint
+    // resolves to the production host on native, so every CI run that
+    // exercised the reporter mailed the owner. 2026-09-18, from an
+    // Azure runner: "Exception: boom", version 1.6.314, screen 800x600
+    // — `error_reporter_test.dart` proving that `report()` survives a
+    // null stack, by sending him the proof.
+    //
+    // Guarded HERE rather than in the tests, because the next test to
+    // call `report()` would not know to opt out, and would not fail
+    // when it forgot.
+    if (platform.isTestRun) return;
     try {
       // Use the absolute endpoint on native (no document.location);
       // relative on web works because the function lives on the

@@ -7,8 +7,12 @@ library;
 /// future refactor can't silently break the visibility we just
 /// shipped in v1.3.21.
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/services/error_reporter.dart';
+import 'package:seeksparks/services/error_reporter_platform_io.dart'
+    as platform;
 
 void main() {
   setUp(() {
@@ -250,6 +254,34 @@ void main() {
         () {
       expect(() => ErrorReporter.report(_HostileToString(), null),
           returnsNormally);
+    });
+  });
+
+  group('a test run never reaches the network', () {
+    // 2026-09-18, in the owner's inbox: "Exception: boom", source
+    // `manual`, version 1.6.314, platform linux, screen 800x600, an
+    // Azure IP — a GitHub runner. That is the group above, proving
+    // `report()` survives a null stack by mailing the proof to a human.
+    //
+    // The endpoint resolves to the production host on native, so every
+    // CI run that touched the reporter sent a real email. The guard
+    // lives in `_postSafely`, not in these tests, because the next test
+    // to call `report()` would not know to opt out — and would not fail
+    // when it forgot.
+    test('the native shim knows it is being tested', () {
+      expect(platform.isTestRun, isTrue,
+          reason: 'this IS a test run; if the shim cannot tell, the '
+              'reporter posts from CI again');
+    });
+
+    test('the guard is in the poster, before the request is built', () {
+      final src = File('lib/services/error_reporter.dart').readAsStringSync();
+      final poster = src.substring(src.indexOf('_postSafely('));
+      expect(poster.contains('if (platform.isTestRun) return;'), isTrue,
+          reason: 'the reporter can post from a test again');
+      expect(poster.indexOf('if (platform.isTestRun) return;'),
+          lessThan(poster.indexOf('http')),
+          reason: 'the guard must come before the request');
     });
   });
 }

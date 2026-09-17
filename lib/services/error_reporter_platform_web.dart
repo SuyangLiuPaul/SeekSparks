@@ -44,3 +44,7 @@ Map<String, dynamic> collectDeviceInfo() {
     'ua': ua,
   };
 }
+
+/// Web has no process environment; a browser is never a test runner in
+/// the sense that matters here. See the native shim's own doc.
+bool get isTestRun => false;
