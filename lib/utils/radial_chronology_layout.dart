@@ -568,6 +568,24 @@ double scriptureLabelBase(double rBands) => rBands + 5;
 /// `_radialTarget`): the ink is a floor, not a ceiling.
 double tickHalfDepth(double bandWidth) => bandWidth * 0.42;
 
+/// HALF A GENEALOGY RAIL MARK, along its own bearing.
+///
+/// A mark's height says how many people the tree places in that year:
+/// one person is about a third of the rail's pitch, eight or more fills
+/// it. That is the whole of what the rail says, and it is drawn rather
+/// than written because forty-four names cannot be set at one angle.
+///
+/// It exists as a function for the same reason [tickHalfDepth] does, and
+/// after the same report: 2026-09-17 「这些线做什么的好像没用一样也按不
+/// 了」, of two clusters of rail marks at 2412% on a phone. The painter
+/// drew them this long and the hit test asked for `ink: 0` — a pointer
+/// and nothing else — so the answerable part of a mark was a sliver in
+/// the middle of a line the reader could see all of.
+double lineageRailHalfDepth({required double pitch, required int people}) {
+  final fill = (0.34 + 0.66 * ((people - 1) / 7)).clamp(0.34, 1.0);
+  return pitch * 0.5 * fill;
+}
+
 /// Every label on the rim: its radius, its flip, and the text it can
 /// honestly carry.
 ///

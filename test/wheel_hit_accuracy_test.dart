@@ -10,6 +10,8 @@
 /// the code.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +23,8 @@ import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
+import 'package:seeksparks/utils/radial_chronology_layout.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
 import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
@@ -30,6 +34,10 @@ void main() {
   setUpAll(() async {
     await WheelHistoryService.instance.load();
     await ChronologyService.instance.load();
+    // The genealogy rail is built from the family tree, and is EMPTY
+    // without it — a test that forgets this reports "the sweep never
+    // landed on the rail" for a chart that has no rail to land on.
+    await FamilyTreeService.instance.loadAll();
   });
 
   testWidgets('every answer is inside the target it was admitted by',
@@ -286,6 +294,126 @@ void main() {
     for (final p in spokes) {
       expect(WheelRenderStats.hitErrorPx(p), lessThan(8),
           reason: 'a record answered ${WheelRenderStats.hitErrorPx(p)} px '
+              'outside its own target');
+    }
+  });
+
+  testWidgets('a rail mark answers along its own height', (tester) async {
+    // 2026-09-17 「这些线做什么的好像没用一样也按不了」, of two clusters of
+    // genealogy rail marks at 2412% on a phone. The marks are drawn a
+    // third to all of the rail's pitch — taller where more people share
+    // the year, which is the only thing the rail says — and the hit
+    // test asked for `ink: 0`, a pointer and nothing else. Seen whole,
+    // answerable in the middle: the same defect the event ticks had,
+    // one ring further in.
+    WheelRenderStats.reset();
+    WheelRenderStats.trackHits = true;
+    addTearDown(() {
+      WheelRenderStats.trackHits = false;
+      WheelRenderStats.reset();
+    });
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(900, 900);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MainProvider()),
+        ChangeNotifierProvider(create: (_) => AppSettings()),
+      ],
+      child:
+          const MaterialApp(home: RadialChronologyPage(initialStacked: false)),
+    ));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(() => gesture.removePointer());
+
+    // THE CAMERA IS SET, NOT DRIVEN. The rail sits just outside the band
+    // stack, and zooming with the control alone parks the view on the
+    // hub — where there is no rail, and a sweep then measures nothing
+    // while looking exactly like a pass.
+    final iv = tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
+    final vp = tester.getSize(find.byType(InteractiveViewer));
+    final canvasSize =
+        tester.getSize(find.byKey(const ValueKey('wheelSceneBoundary')));
+    final side = canvasSize.width < canvasSize.height
+        ? canvasSize.width
+        : canvasSize.height;
+    // 2412%, which is where the photograph was taken — and it has to be
+    // up here: a rail mark's ink is a fraction of a sub-ring's pitch,
+    // about 1.9 canvas units at most on this pane, and a mouse pointer
+    // is 12 SCREEN pixels. Those two are the same size at about 800%,
+    // so below that the pointer covers the whole mark and there is
+    // nothing to measure.
+    const zoom = 24.0;
+    // WHERE THE RAIL ACTUALLY IS, in both coordinates.
+    //
+    // Radius: 0.2896 of the side — just outside `bandsFractionFor`
+    // (0.26), on the innermost sub-ring of the lifespan annulus.
+    // Measured 97.05 of 335.12.
+    //
+    // ANGLE: the genealogy does not go all the way round. Its marks run
+    // from Adam to Joseph and stop, so a camera parked at an arbitrary
+    // bearing sits on an empty stretch of that circle and the sweep
+    // reports "never landed on the rail" for a chart drawing 107 of
+    // them. And the stretch is not where a reader would guess: the rail
+    // carries the genealogy people the chart does NOT draw somewhere
+    // else, and the patriarchs are all drawn as lifespans — so what is
+    // left is the line from Abraham down, 主前2200 to 主前2, between
+    // 0.223 and 2.195 radians. 主前1000 is in the middle of it.
+    final railAngle = angleForSpan(-1000, kMinYear, kMaxYear);
+    final railR = side * 0.2896;
+    final p = Offset(side / 2 + railR * math.cos(railAngle),
+        side / 2 + railR * math.sin(railAngle));
+    final q = Offset(p.dx + (vp.width - side) / 2,
+        p.dy + (vp.height - side) / 2);
+    final m = Matrix4.identity();
+    m.setEntry(0, 0, zoom);
+    m.setEntry(1, 1, zoom);
+    m.setEntry(2, 2, zoom);
+    m.setEntry(0, 3, vp.width / 2 - zoom * q.dx);
+    m.setEntry(1, 3, vp.height / 2 - zoom * q.dy);
+    iv.transformationController!.value = m;
+    await tester.pumpAndSettle();
+
+    WheelRenderStats.hitsForTest.clear();
+    // The viewer's own rectangle ON SCREEN. `Offset.zero & size` would
+    // start at the top-left of the WINDOW, which is the app bar.
+    final rect = tester.getRect(find.byType(InteractiveViewer));
+    const steps = 30;
+    for (var i = 1; i < steps; i++) {
+      for (var j = 1; j < steps; j++) {
+        await gesture.moveTo(Offset(rect.left + rect.width * i / steps,
+            rect.top + rect.height * j / steps));
+        await tester.pump();
+      }
+    }
+    final marks = WheelRenderStats.hitsForTest
+        .where((p) => p.kind == 'rail' && p.id.isNotEmpty)
+        .toList();
+    expect(marks, isNotEmpty,
+        reason: 'the sweep never landed on the genealogy rail, so this '
+            'measures nothing');
+    // MEASURED 2026-09-17 at 2412%, a 29x29 sweep across the rail:
+    // 0 of 55 rail answers landed past a pointer's width from the
+    // rail's own radius before the change, and 52 of 107 after. Zero
+    // was not a coincidence — the gate WAS the pointer — and the other
+    // number says the rest of it: the sweep reaches 107 marks where it
+    // used to reach 55.
+    final past =
+        marks.where((p) => (p.r - p.centre).abs() > 12 / p.zoom).length;
+    expect(past, greaterThan(0),
+        reason: 'every rail answer came from within a pointer of the rail '
+            'centre, which is what a gate that ignores the ink does. The '
+            'marks are drawn taller than that — that is what their height '
+            'is FOR.');
+    for (final p in marks) {
+      expect(WheelRenderStats.hitErrorPx(p), lessThan(8),
+          reason: 'a rail mark answered ${WheelRenderStats.hitErrorPx(p)} px '
               'outside its own target');
     }
   });

@@ -468,6 +468,12 @@ const Map<String, Map<String, String>> wheelStrings = {
   // The toolbar's question mark. `wheelAbout` beside it answers "where
   // do these dates come from"; this one answers "what do I do with
   // this", which is a different reader on a different day.
+  'wheelLineageHeight': {
+    'zh-Hans': '线越高，这一年家谱记的人越多；点一下看是谁。',
+    'zh-Hant': '線越高，這一年家譜記的人越多；點一下看是誰。',
+    'en': 'A taller mark means more people placed in that year. Tap one '
+        'to see who.',
+  },
   'wheelHelp': {
     'zh-Hans': '怎么看这张图',
     'zh-Hant': '怎麼看這張圖',
@@ -3402,7 +3408,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             // is willing to state. The word 「约」/"approximate" is in
             // the label itself — this is the one layer on the wheel
             // whose every year rests on no verse at all.
-            if (!_hidden.contains(kLineageLayerId))
+            if (!_hidden.contains(kLineageLayerId)) ...[
               Padding(
                 padding: EdgeInsets.only(top: t.scaled(2)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -3419,6 +3425,27 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                   ),
                 ]),
               ),
+              // WHAT THE HEIGHT MEANS, which is the whole of what these
+              // marks say and the one thing the legend did not say.
+              // 2026-09-17 「这些线做什么的好像没用一样」, of a cluster of
+              // them at 2412%: the row above names the layer, and a
+              // reader looking at a comb of faint lines wants to know
+              // why some are taller — and that they can be tapped.
+              Padding(
+                padding: EdgeInsets.only(
+                    top: t.scaled(1), left: t.scaled(16)),
+                child: Text(
+                  s('wheelLineageHeight', '', locale),
+                  style: TextStyle(
+                      color: wb.mutedText,
+                      // The same floor every other small print on this
+                      // page answers to — `font_size_reach_ratchet_test`
+                      // caught 10.5 here within the hour.
+                      fontSize: math.max(
+                          t.scaled(11), WbMetrics.smallPrintFloor)),
+                ),
+              ),
+            ],
           ],
           SizedBox(height: t.scaled(3)),
           Text(s('wheelShadeNote', '', locale),
@@ -4700,12 +4727,21 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // ring-1 arc claim a tap that fell in ring 0.
     if (rail.isNotEmpty) {
       for (final m in rail) {
-        // A rail mark has no drawn depth of its own, so its target is
-        // the pointer, clipped to its share.
-        if ((r - m.centre).abs() >
-            _radialTarget(ink: 0, share: m.pitch / 2, kind: kind)) {
-          continue;
-        }
+        // THE MARK'S OWN HEIGHT, and never less than a pointer.
+        //
+        // This read `ink: 0` — "a rail mark has no drawn depth of its
+        // own" — and that was simply not true: `_paintRail` draws each
+        // mark a third to all of the rail's pitch, taller where more
+        // people share the year. At 2412% that is a line the reader can
+        // see and a target a pixel wide in the middle of it, which is
+        // what 「好像没用一样也按不了」 describes.
+        final railHalf = _radialTarget(
+          ink: lineageRailHalfDepth(
+              pitch: m.pitch, people: m.cohort.people.length),
+          share: m.pitch / 2,
+          kind: kind,
+        );
+        if ((r - m.centre).abs() > railHalf) continue;
         // A mark has no width, so the target is angular: half the
         // gap to a neighbour, floored at what a finger needs. Scored
         // the same way as everything else here, and compared with the
@@ -4732,9 +4768,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             a0: m.angle,
             a1: m.angle,
             centre: m.centre,
-            halfDepth: _radialTarget(ink: 0, share: m.pitch / 2, kind: kind),
+            halfDepth: railHalf,
             halfAngle: math.max(9 / m.centre, 0.004),
-            inkHalf: m.pitch / 2,
+            inkHalf: lineageRailHalfDepth(
+                pitch: m.pitch, people: m.cohort.people.length),
           );
         }
       }
@@ -5555,11 +5592,12 @@ class _WorldWheelPainter extends CustomPainter {
     for (final r in rail) {
       final sel = selectedId == '$kLineageArcPrefix${r.cohort.year}';
       final alpha = sel ? 0.9 : (has ? 0.30 * 0.35 : 0.30);
-      // 1 person is a third of the ring, 8 or more fills it. Clamped so
-      // the 44-person year does not print into its neighbours.
-      final fill =
-          (0.34 + 0.66 * ((r.cohort.people.length - 1) / 7)).clamp(0.34, 1.0);
-      final half = r.pitch * 0.5 * fill;
+      // 1 person is a third of the ring, 8 or more fills it, clamped so
+      // the 44-person year does not print into its neighbours — and the
+      // hit test reads the same function, so what is drawn is what
+      // answers. See [lineageRailHalfDepth].
+      final half = lineageRailHalfDepth(
+          pitch: r.pitch, people: r.cohort.people.length);
       final dir = Offset(math.cos(r.angle), math.sin(r.angle));
       canvas.drawLine(
         c + dir * (r.centre - half),
