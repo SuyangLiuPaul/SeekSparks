@@ -19,6 +19,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart'
+    show lineageRailColor;
 import 'package:seeksparks/utils/chronology_palette.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
 
@@ -138,6 +140,47 @@ void main() {
         expect(kLifespanRecededAlpha, lessThan(kLifespanRestAlpha),
             reason: 'receding must still recede');
       }
+    });
+  });
+
+  group('and the genealogy rail is a scale, not debris', () {
+    // The fourth circle on the same photograph, 2026-09-17: with the
+    // lifespans fixed, what was left were the rail's ticks — a hundred
+    // and seven short grey dashes, at 0.30 alpha on a dark ground
+    // (1.80:1) and 0.18 behind a selection (1.38:1), floating in the
+    // annulus with nothing joining them. Rendered and looked at, they
+    // read as artefacts. A scale has a line.
+    final grounds = {
+      'dark': Color.lerp(WbColors.dark.paneBg, WbColors.dark.paneAltBg, 0.65)!,
+      'light':
+          Color.lerp(WbColors.light.paneBg, WbColors.light.paneAltBg, 0.65)!,
+    };
+
+    test('a tick at rest clears 2:1 on both grounds', () {
+      for (final e in grounds.entries) {
+        final c = lineageRailColor(dark: e.key == 'dark');
+        expect(_ratio(_over(c, kRailTickAlpha, e.value), e.value),
+            greaterThanOrEqualTo(2.0),
+            reason: '${e.key}: a tick the reader cannot see is a tick '
+                'they will circle');
+        // The old value, for the record: it failed on the light ground.
+        expect(_ratio(_over(c, 0.30, e.value), e.value), lessThan(2.0),
+            reason: '${e.key}: if 0.30 now clears 2:1 the palette moved');
+      }
+    });
+
+    test('ticks behind a selection are not drawn, and the track is', () {
+      final src = File('lib/pages/radial_chronology_page.dart')
+          .readAsStringSync();
+      final rail = src.substring(src.indexOf('void _paintRail('),
+          src.indexOf('void _paintLifespans('));
+      expect(rail.contains('if (has && !sel) continue;'), isTrue,
+          reason: 'receded rail ticks are being drawn again — that is the '
+              'scatter of grey dashes beside a selected record');
+      expect(rail.contains('canvas.drawArc('), isTrue,
+          reason: 'the rail has no track: its ticks are floating in the '
+              'annulus with nothing to say they belong together');
+      expect(rail.contains('kRailTickAlpha'), isTrue);
     });
   });
 

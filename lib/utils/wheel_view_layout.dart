@@ -100,6 +100,14 @@ const double kLegibleLabelDim = 0.55;
 const double kLifespanRestAlpha = 0.36;
 const double kLifespanRecededAlpha = 0.18;
 
+/// A GENEALOGY RAIL TICK at rest, as an alpha on the annulus ground.
+///
+/// Measured 2026-09-17 with the no-descent grey on both grounds: the old
+/// 0.30 read at 1.80:1 (dark) and 1.40:1 (light); 0.7 reads at 4.36:1
+/// and 2.35:1. Ticks behind a selection are not drawn at all — see
+/// `_paintRail`.
+const double kRailTickAlpha = 0.7;
+
 /// One million square pixels — the unit the detail table's densities are
 /// quoted in. A 1280x663 pane is 0.85 of one; a 390x620 phone is 0.24.
 const double kWheelLabelArea = 1000000;

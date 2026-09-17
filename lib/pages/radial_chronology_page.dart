@@ -5633,10 +5633,46 @@ class _WorldWheelPainter extends CustomPainter {
   void _paintRail(Canvas canvas, Offset c) {
     if (rail.isEmpty) return;
     final has = selectedId != null;
+    final colour = lineageRailColor(dark: wb.isDark);
+    // THE TRACK FIRST, so the marks are ticks ON something. Rendered
+    // and looked at, 2026-09-17, four screenshots in: a hundred and
+    // seven short grey dashes scattered through the annulus read as
+    // debris — 「这些线做什么的」, 「这不还在吗」 — and no amount of
+    // explaining in the legend changes what they look like. A scale
+    // has a line; ticks floating in space do not read as a scale.
+    //
+    // The track runs only where the rail has years (主前2200 to 主前2,
+    // not the whole wheel), at the rail's own radius. Behind a
+    // selection it stays, faintly, so the reader still sees the rail is
+    // there; the ticks do not — a mark that is not what the reader is
+    // looking at and cannot be read either is noise, and that was the
+    // fourth circle.
+    var a0 = double.infinity;
+    var a1 = double.negativeInfinity;
+    for (final r in rail) {
+      if (r.angle < a0) a0 = r.angle;
+      if (r.angle > a1) a1 = r.angle;
+    }
+    final centre = rail.first.centre;
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: centre),
+      a0,
+      a1 - a0,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.6 / zoom
+        ..color = colour.withValues(alpha: has ? 0.18 : 0.35),
+    );
     for (final r in rail) {
       final sel = selectedId == '$kLineageArcPrefix${r.cohort.year}';
-      // Same floor as the lifespans, same reason: 0.105 was a stain.
-      final alpha = sel ? 0.9 : (has ? kLifespanRecededAlpha : 0.30);
+      // Receded ticks are not drawn — see above. The selected cohort's
+      // own tick always is.
+      if (has && !sel) continue;
+      // Measured against the annulus ground: the no-descent grey at
+      // 0.30 was 1.80:1 on dark and 1.40:1 on light, a stain in the
+      // light palette; at [kRailTickAlpha] it is 4.36:1 and 2.35:1.
+      final alpha = sel ? 0.9 : kRailTickAlpha;
       // 1 person is a third of the ring, 8 or more fills it, clamped so
       // the 44-person year does not print into its neighbours — and the
       // hit test reads the same function, so what is drawn is what
@@ -5649,7 +5685,7 @@ class _WorldWheelPainter extends CustomPainter {
         c + dir * (r.centre + half),
         Paint()
           ..strokeWidth = (sel ? 1.8 : 1.0) / zoom
-          ..color = lineageRailColor(dark: wb.isDark).withValues(alpha: alpha),
+          ..color = colour.withValues(alpha: alpha),
       );
     }
   }
