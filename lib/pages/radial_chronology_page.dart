@@ -5245,9 +5245,21 @@ class _WorldWheelPainter extends CustomPainter {
     // ring was named anywhere on the screen — every anchored label had
     // lost its plate to a power name — while the pointer was by then
     // answering 犹大 and 圣经.
-    _repeatBandNames(canvas, c, rHub, rBands);
-    _paintArcs(canvas, c, rHub, rBands);
+    _repeatBandNames(canvas, c, rHub, rBands, rRim);
+    // AND THE ANCHORED ONES BEFORE THE ARCS TOO, which is what the
+    // paragraph above always said and what the code did for only one of
+    // the two passes. 2026-09-17, measured on the ring stack at 200%:
+    // ONE ring was named out of five. Every repeat was correctly
+    // skipped — at that zoom the anchored labels ARE on screen — and
+    // then four of the five anchored labels lost their plate to a power
+    // name, because they were drawn after the arcs.
+    //
+    // A power name is the more useful word on a chart the reader knows
+    // their way around. "Which ring am I on" is the question they have
+    // when they do not, and it is the one the list beside the chart
+    // cannot answer.
     _paintBandNames(canvas, c, rHub, rBands, rRim);
+    _paintArcs(canvas, c, rHub, rBands);
     _paintStreamSymbols(canvas, c, rHub, rBands);
     // Lifespans remain a lighter layer than power bands. At overview
     // the explorer carries event titles; zooming restores radial text
@@ -5697,9 +5709,21 @@ class _WorldWheelPainter extends CustomPainter {
   /// are then pushed apart to a readable pitch. Pushed UPWARD, away
   /// from the data: the leader stretches instead, which is exactly what
   /// a leader is for.
-  void _paintBandNames(
-      Canvas canvas, Offset c, double rHub, double rBands, double rRim) {
-    if (streams.isEmpty) return;
+  /// THE ANCHORED RING LABELS: where each one goes, and what it says.
+  ///
+  /// One builder for two readers. [_paintBandNames] draws them, and
+  /// [_repeatBandNames] asks whether the reader can still SEE them
+  /// before deciding to repeat a ring's name further round it.
+  ///
+  /// That question used to be asked of the ANCHOR POINT — the dot on
+  /// the ring at `_kBandNameBearing` — and the label does not sit on
+  /// the anchor: it sits to the left of the disc with a leader out to
+  /// it. At 200% on a wide pane the anchor is comfortably in view and
+  /// the plate is off the left edge, so the repeat was skipped for a
+  /// name nobody could see.
+  List<({Rect box, _WheelText tp, String name, Offset anchor, Color colour})>
+      _anchoredBandLabels(
+          Offset c, double rHub, double rBands, double rRim) {
     // The disc's own left edge. A 390 px phone puts the outer ring's
     // anchor at about `c.dx - 85` and 以色列 is 38 px wide, so the plate
     // started 13 px OUTSIDE the rim — the labels were hanging off the
@@ -5707,10 +5731,12 @@ class _WorldWheelPainter extends CustomPainter {
     // was just raised because it was too small, and a label that has to
     // shrink to fit is the defect coming back in another form. The
     // leader stretches instead, which is what a leader is for.
+    final out =
+        <({Rect box, _WheelText tp, String name, Offset anchor, Color colour})>[];
+    if (streams.isEmpty) return out;
     final leftEdge = c.dx - rRim + 2 / zoom;
     final dir =
         Offset(math.cos(_kBandNameBearing), math.sin(_kBandNameBearing));
-    final gap = 3 / zoom;
     var ceiling = double.infinity;
     // Outermost first, so the push upward accumulates in one direction
     // and the ring closest to the rim keeps the y it was born with.
@@ -5733,8 +5759,30 @@ class _WorldWheelPainter extends CustomPainter {
       if (ceiling.isFinite && y > ceiling - pitch) y = ceiling - pitch;
       ceiling = y;
       final right = math.max(anchor.dx - 9 / zoom, leftEdge + tp.width);
-      final box = Rect.fromLTWH(
-          right - tp.width, y - tp.height / 2, tp.width, tp.height);
+      out.add((
+        box: Rect.fromLTWH(
+            right - tp.width, y - tp.height / 2, tp.width, tp.height),
+        tp: tp,
+        name: streams[i].nameFor(locale),
+        anchor: anchor,
+        colour: colour,
+      ));
+    }
+    // Built outermost-first for the stacking; handed back ring 0 first,
+    // because that is how every other loop here indexes a ring.
+    return out.reversed.toList();
+  }
+
+  /// How much air a ring label's plate takes around its text.
+  double _bandLabelGap() => 3 / zoom;
+
+  void _paintBandNames(
+      Canvas canvas, Offset c, double rHub, double rBands, double rRim) {
+    if (streams.isEmpty) return;
+    final gap = _bandLabelGap();
+    for (final label in _anchoredBandLabels(c, rHub, rBands, rRim)) {
+      final box = label.box;
+      final tp = label.tp;
       // A plate, for the same reason the selected callout has one: a
       // level label crosses whatever it is over instead of following
       // it, and the quadrant is usually but not always empty.
@@ -5747,25 +5795,27 @@ class _WorldWheelPainter extends CustomPainter {
       // Recorded like the sticky copies, and for the same reason: an
       // audit of what the reader can see must see every place a ring is
       // named, or it reports a gap the chart does not have.
-      WheelRenderStats.noteBandName(streams[i].nameFor(locale),
-          box.center.dx - c.dx, box.center.dy - c.dy);
+      WheelRenderStats.noteBandName(
+          label.name, box.center.dx - c.dx, box.center.dy - c.dy);
       // The leader: out to the label, then across to the ring. Two
       // segments rather than one diagonal, so it reads as a pointer and
       // not as another piece of data drawn on the chart.
-      final elbow = Offset(right - 3 / zoom, y);
+      final y = box.center.dy;
+      final elbow = Offset(box.right - 3 / zoom, y);
       canvas.drawLine(
           elbow,
-          Offset(anchor.dx - 3 / zoom, y),
+          Offset(label.anchor.dx - 3 / zoom, y),
           Paint()
             ..strokeWidth = 0.8 / zoom
-            ..color = colour.withValues(alpha: 0.55));
+            ..color = label.colour.withValues(alpha: 0.55));
       canvas.drawLine(
-          Offset(anchor.dx - 3 / zoom, y),
-          anchor,
+          Offset(label.anchor.dx - 3 / zoom, y),
+          label.anchor,
           Paint()
             ..strokeWidth = 0.8 / zoom
-            ..color = colour.withValues(alpha: 0.55));
-      canvas.drawCircle(anchor, 1.6 / zoom, Paint()..color = colour);
+            ..color = label.colour.withValues(alpha: 0.55));
+      canvas.drawCircle(
+          label.anchor, 1.6 / zoom, Paint()..color = label.colour);
     }
   }
 
@@ -5785,8 +5835,11 @@ class _WorldWheelPainter extends CustomPainter {
   /// declutter list keeps each copy off everything else, so where a
   /// ring is busy the copy simply does not appear — the reader loses
   /// nothing they had.
-  void _repeatBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
+  void _repeatBandNames(
+      Canvas canvas, Offset c, double rHub, double rBands, double rRim) {
     final v = visible;
+    final anchored = _anchoredBandLabels(c, rHub, rBands, rRim);
+    final gap = _bandLabelGap();
     // WHEN THE ANCHORED LABEL HAS LEFT THE SCREEN, and not at some
     // number of percent.
     //
@@ -5796,13 +5849,13 @@ class _WorldWheelPainter extends CustomPainter {
     // all, and the pointer was by then answering with rings. The real
     // condition is not a zoom, it is whether the reader can still see
     // the anchored label — so ask that, per ring, and the rest follows.
-    // At rest the whole chart is visible, every anchor is on screen,
-    // and no copy is drawn: exactly the behaviour this had before.
-    final dir =
-        Offset(math.cos(_kBandNameBearing), math.sin(_kBandNameBearing));
+    // At rest the whole chart is visible, every anchored label is on
+    // screen, and no copy is drawn: exactly the behaviour this had
+    // before.
     for (var i = 0; i < streams.length; i++) {
       final band = ringRadii(i, streams.length, rHub, rBands);
-      if (v != null && v.contains(c + dir * band.centre)) continue;
+      // THE LABEL, NOT THE DOT IT POINTS AT.
+      if (v != null && v.overlaps(anchored[i].box.inflate(gap))) continue;
       final arc = _visibleArc(c, band.centre, v);
       if (arc == null) continue;
       final colour =

@@ -416,7 +416,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   Future<void> _offerHelpOnFirstVisit() async {
     if (await ChartHelp.hasSeen()) return;
     if (!mounted) return;
-    await showChartHelp(context, context.read<AppSettings>().locale);
+    await showChartHelp(context);
   }
 
   void _onHScroll() {
@@ -690,7 +690,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           onFind: () => _showSearch(context, locale),
           onFilter: () => _showFilter(context, locale),
           onAbout: () => _showAbout(context, locale),
-          onHelp: () => showChartHelp(context, locale),
+          onHelp: () => showChartHelp(context),
           viewSwitch: _viewSwitch(context, locale),
         ),
       ),
