@@ -97,4 +97,82 @@ void main() {
       await sweepAndCheck('zoom step ${step + 1}');
     }
   });
+
+  testWidgets('deep in, an answer is never about air the reader cannot see',
+      (tester) async {
+    WheelRenderStats.reset();
+    WheelRenderStats.trackHits = true;
+    addTearDown(() {
+      WheelRenderStats.trackHits = false;
+      WheelRenderStats.reset();
+    });
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(900, 900);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MainProvider()),
+        ChangeNotifierProvider(create: (_) => AppSettings()),
+      ],
+      child:
+          const MaterialApp(home: RadialChronologyPage(initialStacked: false)),
+    ));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(() => gesture.removePointer());
+
+    // 4050%, which is where the report came from. The camera starts on
+    // the hub at this scale, so the sweep has to pan until there is
+    // something under the pointer at all.
+    for (var i = 0; i < 11; i++) {
+      await tester.tap(find.byKey(const ValueKey('wheelZoomInControl')));
+      await tester.pumpAndSettle();
+    }
+
+    var answered = 0;
+    var fromAir = 0;
+    var worstAir = 0.0;
+    for (var pan = 0; pan < 8; pan++) {
+      WheelRenderStats.hitsForTest.clear();
+      const rect = Rect.fromLTRB(20, 150, 880, 800);
+      const steps = 26;
+      for (var i = 1; i < steps; i++) {
+        for (var j = 1; j < steps; j++) {
+          await gesture.moveTo(Offset(rect.left + rect.width * i / steps,
+              rect.top + rect.height * j / steps));
+          await tester.pump();
+        }
+      }
+      for (final p in WheelRenderStats.hitsForTest) {
+        if (p.id.isEmpty) continue;
+        answered++;
+        if (WheelRenderStats.hitWasOnInk(p)) continue;
+        fromAir++;
+        final px = ((p.r - p.centre).abs() - p.inkHalf) * p.zoom;
+        if (px > worstAir) worstAir = px;
+      }
+      await tester.dragFrom(const Offset(450, 470), const Offset(-260, -260));
+      await tester.pumpAndSettle();
+    }
+
+    expect(answered, greaterThan(100),
+        reason: 'the pans must find the bands, or this measures nothing');
+    // MEASURED 2026-09-17, before and after the one-rule change:
+    //
+    //   before   57/243/228/41 answers per pan, of which 56/130/137/41
+    //            came from air; a point could be 175 screen px past the
+    //            edge of the ink it was told it was on
+    //   after    every answer on ink, 0 px of air
+    //
+    // Air is not a rounding error at this scale: it is most of a ring's
+    // depth, being the gaps between its layers, and it is invisible.
+    expect(fromAir, 0,
+        reason: '$fromAir of $answered answers were about a band the '
+            'pointer was not on, the worst by ${worstAir.round()} px. '
+            'That is 「hover over那个不准确」 coming back.');
+  });
 }

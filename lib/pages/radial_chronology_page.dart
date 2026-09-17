@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart' show kTouchSlop;
+import 'package:flutter/gestures.dart' show PointerDeviceKind, kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -2228,8 +2228,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                             ? MouseCursor.defer
                             : SystemMouseCursors.click,
                         onHover: (e) => _setHover(
-                            _resolveAt(context, e.localPosition, side, data,
-                                    streams, arcs, spokes, lives, rail, locale)
+                            _resolveAt(
+                                    context,
+                                    e.localPosition,
+                                    side,
+                                    data,
+                                    streams,
+                                    arcs,
+                                    spokes,
+                                    lives,
+                                    rail,
+                                    locale,
+                                    e.kind)
                                 ?.label,
                             e.position),
                         onExit: (_) => _setHover(null, null),
@@ -2252,7 +2262,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                               spokes,
                               lives,
                               rail,
-                              locale),
+                              locale,
+                              // A finger is twice a cursor, and the
+                              // event says which this was.
+                              e.kind),
                           child: Stack(children: [
                             RepaintBoundary(
                               key: const ValueKey('wheelSceneBoundary'),
@@ -4152,6 +4165,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     List<_Life> lives,
     List<_Rail> rail,
     String locale,
+    PointerDeviceKind kind,
   ) {
     // Kept here as well as in the resolver: with no data at all there
     // is nothing to select OR deselect, and routing that case through
@@ -4159,7 +4173,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // selection the reader made before the streams were filtered away.
     if (streams.isEmpty) return;
     final hit = _resolveAt(context, local, side, data, streams, arcs, spokes,
-        lives, rail, locale);
+        lives, rail, locale, kind);
     // NOTHING UNDER THE FINGER MEANS DESELECT, and that rule lives here
     // rather than in the resolver: the resolver is also asked by the
     // hover, which must be able to say "nothing" without changing what
@@ -4194,6 +4208,51 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// and stops pretending a band is 330 px wide at 3660%, where it is
   /// already enormous.
   double get _fingerPx => 9 / _zoom;
+
+  /// HOW DEEP A RADIAL TARGET MAY BE, in canvas units.
+  ///
+  /// 2026-09-17, and it is one rule where there were four: the target is
+  /// the record's own INK, never smaller than a pointer, never larger
+  /// than its own share of the annulus.
+  ///
+  ///     min(share, max(ink, K / zoom))
+  ///
+  /// Every radial tolerance on this wheel used to be a FRACTION OF THE
+  /// GEOMETRY — half a ring's pitch, half a layer's — which the zoom
+  /// then magnified without limit, while the angular tolerance beside
+  /// it was already nine screen pixels and shrank correctly. Measured at
+  /// 4050%: more than half of every answer came from air the reader
+  /// cannot see, and a point could be 175 screen pixels past the edge of
+  /// a band's ink and still be told it was on that band. That is the
+  /// 「hover over那个不准确」 report, and it is the same defect a tap has
+  /// always had.
+  ///
+  /// The two ends of the formula each rescue a different case, and both
+  /// are load-bearing:
+  ///
+  ///   * `max(ink, K/zoom)` is why a hairline stays reachable. Seven
+  ///     arcs on this chart are 0.00 px wide; at 100% a ring is 7 px and
+  ///     a layer of it 1 px.
+  ///   * `min(share, …)` is why zooming OUT changes nothing. At 100%,
+  ///     K/zoom is 12 canvas units against a share of 3.5, so the share
+  ///     wins and the behaviour is exactly what it was.
+  ///
+  /// K comes from the pointer, not from the gesture: a mouse is precise
+  /// and a finger is not. Hover and tap read the same K for the same
+  /// device, so the plate cannot name one thing while the tap opens
+  /// another.
+  double _radialTarget(
+          {required double ink,
+          required double share,
+          required PointerDeviceKind kind}) =>
+      math.min(share, math.max(ink, _pointerPx(kind) / _zoom));
+
+  /// A pointer's own size, in screen pixels. 24 for a finger, 12 for
+  /// anything with a cursor.
+  static double _pointerPx(PointerDeviceKind kind) =>
+      kind == PointerDeviceKind.touch || kind == PointerDeviceKind.stylus
+          ? 24
+          : 12;
 
   /// The angular slack the spoke branch allowed on the last resolve,
   /// for the probe only — the branch computes it from the radius under
@@ -4239,6 +4298,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     List<_Life> lives,
     List<_Rail> rail,
     String locale,
+    PointerDeviceKind kind,
   ) {
     if (streams.isEmpty) return null;
 
@@ -4362,7 +4422,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         final rOwn = ring == null
             ? scriptureLabelBase(rBands)
             : ringRadii(ring, streams.length, rHub, rBands).centre;
-        final tickHalf = 9 / _zoom;
+        final tickHalf = _pointerPx(kind) / _zoom;
         final atTick = (r - rOwn).abs() <= tickHalf;
         // THE TAP FOLLOWS THE INK. `s.label.rStart..rEnd` is the radial
         // run a spoke's TEXT occupies, and claiming it was right while
@@ -4459,7 +4519,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // ring-1 arc claim a tap that fell in ring 0.
     if (rail.isNotEmpty) {
       for (final m in rail) {
-        if ((r - m.centre).abs() > m.pitch / 2) continue;
+        // A rail mark has no drawn depth of its own, so its target is
+        // the pointer, clipped to its share.
+        if ((r - m.centre).abs() >
+            _radialTarget(ink: 0, share: m.pitch / 2, kind: kind)) {
+          continue;
+        }
         // A mark has no width, so the target is angular: half the
         // gap to a neighbour, floored at what a finger needs. Scored
         // the same way as everything else here, and compared with the
@@ -4486,7 +4551,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             a0: m.angle,
             a1: m.angle,
             centre: m.centre,
-            halfDepth: m.pitch / 2,
+            halfDepth: _radialTarget(ink: 0, share: m.pitch / 2, kind: kind),
             halfAngle: math.max(9 / m.centre, 0.004),
             inkHalf: m.pitch / 2,
           );
@@ -4511,7 +4576,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       // least a finger and resolves overlaps by the nearer centre.
       final inRing = [
         for (final l in lives)
-          if ((r - l.centre).abs() / (l.pitch / 2) <= 1) l
+          if ((r - l.centre).abs() <=
+              _radialTarget(
+                  ink: l.stroke / 2, share: l.pitch / 2, kind: kind))
+            l
       ];
       final pick = nearestArcAt(
           a, r, [for (final l in inRing) (a0: l.arc.a0, a1: l.arc.a1)],
@@ -4549,7 +4617,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             a0: l.arc.a0,
             a1: l.arc.a1,
             centre: l.centre,
-            halfDepth: l.pitch / 2,
+            halfDepth: _radialTarget(
+                ink: l.stroke / 2, share: l.pitch / 2, kind: kind),
             halfAngle: fingerHalfWidth(r, fingerPx: _fingerPx),
             inkHalf: l.stroke / 2,
           );
@@ -4590,50 +4659,51 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       // finger, so a tap near one has to reach it. Which of the
       // candidates wins is `nearestArcAt`'s question, and it answers it
       // by containment first — see its doc.
+      // EACH ARC IS ASKED ABOUT ITS OWN LAYER, and only that.
+      //
+      // This was two pools. The first held the arcs whose own layer the
+      // finger was in; the second, consulted when the first had nothing
+      // at this angle, held every arc within HALF A RING — which is how
+      // a point in the gap between two layers came to be handed a band
+      // from some other layer entirely. Measured at 4050%: more than
+      // half of every answer came from air, up to 175 screen pixels past
+      // the edge of the ink it named.
+      //
+      // The second pool existed for a good reason — 「the layers are
+      // thinner than a finger, so a tap near one has to reach it」 — and
+      // [_radialTarget] now serves that reason directly by never letting
+      // a target be thinner than the pointer. With it, the pools
+      // collapse into one: a layer's target is at most its own share, so
+      // adjacent layers tile the ring exactly and at most one of them
+      // can contain any point. There is nothing left for a fallback to
+      // resolve.
+      //
+      // The 2026-09-16 defect this replaces — 「tapping 以拦 opened
+      // whatever short span happened to be nested three layers away」 —
+      // cannot recur for the same reason: an arc three layers away is
+      // three shares away, and no share reaches past its own.
+      double targetOf(_Arc arc) {
+        final tier = tierRadii(arc.ring, streams.length, rHub, rBands,
+            tier: arc.tier, tiers: arc.tiers);
+        return _radialTarget(
+          ink: tier.width / 2,
+          share: pitch / (2 * math.max(1, arc.tiers)),
+          kind: kind,
+        );
+      }
+
       double offRing(_Arc arc) => (r -
               tierRadii(arc.ring, streams.length, rHub, rBands,
                       tier: arc.tier, tiers: arc.tiers)
                   .centre)
           .abs();
-      // THE LAYER THE FINGER IS IN, BEFORE THE REST OF THE RING.
-      //
-      // 2026-09-16. The tolerance below is a whole ring's pitch on
-      // purpose — the layers are thinner than a finger, so a tap near
-      // one has to reach it. On a lane divided into seven that meant
-      // every layer was a candidate for every tap, and `nearestArcAt`
-      // decides by containment, so the widest band under the finger
-      // could never win against a narrow band on any OTHER layer of its
-      // ring. Tapping 以拦 opened whatever short span happened to be
-      // nested three layers away.
-      //
-      // So the arcs whose own layer the finger is actually in get
-      // asked first, and the whole ring is consulted only when that
-      // layer has nothing at this angle — which is what keeps a thin
-      // layer reachable in the first place.
-      final onLayer = [
+      final candidates = [
         for (final arc in arcs)
-          if (offRing(arc) <= pitch / (2 * math.max(1, arc.tiers))) arc
+          if (offRing(arc) <= targetOf(arc)) arc
       ];
-      final inBand = [
-        for (final arc in arcs)
-          if (offRing(arc) <= pitch / 2) arc
-      ];
-      ({int index, double score})? pickIn(List<_Arc> pool) => nearestArcAt(
-          a, r, [for (final arc in pool) (a0: arc.a0, a1: arc.a1)],
+      final pick = nearestArcAt(
+          a, r, [for (final arc in candidates) (a0: arc.a0, a1: arc.a1)],
           fingerPx: _fingerPx);
-      var candidates = onLayer;
-      var pick = pickIn(candidates);
-      // Which POOL answered is the radial tolerance that answered, and
-      // the two differ by a factor of `tiers` — up to seven. Recorded
-      // rather than assumed: reporting an `inBand` answer against the
-      // `onLayer` target counted 31 correct answers as mistakes at
-      // 384% on the first run.
-      var viaBand = false;
-      if (pick == null) {
-        candidates = inBand;
-        pick = pickIn(candidates);
-        viaBand = true;
-      }
       if (pick != null) {
         final arc = candidates[pick.index];
         // A TICK ON THIS BAND IS A SMALLER TARGET THAN THE BAND.
@@ -4684,8 +4754,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           centre: tierRadii(arc.ring, streams.length, rHub, rBands,
                   tier: arc.tier, tiers: arc.tiers)
               .centre,
-          halfDepth:
-              viaBand ? pitch / 2 : pitch / (2 * math.max(1, arc.tiers)),
+          halfDepth: targetOf(arc),
           halfAngle: fingerHalfWidth(r, fingerPx: _fingerPx),
           inkHalf: tierRadii(arc.ring, streams.length, rHub, rBands,
                       tier: arc.tier, tiers: arc.tiers)
@@ -4723,7 +4792,22 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       // `nearestArcAt` gives every arc, so a hairline span is still
       // something a reader can be asking about.
       final pad = fingerHalfWidth(math.max(r, 1), fingerPx: _fingerPx);
-      final under = best < 0
+      // AND ONLY IF THE POINT IS ON THAT RING, not merely nearest to it.
+      //
+      // `best` is the nearest ring centre and nothing more — the loop
+      // above has no radial bound at all, by design, so that the
+      // outermost and innermost edges of the annulus round INTO their
+      // band. At 100% that rounds over a pixel or two. At 4050% it
+      // rounds over two hundred, and every one of those pixels answered
+      // with a stream the reader was nowhere near.
+      final onRing = best >= 0 &&
+          (r - ringRadii(best, streams.length, rHub, rBands).centre).abs() <=
+              _radialTarget(
+                ink: ringRadii(best, streams.length, rHub, rBands).width / 2,
+                share: ringPitch(streams.length, rHub, rBands) / 2,
+                kind: kind,
+              );
+      final under = !onRing || best < 0
           ? null
           : arcs
               .where((arc) =>
@@ -4747,7 +4831,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           a0: under.a0,
           a1: under.a1,
           centre: ringRadii(best, streams.length, rHub, rBands).centre,
-          halfDepth: ringPitch(streams.length, rHub, rBands) / 2,
+          halfDepth: _radialTarget(
+            ink: ringRadii(best, streams.length, rHub, rBands).width / 2,
+            share: ringPitch(streams.length, rHub, rBands) / 2,
+            kind: kind,
+          ),
           halfAngle: pad,
           inkHalf: ringRadii(best, streams.length, rHub, rBands).width / 2,
         );
