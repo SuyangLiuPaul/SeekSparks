@@ -20,6 +20,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +38,8 @@ void main() {
       WheelRenderStats.trackHits = false;
       WheelRenderStats.reset();
     });
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(900, 900);

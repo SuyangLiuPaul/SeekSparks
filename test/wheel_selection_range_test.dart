@@ -15,6 +15,7 @@ import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +46,8 @@ void main() {
   testWidgets(
       'a later search result updates the sector without losing the event',
       (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(1440, 900);
     addTearDown(tester.view.reset);

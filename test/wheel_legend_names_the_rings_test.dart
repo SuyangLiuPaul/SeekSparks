@@ -21,6 +21,7 @@ import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
 import 'package:seeksparks/utils/chronology_symbols.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +40,8 @@ void main() {
       (tester) async {
     await tester.runAsync(() => ChartSymbolService.instance.load());
     addTearDown(ChartSymbolService.instance.resetForTest);
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(1100, 900);
     addTearDown(tester.view.reset);

@@ -62,7 +62,114 @@ double wheelLabelScale(double zoom) {
 /// keeps its name at every zoom, because that is the one question the
 /// list can never answer.
 bool wheelShowsEventText({required double zoom, required bool selected}) =>
-    selected || zoom >= 1.6;
+    selected || wheelDetailFor(zoom).records > 0;
+
+/// The kinds of name this wheel can put on the canvas.
+///
+/// One enum rather than four booleans scattered through the painter,
+/// because the question the reader is actually asking — "why is there so
+/// much text on this" — is about the MIX, and a mix cannot be read out
+/// of conditions that each know only about themselves.
+enum WheelLabelKind {
+  /// A stream's own name: 犹大, 教会, 圣经, 全世界.
+  ring,
+
+  /// A power, a reign, a ministry — a span with a width.
+  power,
+
+  /// A lifespan on the genealogy annulus.
+  life,
+
+  /// One record's title, beside its tick.
+  record,
+}
+
+/// WHAT THE WHEEL DRAWS AT A GIVEN MAGNIFICATION — the whole of it, as
+/// rows, in one place.
+///
+/// Until 2026-09-17 there was no table: every name on the chart was
+/// gated by the single `zoom >= 1.6` above, so every class of label
+/// arrived at once and then competed for room first-come-first-served.
+/// Measured on one 900x900 screen, that put 30 record names on the
+/// canvas at 332% — which is the density the owner has been reporting
+/// since the redesign, and it is not a decluttering failure. Each of
+/// those labels cleared its neighbours honestly. There were simply too
+/// many of them, and nothing in the code had an opinion about how many
+/// is too many.
+///
+/// A cap is only half of it. A cap with no ranking is still first-come-
+/// first-served — it just stops earlier — so the caps here are paired
+/// with a rank inside each kind (see `_paintSpokes`): the selected
+/// record, then the biggest clusters, then the ones carrying scripture,
+/// then by year. What a cap removes is the thirtieth most useful name
+/// on the screen, not whichever one happened to be painted last.
+class WheelDetailLevel {
+  const WheelDetailLevel({
+    required this.name,
+    required this.minZoom,
+    required this.rings,
+    required this.powers,
+    required this.lives,
+    required this.records,
+  });
+
+  /// For tests and the probe. Also what a reader would call this view.
+  final String name;
+
+  /// The magnification at which this row takes over.
+  final double minZoom;
+
+  /// How many of each kind may reach the canvas on one screen.
+  final int rings;
+  final int powers;
+  final int lives;
+  final int records;
+
+  int capFor(WheelLabelKind kind) => switch (kind) {
+        WheelLabelKind.ring => rings,
+        WheelLabelKind.power => powers,
+        WheelLabelKind.life => lives,
+        WheelLabelKind.record => records,
+      };
+}
+
+/// The table. Ordered by [WheelDetailLevel.minZoom]; the last row whose
+/// threshold the zoom has passed is the one in force.
+///
+/// The numbers are measured, not chosen: see
+/// `test/wheel_detail_levels_test.dart` for what each row admits on a
+/// 900x900 screen, and the counts before this existed.
+const List<WheelDetailLevel> kWheelDetailLevels = [
+  // At rest the wheel is a SHAPE — four rings, their colours, their
+  // spans. The only words are the rings' own names and the century
+  // axis, which is what the eye needs to know what it is looking at.
+  WheelDetailLevel(
+      name: 'fit', minZoom: 0, rings: 10, powers: 0, lives: 0, records: 0),
+  // The first zoom is a reader asking "what is in here". Names arrive,
+  // but a screenful of them is a dozen, not thirty.
+  WheelDetailLevel(
+      name: 'survey', minZoom: 1.6, rings: 10, powers: 14, lives: 10,
+      records: 12),
+  // Closer in, the same screen covers fewer years, so the same number
+  // of labels is a lower density. The cap rises with the room.
+  WheelDetailLevel(
+      name: 'read', minZoom: 5, rings: 10, powers: 20, lives: 14,
+      records: 18),
+  // Far enough in that a screen holds a handful of records: whatever
+  // fits, fits. The declutter list is the only limit left.
+  WheelDetailLevel(
+      name: 'close', minZoom: 16, rings: 12, powers: 28, lives: 20,
+      records: 28),
+];
+
+/// Which row of [kWheelDetailLevels] is in force at [zoom].
+WheelDetailLevel wheelDetailFor(double zoom) {
+  var level = kWheelDetailLevels.first;
+  for (final row in kWheelDetailLevels) {
+    if (zoom >= row.minZoom) level = row;
+  }
+  return level;
+}
 
 class WheelAxisLabelPlacement {
   const WheelAxisLabelPlacement(this.centre, this.rotation, this.bounds);
@@ -381,6 +488,47 @@ class WheelRenderStats {
     if (trackHits) labelSizesForTest.add(size);
   }
 
+  /// HOW MANY OF EACH KIND OF NAME REACHED THE CANVAS ON THE LAST
+  /// FRAME, for tests only.
+  ///
+  /// `labelsDrawn` counts plates and cannot tell a ring's name from a
+  /// record's, so it could not answer the question the detail table
+  /// exists to answer: what is the MIX at this zoom.
+  ///
+  /// The LAST frame, not a running total, and that is the whole point:
+  /// the table's caps are per screen, so a measurement that added up
+  /// every frame of a zoom animation would be measuring the animation.
+  static final Map<WheelLabelKind, int> labelKindsForTest =
+      <WheelLabelKind, int>{};
+
+  /// WHAT THE READER COULD SEE ON THE LAST FRAME, in canvas units.
+  ///
+  /// A count of labels means nothing without the camera that produced
+  /// it: at 1476% the viewport covers about a two-hundredth of the
+  /// canvas, so "no labels" can mean a decluttering failure or can mean
+  /// the view is parked on the empty hub, and the two look identical in
+  /// a number. Armed with `trackHits`.
+  static Rect? cameraForTest;
+
+  /// EVERY PLATE THE LAST FRAME PUT ON THE CANVAS, in canvas units.
+  ///
+  /// With [cameraForTest] this is what makes "the reader can see it" a
+  /// measurement rather than a claim: a box that does not overlap the
+  /// camera is a name nobody read, drawn anyway, holding room beside
+  /// one they could have. Armed with `trackHits`.
+  static final List<Rect> labelBoxesForTest = <Rect>[];
+
+  static void noteLabelBox(Rect box) {
+    if (trackHits) labelBoxesForTest.add(box);
+  }
+
+  static void noteFrameKinds(Map<WheelLabelKind, int> drawn) {
+    if (!trackHits) return;
+    labelKindsForTest
+      ..clear()
+      ..addAll(drawn);
+  }
+
   static void noteHit(WheelHitProbe probe) {
     if (trackHits) hitsForTest.add(probe);
   }
@@ -419,5 +567,8 @@ class WheelRenderStats {
     hitsForTest.clear();
     bandNamesForTest.clear();
     labelSizesForTest.clear();
+    labelKindsForTest.clear();
+    labelBoxesForTest.clear();
+    cameraForTest = null;
   }
 }

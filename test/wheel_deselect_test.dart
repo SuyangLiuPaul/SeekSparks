@@ -40,6 +40,7 @@ import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 // The page's own fractions, restated because they are private to it —
 // the same thing wheel_band_target_test.dart and wheel_lifespans_test
@@ -56,7 +57,8 @@ void main() {
   });
 
   Future<void> pump(WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1000, 1000);

@@ -39,6 +39,7 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 // The page's own geometry, restated because the fractions are private
 // to it. `wheel_arc_label_behaviour_test.dart` does the same.
@@ -805,7 +806,8 @@ void main() {
   // ── 7 & 10. the sheet, and the switch ──────────────────────────────
 
   Future<void> pump(WidgetTester tester, Size size) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;

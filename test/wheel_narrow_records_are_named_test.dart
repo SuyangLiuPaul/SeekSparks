@@ -33,6 +33,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +50,8 @@ void main() {
   /// per-run and a name lost at 500% and found at 2900% would otherwise
   /// read as lost.
   Future<void> pumpZoomed(WidgetTester tester, int steps) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     addTearDown(() {
       WheelRenderStats.trackLabels = false;

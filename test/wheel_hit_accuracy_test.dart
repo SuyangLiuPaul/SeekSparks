@@ -22,6 +22,7 @@ import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +40,8 @@ void main() {
       WheelRenderStats.trackHits = false;
       WheelRenderStats.reset();
     });
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(900, 900);
@@ -106,7 +108,8 @@ void main() {
       WheelRenderStats.trackHits = false;
       WheelRenderStats.reset();
     });
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(900, 900);
@@ -200,4 +203,91 @@ void main() {
             'painted band. A reader pointing at ink and being told '
             'nothing cannot tell that from the feature being broken.');
   });
+  testWidgets('the whole of a mark answers, not the middle of it',
+      (tester) async {
+    // 2026-09-17 「好像只有中间这个可以选的 要不这根线只有中间那么长 不然
+    // 人们以为整根线都可以选」, photographed at 1488%: an event tick some
+    // ninety screen pixels long with a target box a quarter of that,
+    // centred on it.
+    //
+    // The tick gate asked for a FINGER — twelve screen pixels either
+    // side of the ring — and never looked at how long the mark it was
+    // answering for had been drawn. At rest those are the same number.
+    // They come apart the moment the reader zooms, because the ink
+    // grows with the chart and a finger does not.
+    WheelRenderStats.reset();
+    WheelRenderStats.trackHits = true;
+    addTearDown(() {
+      WheelRenderStats.trackHits = false;
+      WheelRenderStats.reset();
+    });
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(900, 900);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MainProvider()),
+        ChangeNotifierProvider(create: (_) => AppSettings()),
+      ],
+      child:
+          const MaterialApp(home: RadialChronologyPage(initialStacked: false)),
+    ));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(() => gesture.removePointer());
+
+    for (var i = 0; i < 6; i++) {
+      await tester.tap(find.byKey(const ValueKey('wheelZoomInControl')));
+      await tester.pumpAndSettle();
+    }
+    WheelRenderStats.hitsForTest.clear();
+    const rect = Rect.fromLTRB(20, 150, 880, 800);
+    const steps = 30;
+    for (var i = 1; i < steps; i++) {
+      for (var j = 1; j < steps; j++) {
+        await gesture.moveTo(Offset(rect.left + rect.width * i / steps,
+            rect.top + rect.height * j / steps));
+        await tester.pump();
+      }
+    }
+    final spokes = WheelRenderStats.hitsForTest
+        .where((p) => p.kind == 'spoke:tick' && p.id.isNotEmpty)
+        .toList();
+    expect(spokes, isNotEmpty,
+        reason: 'the sweep never landed on a record, so this measures '
+            'nothing');
+    // 12 logical pixels is `_pointerPx` for a mouse — the old gate, and
+    // the whole of it.
+    final past = spokes
+        .where((p) => (p.r - p.centre).abs() > 12 / p.zoom)
+        .length;
+    // MEASURED 2026-09-17 at 753%, a 29x29 sweep: 0 of 9 tick answers
+    // before, 13 of 22 after. Before the change this number could not
+    // be anything but zero — the gate WAS the finger — so it is the one
+    // number that proves the mark answers end to end rather than in the
+    // middle. The other number in that pair matters too: the sweep
+    // found nine marks and now finds twenty-two, because most of a tick
+    // used to be unreachable.
+    //
+    // It reads `p.kind == 'spoke:tick'` and not `'spoke'` for a reason
+    // that cost a run: with both gates counted the test passed against
+    // the very defect it was written for, five of its fifteen answers
+    // having come in through the label gate, where a large radial
+    // offset is normal and says nothing about the mark.
+    expect(past, greaterThan(0),
+        reason: 'every record answered within a finger of its ring, which '
+            'is what a gate that ignores the ink does. The mark is drawn '
+            'longer than that.');
+    for (final p in spokes) {
+      expect(WheelRenderStats.hitErrorPx(p), lessThan(8),
+          reason: 'a record answered ${WheelRenderStats.hitErrorPx(p)} px '
+              'outside its own target');
+    }
+  });
+
 }

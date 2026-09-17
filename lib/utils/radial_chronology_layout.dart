@@ -550,6 +550,24 @@ class PlannedSpoke {
 /// units clear of the bands, so the tick has somewhere to be.
 double scriptureLabelBase(double rBands) => rBands + 5;
 
+/// HALF AN EVENT TICK, along its own bearing, given the width of the
+/// ring it sits on.
+///
+/// It exists as a function because two places have to agree about it:
+/// the painter draws the mark this long, and the hit test answers for
+/// exactly this much of it. They did not agree until 2026-09-17 — the
+/// painter used 0.42 of the band and the hit test used a flat twelve
+/// SCREEN pixels, which is the same thing at about 300% and nothing
+/// like it at 1488%, where the owner photographed a mark some ninety
+/// pixels long with a target box a quarter of that in the middle of it:
+/// 「好像只有中间这个可以选的 要不这根线只有中间那么长 不然人们以为整根线
+/// 都可以选」. Exactly so — a chart that draws a line and answers for
+/// part of it has told the reader something false about where to aim.
+///
+/// The finger minimum still applies on top of this (see
+/// `_radialTarget`): the ink is a floor, not a ceiling.
+double tickHalfDepth(double bandWidth) => bandWidth * 0.42;
+
 /// Every label on the rim: its radius, its flip, and the text it can
 /// honestly carry.
 ///

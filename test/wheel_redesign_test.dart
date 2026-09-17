@@ -30,6 +30,7 @@ import 'package:seeksparks/utils/wheel_text_metrics.dart';
 import 'package:seeksparks/utils/wheel_view_layout.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
 import 'package:seeksparks/widgets/year_digest_bar.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -232,7 +233,8 @@ void main() {
   });
 
   Future<void> mount(WidgetTester tester, Size size) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
     addTearDown(tester.view.reset);

@@ -32,6 +32,7 @@ import 'package:seeksparks/utils/strip_chronology_layout.dart'
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 import 'package:seeksparks/widgets/chart_hover_plate.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/year_digest.dart'
@@ -464,6 +465,14 @@ Color streamColor(String line, int index, int count, {required bool dark}) =>
 /// ui_strings.dart because the unattended loop shares this checkout and
 /// edits that file; fold these in on a quiet merge.
 const Map<String, Map<String, String>> wheelStrings = {
+  // The toolbar's question mark. `wheelAbout` beside it answers "where
+  // do these dates come from"; this one answers "what do I do with
+  // this", which is a different reader on a different day.
+  'wheelHelp': {
+    'zh-Hans': '怎么看这张图',
+    'zh-Hant': '怎麼看這張圖',
+    'en': 'How to read this chart',
+  },
   // ── the year cursor, shared by both forms ─────────────────────────
   //
   // The wheel and the strip draw the same corpus and now answer the
@@ -1388,6 +1397,30 @@ class _WheelScene {
   final List<_Rail> rail;
 }
 
+/// A name the painter WOULD like to draw, and what makes it worth the
+/// room it needs.
+///
+/// The detail table caps how many names of each kind reach the canvas
+/// (see [WheelDetailLevel]). A cap with no rank is still first-come-
+/// first-served — it only stops earlier — so each painter collects its
+/// names first and draws them in this order, and what a cap removes is
+/// the least useful name on the screen rather than the last one asked.
+typedef _NamePlan = ({bool sel, int weight, int order, VoidCallback draw});
+
+/// Selection first, then weight (a bigger span, a bigger cluster), then
+/// [_NamePlan.order] — a stable tiebreak, so which names survive a cap
+/// cannot depend on the order the records happened to arrive in.
+void _drawNamesInRank(List<_NamePlan> plans) {
+  plans.sort((a, b) {
+    if (a.sel != b.sel) return a.sel ? -1 : 1;
+    if (a.weight != b.weight) return b.weight.compareTo(a.weight);
+    return a.order.compareTo(b.order);
+  });
+  for (final p in plans) {
+    p.draw();
+  }
+}
+
 class _RadialChronologyPageState extends State<RadialChronologyPage>
     with WheelSheets<RadialChronologyPage> {
   Future<WheelHistoryData>? _future;
@@ -1602,6 +1635,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // `owner: this` so this State's own release cannot clear a claim a
     // LATER wheel has taken over — see `UrlClaim`.
     UrlSyncService.claimUrl(kWheelUrlPath, owner: this);
+    _offerHelpOnFirstVisit();
+  }
+
+  /// THE CARD, ONCE, ON THE WAY IN. See [ChartHelp].
+  ///
+  /// Both charts call this and the flag is spent by whichever is
+  /// reached first, so a reader who lands on the strip and switches to
+  /// the wheel is not told twice.
+  Future<void> _offerHelpOnFirstVisit() async {
+    if (await ChartHelp.hasSeen()) return;
+    if (!mounted) return;
+    await showChartHelp(context, context.read<AppSettings>().locale);
   }
 
   void _onZoom() {
@@ -1875,6 +1920,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           onFind: () => _showSearch(context, locale),
           onFilter: () => _showFilter(context, locale),
           onAbout: () => _showAbout(context, locale),
+          onHelp: () => showChartHelp(context, locale),
           // The wheel and the strip are one chart in two forms, so this
           // is a SWITCH between the two rather than a second "open the
           // strip" button — tapping the already-selected 'wheel'
@@ -4502,6 +4548,21 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     // about the code rather than measuring it.
     var bestSpokeCentre = 0.0;
     var bestSpokeHalfDepth = 0.0;
+    // The INK, separately from the target: the tick's target is the ink
+    // or a finger, whichever is bigger, and `hitWasOnInk` must be able
+    // to tell a reader who was on the mark from one who was in the air
+    // beside it. They were the same number while the target ignored the
+    // ink; they are not any more.
+    var bestSpokeInk = 0.0;
+    // WHICH GATE ADMITTED IT, in the probe's own `kind`. The two are
+    // different shapes with different failure modes — a tick is the
+    // mark on the ring, a label is the words running out from it — and
+    // a measurement that calls both 'spoke' cannot tell a test whether
+    // the mark answered or the text beside it did. That is not a
+    // hypothetical: the first version of the tick-length test passed
+    // against the defect it was written for, because five of its
+    // fifteen answers had come in through the label gate.
+    var bestSpokeGate = 'spoke:tick';
     // From the hub outward, not from the bands outward. The gate used
     // to start at `rBands - 6` because every tick was outside the band
     // stack; with the ticks moved onto their own rings, that gate
@@ -4520,10 +4581,25 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         // under those marks would have kept losing taps to a target
         // nothing is drawn at.
         final ring = ringOf[s.event.stream];
-        final rOwn = ring == null
-            ? scriptureLabelBase(rBands)
-            : ringRadii(ring, streams.length, rHub, rBands).centre;
-        final tickHalf = _pointerPx(kind) / _zoom;
+        final ringBand =
+            ring == null ? null : ringRadii(ring, streams.length, rHub, rBands);
+        final rOwn = ringBand?.centre ?? scriptureLabelBase(rBands);
+        // THE WHOLE OF THE MARK, AND NEVER LESS THAN A FINGER.
+        //
+        // This read `_pointerPx(kind) / _zoom` alone until 2026-09-17 —
+        // a finger, and no account of the ink at all. At rest that is
+        // generous; at 1488% the drawn tick is four times longer than
+        // the target, and the reader hunts for the middle of a line
+        // that looks answerable end to end. `_radialTarget` is the rule
+        // everything else on this wheel already resolves by: the ink or
+        // the finger, whichever is bigger, capped by the share.
+        final ringWidth = ringBand?.width ?? 10.0;
+        final tickInk = tickHalfDepth(ringWidth);
+        final tickHalf = _radialTarget(
+          ink: tickInk,
+          share: ringWidth / 2,
+          kind: kind,
+        );
         final atTick = (r - rOwn).abs() <= tickHalf;
         // THE TAP FOLLOWS THE INK. `s.label.rStart..rEnd` is the radial
         // run a spoke's TEXT occupies, and claiming it was right while
@@ -4553,13 +4629,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           // against. When both do, the tick is the tighter claim and
           // the one the reader was aiming at.
           if (atTick) {
+            bestSpokeGate = 'spoke:tick';
             bestSpokeCentre = rOwn;
             bestSpokeHalfDepth = tickHalf;
+            bestSpokeInk = tickInk;
           } else {
+            bestSpokeGate = 'spoke:label';
             final lo = s.label.rStart - 6 / _zoom;
             final hi = s.label.rEnd + 6 / _zoom;
             bestSpokeCentre = (lo + hi) / 2;
             bestSpokeHalfDepth = (hi - lo).abs() / 2;
+            bestSpokeInk = bestSpokeHalfDepth;
           }
         }
       }
@@ -4581,13 +4661,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
               }
             },
           ),
-          kind: 'spoke',
+          kind: bestSpokeGate,
           a0: s.label.angle,
           a1: s.label.angle,
           centre: bestSpokeCentre,
           halfDepth: bestSpokeHalfDepth,
           halfAngle: _probeSpokeTol,
-          inkHalf: bestSpokeHalfDepth,
+          inkHalf: bestSpokeInk,
         );
 
     // A life, and THE SMALLER NORMALISED DISTANCE WINS — not the spoke.
@@ -5084,10 +5164,33 @@ class _WorldWheelPainter extends CustomPainter {
   /// moved two screens is a name about something else.
   double _side = 0;
 
-  bool _claim(Rect box) {
+  /// The row of [kWheelDetailLevels] this frame is painting under.
+  WheelDetailLevel _detail = kWheelDetailLevels.first;
+
+  /// How many of each kind have taken room, this frame.
+  final Map<WheelLabelKind, int> _drawn = <WheelLabelKind, int>{};
+
+  bool _claim(Rect box, WheelLabelKind kind) {
+    // OFF SCREEN IS NOT A LABEL, AND MUST NOT SPEND A SCREEN'S BUDGET.
+    //
+    // The declutter list never cared where the viewport was, which cost
+    // nothing while the only question was overlap — two names that
+    // collide off screen collide off screen. It costs everything once
+    // there is a CAP: at 1476% most of the wheel is outside the pane,
+    // so a cap spent in paint order would be exhausted by names the
+    // reader cannot see before the first visible one was asked.
+    final v = visible;
+    if (v != null && !v.overlaps(box)) return false;
+    // WHAT THE TABLE ALLOWS. See [WheelDetailLevel] — this is the only
+    // place a cap is read, and the rank that decides WHICH names get
+    // the room lives with each kind's own painter.
+    final taken = _drawn[kind] ?? 0;
+    if (taken >= _detail.capFor(kind)) return false;
     final claim = box.inflate(math.max(2 / zoom, box.height * 0.3));
     if (_inked.any(claim.overlaps)) return false;
     _inked.add(claim);
+    _drawn[kind] = taken + 1;
+    WheelRenderStats.noteLabelBox(box);
     return true;
   }
 
@@ -5095,6 +5198,9 @@ class _WorldWheelPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     WheelRenderStats.paints++;
     _inked.clear();
+    if (WheelRenderStats.trackHits) WheelRenderStats.labelBoxesForTest.clear();
+    _drawn.clear();
+    _detail = wheelDetailFor(zoom);
     if (streams.isEmpty) return;
     final side = math.min(size.width, size.height);
     _side = side;
@@ -5138,6 +5244,8 @@ class _WorldWheelPainter extends CustomPainter {
     _paintHub(canvas, c, rHub);
     _paintAxisEnds(canvas, c, rHub, rRim);
     WheelRenderStats.labelsDrawn = _inked.length;
+    WheelRenderStats.noteFrameKinds(_drawn);
+    if (WheelRenderStats.trackHits) WheelRenderStats.cameraForTest = visible;
   }
 
   void _paintSurface(Canvas canvas, Offset c, double rHub, double rRim) {
@@ -5301,6 +5409,7 @@ class _WorldWheelPainter extends CustomPainter {
   /// names, so there is one sort instead of two.
   void _paintArcs(Canvas canvas, Offset c, double rHub, double rBands) {
     final has = selectedId != null;
+    final names = <_NamePlan>[];
     for (final arc in arcs) {
       // The arc's own LAYER of its stream's ring. `tiers` is 1 wherever
       // the ring was too thin to divide, and then this is exactly the
@@ -5367,10 +5476,28 @@ class _WorldWheelPainter extends CustomPainter {
         // A callout is allowed to be longer than the thing it points
         // at. There is exactly one on screen, so it cannot collide with
         // another, and it carries its own plate.
-        _uprightArcLabel(canvas, c, band.centre, arc.power.nameFor(locale),
-            arc.a0, arc.a1 - arc.a0, rimFont / _labelScale(zoom), dim);
+        // A WIDER SPAN FIRST. Among powers, angular width IS duration,
+        // and a reader who can be shown twelve of forty names is better
+        // served by the twelve that ruled longest than by the twelve
+        // that happen to sit earliest in the file.
+        names.add((
+          sel: sel,
+          weight: ((arc.a1 - arc.a0) * 100000).round(),
+          order: (arc.a0 * 100000).round(),
+          draw: () => _uprightArcLabel(
+              canvas,
+              c,
+              band.centre,
+              arc.power.nameFor(locale),
+              arc.a0,
+              arc.a1 - arc.a0,
+              rimFont / _labelScale(zoom),
+              dim,
+              kind: WheelLabelKind.power),
+        ));
       }
     }
+    _drawNamesInRank(names);
   }
 
   /// The Genesis lifespans, as arcs in the label annulus.
@@ -5419,6 +5546,7 @@ class _WorldWheelPainter extends CustomPainter {
   void _paintLifespans(Canvas canvas, Offset c, double rBands, double rRim) {
     if (lives.isEmpty) return;
     final has = selectedId != null;
+    final names = <_NamePlan>[];
     for (final l in lives) {
       final sel = l.id == selectedId;
       // 0.22 at rest, so spoke titles stay legible over it; 0.85 for
@@ -5451,8 +5579,14 @@ class _WorldWheelPainter extends CustomPainter {
       if (l.name.isNotEmpty &&
           l.nameSize > 0 &&
           wheelShowsEventText(zoom: zoom, selected: sel)) {
-        _uprightArcLabel(canvas, c, l.centre, l.name, l.nameA0, l.nameSweep,
-            l.nameSize, sel ? 1.0 : 0.75);
+        names.add((
+          sel: sel,
+          weight: (l.arc.sweep * 100000).round(),
+          order: (l.arc.a0 * 100000).round(),
+          draw: () => _uprightArcLabel(canvas, c, l.centre, l.name, l.nameA0,
+              l.nameSweep, l.nameSize, sel ? 1.0 : 0.75,
+              kind: WheelLabelKind.life),
+        ));
       } else {
         // A NAMELESS ARC STILL SAYS IT IS SOMETHING. Reported with a
         // screenshot of two of these: 「很多就像一个线一样，按也很难按到，
@@ -5486,11 +5620,19 @@ class _WorldWheelPainter extends CustomPainter {
         // finds it somewhere free and draws a leader back to the mark.
         if (l.fullName.isNotEmpty &&
             wheelShowsEventText(zoom: zoom, selected: sel)) {
-          _uprightArcLabel(canvas, c, l.centre, l.fullName, l.arc.a0,
-              l.arc.sweep, rimFont / _labelScale(zoom), sel ? 1.0 : 0.7);
+          names.add((
+            sel: sel,
+            weight: (l.arc.sweep * 100000).round(),
+            order: (l.arc.a0 * 100000).round(),
+            draw: () => _uprightArcLabel(canvas, c, l.centre, l.fullName,
+                l.arc.a0, l.arc.sweep, rimFont / _labelScale(zoom),
+                sel ? 1.0 : 0.7,
+                kind: WheelLabelKind.life),
+          ));
         }
       }
     }
+    _drawNamesInRank(names);
     final chosen = _find(lives, (l) => l.id == selectedId);
     if (chosen == null) return;
     final rule = Paint()
@@ -5580,7 +5722,7 @@ class _WorldWheelPainter extends CustomPainter {
       // A plate, for the same reason the selected callout has one: a
       // level label crosses whatever it is over instead of following
       // it, and the quadrant is usually but not always empty.
-      if (!_claim(box.inflate(gap))) continue;
+      if (!_claim(box.inflate(gap), WheelLabelKind.ring)) continue;
       canvas.drawRRect(
           RRect.fromRectAndRadius(box.inflate(gap),
               Radius.circular(WbMetrics.radiusControl / zoom)),
@@ -5683,7 +5825,7 @@ class _WorldWheelPainter extends CustomPainter {
               width: tp.width + 6 / zoom,
               height: tp.height + 2 / zoom);
           if (v != null && !v.contains(box.center)) continue;
-          if (_claim(box)) {
+          if (_claim(box, WheelLabelKind.ring)) {
             placed = box;
             break;
           }
@@ -5724,9 +5866,23 @@ class _WorldWheelPainter extends CustomPainter {
   /// across a 320-degree sweep is one sample every 0.6 degrees — finer
   /// than any label is wide. It runs once per repaint of a scene that
   /// only repaints when the camera moves, not per pointer event.
-  ({double a0, double a1})? _visibleArc(Offset c, double radius, Rect? v) {
-    if (v == null) {
-      return (a0: startRad, a1: startRad + sweepRad);
+  /// The longest run of [from]..[to] at [radius] that is inside [v].
+  ///
+  /// Defaults to the whole wheel, which is what the repeated ring names
+  /// want. Passing an arc's own span is what a POWER's name wants: a
+  /// reign that crosses the screen used to print its name at the middle
+  /// of its whole sweep, which at 800% can be a screen and a half away
+  /// from anything the reader can see.
+  ({double a0, double a1})? _visibleArc(Offset c, double radius, Rect? v,
+      {double? from, double? to}) {
+    final lo = from ?? startRad;
+    final hi = to ?? startRad + sweepRad;
+    if (v == null) return (a0: lo, a1: hi);
+    if (hi - lo < 1e-9) {
+      // A record with no width is one point, and one point is either on
+      // the screen or it is not.
+      final p = c + Offset(math.cos(lo), math.sin(lo)) * radius;
+      return v.contains(p) ? (a0: lo, a1: lo) : null;
     }
     const steps = 512;
     var bestStart = -1;
@@ -5734,7 +5890,7 @@ class _WorldWheelPainter extends CustomPainter {
     var runStart = -1;
     var runLen = 0;
     for (var k = 0; k <= steps; k++) {
-      final a = startRad + sweepRad * k / steps;
+      final a = lo + (hi - lo) * k / steps;
       final p = c + Offset(math.cos(a), math.sin(a)) * radius;
       if (v.contains(p)) {
         if (runStart < 0) runStart = k;
@@ -5750,8 +5906,8 @@ class _WorldWheelPainter extends CustomPainter {
     }
     if (bestLen == 0) return null;
     return (
-      a0: startRad + sweepRad * bestStart / steps,
-      a1: startRad + sweepRad * (bestStart + bestLen - 1) / steps,
+      a0: lo + (hi - lo) * bestStart / steps,
+      a1: lo + (hi - lo) * (bestStart + bestLen - 1) / steps,
     );
   }
 
@@ -5843,6 +5999,7 @@ class _WorldWheelPainter extends CustomPainter {
       for (final s in spokes)
         if (s.event.id != selectedId) s,
     ];
+    final names = <_NamePlan>[];
     for (final s in ordered) {
       final ring = ringOf[s.event.stream];
       final band =
@@ -5863,12 +6020,19 @@ class _WorldWheelPainter extends CustomPainter {
       // band is that colour at 0.64. Pulling the tick toward the
       // page's ink gives it a darker edge on a lighter band, which is
       // the same device the selected arc's outline uses.
-      final half = (band?.width ?? 10) * 0.42;
+      final half = tickHalfDepth(band?.width ?? 10);
+      // A HAIRLINE IS NOT A TARGET. 2026-09-17 「另外这根线稍微粗一点 这样
+      // 就可以选得到不是吗」. Thickness is not in fact what was stopping
+      // the tap — across the line the target is already about nine
+      // screen pixels of arc, far wider than the ink — but 0.9 px is
+      // thin to AIM at, and a mark the reader can see is the half of
+      // this the code cannot supply on its own. The length is the part
+      // that was actually wrong; see [tickHalfDepth].
       canvas.drawLine(
         c + dir * (rTick - half),
         c + dir * (rTick + half),
         Paint()
-          ..strokeWidth = (sel ? 1.8 : 0.9) / zoom
+          ..strokeWidth = (sel ? 2.4 : 1.4) / zoom
           ..color = Color.lerp(s.color, wb.text, sel ? 0.7 : 0.45)!
               .withValues(alpha: (sel ? 1.0 : 0.85) * dim),
       );
@@ -5879,9 +6043,21 @@ class _WorldWheelPainter extends CustomPainter {
             Paint()..color = s.color.withValues(alpha: 0.85 * dim));
       }
       if (wheelShowsEventText(zoom: zoom, selected: sel)) {
-        _uprightSpokeLabel(canvas, c, s, dim, sel, rTick + half);
+        // A CLUSTER OUTRANKS A SINGLE RECORD, AND SCRIPTURE OUTRANKS
+        // WHAT IS ONLY DATED. A spoke standing for nine events is nine
+        // records' worth of the screen's name budget; an event the text
+        // narrates is what this chart is for. Neither is a guess about
+        // importance in general — they are the two things the record
+        // itself says about how much it carries.
+        names.add((
+          sel: sel,
+          weight: s.members.length * 2 + (s.event.refs.isEmpty ? 0 : 1),
+          order: s.event.year,
+          draw: () => _uprightSpokeLabel(canvas, c, s, dim, sel, rTick + half),
+        ));
       }
     }
+    _drawNamesInRank(names);
   }
 
   /// Event text running OUTWARD along its spoke — the whole reason this
@@ -5956,7 +6132,7 @@ class _WorldWheelPainter extends CustomPainter {
     final centre = c + dir * (fromRadius + 5 / zoom + reach);
     final box = Rect.fromCenter(
         center: centre, width: width + 6 / zoom, height: height + 2 / zoom);
-    if (!_claim(box)) return;
+    if (!_claim(box, WheelLabelKind.record)) return;
 
     canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -6016,7 +6192,8 @@ class _WorldWheelPainter extends CustomPainter {
   /// of the pane's own colour, because a level label crosses its band
   /// rather than following it and has to win against the fill beneath.
   void _uprightArcLabel(Canvas canvas, Offset c, double radius, String text,
-      double a0, double sweep, double fontSize, double dim) {
+      double a0, double sweep, double fontSize, double dim,
+      {required WheelLabelKind kind}) {
     // A SPAN OF ZERO IS STILL A RECORD. 2026-09-16 「你看这个可以在后面显
     // 示而不是在那个框框内的是不是」, of 哈该 — 主前520 to 主前520, one
     // year, drawn as a mark with no width. `sweep <= 0` sent it home
@@ -6025,14 +6202,31 @@ class _WorldWheelPainter extends CustomPainter {
     // else now; the walk below finds it somewhere free.
     if (sweep < 0 || fontSize <= 0 || text.isEmpty) return;
     WheelRenderStats.noteLabelAsked(text);
+    // WHERE ON THE RECORD THE READER CAN SEE, and nowhere if that is
+    // nowhere.
+    //
+    // The anchor used to be the middle of the record's whole sweep. For
+    // a reign that crosses the screen at 800% that middle can be a
+    // screen and a half away, so the name was drawn where nobody was
+    // looking and the visible part of the arc carried nothing.
+    //
+    // A name whose record is entirely off screen returns here WITHOUT
+    // being counted as lost. Lost means "asked for, and there was
+    // nowhere on this screen to stand"; a record that is not on this
+    // screen was never a question this screen asked. The distinction
+    // matters to `wheel_narrow_records_are_named_test`, which at 2900%
+    // would otherwise report all 213 names as lost and mean nothing by
+    // it.
+    final seen = _visibleArc(c, radius, visible, from: a0, to: a0 + sweep);
+    if (seen == null) return;
     final tp = _painter(text, wb.text.withValues(alpha: 0.98 * dim), fontSize);
-    final mid = a0 + sweep / 2;
+    final mid = (seen.a0 + seen.a1) / 2;
     final centre = c + Offset(math.cos(mid), math.sin(mid)) * radius;
     final w = tp.width + 8 / zoom;
     final h = tp.height + 3 / zoom;
     var box = Rect.fromCenter(center: centre, width: w, height: h);
     Offset? leader;
-    if (!_claim(box)) {
+    if (!_claim(box, kind)) {
       // ALONG THE RING, RATHER THAN NOT AT ALL.
       //
       // 2026-09-16 「这种也是后面有位置就应该可以放label」 and 「这个后面
@@ -6074,7 +6268,7 @@ class _WorldWheelPainter extends CustomPainter {
         if (r <= 0) continue;
         final p = c + Offset(math.cos(at), math.sin(at)) * r;
         final candidate = Rect.fromCenter(center: p, width: w, height: h);
-        if (_claim(candidate)) {
+        if (_claim(candidate, kind)) {
           box = candidate;
           leader = centre;
           moved = true;
