@@ -332,6 +332,38 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
     _detailPanel = null;
   }
 
+  /// CLOSE THIS SHEET, WHATEVER IT IS, and hand back a context that is
+  /// still alive on the other side of it.
+  ///
+  /// Every "tap a row to open the next sheet" handler here used to read
+  ///
+  ///     Navigator.of(sheet).pop();
+  ///     showPerson(context, ...);
+  ///
+  /// and both halves of that are wrong when the sheet is the persistent
+  /// PANEL rather than a modal route — which is what [_present] gives
+  /// whenever there is a Scaffold in scope, i.e. normally. A persistent
+  /// sheet is not a route, so the `pop` pops the PAGE (`buildSheet`'s
+  /// own close button already says so in as many words), and the
+  /// `context` captured from the caller then belongs to a widget that
+  /// has just been taken off the tree — so `showModalBottomSheet` calls
+  /// `Navigator.of` on a dead element and throws "Null check operator
+  /// used on a null value". Reported from the web build of 1.6.313 with
+  /// the breadcrumbs that named this path exactly: a sheet popped, then
+  /// a crash inside the next sheet's opening.
+  ///
+  /// The returned context is the NavigatorState's own, which outlives
+  /// every sheet and every page this mixin opens.
+  BuildContext dismissSheet(BuildContext sheet) {
+    final nav = Navigator.of(sheet);
+    if (_detailPanel != null) {
+      closeDetailPanel();
+    } else {
+      nav.pop();
+    }
+    return nav.context;
+  }
+
   Widget buildSheet(BuildContext sheet, List<Widget> children) {
     final wb = WbColors.of(sheet);
     final t = WbType.of(sheet);
@@ -712,8 +744,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
           for (final p in cohort.people)
             InkWell(
               onTap: () {
-                Navigator.of(sheet).pop();
-                showPerson(context, p.id, locale);
+                final next = dismissSheet(sheet);
+                showPerson(next, p.id, locale);
               },
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
@@ -798,8 +830,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
                 for (final ref in ministry.refs)
                   InkWell(
                     onTap: () {
-                      Navigator.of(sheet).pop();
-                      _jump(context, ref);
+                      final next = dismissSheet(sheet);
+                      _jump(next, ref);
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(
@@ -912,8 +944,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
                 for (final ref in omission.refs)
                   InkWell(
                     onTap: () {
-                      Navigator.of(sheet).pop();
-                      _jump(context, ref);
+                      final next = dismissSheet(sheet);
+                      _jump(next, ref);
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(
@@ -961,8 +993,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
               padding: EdgeInsets.symmetric(vertical: t.scaled(2)),
               child: InkWell(
                 onTap: () {
-                  Navigator.of(sheet).pop();
-                  _jump(context, ref);
+                  final next = dismissSheet(sheet);
+                  _jump(next, ref);
                 },
                 child: Row(children: [
                   Expanded(
@@ -1135,8 +1167,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
                 for (final c in contemporaries)
                   InkWell(
                     onTap: () {
-                      Navigator.of(sheet).pop();
-                      showKing(context, c, locale);
+                      final next = dismissSheet(sheet);
+                      showKing(next, c, locale);
                     },
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
@@ -1179,8 +1211,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
             alignment: AlignmentDirectional.centerStart,
             child: TextButton(
               onPressed: () {
-                Navigator.of(sheet).pop();
-                Navigator.of(context).push(
+                final next = dismissSheet(sheet);
+                Navigator.of(next).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const HebrewKingsPage(),
                   ),
@@ -1465,9 +1497,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
           for (final e in events)
             InkWell(
               onTap: () {
-                Navigator.of(sheet).pop();
+                final next = dismissSheet(sheet);
                 select(e.id);
-                showEvent(context, e, data, locale);
+                showEvent(next, e, data, locale);
               },
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: t.scaled(4)),
@@ -1671,9 +1703,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
               for (final e in within)
                 InkWell(
                   onTap: () {
-                    Navigator.of(sheet).pop();
+                    final next = dismissSheet(sheet);
                     select(e.id);
-                    showEvent(context, e, data, locale);
+                    showEvent(next, e, data, locale);
                   },
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
@@ -1809,9 +1841,9 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
             for (final e in events)
               InkWell(
                 onTap: () {
-                  Navigator.of(sheet).pop();
+                  final next = dismissSheet(sheet);
                   select(e.id);
-                  showEvent(context, e, data, locale);
+                  showEvent(next, e, data, locale);
                 },
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
