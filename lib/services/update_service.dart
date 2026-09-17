@@ -184,7 +184,7 @@ class UpdateService {
 
   /// Pick the release asset whose name matches the current platform, by
   /// the substrings the release-build workflows use in their filenames
-  /// (`SeekSparks-Android-…apk`, `…Windows…zip`, `…macOS…zip`, `…Linux…tar.gz`).
+  /// (`Yahwehs-Sword-Android-…apk`, `…Windows…zip`, `…macOS…zip`, `…Linux…tar.gz`).
   /// iOS has no directly-installable asset, so it returns null → the UI
   /// falls back to the release page.
   static String? _assetUrlForPlatform(

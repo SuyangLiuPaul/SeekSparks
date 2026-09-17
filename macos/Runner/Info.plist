@@ -12,8 +12,18 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleDisplayName</key>
+	<string>Yahweh’s Sword</string>
+	<!-- 2026-09-18: both names spelled out, rather than left as
+	     $(PRODUCT_NAME). PRODUCT_NAME is what the BUILT BUNDLE is
+	     called — `Yahwehs-Sword.app`, the name on the download button
+	     — and a hyphenated file name is not what belongs in the menu
+	     bar next to . Before today it was worse: PRODUCT_NAME was
+	     the scaffold's `yahwehswords`, so the menu bar said that.
+	     These two keys are the only surfaces a reader sees, so they
+	     carry the app's real name and nothing else reads them. -->
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>Yahweh’s Sword</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

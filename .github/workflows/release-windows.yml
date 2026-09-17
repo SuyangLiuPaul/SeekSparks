@@ -70,11 +70,11 @@ jobs:
           $tag = "${{ steps.ver.outputs.tag }}"
           if ([string]::IsNullOrWhiteSpace($tag)) { $tag = "dev-$($env:GITHUB_SHA.Substring(0,7))" }
           $src   = "build/windows/x64/runner/Release"
-          $stage = "staging/SeekSparks"
+          $stage = "staging/Yahwehs-Sword"
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
           Get-ChildItem $src -Exclude *.lib,*.exp | Copy-Item -Destination $stage -Recurse -Force
           $zip = "Yahwehs-Sword-Windows-x64-$tag.zip"
-          Compress-Archive -Path "staging/SeekSparks" -DestinationPath $zip -Force
+          Compress-Archive -Path "staging/Yahwehs-Sword" -DestinationPath $zip -Force
           "ZIP=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Packaged $zip ($([math]::Round((Get-Item $zip).Length/1MB,1)) MB)"
 
@@ -107,6 +107,6 @@ jobs:
             # sibling platform workflow created it a moment earlier.
             gh release create "$tag" \
               --title "$tag — Windows desktop build" \
-              --notes "Automated Windows x64 build. Download the zip, extract, and run \`SeekSparks\\yswords.exe\`. The exe is unsigned — on first launch click **More info → Run anyway** past Windows SmartScreen."
+              --notes "Automated Windows x64 build. Download the zip, extract, and run \`Yahwehs-Sword\\Yahwehs-Sword.exe\`. The exe is unsigned — on first launch click **More info → Run anyway** past Windows SmartScreen."
           fi
           gh release upload "$tag" "$ZIP" --clobber

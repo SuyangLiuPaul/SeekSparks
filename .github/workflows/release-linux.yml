@@ -76,7 +76,7 @@ jobs:
           [ -z "$tag" ] && tag="dev-${GITHUB_SHA::7}"
           src="build/linux/x64/release/bundle"
           pkg="Yahwehs-Sword-Linux-x64-${tag}.tar.gz"
-          # Archive the bundle CONTENTS (so it extracts to ./yswords, lib/, data/)
+          # Archive the bundle CONTENTS (so it extracts to ./Yahwehs-Sword, lib/, data/)
           tar -czf "$pkg" -C "$src" .
           echo "PKG=$pkg" >> "$GITHUB_ENV"
           echo "Packaged $pkg ($(du -h "$pkg" | cut -f1))"
@@ -110,7 +110,7 @@ jobs:
             # sibling platform workflow created it a moment earlier.
             gh release create "$tag" \
               --title "$tag" \
-              --notes "Automated Linux x64 build. Download the tarball, extract (\`tar -xzf Yahwehs-Sword-Linux-x64-${tag}.tar.gz\`), and run \`./yswords\`. Requires GTK3 (\`libgtk-3-0\`) installed on the host." \
+              --notes "Automated Linux x64 build. Download the tarball, extract (\`tar -xzf Yahwehs-Sword-Linux-x64-${tag}.tar.gz\`), and run \`./Yahwehs-Sword\`. Requires GTK3 (\`libgtk-3-0\`) installed on the host." \
               || true
           fi
           gh release upload "$tag" "$PKG" --clobber

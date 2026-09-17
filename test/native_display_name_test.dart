@@ -96,6 +96,19 @@ void main() {
             'home screen');
     expect(fold(manifest['name'] as String), infoPlist);
     expect(fold(manifest['short_name'] as String), infoPlist);
+
+    // macOS, added 2026-09-18. Both keys were `$(PRODUCT_NAME)` until
+    // that day, so the desktop build's menu bar and Finder label read
+    // `yahwehswords` — the scaffold's spelling, agreeing with nothing
+    // above. They are literal now, which is also why they need a test:
+    // a literal cannot follow a rename by itself.
+    expect(plistString('macos/Runner/Info.plist', 'CFBundleDisplayName'),
+        infoPlist,
+        reason: 'Finder and the Dock would label the desktop app with '
+            'something other than its name');
+    expect(plistString('macos/Runner/Info.plist', 'CFBundleName'), infoPlist,
+        reason: 'the Apple-menu item for the desktop app would read '
+            'something other than its name');
   });
 
   test('the Chinese carriers agree, script by script', () {
