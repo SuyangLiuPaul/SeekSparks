@@ -43,6 +43,7 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kWheelUrlPath;
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/page_links.dart' show samePageUrlPath;
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 /// Counts what the Navigator was actually asked to do. The bug was a
 /// PUSH, so this is the assertion that matters most: browser Back must
@@ -169,7 +170,8 @@ void main() {
   testWidgets(
       'Back within reader history mounts nothing, at the app root',
       (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1440, 900);
@@ -204,7 +206,8 @@ void main() {
   testWidgets(
       'Back off the wheel closes the wheel and shows what was underneath',
       (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1440, 900);
@@ -245,7 +248,8 @@ void main() {
 
   testWidgets('the wheel URL still opens the wheel through the observer',
       (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1440, 900);
@@ -280,7 +284,8 @@ void main() {
 
   testWidgets('Back onto the wheel URL with the wheel open does not open '
       'a second wheel', (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1440, 900);

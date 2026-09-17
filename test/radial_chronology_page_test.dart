@@ -51,6 +51,7 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart' show kWheelNearestPerYear;
 import 'package:seeksparks/widgets/person_detail_sheet.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +70,8 @@ void main() {
   });
 
   Future<void> pump(WidgetTester tester, Size size) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;

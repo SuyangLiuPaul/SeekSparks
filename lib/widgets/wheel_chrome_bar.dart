@@ -73,6 +73,7 @@ List<Widget> wheelChromeActions({
   required VoidCallback onFind,
   required VoidCallback onFilter,
   required VoidCallback onAbout,
+  required VoidCallback onHelp,
   required Widget viewSwitch,
 }) {
   if (paneWidth >= kWheelNarrowPaneWidth) {
@@ -91,6 +92,17 @@ List<Widget> wheelChromeActions({
         icon: const Icon(Icons.info_outline),
         tooltip: s('wheelAbout', 'About this chart'),
         onPressed: onAbout,
+      ),
+      // HOW TO USE IT, beside WHAT IT IS. The two are different
+      // questions and the reader who needs one rarely needs the other:
+      // `info_outline` is the provenance of the dates, this is the
+      // pointer, the pinch and the list. It is also the way back to a
+      // card most readers will see exactly once, on their first visit.
+      IconButton(
+        key: const ValueKey('chartHelpButton'),
+        icon: const Icon(Icons.help_outline),
+        tooltip: s('wheelHelp', 'How to read this chart'),
+        onPressed: onHelp,
       ),
       viewSwitch,
       const LanguageSwitcherButton(),
@@ -129,6 +141,7 @@ List<Widget> wheelChromeActions({
         onFind: onFind,
         onFilter: onFilter,
         onAbout: onAbout,
+        onHelp: onHelp,
       ),
     ),
     viewSwitch,
@@ -142,6 +155,7 @@ void _showOverflow({
   required VoidCallback onFind,
   required VoidCallback onFilter,
   required VoidCallback onAbout,
+  required VoidCallback onHelp,
 }) {
   final wb = WbColors.of(context);
   // Asked BEFORE the sheet is pushed. Once it is open the sheet is
@@ -178,6 +192,16 @@ void _showOverflow({
           onTap: () {
             Navigator.of(sheet).pop();
             onAbout();
+          },
+        ),
+        ListTile(
+          key: const ValueKey('chartHelpRow'),
+          leading: Icon(Icons.help_outline, color: wb.text),
+          title: Text(s('wheelHelp', 'How to read this chart'),
+              style: TextStyle(color: wb.text)),
+          onTap: () {
+            Navigator.of(sheet).pop();
+            onHelp();
           },
         ),
         // The two the AppBar gave up so the page could keep its name.

@@ -16,6 +16,7 @@ import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/utils/chronology_explorer.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/widgets/chronology_explorer.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +26,8 @@ void main() {
 
   Future<void> mount(WidgetTester tester,
       {Widget page = const StripChronologyPage()}) async {
-    SharedPreferences.setMockInitialValues({'locale': 'en'});
+    SharedPreferences.setMockInitialValues(
+        {'locale': 'en', ChartHelp.seenKey: true});
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(360, 800);
     addTearDown(tester.view.reset);

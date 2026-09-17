@@ -26,6 +26,7 @@ import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +37,8 @@ void main() {
   });
 
   Future<void> pump(WidgetTester tester, Size size) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;

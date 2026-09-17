@@ -51,6 +51,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/chronology_chart_entry.dart'
     show chronologyChartEntryPage;
 import 'package:seeksparks/utils/page_links.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -119,7 +120,8 @@ void main() {
     // is behind the door, so it is what a fresh reader vs. a reader who
     // switched forms actually sees.
     test('a reader who has never switched gets the wheel', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{});
+      SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
       final settings = AppSettings();
       await settings.loadSettings();
       expect(
@@ -127,7 +129,8 @@ void main() {
     });
 
     test('a reader who switched to the strip gets the strip', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{});
+      SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
       final settings = AppSettings();
       await settings.loadSettings();
       await settings.setChronologyView('strip');
@@ -141,7 +144,8 @@ void main() {
   group('AppSettings.chronologyView', () {
     test('round-trips through SharedPreferences like notesSortMode does',
         () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{});
+      SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
       final first = AppSettings();
       await first.loadSettings();
       expect(first.chronologyView, 'wheel');
@@ -167,7 +171,8 @@ void main() {
     });
 
     test('setChronologyView ignores an unrecognised value', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{});
+      SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
       final settings = AppSettings();
       await settings.loadSettings();
       await settings.setChronologyView('donut');
@@ -201,7 +206,8 @@ void main() {
   testWidgets(
       'a live-tab navigation to the wheel URL opens the wheel, '
       'not a second copy of the app root', (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1440, 900);
@@ -249,7 +255,8 @@ void main() {
   testWidgets(
       'a cold #/wheel boots with the wheel on top of the app root, '
       'from the first frame', (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1440, 900);
@@ -314,7 +321,8 @@ void main() {
   testWidgets(
       'the live-tab door does not depend on the stray-name fallback',
       (tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1440, 900);

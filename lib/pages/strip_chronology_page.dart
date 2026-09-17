@@ -150,6 +150,7 @@ import 'package:seeksparks/utils/strip_viewport.dart';
 import 'package:seeksparks/utils/strip_paint_text.dart';
 import 'package:seeksparks/utils/strip_event_cards.dart';
 import 'package:seeksparks/utils/strip_depth_layout.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 import 'package:seeksparks/widgets/chart_hover_plate.dart';
 import 'package:seeksparks/widgets/chronology_depth_toggle.dart';
 import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
@@ -406,6 +407,16 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     UrlSyncService.claimUrl(kStripUrlPath, owner: this);
     _hCtl.addListener(_onHScroll);
     _vCtl.addListener(_onVScroll);
+    _offerHelpOnFirstVisit();
+  }
+
+  /// THE CARD, ONCE, ON THE WAY IN — the wheel's own copy of this has
+  /// the reasoning. The flag is shared, so whichever chart a reader
+  /// reaches first is the one that shows it.
+  Future<void> _offerHelpOnFirstVisit() async {
+    if (await ChartHelp.hasSeen()) return;
+    if (!mounted) return;
+    await showChartHelp(context, context.read<AppSettings>().locale);
   }
 
   void _onHScroll() {
@@ -679,6 +690,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           onFind: () => _showSearch(context, locale),
           onFilter: () => _showFilter(context, locale),
           onAbout: () => _showAbout(context, locale),
+          onHelp: () => showChartHelp(context, locale),
           viewSwitch: _viewSwitch(context, locale),
         ),
       ),

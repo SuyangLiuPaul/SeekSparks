@@ -113,6 +113,7 @@ import 'package:seeksparks/pages/strip_chronology_page.dart';
 import 'package:seeksparks/pages/word_list_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/widgets/chart_help_sheet.dart';
 
 /// The pages this walk pumps: every page class whose constructor takes
 /// no required argument.
@@ -206,7 +207,8 @@ void main() {
     group('$paletteName palette', () {
       _pages.forEach((pageName, build) {
         testWidgets('$pageName prints nothing invisible', (tester) async {
-          SharedPreferences.setMockInitialValues(<String, Object>{});
+          SharedPreferences.setMockInitialValues(
+        <String, Object>{ChartHelp.seenKey: true});
           tester.view.physicalSize = const Size(1280, 900);
           tester.view.devicePixelRatio = 1.0;
           addTearDown(tester.view.reset);
