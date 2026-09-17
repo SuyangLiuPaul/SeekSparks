@@ -2311,6 +2311,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                                   rimFont: _wheelFont(t, _kLabelPx),
                                   endFont: _wheelFont(t, 13),
                                   bandFont: _wheelFont(t, 12),
+                                  visible: _visibleCanvasRect(side),
                                 ),
                               ),
                             ),
@@ -4264,6 +4265,31 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// already enormous.
   double get _fingerPx => 9 / _zoom;
 
+  /// WHAT IS ON SCREEN, in the wheel's own coordinates.
+  ///
+  /// The painter draws in canvas units and has never known where the
+  /// reader is looking, which is why a ring's name could be painted two
+  /// thousand pixels off the side of the window while the reader stared
+  /// at that very ring.
+  ///
+  /// The viewer's matrix maps the child's coordinates to the viewport;
+  /// inverting it maps back. The `Center` between the two is why the
+  /// half-difference is subtracted: the square canvas sits in the
+  /// middle of a viewport that is usually wider than it is.
+  Rect? _visibleCanvasRect(double side) {
+    final vp = _viewportSize;
+    if (vp == null) return null;
+    final inv = Matrix4.tryInvert(_viewer.value);
+    if (inv == null) return null;
+    final dx = (vp.width - side) / 2;
+    final dy = (vp.height - side) / 2;
+    Offset toCanvas(Offset p) =>
+        MatrixUtils.transformPoint(inv, p) - Offset(dx, dy);
+    // No rotation is ever applied, so two opposite corners are the rect.
+    return Rect.fromPoints(
+        toCanvas(Offset.zero), toCanvas(Offset(vp.width, vp.height)));
+  }
+
   /// HOW DEEP A RADIAL TARGET MAY BE, in canvas units.
   ///
   /// 2026-09-17, and it is one rule where there were four: the target is
@@ -4951,6 +4977,7 @@ class _WorldWheelPainter extends CustomPainter {
     required this.rimFont,
     required this.endFont,
     required this.bandFont,
+    required this.visible,
   });
 
   final List<WheelStream> streams;
@@ -4972,6 +4999,10 @@ class _WorldWheelPainter extends CustomPainter {
 
   /// Decoded silhouettes by asset name, empty until they load.
   final Map<String, ui.Image> symbols;
+
+  /// What the reader can see, in canvas units; null before the first
+  /// layout. See [_RadialChronologyPageState._visibleCanvasRect].
+  final Rect? visible;
 
   /// Passed through wheelLabelScale: screen type grows to twice its
   /// resting size, then further zoom buys additional detail.
@@ -5019,6 +5050,18 @@ class _WorldWheelPainter extends CustomPainter {
     _paintSurface(canvas, c, rHub, rRim);
     _paintCenturies(canvas, c, rHub, rRim);
     _paintGrooves(canvas, c, rHub, rBands);
+    // BEFORE THE ARCS' OWN NAMES, and only once zoomed in.
+    //
+    // The declutter list is first-come-first-served, and when this ran
+    // last the power names had already taken every free plate on a busy
+    // ring — so 教会 went unnamed at 384% while the pointer was
+    // answering 教会. Which name matters more is a real question and it
+    // has a zoom-dependent answer: at rest the ring is obvious from the
+    // anchored label at the side and a power's name is the useful one;
+    // zoomed in, the ring has become the thing the reader has lost
+    // track of. There is at most one of these per ring per viewport, so
+    // what it costs the arcs is about twenty small plates.
+    _repeatBandNames(canvas, c, rHub, rBands);
     _paintArcs(canvas, c, rHub, rBands);
     _paintBandNames(canvas, c, rHub, rBands, rRim);
     _paintStreamSymbols(canvas, c, rHub, rBands);
@@ -5480,6 +5523,11 @@ class _WorldWheelPainter extends CustomPainter {
               Radius.circular(WbMetrics.radiusControl / zoom)),
           Paint()..color = wb.paneBg.withValues(alpha: 0.82));
       tp.paint(canvas, box.topLeft);
+      // Recorded like the sticky copies, and for the same reason: an
+      // audit of what the reader can see must see every place a ring is
+      // named, or it reports a gap the chart does not have.
+      WheelRenderStats.noteBandName(streams[i].nameFor(locale),
+          box.center.dx - c.dx, box.center.dy - c.dy);
       // The leader: out to the label, then across to the ring. Two
       // segments rather than one diagonal, so it reads as a pointer and
       // not as another piece of data drawn on the chart.
@@ -5498,7 +5546,6 @@ class _WorldWheelPainter extends CustomPainter {
             ..color = colour.withValues(alpha: 0.55));
       canvas.drawCircle(anchor, 1.6 / zoom, Paint()..color = colour);
     }
-    _repeatBandNames(canvas, c, rHub, rBands);
   }
 
   /// The ring's name again, further round it, once the reader has zoomed
@@ -5519,22 +5566,11 @@ class _WorldWheelPainter extends CustomPainter {
   /// nothing they had.
   void _repeatBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
     if (zoom < 2) return;
+    final v = visible;
     for (var i = 0; i < streams.length; i++) {
       final band = ringRadii(i, streams.length, rHub, rBands);
-      // ONE PER SCREENFUL, not twelve per ring. 2026-09-16, from a phone
-      // at 235%: 「手机上看就很恐怖了」, with 以色列 printed three times
-      // inside one screen. Twelve fixed bearings is a count, and what
-      // the reader needs is a DISTANCE — the name in view wherever they
-      // have panned to, and not again until they have panned away. So
-      // the copies are spaced by the width of the viewport measured
-      // along this ring, which on a wide desktop is a handful and on a
-      // phone at high zoom is one or two.
-      final visible = _side > 0 ? _side / zoom : double.infinity;
-      final steps = visible.isFinite
-          ? (sweepRad / (visible / math.max(band.centre, 1)))
-              .ceil()
-              .clamp(2, 12)
-          : 12;
+      final arc = _visibleArc(c, band.centre, v);
+      if (arc == null) continue;
       final colour =
           (colors[streams[i].id] ?? lineColor(streams[i].line, dark: wb.isDark))
               .withValues(alpha: 0.75);
@@ -5546,21 +5582,101 @@ class _WorldWheelPainter extends CustomPainter {
           fontWeight: FontWeight.w600,
         ),
       );
-      for (var k = 1; k < steps; k++) {
-        final at = startRad + sweepRad * k / steps;
-        final p = c + Offset(math.cos(at), math.sin(at)) * band.centre;
-        final box = Rect.fromCenter(
-            center: p,
-            width: tp.width + 6 / zoom,
-            height: tp.height + 2 / zoom);
-        if (!_claim(box)) continue;
-        canvas.drawRRect(
-            RRect.fromRectAndRadius(
-                box, Radius.circular(WbMetrics.radiusControl / zoom)),
-            Paint()..color = wb.paneBg.withValues(alpha: 0.7));
-        tp.paint(canvas, box.center - Offset(tp.width / 2, tp.height / 2));
+      // WALK THE VISIBLE ARC UNTIL THERE IS ROOM.
+      //
+      // The midpoint alone is not enough, and the reason is geometric:
+      // concentric rings share a centre, so every one of them computes
+      // the SAME midpoint bearing, their labels stack up along one
+      // radius, and the declutter list drops all but the first. Measured
+      // at 753% on the five opening rings: two were named, and neither
+      // was the ring the pointer was actually answering with.
+      //
+      // So the midpoint is the preference, not the demand. Candidates
+      // spiral outward from it along the ring's own visible stretch, and
+      // the first with room wins — which keeps every label inside the
+      // viewport, keeps it on its own ring, and lets neighbours settle
+      // side by side instead of on top of each other.
+      Rect? placed;
+      for (var step = 0; step <= 8 && placed == null; step++) {
+        for (final dir in step == 0 ? const [0.0] : const [-1.0, 1.0]) {
+          final t = (0.5 + dir * step / 18).clamp(0.0, 1.0);
+          final at = arc.a0 + (arc.a1 - arc.a0) * t;
+          final p = c + Offset(math.cos(at), math.sin(at)) * band.centre;
+          final box = Rect.fromCenter(
+              center: p,
+              width: tp.width + 6 / zoom,
+              height: tp.height + 2 / zoom);
+          if (v != null && !v.contains(box.center)) continue;
+          if (_claim(box)) {
+            placed = box;
+            break;
+          }
+        }
+      }
+      // Where a ring is genuinely too busy the copy still does not
+      // appear, and the reader loses nothing they had.
+      if (placed == null) continue;
+      final box = placed;
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              box, Radius.circular(WbMetrics.radiusControl / zoom)),
+          Paint()..color = wb.paneBg.withValues(alpha: 0.7));
+      tp.paint(canvas, box.center - Offset(tp.width / 2, tp.height / 2));
+      // Recorded RELATIVE TO THE WHEEL'S CENTRE, which is the frame the
+      // hit probe reports in. Absolute canvas coordinates here made the
+      // first audit compare two different origins and report every name
+      // as thousands of pixels away.
+      WheelRenderStats.noteBandName(streams[i].nameFor(locale),
+          box.center.dx - c.dx, box.center.dy - c.dy);
+    }
+  }
+
+  /// The LONGEST STRETCH OF THIS RING THE READER CAN SEE, or null when
+  /// they can see none of it.
+  ///
+  /// This is the whole of the sticky-label idea, and it is deliberately
+  /// not a bearing from the eye to the ring. At every zoom level the
+  /// controls produce, the camera is centred on the hub — so the eye IS
+  /// the wheel's centre, every bearing from it is equally "where the
+  /// reader is looking", and a label placed that way lands at an
+  /// arbitrary angle that is usually off screen. Measured: it painted
+  /// one ring name at 384% and none at 753%, worse than the twelve
+  /// fixed bearings it replaced.
+  ///
+  /// A ring crosses the viewport in up to two stretches. Sampling finds
+  /// them without the four-edge circle-rectangle algebra, and 512 steps
+  /// across a 320-degree sweep is one sample every 0.6 degrees — finer
+  /// than any label is wide. It runs once per repaint of a scene that
+  /// only repaints when the camera moves, not per pointer event.
+  ({double a0, double a1})? _visibleArc(Offset c, double radius, Rect? v) {
+    if (v == null) {
+      return (a0: startRad, a1: startRad + sweepRad);
+    }
+    const steps = 512;
+    var bestStart = -1;
+    var bestLen = 0;
+    var runStart = -1;
+    var runLen = 0;
+    for (var k = 0; k <= steps; k++) {
+      final a = startRad + sweepRad * k / steps;
+      final p = c + Offset(math.cos(a), math.sin(a)) * radius;
+      if (v.contains(p)) {
+        if (runStart < 0) runStart = k;
+        runLen++;
+        if (runLen > bestLen) {
+          bestLen = runLen;
+          bestStart = runStart;
+        }
+      } else {
+        runStart = -1;
+        runLen = 0;
       }
     }
+    if (bestLen == 0) return null;
+    return (
+      a0: startRad + sweepRad * bestStart / steps,
+      a1: startRad + sweepRad * (bestStart + bestLen - 1) / steps,
+    );
   }
 
   /// One silhouette per ring, at the year that ring begins.
@@ -5982,7 +6098,17 @@ class _WorldWheelPainter extends CustomPainter {
       old.symbols != symbols ||
       old.rimFont != rimFont ||
       old.endFont != endFont ||
-      old.bandFont != bandFont;
+      old.bandFont != bandFont ||
+      // THE CAMERA MOVING IS A REASON TO REPAINT, now that a label's
+      // position depends on where the reader is looking. Without this
+      // the ring names would be laid out once and then slide off with
+      // the chart on every pan — the exact defect the sticky label was
+      // written to remove, reintroduced by omission.
+      //
+      // `wheel_repaint_coverage_test` caught it, which is what that
+      // test is for: a painter field that nothing compares is a stale
+      // frame waiting to happen, and it never throws.
+      old.visible != visible;
 }
 
 /// The year spoke — the wheel's own year cursor.

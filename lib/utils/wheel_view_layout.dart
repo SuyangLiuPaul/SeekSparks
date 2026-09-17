@@ -355,6 +355,20 @@ class WheelRenderStats {
   static bool trackHits = false;
   static final List<WheelHitProbe> hitsForTest = <WheelHitProbe>[];
 
+  /// WHERE A RING'S NAME WAS ACTUALLY PAINTED, in canvas coordinates.
+  ///
+  /// The third of Fable 5.1's rules, 2026-09-17: test accuracy in the
+  /// READER's frame, not the resolver's. The resolver can be exact and
+  /// the reader still lost, if the name of the thing under the pointer
+  /// is not on the screen at all. That is a measurement, and this is
+  /// what makes it one.
+  static final List<({String text, double x, double y})> bandNamesForTest =
+      <({String text, double x, double y})>[];
+
+  static void noteBandName(String text, double x, double y) {
+    if (trackHits) bandNamesForTest.add((text: text, x: x, y: y));
+  }
+
   static void noteHit(WheelHitProbe probe) {
     if (trackHits) hitsForTest.add(probe);
   }
@@ -391,5 +405,6 @@ class WheelRenderStats {
     labelsAsked.clear();
     labelsLost.clear();
     hitsForTest.clear();
+    bandNamesForTest.clear();
   }
 }
