@@ -1,6 +1,20 @@
 // GENERATED FROM A ONE-OFF SOURCE, THEN OWNED HERE. Edit this file
 // directly; there is no generator to re-run. 繁體 was produced with
-// OpenCC (s2twp) and corrected to this app's own 繁體 menu labels.
+// OpenCC (`opencc -c s2twp`) and then corrected where its Taiwan
+// phrasing differs from what this app already says on screen:
+//   插圖 → 插畫
+//   重新檢視導覽 → 重新查看導覽
+//   傳送測試通知 → 發送測試通知
+//   彙總 → 匯總
+//   字型 → 字體
+//   母音 → 元音
+//   映象 → 鏡像
+//   重灌 → 重新安裝
+//   型別 → 類型
+//   位址列 → 網址列
+//   新增到主螢幕 → 加入主畫面
+//   畫素 → 像素
+// Writing new 繁體 by the same route? Apply the same list.
 //
 // ignore_for_file: lines_longer_than_80_chars
 
@@ -59,7 +73,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '三栏并排至少需要 992 像素宽：电脑、横放的 iPad、较大的 Android 平板都够。\n\n• 竖着拿 iPad 时，如果横过来就放得下，会提示你把设备转过来。\n• 手机横竖都放不下三栏，会建议改用姊妹 app「雅伟之言」（yahwehword.com），那是专为手机做的读经 app，笔记和高亮的用法一样。',
-      '三欄並排至少需要 992 畫素寬：電腦、橫放的 iPad、較大的 Android 平板都夠。\n\n• 豎著拿 iPad 時，如果橫過來就放得下，會提示你把裝置轉過來。\n• 手機橫豎都放不下三欄，會建議改用姊妹 app「雅偉之言」（yahwehword.com），那是專為手機做的讀經 app，筆記和高亮的用法一樣。',
+      '三欄並排至少需要 992 像素寬：電腦、橫放的 iPad、較大的 Android 平板都夠。\n\n• 豎著拿 iPad 時，如果橫過來就放得下，會提示你把裝置轉過來。\n• 手機橫豎都放不下三欄，會建議改用姊妹 app「雅偉之言」（yahwehword.com），那是專為手機做的讀經 app，筆記和高亮的用法一樣。',
       'Three panes side by side need at least 992 pixels: a computer, an iPad held landscape and larger Android tablets all qualify.\n\n• Holding an iPad in portrait, you are asked to turn it round if landscape would fit.\n• A phone cannot fit three panes either way, so you are pointed to the sister app, Yahweh\'s Words (yahwehword.com), which is built for phones.',
     ),
     keywords: [
@@ -419,12 +433,12 @@ const List<HelpTopic> kHelpTopics = [
     section: HelpSection.reading,
     title: HelpText(
       '深色模式、字体与字号',
-      '深色模式、字型與字號',
+      '深色模式、字體與字號',
       'Dark mode, fonts and text size',
     ),
     body: HelpText(
-      '「视图」›「深色模式」一键切换。\n\n其余外观在「文件」›「设置」：字号、菜单大小、行距、字体、主题色、浅色/深色/跟随系统，以及护眼纸质背景。改动即时生效，右边有预览。',
-      '「檢視」›「深色模式」一鍵切換。\n\n其餘外觀在「檔案」›「設定」：字號、選單大小、行距、字型、主題色、淺色/深色/跟隨系統，以及護眼紙質背景。改動即時生效，右邊有預覽。',
+      '「视图」›「深色模式」一键切换。\n\n其余外观在「文件」›「设置」：字号、菜单大小、行距、字体、主题色、浅色/深色/跟随系统，以及护眼纸质背景。改动即时生效，设置页里有预览。',
+      '「檢視」›「深色模式」一鍵切換。\n\n其餘外觀在「檔案」›「設定」：字號、選單大小、行距、字體、主題色、淺色/深色/跟隨系統，以及護眼紙質背景。改動即時生效，設定頁裡有預覽。',
       'View › Dark mode switches in one click.\n\nEverything else is in File › Settings: text size, menu size, line spacing, font, theme colour, light/dark/system, and the paper-tone reading background. Changes apply at once, with a preview.',
     ),
     path: ['menuFile', 'settings'],
@@ -503,7 +517,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '第一个字符决定搜索的类型。在这里点一行会复制它的查询；在命令行的 ? 卡上点同一行，则直接填进命令行。\n\n中文按字匹配，英文按词匹配：「.爱 神」是同一节里既有「爱」也有「神」；「.爱神」是连在一起的「爱神」。',
-      '第一個字元決定搜尋的型別。在這裡點一行會複製它的查詢；在命令列的 ? 卡上點同一行，則直接填進命令列。\n\n中文按字匹配，英文按詞匹配：「.愛 神」是同一節裡既有「愛」也有「神」；「.愛神」是連在一起的「愛神」。',
+      '第一個字元決定搜尋的類型。在這裡點一行會複製它的查詢；在命令列的 ? 卡上點同一行，則直接填進命令列。\n\n中文按字匹配，英文按詞匹配：「.愛 神」是同一節裡既有「愛」也有「神」；「.愛神」是連在一起的「愛神」。',
       'The first character decides what kind of search it is. Tap a line here to copy its query; tap the same line on the command line\'s ? card to put it straight on the command line.\n\nChinese matches by character, English by word: ".爱 神" is a verse holding both 爱 and 神; ".爱神" is the two together.',
     ),
     examples: [
@@ -684,7 +698,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '「设置」里还有三项：\n\n• 搜索时忽略希伯来元音点与希腊重音（默认开）：照着屏幕上看到的打就能找到，ברא 和 בָּרָא、θεος 和 θεός 互相匹配\n• 搜索时排除 Ketiv（所写的）\n• 搜索时排除 Qere（所读的）\n\n希伯来圣经有 1,103 节经文并列两种读法，后两项决定形态搜索和 NEAR / BEFORE 算哪一种。',
-      '「設定」裡還有三項：\n\n• 搜尋時忽略希伯來母音點與希臘重音（預設開）：照著螢幕上看到的打就能找到，ברא 和 בָּרָא、θεος 和 θεός 互相匹配\n• 搜尋時排除 Ketiv（所寫的）\n• 搜尋時排除 Qere（所讀的）\n\n希伯來聖經有 1,103 節經文並列兩種讀法，後兩項決定形態搜尋和 NEAR / BEFORE 算哪一種。',
+      '「設定」裡還有三項：\n\n• 搜尋時忽略希伯來元音點與希臘重音（預設開）：照著螢幕上看到的打就能找到，ברא 和 בָּרָא、θεος 和 θεός 互相匹配\n• 搜尋時排除 Ketiv（所寫的）\n• 搜尋時排除 Qere（所讀的）\n\n希伯來聖經有 1,103 節經文並列兩種讀法，後兩項決定形態搜尋和 NEAR / BEFORE 算哪一種。',
       'Three more in Settings:\n\n• Ignore Hebrew points and Greek accents (on by default): type what you see, and ברא finds בָּרָא, θεος finds θεός\n• Exclude Ketiv (as written)\n• Exclude Qere (as read)\n\nThe Hebrew Bible carries two readings in 1,103 verses; the last two decide which one morphology searches and NEAR / BEFORE count.',
     ),
     path: ['menuFile', 'settings'],
@@ -1351,7 +1365,7 @@ const List<HelpTopic> kHelpTopics = [
       ),
       HelpPlatform.ios: HelpText(
         'iPad 没有第二个投影窗口（D 不起作用）。用系统的屏幕镜像把整个 iPad 画面投出去即可；外接键盘时上面的按键都能用。',
-        'iPad 沒有第二個投影視窗（D 不起作用）。用系統的螢幕映象把整個 iPad 畫面投出去即可；外接鍵盤時上面的按鍵都能用。',
+        'iPad 沒有第二個投影視窗（D 不起作用）。用系統的螢幕鏡像把整個 iPad 畫面投出去即可；外接鍵盤時上面的按鍵都能用。',
         'The iPad has no second projection window (D does nothing). Mirror the whole screen with the system\'s screen mirroring; with a keyboard attached, every key above works.',
       ),
       HelpPlatform.android: HelpText(
@@ -1403,7 +1417,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '高亮、笔记、书签只保存在这台设备上，不上传，也没有云同步。\n\n换设备或重装前，在「设置」里用「导出我的数据」存一个文件（JSON 是完整备份；Markdown 可以直接贴进 Notion、Obsidian、备忘录），到新设备上用「导入」读回来。',
-      '高亮、筆記、書籤只儲存在這臺裝置上，不上傳，也沒有云同步。\n\n換裝置或重灌前，在「設定」裡用「匯出我的資料」存一個檔案（JSON 是完整備份；Markdown 可以直接貼進 Notion、Obsidian、備忘錄），到新裝置上用「匯入」讀回來。',
+      '高亮、筆記、書籤只儲存在這臺裝置上，不上傳，也沒有云同步。\n\n換裝置或重新安裝前，在「設定」裡用「匯出我的資料」存一個檔案（JSON 是完整備份；Markdown 可以直接貼進 Notion、Obsidian、備忘錄），到新裝置上用「匯入」讀回來。',
       'Highlights, notes and bookmarks are stored on this device only — nothing is uploaded and there is no cloud sync.\n\nBefore changing devices or reinstalling, use Export my data in Settings to save a file (JSON is the complete backup; Markdown pastes into Notion, Obsidian or Notes), and Import it on the new device.',
     ),
     path: ['menuFile', 'settings'],
@@ -1467,7 +1481,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '「文件」›「设置」，Mac 上也可以按 ⌘,（先点一下经文区）。\n\n• 显示：字号、菜单大小、行距、复制格式、字体、主题色\n• 阅读：浅色/深色/跟随系统、阅读模式、护眼纸质、粗体经文、段落标题、书卷简介、原文编号标记、导入你自己的圣经文本，以及跨译本搜索、忽略元音与重音、Ketiv / Qere 这几项搜索选项\n• 应用：界面语言、自动检查更新\n• 通知\n• 关于：导出和导入数据、离线包、清除缓存、重新查看导览、恢复设置',
-      '「檔案」›「設定」，Mac 上也可以按 ⌘,（先點一下經文區）。\n\n• 顯示：字號、選單大小、行距、複製格式、字型、主題色\n• 閱讀：淺色/深色/跟隨系統、閱讀模式、護眼紙質、粗體經文、段落標題、書卷簡介、原文編號標記、匯入你自己的聖經文本，以及跨譯本搜尋、忽略母音與重音、Ketiv / Qere 這幾項搜尋選項\n• 應用：介面語言、自動檢查更新\n• 通知\n• 關於：匯出和匯入資料、離線包、清除快取、重新查看導覽、恢復設定',
+      '「檔案」›「設定」，Mac 上也可以按 ⌘,（先點一下經文區）。\n\n• 顯示：字號、選單大小、行距、複製格式、字體、主題色\n• 閱讀：淺色/深色/跟隨系統、閱讀模式、護眼紙質、粗體經文、段落標題、書卷簡介、原文編號標記、匯入你自己的聖經文本，以及跨譯本搜尋、忽略元音與重音、Ketiv / Qere 這幾項搜尋選項\n• 應用：介面語言、自動檢查更新\n• 通知\n• 關於：匯出和匯入資料、離線包、清除快取、重新查看導覽、恢復設定',
       'File › Settings; on a Mac also ⌘, (click in the text first).\n\n• Display: text size, menu size, line spacing, copy format, font, theme colour\n• Reading: light/dark/system, reading mode, paper tone, bold text, section titles, book introductions, Strong\'s markers, importing your own Bible, and the search options — cross-version search, ignoring points and accents, Ketiv / Qere\n• App: interface language, automatic update checks\n• Notifications\n• About: export and import your data, the offline pack, clear cache, show the tour again, reset',
     ),
     path: ['menuFile', 'settings'],
@@ -1615,7 +1629,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '网页版可以像 app 一样装到电脑桌面或平板主屏幕，打开时没有浏览器地址栏。\n\n• Chrome、Edge：「设置」里会出现「安装」按钮，或点地址栏右边的安装图标\n• iPad 上的 Safari：点「分享」›「添加到主屏幕」',
-      '網頁版可以像 app 一樣裝到電腦桌面或平板主螢幕，開啟時沒有瀏覽器位址列。\n\n• Chrome、Edge：「設定」裡會出現「安裝」按鈕，或點位址列右邊的安裝圖示\n• iPad 上的 Safari：點「分享」›「新增到主螢幕」',
+      '網頁版可以像 app 一樣裝到電腦桌面或平板主螢幕，開啟時沒有瀏覽器網址列。\n\n• Chrome、Edge：「設定」裡會出現「安裝」按鈕，或點網址列右邊的安裝圖示\n• iPad 上的 Safari：點「分享」›「加入主畫面」',
       'The web version installs like an app on a computer or a tablet home screen, and opens without the browser\'s address bar.\n\n• Chrome, Edge: an Install button appears in Settings, or use the install icon at the right of the address bar\n• Safari on iPad: Share › Add to Home Screen',
     ),
     path: ['menuFile', 'settings'],
@@ -1766,7 +1780,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '横着拿。没有鼠标就没有「指向」：点一下原文词就锁定并显示它，再点一次取消。经典阅读模式里左右滑动翻章。\n\n接上键盘（例如妙控键盘）后，这份说明里的快捷键都能用，⌘ 键就是 Command。投影没有第二窗口，用系统的屏幕镜像。',
-      '橫著拿。沒有滑鼠就沒有「指向」：點一下原文詞就鎖定並顯示它，再點一次取消。經典閱讀模式裡左右滑動翻章。\n\n接上鍵盤（例如妙控鍵盤）後，這份說明裡的快捷鍵都能用，⌘ 鍵就是 Command。投影沒有第二視窗，用系統的螢幕映象。',
+      '橫著拿。沒有滑鼠就沒有「指向」：點一下原文詞就鎖定並顯示它，再點一次取消。經典閱讀模式裡左右滑動翻章。\n\n接上鍵盤（例如妙控鍵盤）後，這份說明裡的快捷鍵都能用，⌘ 鍵就是 Command。投影沒有第二視窗，用系統的螢幕鏡像。',
       'Hold it landscape. Without a mouse there is no pointing: tap an original-language word to pin and show it, tap again to release. In Classic Reader, swipe sideways to turn the chapter.\n\nWith a keyboard attached (a Magic Keyboard, say) every shortcut here works, ⌘ being Command. Projection has no second window; use the system\'s screen mirroring.',
     ),
     keywords: [
@@ -1794,7 +1808,7 @@ const List<HelpTopic> kHelpTopics = [
     ),
     body: HelpText(
       '横着拿，宽度要到 992 像素（大多数 10 寸以上的平板可以）。点一下原文词锁定，再点一次取消；经典阅读模式里左右滑动翻章。\n\n更新可以在 app 里直接下载安装。接键盘后快捷键用 Ctrl。',
-      '橫著拿，寬度要到 992 畫素（大多數 10 寸以上的平板可以）。點一下原文詞鎖定，再點一次取消；經典閱讀模式裡左右滑動翻章。\n\n更新可以在 app 裡直接下載安裝。接鍵盤後快捷鍵用 Ctrl。',
+      '橫著拿，寬度要到 992 像素（大多數 10 寸以上的平板可以）。點一下原文詞鎖定，再點一次取消；經典閱讀模式裡左右滑動翻章。\n\n更新可以在 app 裡直接下載安裝。接鍵盤後快捷鍵用 Ctrl。',
       'Hold it landscape; it needs 992 pixels of width, which most 10-inch-plus tablets have. Tap an original-language word to pin it, tap again to release; in Classic Reader, swipe sideways to turn the chapter.\n\nUpdates download and install inside the app. With a keyboard, shortcuts use Ctrl.',
     ),
     keywords: [
