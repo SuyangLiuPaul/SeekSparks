@@ -95,11 +95,21 @@ OUT = PROJECT / 'assets' / 'changelog.json'
 # How many versions-with-something-to-say to keep. Measured at this
 # repo's rate: about one month, 250 notes, 25 KB. See "HOW MANY" above
 # for the two smaller numbers that were tried and why they were wrong.
-DEFAULT_MAX_ENTRIES = 120
+# 2026-09-18, the owner: 「最近或者30个的release notes」. 120 was set when
+# every deploy bumped the version (29 versions in three days); since
+# 2026-09-16 the version moves only on a real release, so 30 releases
+# is the few weeks a reader wants, not an afternoon.
+DEFAULT_MAX_ENTRIES = 30
 
 # A released version, in either convention this repo has used.
+#
+# 2026-09-18: and a third. Since v1.6.284 the release commit reads
+# `vX.Y.Z — to dev and prod`, which the first two spellings never
+# matched — so every release after them was folded into ONE entry, and
+# the release lines themselves were shown as notes.
 ANCHOR = re.compile(
-    r'^(?:release|chore\(release\)):\s*v?(\d+\.\d+\.\d+)\b',
+    r'^(?:(?:release|chore\(release\)):\s*v?(\d+\.\d+\.\d+)\b'
+    r'|v(\d+\.\d+\.\d+)\s+—)',
     re.IGNORECASE,
 )
 
@@ -122,6 +132,12 @@ DROP = re.compile(
     r'(?:\([^)]*\))?:'
     r'|fix\s*(?:\(\s*(?:ci|lint|release)\s*\)|CI)\s*:'
     r'|PROJECT_STATE\b'
+    # `v1.6.321 — to dev and prod`: the third release spelling (see
+    # ANCHOR), bookkeeping for the same reason as `release:`.
+    r'|v\d+\.\d+\.\d+\s+—'
+    # `Measure queue:16548's …`, `Measure the queue:16481 …` — the
+    # unattended loop recording what it measured, not a change.
+    r'|measure\s+(?:the\s+)?queue:'
     r'|Merge (?:branch|pull request)\b'
     r')',
     re.IGNORECASE,
@@ -194,7 +210,7 @@ def released_versions(
         m = ANCHOR.match(subject)
         if not m:
             continue
-        version = m.group(1)
+        version = m.group(1) or m.group(2)
         # A version re-cut (dev, then dev + prod) has two release
         # commits. The FIRST one seen walking backwards is the newest,
         # which is the one whose date the reader should be shown.

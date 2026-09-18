@@ -2,7 +2,7 @@
 //
 // From the owner on 2026-09-09: 「也要有历史的release note但是不要全部
 // 的而是足够的不然太多」. The "不要全部" half is answered by
-// `tools/build_changelog.py`, which bundles a 120-version window. The
+// `tools/build_changelog.py`, which bundles the last 30 releases. The
 // "不然太多" half is answered HERE, and the two halves needed different
 // answers.
 //

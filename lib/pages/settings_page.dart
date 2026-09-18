@@ -32,6 +32,7 @@ import 'package:yahwehs_sword/models/app_style_preset.dart';
 import 'package:yahwehs_sword/providers/main_provider.dart';
 import 'package:yahwehs_sword/widgets/projection_stage.dart';
 import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/pages/changelog_page.dart';
 import 'package:yahwehs_sword/pages/help_page.dart' show openHelp;
 import 'package:yahwehs_sword/services/notification_scheduler.dart'
     show notificationSchedulingSupported;
@@ -271,6 +272,21 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                         'Help & shortcuts'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => openHelp(context),
+                  ),
+                ),
+                // 2026-09-18: the release notes, one tap away. They lived only
+                // behind a button on the About page, where the owner could not
+                // find them (「可以有个地方放最新的release notes吗」).
+                Card(
+                  elevation: 0,
+                  child: ListTile(
+                    key: const Key('settings.changelog'),
+                    leading: const Icon(Icons.new_releases_outlined),
+                    title: Text(uiStrings['changelogTitle']?[settings.locale] ??
+                        "What's new"),
+                    subtitle: Text('v$kAppVersion'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => pushPage(const ChangelogPage()),
                   ),
                 ),
                 SizedBox(height: 12 * s),

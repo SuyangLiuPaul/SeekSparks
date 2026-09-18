@@ -4,7 +4,7 @@
 // `release: vX.Y.Z` commits — see that file for why the notes come
 // from commit subjects, why the GitHub Release bodies are useless for
 // this (all 270 of them are the same Linux build boilerplate), and why
-// the window is 120 versions.
+// the window is the last 30 releases.
 //
 // **Grouped by day, not listed by version, and that is the whole
 // design.** This app shipped 29 versions in three days; a list of
