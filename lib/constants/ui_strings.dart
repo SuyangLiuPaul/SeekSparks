@@ -4962,22 +4962,14 @@ const uiStrings = {
     'zh-Hant': '{name}講道（assets/sermons/）',
     'en': 'Sermons by {name} (assets/sermons/)',
   },
-  // WHO PREACHED and WHO HOLDS THE RIGHTS are two different facts, and
-  // only the first is settled. The sermons are Pastor Eric H.H. Chang's —
-  // `scripts/ingest_sermons.py` built the corpus from his sermon tree and
-  // every body file is his preaching. This © line names 梁家铿, who is the
-  // translator of the biblexg edition, and it has been here since the
-  // initial commit with no note explaining the connection. He may well be
-  // the publisher who granted permission, which would make both lines
-  // correct — but nothing in the repo establishes that. Left as-is rather
-  // than rewritten: deleting a rights claim on a guess is worse than
-  // carrying an unverified one, and the byline above now states the
-  // authorship fact that was missing either way. Needs a human to confirm
-  // with the corpus owner.
+  // The sermons are Pastor Eric H.H. Chang's (张熙和牧师). This line used
+  // to read © 梁家铿 — the translator of the biblexg edition, a different
+  // person; the owner confirmed it on 2026-09-18 (YsWords fixed it
+  // earlier). It composes the preacher like the byline above.
   'aboutLicenseSermons': {
-    'zh-Hans': '© 梁家铿 · 经授权使用。',
-    'zh-Hant': '© 梁家鏗 · 經授權使用。',
-    'en': '© Liang Jia-keng · used with permission.',
+    'zh-Hans': '© {name} · 经授权使用。',
+    'zh-Hant': '© {name} · 經授權使用。',
+    'en': '© {name} · used with permission.',
   },
   'aboutFontsBundled': {
     'zh-Hans': '内置字体：Roboto',

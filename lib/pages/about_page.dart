@@ -726,8 +726,10 @@ class _OtherAttributions extends StatelessWidget {
             uiStrings['aboutSermons']?[locale] ??
                 'Sermons by {name} (assets/sermons/)',
             locale),
-        licence: uiStrings['aboutLicenseSermons']?[locale] ??
-            '© Liang Jia-keng · used with permission.',
+        licence: withPreacher(
+            uiStrings['aboutLicenseSermons']?[locale] ??
+                '© {name} · used with permission.',
+            locale),
       ),
       _AttribRow(
         name: uiStrings['aboutFontsBundled']?[locale] ?? 'Bundled font: Roboto',

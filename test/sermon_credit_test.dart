@@ -115,4 +115,19 @@ void main() {
       }
     });
   });
+
+  test('the sermons licence credits the preacher, not the Bible translator',
+      () {
+    // 2026-09-18: it read © 梁家铿, the translator of the biblexg edition —
+    // a different person. The owner: the sermons are 张熙和牧师's.
+    final line = uiStrings['aboutLicenseSermons']!;
+    for (final l in _locales) {
+      expect(line[l], contains('{name}'), reason: l);
+      final shown = withPreacher(line[l]!, l);
+      expect(shown, contains(preacherName(l)), reason: l);
+      for (final wrong in ['梁家铿', '梁家鏗', 'Liang']) {
+        expect(shown, isNot(contains(wrong)), reason: l);
+      }
+    }
+  });
 }
