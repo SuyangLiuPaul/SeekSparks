@@ -46,7 +46,7 @@
 /// compares books.
 library;
 
-import 'package:seeksparks/utils/word_list.dart';
+import 'package:yahwehs_sword/utils/word_list.dart';
 
 /// Which of the two lists a word appeared in.
 enum WordCompareBucket { both, onlyA, onlyB }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart' show uiStrings;
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/models/app_settings.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart' show uiStrings;
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
 
 /// The wheel and the strip AppBars, collapsed for a phone pane — shared
 /// so the two forms cannot drift apart the way two hand-rolled copies

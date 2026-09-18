@@ -10,8 +10,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/passage_report.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/passage_report.dart';
 
 ReportWord word(
   String surface, {

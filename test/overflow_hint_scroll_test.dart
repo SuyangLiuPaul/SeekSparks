@@ -8,7 +8,7 @@ import 'dart:io' as io;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
+import 'package:yahwehs_sword/widgets/overflow_hint_scroll.dart';
 
 final tapped = <int>[];
 

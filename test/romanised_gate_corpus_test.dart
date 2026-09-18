@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/search_service.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/psalm_superscription.dart';
-import 'package:seeksparks/utils/romanised_lemma.dart';
-import 'package:seeksparks/utils/vocabulary.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/search_service.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/psalm_superscription.dart';
+import 'package:yahwehs_sword/utils/romanised_lemma.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
 
 /// The gate on the romanised offer, measured through the two search
 /// engines it sits between.

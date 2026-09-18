@@ -14,9 +14,9 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 
 class AnalysisPinBar extends StatelessWidget {
   const AnalysisPinBar({

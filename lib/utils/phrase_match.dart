@@ -101,9 +101,9 @@ library;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:seeksparks/utils/related_verses.dart'
+import 'package:yahwehs_sword/utils/related_verses.dart'
     show isCjkChar, isWordChar, kRelatedVersesCommonWords;
-import 'package:seeksparks/utils/search_highlight.dart' show HighlightSpan;
+import 'package:yahwehs_sword/utils/search_highlight.dart' show HighlightSpan;
 
 // ── Limits ──────────────────────────────────────────────────────────
 

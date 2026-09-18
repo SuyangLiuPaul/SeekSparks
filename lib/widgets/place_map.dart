@@ -27,17 +27,17 @@ library;
 import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
-import 'package:seeksparks/constants/journey_style.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/atlas_index.dart' show labelPriority;
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/journey_route.dart';
-import 'package:seeksparks/utils/place_geo.dart';
-import 'package:seeksparks/utils/place_ruler.dart';
-import 'package:seeksparks/utils/travel_time.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart' show BookScript;
+import 'package:yahwehs_sword/constants/journey_style.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/atlas_index.dart' show labelPriority;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/journey_route.dart';
+import 'package:yahwehs_sword/utils/place_geo.dart';
+import 'package:yahwehs_sword/utils/place_ruler.dart';
+import 'package:yahwehs_sword/utils/travel_time.dart';
 
 /// Base geography, the places asked about, and a ruler between them.
 class PlaceMapView extends StatefulWidget {

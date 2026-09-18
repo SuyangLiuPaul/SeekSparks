@@ -26,12 +26,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/services/greek_stats_service.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/services/greek_stats_service.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
 
 /// ἀγάπη — a Greek word the corpus profile certainly carries.
 const String kAgape = 'G26';

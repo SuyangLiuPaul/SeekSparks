@@ -11,11 +11,11 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/utils/morph_construction.dart';
-import 'package:seeksparks/utils/morph_query.dart';
-import 'package:seeksparks/utils/morphology.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/utils/morph_construction.dart';
+import 'package:yahwehs_sword/utils/morph_query.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
 
 OriginalWord w(String text, String morph, {String strongs = ''}) =>
     OriginalWord(text: text, strongs: strongs, morph: morph);

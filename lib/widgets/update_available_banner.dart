@@ -25,11 +25,11 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/link_opener.dart';
-import 'package:seeksparks/services/update_service.dart';
-import 'package:seeksparks/widgets/update_check_tile.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/link_opener.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
+import 'package:yahwehs_sword/widgets/update_check_tile.dart';
 
 class UpdateAvailableBanner extends StatelessWidget {
   const UpdateAvailableBanner({

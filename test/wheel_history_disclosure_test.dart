@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localizedReferenceLabel;
 
 /// A STAMPED ASSET IS NOT A DISCLOSED ONE.

@@ -9,8 +9,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/bible_names_service.dart';
-import 'package:seeksparks/services/thayer_service.dart';
+import 'package:yahwehs_sword/services/bible_names_service.dart';
+import 'package:yahwehs_sword/services/thayer_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

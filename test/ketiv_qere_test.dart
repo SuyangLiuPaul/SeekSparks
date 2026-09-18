@@ -21,9 +21,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart';
-import 'package:seeksparks/utils/word_list.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart';
+import 'package:yahwehs_sword/utils/word_list.dart';
 
 Map<String, List<dynamic>> _book(String slug) {
   final file = File('assets/originals/$slug.json');

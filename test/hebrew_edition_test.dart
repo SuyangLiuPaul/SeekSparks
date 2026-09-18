@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/version_attribution.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/constants/book_names.dart' show standardBookOrder;
-import 'package:seeksparks/utils/phrasing.dart' show isRtlText;
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/version_attribution.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/constants/book_names.dart' show standardBookOrder;
+import 'package:yahwehs_sword/utils/phrasing.dart' show isRtlText;
 
 /// The Hebrew Old Testament — the missing half of a pair the app already
 /// advertised, since the originals row offered Greek and nothing else.

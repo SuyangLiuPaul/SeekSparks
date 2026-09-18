@@ -14,16 +14,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/romanised_lemma.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
-import 'package:seeksparks/utils/vocabulary.dart';
-import 'package:seeksparks/widgets/command_pane.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/providers/workbench_provider.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/romanised_lemma.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
+import 'package:yahwehs_sword/widgets/command_pane.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _seed = [

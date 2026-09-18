@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/chronology.dart' show Patriarch;
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/models/strip_lanes.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/chronology.dart' show Patriarch;
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/models/strip_lanes.dart'
     show StripLaneKind, kStripKingPrefix, kStripMinistryPrefix;
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/chronology_page.dart';
-import 'package:seeksparks/pages/hebrew_kings_page.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/chronology_page.dart';
+import 'package:yahwehs_sword/pages/hebrew_kings_page.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show
         LineageCohort,
         kDrawnTradition,
@@ -19,22 +19,22 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
         streamColor,
         wheelStrings,
         yearLabel;
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/chronology_service.dart';
-import 'package:seeksparks/services/family_tree_service.dart';
-import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
-import 'package:seeksparks/utils/date_hedge.dart';
-import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
-import 'package:seeksparks/utils/kings_contemporaries.dart'
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/chronology_service.dart';
+import 'package:yahwehs_sword/services/family_tree_service.dart';
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart';
+import 'package:yahwehs_sword/services/timeline_service.dart';
+import 'package:yahwehs_sword/utils/date_hedge.dart';
+import 'package:yahwehs_sword/utils/jump_to_reference.dart' as jumper;
+import 'package:yahwehs_sword/utils/kings_contemporaries.dart'
     show ContemporaryTally;
-import 'package:seeksparks/utils/navigate_to_reader.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/year_digest.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/utils/navigate_to_reader.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/year_digest.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localizedReferenceLabel;
-import 'package:seeksparks/widgets/person_detail_sheet.dart';
-import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
+import 'package:yahwehs_sword/widgets/person_detail_sheet.dart';
+import 'package:yahwehs_sword/widgets/verse_popup_sheet.dart' show showVersePopup;
 
 /// The wheel's detail sheets — [showPerson] through [showStream] — split
 /// out of `RadialChronologyPage` so a second, horizontal view of the

@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:seeksparks/services/profile_service.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
 
 /// Per-profile recent-search history. Surfaced as tappable rows
 /// above the search results list when the query box is empty so

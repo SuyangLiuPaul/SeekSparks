@@ -25,7 +25,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/utils/word_forms.dart';
+import 'package:yahwehs_sword/utils/word_forms.dart';
 
 class WordFormsService {
   static const _dir = 'assets/forms';

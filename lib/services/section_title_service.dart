@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/constants/section_title_map.dart';
-import 'package:seeksparks/utils/pericope.dart' show BookHeading;
+import 'package:yahwehs_sword/constants/section_title_map.dart';
+import 'package:yahwehs_sword/utils/pericope.dart' show BookHeading;
 
 /// One row from `assets/section_titles.json` — title + optional
 /// `context` (a short paragraph of historical / theological

@@ -29,18 +29,18 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/map_viewer_page.dart';
-import 'package:seeksparks/pages/sermon_detail_page.dart';
-import 'package:seeksparks/services/jesus_teachings_service.dart';
-import 'package:seeksparks/services/map_service.dart';
-import 'package:seeksparks/services/sermon_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
-import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/map_viewer_page.dart';
+import 'package:yahwehs_sword/pages/sermon_detail_page.dart';
+import 'package:yahwehs_sword/services/jesus_teachings_service.dart';
+import 'package:yahwehs_sword/services/map_service.dart';
+import 'package:yahwehs_sword/services/sermon_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/passage_localizer.dart' show localizePassage;
+import 'package:yahwehs_sword/utils/reference_parser.dart' show parseReference;
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/verse_popup_sheet.dart' show showVersePopup;
 
 const Map<String, String> kJesusTeachingsTitle = {
   'zh-Hans': '主耶稣的教导',

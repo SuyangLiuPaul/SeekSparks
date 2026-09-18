@@ -1,7 +1,7 @@
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show bibleVersionFullCanonFallback, shortBibleVersionLabel;
-import 'package:seeksparks/constants/ui_strings.dart' show uiStrings;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/ui_strings.dart' show uiStrings;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 /// What the centre pane says when the open edition does not ship the
 /// chapter the reader navigated to — the NT-only 梁家铿译本 with a

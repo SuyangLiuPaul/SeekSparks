@@ -19,11 +19,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/search_stats.dart' show HitUnit;
-import 'package:seeksparks/widgets/word_distribution.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart' show HitUnit;
+import 'package:yahwehs_sword/widgets/word_distribution.dart';
 
 void main() {
   Widget host(Widget child) => ChangeNotifierProvider(

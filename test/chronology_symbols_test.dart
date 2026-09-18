@@ -22,8 +22,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/chart_symbol_service.dart';
-import 'package:seeksparks/utils/chronology_symbols.dart';
+import 'package:yahwehs_sword/services/chart_symbol_service.dart';
+import 'package:yahwehs_sword/utils/chronology_symbols.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -42,12 +42,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/verse_notes.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/verse_notes.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 /// How long the pane waits after the last keystroke before writing.
 ///

@@ -12,8 +12,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/analysis_focus.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/analysis_focus.dart';
 
 void main() {
   const a = 'John|1|BGT|3|2';

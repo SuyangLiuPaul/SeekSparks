@@ -38,16 +38,16 @@ import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show resolveReadingVersion;
-import 'package:seeksparks/constants/book_slugs.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/url_claim.dart';
-import 'package:seeksparks/services/fetch_books.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
-import 'package:seeksparks/utils/history_state_repair.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
+import 'package:yahwehs_sword/constants/book_slugs.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/url_claim.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart';
+import 'package:yahwehs_sword/utils/history_state_repair.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show translateBookName;
 
 // ── JS interop bindings ─────────────────────────────────────────
 

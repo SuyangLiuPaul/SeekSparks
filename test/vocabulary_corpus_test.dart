@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/vocabulary.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
 
 /// The Vocabulary Flashcard core (bwh40) against the real bundled data —
 /// 14,039 Strong's numbers, 13,963 of them with glosses, over a

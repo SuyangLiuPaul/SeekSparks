@@ -120,15 +120,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HardwareKeyboard;
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/strip_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/biblical_person.dart' show BiblicalPerson;
-import 'package:seeksparks/models/chronology.dart' show Patriarch;
-import 'package:seeksparks/models/hebrew_king.dart' show HebrewKing, Kingdom;
-import 'package:seeksparks/models/strip_lanes.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/constants/strip_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart' show BiblicalPerson;
+import 'package:yahwehs_sword/models/chronology.dart' show Patriarch;
+import 'package:yahwehs_sword/models/hebrew_king.dart' show HebrewKing, Kingdom;
+import 'package:yahwehs_sword/models/strip_lanes.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show
         LineageCohort,
         RadialChronologyPage,
@@ -138,34 +138,34 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
         lineageRailColor,
         ministryArcColor,
         yearLabel;
-import 'package:seeksparks/pages/wheel_sheets.dart';
-import 'package:seeksparks/services/chart_symbol_service.dart';
-import 'package:seeksparks/services/chronology_service.dart';
-import 'package:seeksparks/services/family_tree_service.dart';
-import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/services/url_sync_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
-import 'package:seeksparks/utils/strip_viewport.dart';
-import 'package:seeksparks/utils/strip_paint_text.dart';
-import 'package:seeksparks/utils/strip_event_cards.dart';
-import 'package:seeksparks/utils/strip_depth_layout.dart';
-import 'package:seeksparks/widgets/chart_help_sheet.dart';
-import 'package:seeksparks/widgets/chart_hover_plate.dart';
-import 'package:seeksparks/widgets/chronology_depth_toggle.dart';
-import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
-import 'package:seeksparks/widgets/chronology_explorer.dart';
-import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
-import 'package:seeksparks/utils/year_digest.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/pages/wheel_sheets.dart';
+import 'package:yahwehs_sword/services/chart_symbol_service.dart';
+import 'package:yahwehs_sword/services/chronology_service.dart';
+import 'package:yahwehs_sword/services/family_tree_service.dart';
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart';
+import 'package:yahwehs_sword/services/url_sync_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show canvasTextStyle;
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/strip_viewport.dart';
+import 'package:yahwehs_sword/utils/strip_paint_text.dart';
+import 'package:yahwehs_sword/utils/strip_event_cards.dart';
+import 'package:yahwehs_sword/utils/strip_depth_layout.dart';
+import 'package:yahwehs_sword/widgets/chart_help_sheet.dart';
+import 'package:yahwehs_sword/widgets/chart_hover_plate.dart';
+import 'package:yahwehs_sword/widgets/chronology_depth_toggle.dart';
+import 'package:yahwehs_sword/widgets/chronology_filter_sheet.dart';
+import 'package:yahwehs_sword/widgets/chronology_explorer.dart';
+import 'package:yahwehs_sword/widgets/overflow_hint_scroll.dart';
+import 'package:yahwehs_sword/utils/year_digest.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localizedReferenceLabel;
-import 'package:seeksparks/utils/wheel_search.dart';
-import 'package:seeksparks/utils/chronology_explorer.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/strip_chronology_painter.dart';
-import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
-import 'package:seeksparks/widgets/year_digest_bar.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/utils/wheel_search.dart';
+import 'package:yahwehs_sword/utils/chronology_explorer.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/strip_chronology_painter.dart';
+import 'package:yahwehs_sword/widgets/wheel_chrome_bar.dart';
+import 'package:yahwehs_sword/widgets/year_digest_bar.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
 
 /// The address this page owns, in the same shape as `kWheelUrlPath`.
 ///

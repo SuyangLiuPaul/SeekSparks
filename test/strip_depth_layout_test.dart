@@ -4,7 +4,7 @@ library;
 
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/strip_depth_layout.dart';
+import 'package:yahwehs_sword/utils/strip_depth_layout.dart';
 
 void main() {
   test('front keeps date width; roof and side resolve to the same record', () {

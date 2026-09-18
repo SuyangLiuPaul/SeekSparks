@@ -24,8 +24,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/concordance_reverse_index.dart';
-import 'package:seeksparks/services/modern_concordance_service.dart';
+import 'package:yahwehs_sword/services/concordance_reverse_index.dart';
+import 'package:yahwehs_sword/services/modern_concordance_service.dart';
 
 /// Real topic files, read through dart:io so the pure function can be
 /// exercised without a binding or a warmed service.

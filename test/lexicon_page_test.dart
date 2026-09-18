@@ -18,12 +18,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/lexicon_page.dart';
-import 'package:seeksparks/services/chinese_lexicon_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/thayer_service.dart';
-import 'package:seeksparks/utils/lexicon_browse.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/lexicon_page.dart';
+import 'package:yahwehs_sword/services/chinese_lexicon_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/thayer_service.dart';
+import 'package:yahwehs_sword/utils/lexicon_browse.dart';
 
 /// The one-line summary in the row whose headword is [lemma]. Last of the
 /// row's three Texts: the number tag, the lemma, then the summary.

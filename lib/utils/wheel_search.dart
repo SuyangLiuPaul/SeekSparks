@@ -41,10 +41,10 @@
 ///     the reader instead of silently by us.
 library;
 
-import 'package:seeksparks/models/chronology.dart' show Patriarch;
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
-import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:yahwehs_sword/models/chronology.dart' show Patriarch;
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/diacritics.dart' show foldDiacritics;
+import 'package:yahwehs_sword/utils/reference_parser.dart';
 
 /// Which of the wheel's five record kinds a hit is.
 ///

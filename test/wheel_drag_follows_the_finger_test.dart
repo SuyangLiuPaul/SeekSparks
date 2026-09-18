@@ -21,8 +21,8 @@ import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/utils/chronology_depth_view.dart';
-import 'package:seeksparks/utils/wheel_stack_layout.dart';
+import 'package:yahwehs_sword/utils/chronology_depth_view.dart';
+import 'package:yahwehs_sword/utils/wheel_stack_layout.dart';
 
 /// Where a point on the wheel's rim lands on screen at a given yaw.
 ///

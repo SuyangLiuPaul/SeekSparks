@@ -6,7 +6,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/strongs_inline.dart';
+import 'package:yahwehs_sword/utils/strongs_inline.dart';
 
 void main() {
   List<String> printed(List<StrongsNumberToken> t) =>

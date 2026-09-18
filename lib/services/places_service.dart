@@ -40,8 +40,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/place_geo.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/place_geo.dart';
 
 /// The gazetteer, its verse index, and the base map beneath it.
 ///

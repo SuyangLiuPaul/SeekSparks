@@ -24,13 +24,13 @@ import 'package:http/testing.dart' show MockClient;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/update_check_frequency.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/widgets/update_available_banner.dart';
-import 'package:seeksparks/services/app_update_installer.dart';
-import 'package:seeksparks/services/update_service.dart';
-import 'package:seeksparks/widgets/update_check_tile.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/update_check_frequency.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/widgets/update_available_banner.dart';
+import 'package:yahwehs_sword/services/app_update_installer.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
+import 'package:yahwehs_sword/widgets/update_check_tile.dart';
 
 const _hint = 'Android will ask you to confirm the install.';
 const _downloading = 'Downloading update…';

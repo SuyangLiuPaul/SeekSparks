@@ -11,7 +11,7 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:seeksparks/utils/radial_chronology_layout.dart'
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart'
     show kStreamTierFloorPx, ringRadii;
 
 /// The canonical order. Earlier means kept longer when rings are scarce.

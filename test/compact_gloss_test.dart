@@ -9,7 +9,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/widgets/originals_sheet.dart';
+import 'package:yahwehs_sword/widgets/originals_sheet.dart';
 
 void main() {
   group('compactGloss — Genesis 1:2 regressions', () {

@@ -16,9 +16,9 @@ library;
 /// assigned, so no future caller can perform half a version swap.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/build_books_from_verses.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/build_books_from_verses.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 List<Verse> _chapter(String book, int chapter, int count) => [

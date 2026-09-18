@@ -7,7 +7,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/strongs_absence.dart';
+import 'package:yahwehs_sword/utils/strongs_absence.dart';
 
 void main() {
   group('classifyStrongsAbsence', () {

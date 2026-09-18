@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
 import 'package:provider/provider.dart';
 
 /// AppBar leading button that pops the navigator stack down to the

@@ -4,86 +4,86 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:seeksparks/utils/atomic_text_edit.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/pages/projection_page.dart';
+import 'package:yahwehs_sword/utils/atomic_text_edit.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/pages/projection_page.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/constants/workbench_theme.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart'
     show WbColors, WbMetrics, WbType;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/widgets/note_reference_picker_sheet.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/models/reader_analysis_request.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/pages/bible_trivia_page.dart' as trivia;
-import 'package:seeksparks/pages/books_page.dart';
-import 'package:seeksparks/pages/evidence_page.dart';
-import 'package:seeksparks/pages/highlights_page.dart';
-import 'package:seeksparks/pages/illustrations_page.dart';
-import 'package:seeksparks/pages/library_page.dart';
-import 'package:seeksparks/pages/map_viewer_page.dart';
-import 'package:seeksparks/pages/command_search_page.dart';
-import 'package:seeksparks/pages/settings_page.dart';
-import 'package:seeksparks/pages/stats_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/fetch_books.dart';
-import 'package:seeksparks/utils/chapter_navigation.dart';
-import 'package:seeksparks/utils/chapter_scroll_progress.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/constants/sermon_topics.dart';
-import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/pages/sermon_detail_page.dart';
-import 'package:seeksparks/services/cross_reference_service.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
-import 'package:seeksparks/services/book_intro_service.dart';
-import 'package:seeksparks/services/map_service.dart';
-import 'package:seeksparks/services/section_title_service.dart';
-import 'package:seeksparks/services/sermon_service.dart';
-import 'package:seeksparks/services/synopsis_service.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/haptics.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/widgets/note_reference_picker_sheet.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/models/reader_analysis_request.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/pages/bible_trivia_page.dart' as trivia;
+import 'package:yahwehs_sword/pages/books_page.dart';
+import 'package:yahwehs_sword/pages/evidence_page.dart';
+import 'package:yahwehs_sword/pages/highlights_page.dart';
+import 'package:yahwehs_sword/pages/illustrations_page.dart';
+import 'package:yahwehs_sword/pages/library_page.dart';
+import 'package:yahwehs_sword/pages/map_viewer_page.dart';
+import 'package:yahwehs_sword/pages/command_search_page.dart';
+import 'package:yahwehs_sword/pages/settings_page.dart';
+import 'package:yahwehs_sword/pages/stats_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart';
+import 'package:yahwehs_sword/utils/chapter_navigation.dart';
+import 'package:yahwehs_sword/utils/chapter_scroll_progress.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/constants/sermon_topics.dart';
+import 'package:yahwehs_sword/models/sermon.dart';
+import 'package:yahwehs_sword/pages/sermon_detail_page.dart';
+import 'package:yahwehs_sword/services/cross_reference_service.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart';
+import 'package:yahwehs_sword/services/book_intro_service.dart';
+import 'package:yahwehs_sword/services/map_service.dart';
+import 'package:yahwehs_sword/services/section_title_service.dart';
+import 'package:yahwehs_sword/services/sermon_service.dart';
+import 'package:yahwehs_sword/services/synopsis_service.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/haptics.dart';
 // 2026-05-10 (v1.2.13): the `as jumper` import was only needed by
 // the `_captureChapterRelativeVerseNum` / `_scrollToVerseInChapter`
 // thin wrappers that v1.2.13 removed alongside the version-switch
 // scroll-restore complexity. Only `prepareJumpToVerse` is still
 // used in this file (jump-to-reference flow on a verse tap).
-import 'package:seeksparks/utils/jump_to_reference.dart'
+import 'package:yahwehs_sword/utils/jump_to_reference.dart'
     show prepareJumpToVerse;
-import 'package:seeksparks/utils/note_reference_parser.dart'
+import 'package:yahwehs_sword/utils/note_reference_parser.dart'
     show
         extractNoteReferences,
         NoteReferenceMatch,
         buildNoteSpans,
         spliceComposingUnderline,
         normalizeNoteReferenceBookNames;
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/verse_notes.dart'
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/verse_notes.dart'
     show resolveNotePrefill, verseNoteRangeLabel;
-import 'package:seeksparks/widgets/synopsis_parallels.dart';
-import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
-import 'package:seeksparks/utils/responsive.dart';
-import 'package:seeksparks/widgets/docked_panel.dart';
-import 'package:seeksparks/utils/short_book_name.dart';
-import 'package:seeksparks/widgets/illustration_image.dart';
-import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
-import 'package:seeksparks/utils/missing_chapter_message.dart'
+import 'package:yahwehs_sword/widgets/synopsis_parallels.dart';
+import 'package:yahwehs_sword/widgets/verse_popup_sheet.dart' show showVersePopup;
+import 'package:yahwehs_sword/utils/responsive.dart';
+import 'package:yahwehs_sword/widgets/docked_panel.dart';
+import 'package:yahwehs_sword/utils/short_book_name.dart';
+import 'package:yahwehs_sword/widgets/illustration_image.dart';
+import 'package:yahwehs_sword/utils/floating_toast.dart' show showFloatingToast;
+import 'package:yahwehs_sword/utils/missing_chapter_message.dart'
     show missingChapterMessage;
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show translateBookName, toEnglish, localeAwareBookName;
-import 'package:seeksparks/widgets/highlights_sheet.dart';
-import 'package:seeksparks/widgets/originals_sheet.dart';
-import 'package:seeksparks/widgets/verse_widget.dart';
-import 'package:seeksparks/widgets/paragraph_group_widget.dart';
-import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
-import 'package:seeksparks/widgets/version_picker_sheet.dart'
+import 'package:yahwehs_sword/widgets/highlights_sheet.dart';
+import 'package:yahwehs_sword/widgets/originals_sheet.dart';
+import 'package:yahwehs_sword/widgets/verse_widget.dart';
+import 'package:yahwehs_sword/widgets/paragraph_group_widget.dart';
+import 'package:yahwehs_sword/widgets/overflow_hint_scroll.dart';
+import 'package:yahwehs_sword/widgets/version_picker_sheet.dart'
     show showLanguageGroupedVersionMenu;
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/constants/motion.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/constants/motion.dart';
 
 /// 2026-08 (ported from YsWords v1.3.156): "护眼" (easy-on-eyes) reading
 /// theme — a warm sepia/paper palette for the Bible reading pane, toggled

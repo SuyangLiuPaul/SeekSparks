@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
-import 'package:seeksparks/constants/motion.dart';
+import 'package:yahwehs_sword/constants/motion.dart';
 
 /// Canonical page-push helper — every `Get.to(...)` in the app should
 /// route through here instead of specifying its own transition/duration/

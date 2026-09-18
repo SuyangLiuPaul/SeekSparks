@@ -14,11 +14,11 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
-import 'package:seeksparks/utils/command_verb.dart' show LimitRange, LimitSpec;
-import 'package:seeksparks/utils/search_scope.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart' show oldTestamentBooks;
+import 'package:yahwehs_sword/utils/command_verb.dart' show LimitRange, LimitSpec;
+import 'package:yahwehs_sword/utils/search_scope.dart'
     show kScopeAllBooks, wholeBookScope;
-import 'package:seeksparks/utils/search_stats.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart';
 
 /// H3068 (יהוה) as `concordance.json` holds it, abridged to the books
 /// that matter for the assertions below. The full map has 36 books and

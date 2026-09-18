@@ -14,13 +14,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kMaxYear, kMinYear;
-import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
 
 Map<String, dynamic> _json(String path) =>
     json.decode(File(path).readAsStringSync()) as Map<String, dynamic>;

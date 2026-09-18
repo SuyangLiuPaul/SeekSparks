@@ -43,9 +43,9 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/utils/copy_format.dart';
-import 'package:seeksparks/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/utils/copy_format.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
 
 // `(1:1)` or `(30:28a)`, anywhere in a string. What must never come
 // back into the shipped text. Both alphabets, because the Greek form is

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/wheel_history.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
 
 /// THE COVERAGE PASS OF 2026-09-05, AND THE THREE RULES IT LEFT BEHIND.
 ///

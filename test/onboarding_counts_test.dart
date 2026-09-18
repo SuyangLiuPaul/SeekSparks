@@ -32,7 +32,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
 
 /// Every locale the onboarding strings carry, so a count corrected in
 /// English but missed in 简 or 繁 still fails.

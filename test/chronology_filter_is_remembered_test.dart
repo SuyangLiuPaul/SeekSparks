@@ -18,7 +18,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

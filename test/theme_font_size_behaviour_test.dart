@@ -34,8 +34,8 @@
 // implied.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
 
 ThemeData themeAt(double fontSize, {Brightness brightness = Brightness.light}) =>
     workbenchTheme(

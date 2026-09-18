@@ -12,7 +12,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
 
 void main() {
   const c = Offset(200, 200);

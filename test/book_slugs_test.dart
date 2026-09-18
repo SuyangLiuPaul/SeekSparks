@@ -8,7 +8,7 @@
 // right book.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/book_slugs.dart';
+import 'package:yahwehs_sword/constants/book_slugs.dart';
 
 void main() {
   group('book slug round-trip', () {

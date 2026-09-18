@@ -2,15 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:seeksparks/services/local_version_store.dart';
-import 'package:seeksparks/utils/imported_version.dart' show isImportedVersion;
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/error_reporter.dart';
-import 'package:seeksparks/services/fetch_books.dart'
+import 'package:yahwehs_sword/services/local_version_store.dart';
+import 'package:yahwehs_sword/utils/imported_version.dart' show isImportedVersion;
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/error_reporter.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart'
     show bookNameToEnglish, standardBookOrder;
-import 'package:seeksparks/utils/psalm_superscription.dart';
-import 'package:seeksparks/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/utils/psalm_superscription.dart';
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
 
 /// Lightweight record of paragraph metadata for one verse, used when applying
 /// shared structure across all Bible versions so paragraph mode reads

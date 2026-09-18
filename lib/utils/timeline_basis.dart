@@ -1,5 +1,5 @@
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/timeline_event.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
 
 /// The `basis` values `bible_timeline.json` may carry, mapped to the
 /// `ui_strings` sentence that explains each one.

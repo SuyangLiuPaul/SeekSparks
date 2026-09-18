@@ -37,7 +37,7 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
 
 /// Every value the word study styles itself with, for one presentation.
 ///

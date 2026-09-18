@@ -13,14 +13,14 @@
 /// freeze.
 library;
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart'
     show KetivQereSearchScope;
-import 'package:seeksparks/utils/morph_construction.dart';
-import 'package:seeksparks/utils/morph_query.dart';
-import 'package:seeksparks/utils/morphology.dart';
+import 'package:yahwehs_sword/utils/morph_construction.dart';
+import 'package:yahwehs_sword/utils/morph_query.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
 
 enum MorphScope { chapter, book, testament }
 

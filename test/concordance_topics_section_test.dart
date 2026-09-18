@@ -22,9 +22,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/concordance_reverse_index.dart';
-import 'package:seeksparks/widgets/concordance_topics_section.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/concordance_reverse_index.dart';
+import 'package:yahwehs_sword/widgets/concordance_topics_section.dart';
 
 const _attribution = "Eagle's View (eaglesviewsoftware.com), following "
     'Modern Concordance to the New Testament '

@@ -30,9 +30,9 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart' show AnalysisTab;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart' show AnalysisTab;
 
 /// One line of the summary: a resource, how much of it touches this
 /// verse, and the tab that holds it.

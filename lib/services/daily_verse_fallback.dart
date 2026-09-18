@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show translateBookName;
 
 /// Looks up a single daily-verse reference against a *fallback* Bible
 /// bundle (e.g. CUVS-YHWH) when the user's currently-selected version

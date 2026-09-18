@@ -52,8 +52,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show
         centuryTickLabel,
         kAxisEndSwing,
@@ -61,8 +61,8 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
         kMaxYear,
         kMinYear,
         yearLabel;
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/wheel_search.dart' show parseWheelYears;
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_search.dart' show parseWheelYears;
 
 /// The wheel paints with no family of its own, so Latin resolves to
 /// Roboto and Han to the bundled subset.

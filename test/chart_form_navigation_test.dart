@@ -8,9 +8,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/wheel_stack_layout.dart'
+import 'package:yahwehs_sword/utils/wheel_stack_layout.dart'
     show stackLabelBudget;
-import 'package:seeksparks/widgets/wheel_chrome_bar.dart' show chartFormRoute;
+import 'package:yahwehs_sword/widgets/wheel_chrome_bar.dart' show chartFormRoute;
 
 void main() {
   group('the page moves the way the toggle does', () {

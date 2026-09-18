@@ -30,8 +30,13 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- 2026-09-18: was `yahwehswords` — ANOTHER app's name, sitting on
+	     this one's iPhone. iOS shows CFBundleName in Settings and under
+	     the icon whenever CFBundleDisplayName does not fit. The display
+	     name above has said Yahweh's Sword since the rename; this key
+	     had never been touched since the scaffold was copied. -->
 	<key>CFBundleName</key>
-	<string>yahwehswords</string>
+	<string>Yahweh’s Sword</string>
 	<!-- 2026-06-28: opt the native app into LEGACY iPadOS 26 windowing.
 	     With this YES, iPadOS 26 gives the window its own system title bar
 	     to hold the traffic-light controls, so app content sits below them

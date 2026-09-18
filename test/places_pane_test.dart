@@ -16,15 +16,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/services/journeys_service.dart';
-import 'package:seeksparks/services/places_service.dart';
-import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
-import 'package:seeksparks/utils/travel_time.dart';
-import 'package:seeksparks/widgets/place_map.dart';
-import 'package:seeksparks/widgets/places_pane.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart' show BookScript;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/services/journeys_service.dart';
+import 'package:yahwehs_sword/services/places_service.dart';
+import 'package:yahwehs_sword/utils/place_geo.dart' show BaseMap;
+import 'package:yahwehs_sword/utils/travel_time.dart';
+import 'package:yahwehs_sword/widgets/place_map.dart';
+import 'package:yahwehs_sword/widgets/places_pane.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

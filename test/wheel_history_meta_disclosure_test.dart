@@ -9,8 +9,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart';
 
 /// Strips `//` line comments — copied from
 /// `wheel_timeline_field_coverage_test.dart` rather than reinvented.

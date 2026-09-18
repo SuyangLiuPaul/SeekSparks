@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/cbol_references.dart';
+import 'package:yahwehs_sword/utils/cbol_references.dart';
 
 /// Check 28 (docs/DATA-INTEGRITY.md), frozen.
 ///

@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/services/error_reporter.dart';
-import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/utils/verse_list.dart';
+import 'package:yahwehs_sword/services/error_reporter.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart';
 
 /// Persistence for the Verse List Manager (`utils/verse_list.dart`).
 ///

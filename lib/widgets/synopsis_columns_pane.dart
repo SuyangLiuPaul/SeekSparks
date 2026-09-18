@@ -17,12 +17,12 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/synopsis_service.dart';
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/utils/synopsis_columns.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/synopsis_service.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference;
+import 'package:yahwehs_sword/utils/synopsis_columns.dart';
 
 class SynopsisColumnsPane extends StatefulWidget {
   const SynopsisColumnsPane({

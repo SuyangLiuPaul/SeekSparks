@@ -23,12 +23,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/bible_journey.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/journey_route.dart';
-import 'package:seeksparks/utils/place_geo.dart' show haversineKm;
-import 'package:seeksparks/utils/travel_time.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/bible_journey.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/journey_route.dart';
+import 'package:yahwehs_sword/utils/place_geo.dart' show haversineKm;
+import 'package:yahwehs_sword/utils/travel_time.dart';
 
 void main() {
   final places = parseGazetteer(

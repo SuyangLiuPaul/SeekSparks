@@ -37,7 +37,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
 
 Future<List<Map<String, dynamic>>> _verses(String asset) async {
   final raw = await rootBundle.loadString('assets/$asset.json');

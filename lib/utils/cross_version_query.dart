@@ -43,7 +43,7 @@
 /// `WorkbenchProvider`'s job.
 library;
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show loadableVersions;
 
 /// One edition and what must be true of it.

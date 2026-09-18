@@ -8,17 +8,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/strip_lanes.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/strip_lanes.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kDrawnTradition;
-import 'package:seeksparks/utils/font_catalog.dart';
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
-import 'package:seeksparks/utils/strip_event_cards.dart';
-import 'package:seeksparks/utils/strip_paint_text.dart';
-import 'package:seeksparks/utils/strip_viewport.dart';
-import 'package:seeksparks/widgets/strip_chronology_painter.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/strip_event_cards.dart';
+import 'package:yahwehs_sword/utils/strip_paint_text.dart';
+import 'package:yahwehs_sword/utils/strip_viewport.dart';
+import 'package:yahwehs_sword/widgets/strip_chronology_painter.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

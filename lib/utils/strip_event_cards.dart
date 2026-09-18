@@ -6,10 +6,10 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/chronology_explorer.dart'
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/chronology_explorer.dart'
     show chronologyYearLabel;
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
 
 typedef StripEventTextHeight = double Function(
     String text, double width, double fontSize, bool bold);

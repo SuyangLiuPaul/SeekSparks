@@ -26,8 +26,8 @@
 /// passed in as the two maps `MainProvider` already exposes.
 library;
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/models/verse.dart';
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/models/verse.dart';
 
 /// A stored note key (`Verse.id`) read back as a reference.
 ///

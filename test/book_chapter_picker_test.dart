@@ -19,15 +19,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/app_icon_service.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/book.dart';
-import 'package:seeksparks/models/chapter.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/widgets/book_chapter_picker.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/app_icon_service.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/book.dart';
+import 'package:yahwehs_sword/models/chapter.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/widgets/book_chapter_picker.dart';
 
 /// Genesis 1-3, with 3 / 2 / 2 verses. Small enough to assert on by
 /// exact text, big enough that "chapter 2" and "verse 2" are different

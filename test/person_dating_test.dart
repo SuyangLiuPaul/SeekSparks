@@ -21,9 +21,9 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
 
 BiblicalPerson _person({
   required String kind,

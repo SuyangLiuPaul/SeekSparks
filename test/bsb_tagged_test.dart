@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 /// BSB is the first English translation SeekSparks ships with Strong's
 /// tagging, so these check the whole chain: it is in the catalog, the

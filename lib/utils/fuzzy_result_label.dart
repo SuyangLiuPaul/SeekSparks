@@ -31,12 +31,12 @@
 /// characters that say the verse actually spells it 矶法.
 library;
 
-import 'package:seeksparks/constants/fuzzy_search_strings.dart';
-import 'package:seeksparks/constants/text_patterns.dart' show searchCorpusKey;
-import 'package:seeksparks/utils/command_query.dart' show kCommandControls;
-import 'package:seeksparks/utils/fuzzy_search.dart';
-import 'package:seeksparks/utils/plain_search.dart';
-import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
+import 'package:yahwehs_sword/constants/fuzzy_search_strings.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart' show searchCorpusKey;
+import 'package:yahwehs_sword/utils/command_query.dart' show kCommandControls;
+import 'package:yahwehs_sword/utils/fuzzy_search.dart';
+import 'package:yahwehs_sword/utils/plain_search.dart';
+import 'package:yahwehs_sword/utils/search_folding.dart' show foldSearchMarks;
 
 /// The string key naming [match], or null when the row needs no label.
 ///

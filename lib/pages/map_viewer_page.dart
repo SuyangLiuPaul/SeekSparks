@@ -20,14 +20,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/models/map_provenance.dart';
-import 'package:seeksparks/services/map_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/widgets/illustration_image.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/models/map_provenance.dart';
+import 'package:yahwehs_sword/services/map_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/widgets/illustration_image.dart';
 
 /// Thumbnail geometry in the filmstrip, and the arithmetic that centres
 /// the current plate in it.

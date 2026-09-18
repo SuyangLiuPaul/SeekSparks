@@ -85,12 +85,12 @@
 /// Flutter-free on purpose: this parses and validates, nothing else.
 library;
 
-import 'package:seeksparks/constants/book_groups.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart'
     show canonicalOtBooks, canonicalNtBooks;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/reference_parser.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart'
     show BibleReference, resolveBookName;
-import 'package:seeksparks/utils/version_abbreviation.dart'
+import 'package:yahwehs_sword/utils/version_abbreviation.dart'
     show matchVersionAbbreviation;
 
 // ── Context ─────────────────────────────────────────────────────────

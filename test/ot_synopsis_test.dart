@@ -8,7 +8,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/synopsis_service.dart';
+import 'package:yahwehs_sword/services/synopsis_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

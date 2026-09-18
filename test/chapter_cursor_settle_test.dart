@@ -27,8 +27,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
 
 Verse _v(String book, int chapter, int verse) =>
     Verse(book: book, chapter: chapter, verse: verse, text: '$book $chapter:$verse');

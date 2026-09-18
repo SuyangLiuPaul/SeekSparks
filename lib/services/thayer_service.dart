@@ -18,7 +18,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/utils/thayer_parse.dart';
+import 'package:yahwehs_sword/utils/thayer_parse.dart';
 
 class ThayerService {
   static Map<String, String>? _raw;

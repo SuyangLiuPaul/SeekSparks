@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/phrase_match.dart';
+import 'package:yahwehs_sword/utils/phrase_match.dart';
 
 /// Phrase matching against the real 31,102-verse KJV, rather than the
 /// hand-built corpora in `phrase_match_test.dart`.

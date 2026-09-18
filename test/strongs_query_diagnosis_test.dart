@@ -9,9 +9,9 @@
 // A false refusal would take a working text search away from a reader who
 // never meant to write a Strong's expression at all.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/strongs_boolean_search.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart';
 
 void main() {
   group('diagnoseStrongsBoolean names the refusal', () {

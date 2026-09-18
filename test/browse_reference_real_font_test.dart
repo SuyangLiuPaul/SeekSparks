@@ -17,13 +17,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/book_name_mapping.dart'
+import 'package:yahwehs_sword/constants/book_name_mapping.dart'
     show BookScript, bookNameInScript;
-import 'package:seeksparks/constants/book_names.dart' show standardBookOrder;
-import 'package:seeksparks/constants/workbench_theme.dart' show workbenchTheme;
-import 'package:seeksparks/widgets/browse_window.dart'
+import 'package:yahwehs_sword/constants/book_names.dart' show standardBookOrder;
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show workbenchTheme;
+import 'package:yahwehs_sword/widgets/browse_window.dart'
     show kBrowseReferenceLetterSpacing;
-import 'package:seeksparks/utils/version_gutter.dart'
+import 'package:yahwehs_sword/utils/version_gutter.dart'
     show referenceGutterWidth;
 
 /// The reference is painted in Roboto for its Latin and NotoSansSC-Sub

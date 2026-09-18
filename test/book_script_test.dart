@@ -16,10 +16,10 @@ library;
 import 'package:characters/characters.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/book_name_mapping.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/utils/short_book_name.dart';
-import 'package:seeksparks/utils/version_mapper.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/utils/short_book_name.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart';
 
 void main() {
   group('bookScriptFor', () {

@@ -10,8 +10,8 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/fuzzy_search.dart' as fuzzy;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/fuzzy_search.dart' as fuzzy;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

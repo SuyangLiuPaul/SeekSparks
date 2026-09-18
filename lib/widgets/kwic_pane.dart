@@ -16,14 +16,14 @@ import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/kwic.dart';
-import 'package:seeksparks/utils/search_scope.dart' show scopedCountLabel;
-import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
-import 'package:seeksparks/widgets/wb_pane_bits.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/kwic.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart' show scopedCountLabel;
+import 'package:yahwehs_sword/utils/verse_list.dart' show applySearchLimit;
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart';
 
 class KwicPane extends StatefulWidget {
   const KwicPane({

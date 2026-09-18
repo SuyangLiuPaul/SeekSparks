@@ -8,8 +8,8 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/diacritics.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/diacritics.dart';
 
 /// Six verses of English and four of Chinese, arranged so that the verse
 /// context tests have a book boundary to run into.

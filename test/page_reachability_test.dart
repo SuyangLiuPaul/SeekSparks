@@ -47,7 +47,7 @@ const Map<String, String> _knownOrphans = <String, String>{};
 /// Missing the `if (...)` arms would report every platform-split service
 /// as an orphan, which is exactly the false alarm that makes a test like
 /// this get deleted instead of fixed.
-final RegExp _importedPath = RegExp(r"""'((?:package:seeksparks/|\./|\.\./)?[A-Za-z0-9_./]+\.dart)'""");
+final RegExp _importedPath = RegExp(r"""'((?:package:yahwehs_sword/|\./|\.\./)?[A-Za-z0-9_./]+\.dart)'""");
 
 void main() {
   test('every page is reachable from main.dart', () {
@@ -78,8 +78,8 @@ void main() {
         }
         for (final m in _importedPath.allMatches(line)) {
           var target = m.group(1)!;
-          if (target.startsWith('package:seeksparks/')) {
-            target = 'lib/${target.substring('package:seeksparks/'.length)}';
+          if (target.startsWith('package:yahwehs_sword/')) {
+            target = 'lib/${target.substring('package:yahwehs_sword/'.length)}';
           } else if (target.startsWith('.')) {
             final dir = path.substring(0, path.lastIndexOf('/'));
             target = _normalise('$dir/$target');

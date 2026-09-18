@@ -12,12 +12,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/command_verb.dart' show LimitRange, LimitSpec;
-import 'package:seeksparks/utils/search_scope.dart' show limitSpecForBooks;
-import 'package:seeksparks/widgets/search_scope_sheet.dart';
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart' show LimitRange, LimitSpec;
+import 'package:yahwehs_sword/utils/search_scope.dart' show limitSpecForBooks;
+import 'package:yahwehs_sword/widgets/search_scope_sheet.dart';
 
 /// What the sheet handed back, and whether it has handed anything back
 /// at all — null alone cannot tell "cancelled" from "still open".

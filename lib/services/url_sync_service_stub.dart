@@ -4,8 +4,8 @@
 // impl so the conditional import in `url_sync_service.dart`
 // type-checks on every platform.
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/providers/main_provider.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
 
 Future<void> urlSyncInit({
   required MainProvider mainProvider,

@@ -6,7 +6,7 @@
 // anyway, because it also fails if someone later removes the marking.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
 
 List<({String text, String strongs})> runs(List<List<String>> pairs) =>
     [for (final p in pairs) (text: p[0], strongs: p[1])];

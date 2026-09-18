@@ -30,7 +30,7 @@ import 'projection_broadcast_stub.dart'
     if (dart.library.js_interop) 'projection_broadcast_web.dart'
     if (dart.library.io) 'projection_broadcast_io.dart';
 
-import 'package:seeksparks/constants/projection_setup.dart'
+import 'package:yahwehs_sword/constants/projection_setup.dart'
     show ProjectionLayout;
 
 /// What the follower paints. Plain data so it serialises as JSON and so

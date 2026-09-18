@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/bible_place.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
 
 BiblePlace _p(
   String name, {

@@ -15,8 +15,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/models/map_provenance.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/models/map_provenance.dart';
 
 List<Map<String, dynamic>> _readJsonList(String path, [String? key]) {
   final raw = jsonDecode(File(path).readAsStringSync());

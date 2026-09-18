@@ -1,62 +1,62 @@
 // 2026-05-20 (v1.2.67): `dart:js_interop` was here. See
 // `lib/utils/clear_cache_helper.dart` for the conditional-import
 // pattern that replaced it.
-import 'package:seeksparks/utils/atomic_text_edit.dart';
-import 'package:seeksparks/utils/clear_cache_helper.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/atomic_text_edit.dart';
+import 'package:yahwehs_sword/utils/clear_cache_helper.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
 
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard;
-import 'package:seeksparks/constants/app_version.dart';
-import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
-import 'package:seeksparks/constants/sermon_credit.dart';
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/services/local_version_store.dart';
-import 'package:seeksparks/services/version_import_service.dart';
-import 'package:seeksparks/utils/pick_text_file.dart';
-import 'package:seeksparks/constants/fuzzy_search_strings.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/widgets/update_check_tile.dart';
-import 'package:seeksparks/constants/update_check_frequency.dart';
-import 'package:seeksparks/utils/cross_version_search.dart'
+import 'package:yahwehs_sword/constants/app_version.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart' show sanitizeForCopy;
+import 'package:yahwehs_sword/constants/sermon_credit.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/services/local_version_store.dart';
+import 'package:yahwehs_sword/services/version_import_service.dart';
+import 'package:yahwehs_sword/utils/pick_text_file.dart';
+import 'package:yahwehs_sword/constants/fuzzy_search_strings.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/widgets/update_check_tile.dart';
+import 'package:yahwehs_sword/constants/update_check_frequency.dart';
+import 'package:yahwehs_sword/utils/cross_version_search.dart'
     show CrossVersionSearchMode;
-import 'package:seeksparks/constants/workbench_theme.dart'
+import 'package:yahwehs_sword/constants/workbench_theme.dart'
     show WbColors, WbMetrics, WbType, WbSettingsScale;
 import 'package:provider/provider.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/update_service.dart';
-import 'package:seeksparks/models/app_style_preset.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/widgets/projection_stage.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/constants/projection_strings.dart';
-import 'package:seeksparks/constants/projection_setup.dart';
-import 'package:seeksparks/services/app_icon_service.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/pages/about_page.dart';
-import 'package:seeksparks/utils/theme_color_helpers.dart';
-import 'package:seeksparks/pages/profiles_page.dart';
-import 'package:seeksparks/models/notification_category.dart';
-import 'package:seeksparks/services/notification_service.dart';
-import 'package:seeksparks/widgets/contact_line.dart';
-import 'package:seeksparks/widgets/profile_avatar.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
+import 'package:yahwehs_sword/models/app_style_preset.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/widgets/projection_stage.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/constants/projection_strings.dart';
+import 'package:yahwehs_sword/constants/projection_setup.dart';
+import 'package:yahwehs_sword/services/app_icon_service.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/pages/about_page.dart';
+import 'package:yahwehs_sword/utils/theme_color_helpers.dart';
+import 'package:yahwehs_sword/pages/profiles_page.dart';
+import 'package:yahwehs_sword/models/notification_category.dart';
+import 'package:yahwehs_sword/services/notification_service.dart';
+import 'package:yahwehs_sword/widgets/contact_line.dart';
+import 'package:yahwehs_sword/widgets/profile_avatar.dart';
 // 2026-05-07 (v17): fetch_books / fetch_verses imports removed; the
 // only consumer was the deleted "Check for Updates" reload path.
-import 'package:seeksparks/services/export_service.dart';
-import 'package:seeksparks/services/import_service.dart';
-import 'package:seeksparks/utils/floating_toast.dart';
-import 'package:seeksparks/services/install_prompt_service.dart';
-import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart';
+import 'package:yahwehs_sword/services/export_service.dart';
+import 'package:yahwehs_sword/services/import_service.dart';
+import 'package:yahwehs_sword/utils/floating_toast.dart';
+import 'package:yahwehs_sword/services/install_prompt_service.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
 
-import 'package:seeksparks/services/offline_pack_service.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/onboarding_dialog.dart';
-import 'package:seeksparks/utils/responsive.dart';
+import 'package:yahwehs_sword/services/offline_pack_service.dart';
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/onboarding_dialog.dart';
+import 'package:yahwehs_sword/utils/responsive.dart';
 
 String getDevotionalFormattedText(
     List<Map<String, dynamic>> verses, String? book, int? chapter,

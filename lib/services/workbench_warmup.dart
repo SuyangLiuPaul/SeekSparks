@@ -40,14 +40,14 @@ library;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show kSecondaryVersionKey, loadableVersions, resolveSecondaryVersion;
-import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
-import 'package:seeksparks/models/wb_centre_mode.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/constants/book_names.dart' show bookNameToEnglish;
+import 'package:yahwehs_sword/models/wb_centre_mode.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 /// The bool that `workbench.centreMode.v1` replaced. Still read once, so
 /// a reader who had chosen the chapter reader keeps it; never written.

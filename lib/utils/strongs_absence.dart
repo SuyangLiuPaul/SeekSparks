@@ -16,8 +16,8 @@
 // `H1 will` masquerading as an expression, not to adjudicate what a real
 // Strong's number is". Here we ARE adjudicating, so the number has to be
 // the real one.
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/strongs_result_counts.dart' show groupThousands;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/strongs_result_counts.dart' show groupThousands;
 
 const int kGreekStrongsCeiling = 5624;
 const int kHebrewStrongsCeiling = 8674;

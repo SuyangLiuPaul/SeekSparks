@@ -17,12 +17,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/reader_analysis_request.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/utils/verse_notes.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/verse_notes_pane.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/reader_analysis_request.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/utils/verse_notes.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/verse_notes_pane.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -13,16 +13,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/strip_lanes.dart' show StripLaneKind;
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/chronology_depth_view.dart';
-import 'package:seeksparks/utils/radial_chronology_layout.dart'
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/strip_lanes.dart' show StripLaneKind;
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/chronology_depth_view.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart'
     show angleForSpan;
-import 'package:seeksparks/utils/wheel_stack_layout.dart';
-import 'package:seeksparks/utils/wheel_text_metrics.dart';
-import 'package:seeksparks/utils/year_digest.dart';
-import 'package:seeksparks/widgets/stacked_chronology_wheel.dart';
+import 'package:yahwehs_sword/utils/wheel_stack_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_text_metrics.dart';
+import 'package:yahwehs_sword/utils/year_digest.dart';
+import 'package:yahwehs_sword/widgets/stacked_chronology_wheel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -20,14 +20,14 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/models/chronology.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/models/strip_lanes.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
-import 'package:seeksparks/utils/year_digest.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
+import 'package:yahwehs_sword/models/chronology.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/models/strip_lanes.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/year_digest.dart';
 
 StripSpan _span(
   String id, {

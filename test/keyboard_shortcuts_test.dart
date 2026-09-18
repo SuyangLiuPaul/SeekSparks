@@ -10,8 +10,8 @@ library;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/keyboard_shortcuts.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/keyboard_shortcuts.dart';
 
 void main() {
   group('one table, read twice', () {

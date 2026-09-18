@@ -27,10 +27,10 @@
 /// nothing about whether 64 is all of them. See [scopedCountLabel].
 library;
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/command_verb.dart' show LimitRange, LimitSpec;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart' show LimitRange, LimitSpec;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 /// A named run of books the picker offers as one tap.
 ///

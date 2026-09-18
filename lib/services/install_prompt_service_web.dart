@@ -7,7 +7,7 @@ library;
 import 'dart:js_interop';
 
 import 'package:web/web.dart' as web;
-import 'package:seeksparks/services/install_prompt_service.dart';
+import 'package:yahwehs_sword/services/install_prompt_service.dart';
 
 @JS('seekSparksInstall')
 external _YsInstall? get _seekSparksInstall;

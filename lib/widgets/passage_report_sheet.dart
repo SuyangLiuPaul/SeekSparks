@@ -15,16 +15,16 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/passage_report_service.dart';
-import 'package:seeksparks/utils/app_scroll_behavior.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/passage_report_service.dart';
+import 'package:yahwehs_sword/utils/app_scroll_behavior.dart'
     show kSelectableTextPhysics;
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/passage_report.dart';
-import 'package:seeksparks/widgets/wb_pane_bits.dart' show WbPaneChip;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/passage_report.dart';
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart' show WbPaneChip;
 
 /// Returns `(html, markdown)` for the caller to put on the clipboard,
 /// or null when the reader closed the sheet.

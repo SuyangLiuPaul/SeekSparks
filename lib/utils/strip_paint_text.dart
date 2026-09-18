@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// One immutable paragraph, reusable by the strip's three canvases.
 class StripPaintText {

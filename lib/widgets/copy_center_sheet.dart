@@ -4,24 +4,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/book_names.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/constants/version_attribution.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/app_scroll_behavior.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/book_names.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/constants/version_attribution.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/app_scroll_behavior.dart'
     show kSelectableTextPhysics;
-import 'package:seeksparks/utils/copy_format.dart';
-import 'package:seeksparks/utils/copy_marking.dart'
+import 'package:yahwehs_sword/utils/copy_format.dart';
+import 'package:yahwehs_sword/utils/copy_marking.dart'
     show hasHitMarks, hitMarkedSpans, markVerseHits;
-import 'package:seeksparks/utils/search_highlight.dart' show SearchHighlight;
-import 'package:seeksparks/utils/short_book_name.dart';
-import 'package:seeksparks/utils/verse_list.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart' show SearchHighlight;
+import 'package:yahwehs_sword/utils/short_book_name.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart';
 
 /// One thing the reader might mean by "copy this" — a label and the
 /// references behind it. The host page decides which of these exist,

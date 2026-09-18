@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:seeksparks/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
 
 /// Regression guard, ported from YsWords (which shipped this exact bug in
 /// v1.4.1-1.4.3 — see its HANDOFF.md).

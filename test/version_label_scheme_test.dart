@@ -23,14 +23,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/ui_strings.dart' show uiStrings;
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/command_verb.dart';
-import 'package:seeksparks/utils/version_gutter.dart';
-import 'package:seeksparks/widgets/workbench_chrome.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart' show uiStrings;
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart';
+import 'package:yahwehs_sword/utils/version_gutter.dart';
+import 'package:yahwehs_sword/widgets/workbench_chrome.dart';
 
 /// The scheme as the owner wrote it out on 2026-08-08.
 const _confirmed = {

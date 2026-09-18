@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/strongs_boolean_search.dart' show StrongsTerm;
-import 'package:seeksparks/utils/strongs_proximity.dart';
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart' show StrongsTerm;
+import 'package:yahwehs_sword/utils/strongs_proximity.dart';
 
 StrongsTerm term(String number, {bool wildcard = false}) {
   final prefix = number[0];

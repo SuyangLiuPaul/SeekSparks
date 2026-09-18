@@ -19,7 +19,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/versification.dart';
+import 'package:yahwehs_sword/services/versification.dart';
 
 Versification _shipped() => Versification.fromJson(
     jsonDecode(File('assets/versification.json').readAsStringSync())

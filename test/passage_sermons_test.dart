@@ -17,8 +17,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/passage_sermons.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/passage_sermons.dart';
 
 /// A hand-written reverse index in the shape `SermonRefs.byVerse` has:
 /// canonical `"Book C"` / `"Book C:V"` keys to sermon ids.

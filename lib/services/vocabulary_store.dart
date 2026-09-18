@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/services/error_reporter.dart';
-import 'package:seeksparks/services/profile_service.dart';
+import 'package:yahwehs_sword/services/error_reporter.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
 
 /// The set of Strong's numbers you have marked as learned.
 ///

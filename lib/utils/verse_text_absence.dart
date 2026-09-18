@@ -1,4 +1,4 @@
-import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
 
 /// Why a reference exists in an edition but carries no scripture of its
 /// own.

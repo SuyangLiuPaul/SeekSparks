@@ -1,14 +1,14 @@
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show normalizeDivineNamesInQuery;
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
-import 'package:seeksparks/utils/ketiv_qere.dart' show KetivQereSearchScope;
-import 'package:seeksparks/utils/plain_search.dart';
-import 'package:seeksparks/utils/strongs_boolean_search.dart';
-import 'package:seeksparks/utils/strongs_proximity.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart' show standardBookOrder;
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/utils/search_folding.dart' show foldSearchMarks;
+import 'package:yahwehs_sword/utils/ketiv_qere.dart' show KetivQereSearchScope;
+import 'package:yahwehs_sword/utils/plain_search.dart';
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart';
+import 'package:yahwehs_sword/utils/strongs_proximity.dart';
 
 /// Immutable result of a plain-text corpus scan — see
 /// [SearchService.scanText].

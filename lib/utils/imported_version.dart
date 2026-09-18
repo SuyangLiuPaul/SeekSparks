@@ -49,7 +49,7 @@ library;
 
 import 'dart:convert';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show bibleVersions, isKnownVersion;
 
 /// The attribution key an imported version carries. Declared here so

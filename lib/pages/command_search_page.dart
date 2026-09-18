@@ -19,11 +19,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/widgets/command_pane.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/providers/workbench_provider.dart';
+import 'package:yahwehs_sword/widgets/command_pane.dart';
 
 class CommandSearchPage extends StatefulWidget {
   const CommandSearchPage({super.key});

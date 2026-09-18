@@ -36,7 +36,7 @@
 /// of the defect being fixed here.
 library;
 
-import 'package:seeksparks/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
 
 /// Below this many results, the looser reading is worth measuring.
 ///

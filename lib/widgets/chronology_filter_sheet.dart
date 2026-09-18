@@ -2,15 +2,15 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/chronology_filter_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/services/chart_symbol_service.dart';
-import 'package:seeksparks/utils/chronology_symbols.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/wheel_default_streams.dart'
+import 'package:yahwehs_sword/constants/chronology_filter_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/services/chart_symbol_service.dart';
+import 'package:yahwehs_sword/utils/chronology_symbols.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart'
     show defaultVisibleStreams;
-import 'package:seeksparks/utils/wheel_search.dart'
+import 'package:yahwehs_sword/utils/wheel_search.dart'
     show
         foldForWheelSearch,
         kLifespanLayerId,

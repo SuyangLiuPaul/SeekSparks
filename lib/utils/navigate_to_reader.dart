@@ -24,9 +24,9 @@
 // Either way the stack ends with EXACTLY ONE reader.
 
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
 
-import 'package:seeksparks/pages/workbench_page.dart';
+import 'package:yahwehs_sword/pages/workbench_page.dart';
 
 /// The classic single-pane reader's route name.
 ///

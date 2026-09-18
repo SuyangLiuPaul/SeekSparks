@@ -18,11 +18,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/modern_concordance_service.dart';
-import 'package:seeksparks/services/naves_service.dart';
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/modern_concordance_service.dart';
+import 'package:yahwehs_sword/services/naves_service.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference;
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

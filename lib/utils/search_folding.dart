@@ -48,7 +48,7 @@
 /// cannot be added without meeting this comment.
 library;
 
-import 'package:seeksparks/utils/diacritics.dart'
+import 'package:yahwehs_sword/utils/diacritics.dart'
     show FoldedText, foldDiacritics, foldDiacriticsAligned;
 
 bool _ignorePointing = true;

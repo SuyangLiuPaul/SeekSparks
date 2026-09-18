@@ -22,8 +22,8 @@ import 'dart:math' as math;
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/projection_setup.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbColors;
+import 'package:yahwehs_sword/constants/projection_setup.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbColors;
 
 /// WCAG's contrast ratio, the same formula `palette_legibility_walk_test`
 /// uses one surface along.

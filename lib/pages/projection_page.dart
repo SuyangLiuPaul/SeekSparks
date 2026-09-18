@@ -150,7 +150,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show
         availableVersions,
         bibleVersionLanguage,
@@ -158,19 +158,19 @@ import 'package:seeksparks/constants/bible_versions.dart'
         menuBibleVersionLabel,
         resolveSecondaryVersion,
         shortBibleVersionLabel;
-import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
-import 'package:seeksparks/constants/projection_setup.dart';
-import 'package:seeksparks/constants/projection_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart'
+import 'package:yahwehs_sword/constants/book_names.dart' show bookNameToEnglish;
+import 'package:yahwehs_sword/constants/projection_setup.dart';
+import 'package:yahwehs_sword/constants/projection_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart'
     show WbColors, WbMetrics, WbType;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/projection_agenda.dart';
-import 'package:seeksparks/services/projection_broadcast.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/url_sync_service.dart';
-import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
-import 'package:seeksparks/widgets/projection_stage.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/projection_agenda.dart';
+import 'package:yahwehs_sword/services/projection_broadcast.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/url_sync_service.dart';
+import 'package:yahwehs_sword/widgets/overflow_hint_scroll.dart';
+import 'package:yahwehs_sword/widgets/projection_stage.dart';
 
 /// The type ladder, the grounds and the preset codec moved to
 /// `constants/projection_setup.dart` on 2026-09-09, because
@@ -179,7 +179,7 @@ import 'package:seeksparks/widgets/projection_stage.dart';
 /// caller that already says `kProjectionTypeSteps` off this page — the
 /// two projection tests among them — keeps working, and so there is
 /// still one obvious door to the projection's vocabulary.
-export 'package:seeksparks/constants/projection_setup.dart';
+export 'package:yahwehs_sword/constants/projection_setup.dart';
 
 /// The URL this page owns while it is open — see `page_links.dart` for
 /// the two doors a page path arrives through, and `UrlClaim` for why the

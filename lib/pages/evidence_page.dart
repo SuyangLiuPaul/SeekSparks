@@ -1,28 +1,28 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/widgets/press_scale.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/theme_color_helpers.dart';
-import 'package:seeksparks/models/bible_evidence.dart';
-import 'package:seeksparks/pages/evidence_detail_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/widgets/press_scale.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/theme_color_helpers.dart';
+import 'package:yahwehs_sword/models/bible_evidence.dart';
+import 'package:yahwehs_sword/pages/evidence_detail_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localeAwareBookName, localizedReferenceLabel;
-import 'package:seeksparks/services/bible_evidence_service.dart';
-import 'package:seeksparks/utils/jump_to_reference.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/widgets/confidence_badge.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/navigate_to_reader.dart';
+import 'package:yahwehs_sword/services/bible_evidence_service.dart';
+import 'package:yahwehs_sword/utils/jump_to_reference.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/widgets/confidence_badge.dart';
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/navigate_to_reader.dart';
 
 /// Browse the Biblical Evidence Archive — 225 archaeological,
 /// manuscript, scientific, and historical findings that intersect

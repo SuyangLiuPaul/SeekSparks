@@ -52,11 +52,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/widgets/bible_reading_pane.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
+import 'package:yahwehs_sword/widgets/bible_reading_pane.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

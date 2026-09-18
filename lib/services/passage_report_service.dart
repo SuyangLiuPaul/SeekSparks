@@ -11,13 +11,13 @@
 /// no fact of its own.
 library;
 
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/utils/morphology.dart'
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/utils/morphology.dart'
     show describeMorphology, parseMorphology;
-import 'package:seeksparks/utils/passage_report.dart';
+import 'package:yahwehs_sword/utils/passage_report.dart';
 
 class PassageReportService {
   PassageReportService._();

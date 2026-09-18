@@ -38,24 +38,24 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/pages/map_viewer_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/map_service.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/illustration_index.dart';
-import 'package:seeksparks/utils/search_scope.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/pages/map_viewer_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/map_service.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/illustration_index.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart'
     show limitSpecForBooks, scopeDisplayName, scopedCountLabel;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/illustration_image.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/search_scope_sheet.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/illustration_image.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/search_scope_sheet.dart';
 
 /// Below this the search field and the filters stop sharing a row.
 ///

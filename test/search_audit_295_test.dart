@@ -7,11 +7,11 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/command_query.dart'
+import 'package:yahwehs_sword/utils/command_query.dart'
     show needsWildcardPromotion, parseCommandQuery, CommandKind;
-import 'package:seeksparks/utils/command_verb.dart';
-import 'package:seeksparks/utils/strongs_result_counts.dart';
-import 'package:seeksparks/utils/version_abbreviation.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart';
+import 'package:yahwehs_sword/utils/strongs_result_counts.dart';
+import 'package:yahwehs_sword/utils/version_abbreviation.dart';
 
 void main() {
   group('a Strong\'s header reports both units and claims neither falsely',

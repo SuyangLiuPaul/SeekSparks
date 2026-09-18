@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/widgets/left_accent_card.dart';
+import 'package:yahwehs_sword/widgets/left_accent_card.dart';
 
 void main() {
   // Regression guard for the "A borderRadius can only be given on

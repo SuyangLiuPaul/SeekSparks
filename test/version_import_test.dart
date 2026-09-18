@@ -12,9 +12,9 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/book_name_mapping.dart';
-import 'package:seeksparks/utils/imported_version.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart';
+import 'package:yahwehs_sword/utils/imported_version.dart';
 
 void main() {
   tearDown(() {

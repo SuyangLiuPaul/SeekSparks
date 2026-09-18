@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/chronology.dart';
-import 'package:seeksparks/utils/chronology_layout.dart';
+import 'package:yahwehs_sword/models/chronology.dart';
+import 'package:yahwehs_sword/utils/chronology_layout.dart';
 
 /// The chart is arithmetic on ages the Bible states, so the tests that
 /// matter are about the arithmetic and about the asset, not about

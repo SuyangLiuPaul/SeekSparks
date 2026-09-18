@@ -9,7 +9,7 @@
 // and each is pure, so the reproduction is a unit test rather than a
 // paragraph.
 
-import 'package:seeksparks/utils/page_links.dart';
+import 'package:yahwehs_sword/utils/page_links.dart';
 
 /// Whether the address bar has to be written so that it reads [want].
 ///

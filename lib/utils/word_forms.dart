@@ -25,7 +25,7 @@
 /// to rather than an error state. See `tools/build_forms_index.py`.
 library;
 
-import 'package:seeksparks/constants/book_slugs.dart' show slugToBook;
+import 'package:yahwehs_sword/constants/book_slugs.dart' show slugToBook;
 
 /// `'1_corinthians'` → `'1 Corinthians'`.
 ///

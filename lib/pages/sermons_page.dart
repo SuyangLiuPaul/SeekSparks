@@ -1,26 +1,26 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/sermon_credit.dart';
-import 'package:seeksparks/constants/sermon_topics.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/pages/sermon_detail_page.dart';
-import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
-import 'package:seeksparks/services/sermon_service.dart';
-import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/press_scale.dart';
+import 'package:yahwehs_sword/constants/sermon_credit.dart';
+import 'package:yahwehs_sword/constants/sermon_topics.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbType;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/sermon.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/pages/sermon_detail_page.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart' show standardBookOrder;
+import 'package:yahwehs_sword/services/sermon_service.dart';
+import 'package:yahwehs_sword/utils/passage_localizer.dart' show localizePassage;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/press_scale.dart';
 
 /// Topic-grouped browser for the Pastor Eric sermon corpus.
 ///

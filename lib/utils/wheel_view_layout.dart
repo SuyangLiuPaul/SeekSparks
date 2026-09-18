@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
 
 /// The wheel controls occupy their own row above the year digest. The
 /// initial stream budget reserves the same height as the rendered footer

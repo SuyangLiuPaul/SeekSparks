@@ -16,7 +16,7 @@
 /// file invents none.
 library;
 
-import 'package:seeksparks/utils/journey_route.dart';
+import 'package:yahwehs_sword/utils/journey_route.dart';
 
 /// One journey, and every place in it that is THIS place.
 class PlaceOnJourney {

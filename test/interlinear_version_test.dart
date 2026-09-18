@@ -20,15 +20,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/word_study_style.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/interlinear_editions.dart';
-import 'package:seeksparks/widgets/interlinear_verse_text.dart';
-import 'package:seeksparks/widgets/originals_sheet.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/word_study_style.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/interlinear_editions.dart';
+import 'package:yahwehs_sword/widgets/interlinear_verse_text.dart';
+import 'package:yahwehs_sword/widgets/originals_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

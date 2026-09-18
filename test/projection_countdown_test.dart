@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/widgets/projection_stage.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/widgets/projection_stage.dart';
 
 /// The countdown before a service starts — VideoPsalm parity, and the
 /// thing a hall that is filling actually needs on the wall.

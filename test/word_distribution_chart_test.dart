@@ -13,9 +13,9 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
-import 'package:seeksparks/utils/search_scope.dart' show kScopeAllBooks;
-import 'package:seeksparks/utils/search_stats.dart';
+import 'package:yahwehs_sword/constants/book_groups.dart' show oldTestamentBooks;
+import 'package:yahwehs_sword/utils/search_scope.dart' show kScopeAllBooks;
+import 'package:yahwehs_sword/utils/search_stats.dart';
 
 void main() {
   group('buildDistributionFromCounts', () {

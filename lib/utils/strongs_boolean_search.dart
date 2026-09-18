@@ -26,7 +26,7 @@
 // and UI live elsewhere (search_page.dart), so this stays unit-testable with
 // no asset or Flutter dependency.
 
-import 'package:seeksparks/utils/command_query.dart' show CommandIssue;
+import 'package:yahwehs_sword/utils/command_query.dart' show CommandIssue;
 
 /// One term in a boolean query, e.g. `G25` or `H7225*`.
 class StrongsTerm {

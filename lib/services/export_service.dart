@@ -24,9 +24,9 @@ library;
 
 import 'dart:convert';
 
-import 'package:seeksparks/constants/app_version.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/verse_notes.dart' show parseVerseId;
+import 'package:yahwehs_sword/constants/app_version.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/verse_notes.dart' show parseVerseId;
 
 class ExportService {
   /// Returns a Markdown document with three sections (Highlights,

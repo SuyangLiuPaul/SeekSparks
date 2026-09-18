@@ -26,14 +26,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/pages/bible_timeline_page.dart';
-import 'package:seeksparks/pages/chronology_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/family_tree_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
-import 'package:seeksparks/widgets/person_detail_sheet.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/pages/bible_timeline_page.dart';
+import 'package:yahwehs_sword/pages/chronology_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/family_tree_service.dart';
+import 'package:yahwehs_sword/services/timeline_service.dart';
+import 'package:yahwehs_sword/widgets/person_detail_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

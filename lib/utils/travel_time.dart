@@ -67,9 +67,9 @@
 /// **Sea legs get no number at all, on purpose.** See [JourneyTravel].
 library;
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/bible_journey.dart';
-import 'package:seeksparks/utils/journey_route.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/bible_journey.dart';
+import 'package:yahwehs_sword/utils/journey_route.dart';
 
 /// A day's walk for an unencumbered party, ORBIS's "foot travelers
 /// including armies on the march". The fast end, so it yields the FEWEST

@@ -23,11 +23,11 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/book_name_mapping.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/version_attribution.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/version_attribution.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 void main() {
   late List<Map<String, dynamic>> csb;

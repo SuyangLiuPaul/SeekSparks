@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/chronology.dart';
+import 'package:yahwehs_sword/models/chronology.dart';
 
 /// Loads `assets/chronology.json` — the Genesis 5 and 11 lifespans read
 /// out of the Bible texts this app ships.

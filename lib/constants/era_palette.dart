@@ -22,7 +22,7 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
 
 /// Era key → colour. Covers both vocabularies; a key absent from one
 /// view simply never gets looked up there.

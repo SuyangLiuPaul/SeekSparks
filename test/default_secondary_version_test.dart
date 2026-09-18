@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/utils/responsive.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/utils/responsive.dart';
 
 /// Split View used to seed its second pane with the primary's version,
 /// so it rendered the same chapter twice. These pin the replacement

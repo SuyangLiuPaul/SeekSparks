@@ -22,9 +22,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/naves_page.dart';
-import 'package:seeksparks/services/naves_service.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/naves_page.dart';
+import 'package:yahwehs_sword/services/naves_service.dart';
 
 /// JESUS, THE CHRIST — 801 lines, 3,828 references, the largest entry in
 /// the work and the reason the outline collapses at all.

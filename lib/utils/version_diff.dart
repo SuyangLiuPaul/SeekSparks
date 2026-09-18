@@ -58,8 +58,8 @@
 /// Pure string, list and set work: no Flutter, no assets, no I/O.
 library;
 
-import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
-import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
+import 'package:yahwehs_sword/constants/bible_versions.dart' show bibleVersions;
+import 'package:yahwehs_sword/utils/phrase_match.dart' show phraseTokens;
 
 /// One token of a row, and where it sits in the row's rendering.
 ///

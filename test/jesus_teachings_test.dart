@@ -12,13 +12,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/jesus_teachings_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/jesus_teachings_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
-import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/jesus_teachings_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/jesus_teachings_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/passage_localizer.dart' show localizePassage;
+import 'package:yahwehs_sword/utils/reference_parser.dart' show parseReference;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

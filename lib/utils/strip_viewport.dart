@@ -5,7 +5,7 @@
 library;
 
 import 'dart:math' as math;
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
 
 double stripFitScale(double viewportWidth) =>
     pxPerYearToFit(kStripMinYear, kStripMaxYear, math.max(1, viewportWidth));

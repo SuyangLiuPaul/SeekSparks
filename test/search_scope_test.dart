@@ -8,9 +8,9 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/command_verb.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart'
     show
         CommandVerbParse,
         LimitRange,
@@ -18,7 +18,7 @@ import 'package:seeksparks/utils/command_verb.dart'
         VerbContext,
         VerbVersion,
         parseCommandVerb;
-import 'package:seeksparks/utils/search_scope.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart';
 
 /// A stand-in registry, as in `command_verb_test` — these tests pin the
 /// scope model, not the shipping list of editions.

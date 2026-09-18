@@ -23,16 +23,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/pages/hebrew_kings_page.dart';
-import 'package:seeksparks/pages/wheel_sheets.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/utils/kings_chart_layout.dart';
-import 'package:seeksparks/utils/kings_contemporaries.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/pages/hebrew_kings_page.dart';
+import 'package:yahwehs_sword/pages/wheel_sheets.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart';
+import 'package:yahwehs_sword/utils/kings_chart_layout.dart';
+import 'package:yahwehs_sword/utils/kings_contemporaries.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
 
 HebrewKing _king({
   required String id,

@@ -14,14 +14,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/context_pane.dart';
-import 'package:seeksparks/utils/context_words.dart';
-import 'package:seeksparks/utils/pericope.dart';
-import 'package:seeksparks/utils/word_pos.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/context_pane.dart';
+import 'package:yahwehs_sword/utils/context_words.dart';
+import 'package:yahwehs_sword/utils/pericope.dart';
+import 'package:yahwehs_sword/utils/word_pos.dart';
 
 void _ignoreVerse(int chapter, int verse) {}
 

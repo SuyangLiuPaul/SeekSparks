@@ -1,8 +1,8 @@
 /// 2026-08-08 (SeekSparks): a place in the biblical gazetteer.
 library;
 
-import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
-import 'package:seeksparks/utils/place_geo.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart' show BookScript;
+import 'package:yahwehs_sword/utils/place_geo.dart';
 
 /// One scripture reference on a place, already resolved to the canonical
 /// English book name the rest of the app indexes on.

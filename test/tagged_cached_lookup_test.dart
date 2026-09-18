@@ -10,7 +10,7 @@
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart' show WbColors;
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbColors;
 
 /// Theme-aware color helpers for places where we want to use a
 /// **specific palette** (teal for Aramaic, indigo for Hebrew, etc.)

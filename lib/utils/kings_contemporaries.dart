@@ -27,7 +27,7 @@
 /// which is the property that matters; neither consults a name.
 library;
 
-import 'package:seeksparks/models/hebrew_king.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
 
 /// Kings of the OTHER kingdom whose reign shared a year with [k],
 /// earliest first.

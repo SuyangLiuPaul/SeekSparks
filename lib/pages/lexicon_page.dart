@@ -41,22 +41,22 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/pages/strongs_entry_page.dart';
-import 'package:seeksparks/services/chinese_lexicon_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/thayer_service.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/lexicon_browse.dart';
-import 'package:seeksparks/utils/thayer_parse.dart' show parseThayerEntry;
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/wb_surfaces.dart' show WbTag;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/pages/strongs_entry_page.dart';
+import 'package:yahwehs_sword/services/chinese_lexicon_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/thayer_service.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/lexicon_browse.dart';
+import 'package:yahwehs_sword/utils/thayer_parse.dart' show parseThayerEntry;
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/wb_surfaces.dart' show WbTag;
 
 /// Article hits rendered at once. The header always names the true
 /// total: a cap on a sorted list is a silent WHERE clause.

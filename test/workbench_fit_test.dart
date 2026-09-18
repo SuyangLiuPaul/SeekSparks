@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/workbench_fit.dart';
+import 'package:yahwehs_sword/utils/workbench_fit.dart';
 
 /// The whole small-screen advisory reduces to `adviceFor`. Everything
 /// interesting is a boundary, so every boundary is pinned here.

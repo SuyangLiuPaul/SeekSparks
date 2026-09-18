@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/utils/illustration_index.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/utils/illustration_index.dart';
 
 BibleMap _m(
   String id, {

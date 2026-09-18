@@ -22,12 +22,12 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/utils/phrase_match.dart';
-import 'package:seeksparks/utils/short_book_name.dart';
-import 'package:seeksparks/widgets/wb_pane_bits.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/utils/phrase_match.dart';
+import 'package:yahwehs_sword/utils/short_book_name.dart';
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart';
 
 class PhraseMatchPane extends StatefulWidget {
   const PhraseMatchPane({

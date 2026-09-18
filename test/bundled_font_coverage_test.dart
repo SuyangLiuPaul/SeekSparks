@@ -25,7 +25,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/font_catalog.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
 
 /// Code points with a non-zero glyph id in [bytes], an sfnt font.
 Set<int> cmapOf(Uint8List bytes) {

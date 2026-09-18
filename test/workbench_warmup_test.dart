@@ -9,10 +9,10 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/wb_centre_mode.dart';
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/models/wb_centre_mode.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show loadableVersions;
-import 'package:seeksparks/services/workbench_warmup.dart';
+import 'package:yahwehs_sword/services/workbench_warmup.dart';
 
 void main() {
   List<String> order({

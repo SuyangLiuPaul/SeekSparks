@@ -5,8 +5,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/kwic.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/kwic.dart';
 
 KwicLine _line(String reference, {int hitIndex = 0}) => KwicLine(
       reference: reference,

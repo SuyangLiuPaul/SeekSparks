@@ -53,7 +53,7 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
+import 'package:yahwehs_sword/utils/related_verses.dart' show isCjkChar;
 
 // ── the time axis ────────────────────────────────────────────────────
 

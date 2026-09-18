@@ -1,15 +1,15 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/lxx_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/lxx_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbType;
 
 /// Holistic per-book / per-corpus distribution table for a set of
 /// Strong's entries (typically the current word + its word family +

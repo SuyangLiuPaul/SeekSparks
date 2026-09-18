@@ -42,8 +42,8 @@ library;
 import 'dart:ui' show Offset, Path, Rect;
 import 'dart:math' as math;
 
-import 'package:seeksparks/models/chronology.dart' show Patriarch;
-import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
+import 'package:yahwehs_sword/models/chronology.dart' show Patriarch;
+import 'package:yahwehs_sword/utils/related_verses.dart' show isCjkChar;
 
 /// How far round the wheel the axis runs. The remaining 40° is the gap.
 const double sweepRad = 320 * math.pi / 180;

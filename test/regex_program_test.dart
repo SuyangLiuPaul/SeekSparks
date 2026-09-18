@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/regex_program.dart';
+import 'package:yahwehs_sword/utils/regex_program.dart';
 
 /// bwh43i's operator table, driven once each, plus the one property the
 /// whole file exists for: this engine cannot be made to hang.

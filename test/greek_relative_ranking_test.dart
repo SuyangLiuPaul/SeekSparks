@@ -28,13 +28,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/greek_stats_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/greek_relative_ranking.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/greek_stats_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/greek_relative_ranking.dart';
 
 /// βδέλυγμα — 6 occurrences, three of them in Revelation. The word the
 /// service's own doc comment has used as its example since the import,

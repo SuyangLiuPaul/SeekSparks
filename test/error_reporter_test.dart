@@ -10,8 +10,8 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/error_reporter.dart';
-import 'package:seeksparks/services/error_reporter_platform_io.dart'
+import 'package:yahwehs_sword/services/error_reporter.dart';
+import 'package:yahwehs_sword/services/error_reporter_platform_io.dart'
     as platform;
 
 void main() {

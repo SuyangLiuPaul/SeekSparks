@@ -2,31 +2,31 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart' show loadableVersions;
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/models/wb_centre_mode.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/search_service.dart';
-import 'package:seeksparks/services/tagged_text_service.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart' show loadableVersions;
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/models/wb_centre_mode.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/search_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart'
     show TaggedTextService;
-import 'package:seeksparks/services/vocabulary_service.dart';
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/services/vocabulary_service.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForSearchKey, searchCorpusKey;
-import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/cross_version_query.dart';
-import 'package:seeksparks/utils/cross_version_search.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart' show KetivQereSearchScope;
-import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
-import 'package:seeksparks/utils/compound_query.dart';
-import 'package:seeksparks/utils/romanised_lemma.dart';
-import 'package:seeksparks/utils/search_broadening.dart';
-import 'package:seeksparks/utils/search_scope.dart' show limitSpecForBooks;
-import 'package:seeksparks/utils/strongs_boolean_search.dart';
-import 'package:seeksparks/utils/strongs_result_counts.dart';
-import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
-import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
+import 'package:yahwehs_sword/services/fetch_verses.dart' show FetchVerses;
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/cross_version_query.dart';
+import 'package:yahwehs_sword/utils/cross_version_search.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart' show KetivQereSearchScope;
+import 'package:yahwehs_sword/utils/command_verb.dart' show LimitSpec;
+import 'package:yahwehs_sword/utils/compound_query.dart';
+import 'package:yahwehs_sword/utils/romanised_lemma.dart';
+import 'package:yahwehs_sword/utils/search_broadening.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart' show limitSpecForBooks;
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart';
+import 'package:yahwehs_sword/utils/strongs_result_counts.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart' show applySearchLimit;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show toEnglish;
 
 /// State glue for the three-pane Workbench (`workbench_page.dart`) —
 /// SeekSparks' BibleWorks-style pad workspace: command line + results

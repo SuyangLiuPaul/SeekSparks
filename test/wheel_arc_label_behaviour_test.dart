@@ -41,9 +41,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
 
 const _family = 'Roboto';
 const _fallback = ['NotoSansSC-Sub'];

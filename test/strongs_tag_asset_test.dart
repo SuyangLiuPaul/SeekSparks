@@ -25,9 +25,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForSearchKey, searchCorpusKey;
-import 'package:seeksparks/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
 
 void main() {
   late List<String> texts;

@@ -31,8 +31,8 @@
 /// which label a crowded map keeps — are the parts under test.
 library;
 
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/search_scope.dart' show canonicalScopeOrder;
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart' show canonicalScopeOrder;
 
 /// Fold a name or a query into the form the two are compared in.
 ///

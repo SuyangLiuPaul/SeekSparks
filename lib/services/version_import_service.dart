@@ -9,10 +9,10 @@
 /// row's own condition and the reason the feature is defensible at all.
 library;
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show importedVersionLabels, importedVersionScripts;
-import 'package:seeksparks/services/local_version_store.dart';
-import 'package:seeksparks/utils/imported_version.dart';
+import 'package:yahwehs_sword/services/local_version_store.dart';
+import 'package:yahwehs_sword/utils/imported_version.dart';
 
 /// What happened, in the terms the reader needs.
 enum ImportOutcome {

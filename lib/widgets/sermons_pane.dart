@@ -30,14 +30,14 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/sermon_credit.dart';
-import 'package:seeksparks/constants/sermon_topics.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/services/sermon_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/passage_sermons.dart';
+import 'package:yahwehs_sword/constants/sermon_credit.dart';
+import 'package:yahwehs_sword/constants/sermon_topics.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/sermon.dart';
+import 'package:yahwehs_sword/services/sermon_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/passage_sermons.dart';
 
 class SermonsPane extends StatefulWidget {
   const SermonsPane({

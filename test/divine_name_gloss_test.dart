@@ -18,13 +18,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show versePreviewText;
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/copy_format.dart';
-import 'package:seeksparks/utils/kwic.dart';
-import 'package:seeksparks/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/copy_format.dart';
+import 'package:yahwehs_sword/utils/kwic.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
 
 TaggedRun run(String text, String strongs) =>
     TaggedRun(text: text, strongs: strongs);

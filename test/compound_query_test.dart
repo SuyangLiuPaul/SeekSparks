@@ -8,11 +8,11 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/compound_query.dart';
-import 'package:seeksparks/utils/diacritics.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/compound_query.dart';
+import 'package:yahwehs_sword/utils/diacritics.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
 
 const _texts = <String>[
   'grace and truth came', //        0  Genesis   grace

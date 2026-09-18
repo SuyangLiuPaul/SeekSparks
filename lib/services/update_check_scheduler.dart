@@ -29,8 +29,8 @@
 //      actually exists.
 library;
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/update_service.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
 
 /// Runs the check if it is due, and reports a newer release.
 ///

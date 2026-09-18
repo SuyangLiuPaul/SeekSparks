@@ -15,10 +15,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/update_check_frequency.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/update_check_scheduler.dart';
-import 'package:seeksparks/services/update_service.dart';
+import 'package:yahwehs_sword/constants/update_check_frequency.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/update_check_scheduler.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
 
 UpdateInfo _info({required bool available}) => UpdateInfo(
       updateAvailable: available,

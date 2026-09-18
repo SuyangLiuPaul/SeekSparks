@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/command_verb.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart';
 
 /// A stand-in registry. Deliberately NOT the real `bibleVersions`: these
 /// tests pin the grammar, and they should not start failing the day an

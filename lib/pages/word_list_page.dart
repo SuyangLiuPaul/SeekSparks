@@ -20,22 +20,22 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/constants/book_names.dart'
+import 'package:yahwehs_sword/constants/book_names.dart'
     show bookNameToEnglish, standardBookOrder;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
-import 'package:seeksparks/pages/strongs_entry_page.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/constants/book_groups.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbType;
+import 'package:yahwehs_sword/pages/strongs_entry_page.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/constants/book_groups.dart'
     show canonicalNtBooks, canonicalOtBooks;
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/utils/short_book_name.dart' show shortBookName;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/utils/word_list.dart';
-import 'package:seeksparks/utils/word_list_compare.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/short_book_name.dart' show shortBookName;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/utils/word_list.dart';
+import 'package:yahwehs_sword/utils/word_list_compare.dart';
 
 /// bwh26's scopes. `testament` was the row's remaining "compile a list
 /// from a whole version": a version IS its testament here, because

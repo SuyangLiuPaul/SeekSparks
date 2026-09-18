@@ -14,9 +14,9 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/synopsis_service.dart';
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/utils/synopsis_columns.dart';
+import 'package:yahwehs_sword/services/synopsis_service.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference;
+import 'package:yahwehs_sword/utils/synopsis_columns.dart';
 
 SynopsisPassage passage(String book, {bool resolves = true}) =>
     SynopsisPassage(

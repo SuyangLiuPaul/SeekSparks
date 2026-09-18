@@ -39,19 +39,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/main.dart'
+import 'package:yahwehs_sword/main.dart'
     show appGenerateRoute, appUnknownRoute;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kWheelUrlPath;
-import 'package:seeksparks/pages/strip_chronology_page.dart'
+import 'package:yahwehs_sword/pages/strip_chronology_page.dart'
     show StripChronologyPage, kStripUrlPath;
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/chronology_chart_entry.dart'
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/chronology_chart_entry.dart'
     show chronologyChartEntryPage;
-import 'package:seeksparks/utils/page_links.dart';
-import 'package:seeksparks/widgets/chart_help_sheet.dart';
+import 'package:yahwehs_sword/utils/page_links.dart';
+import 'package:yahwehs_sword/widgets/chart_help_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

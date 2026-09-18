@@ -26,12 +26,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/synopsis_service.dart';
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/synopsis_parallels.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/synopsis_service.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference;
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/synopsis_parallels.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/app_style_preset.dart';
-import 'package:seeksparks/utils/font_catalog.dart';
+import 'package:yahwehs_sword/models/app_style_preset.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
 
 /// v1.6.62 removed the `google_fonts` package, which deleted fourteen
 /// entries from the font catalogue. A key that is no longer in the

@@ -17,9 +17,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/widgets/verse_notes_block.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/widgets/verse_notes_block.dart';
 
 /// A verse carrying five notes, which is 羅馬書 8:28 in 梁家鏗 — the row
 /// the report was made against.

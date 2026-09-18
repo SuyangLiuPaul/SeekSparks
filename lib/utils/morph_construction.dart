@@ -55,9 +55,9 @@
 /// is `MorphSearchService`'s job.
 library;
 
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/utils/morph_query.dart';
-import 'package:seeksparks/utils/morphology.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/utils/morph_query.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
 
 /// One form in a construction, and how far it may sit from the previous.
 ///

@@ -25,13 +25,13 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/services/word_forms_service.dart';
-import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
-import 'package:seeksparks/utils/short_book_name.dart' show shortBookName;
-import 'package:seeksparks/utils/word_forms.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/services/word_forms_service.dart';
+import 'package:yahwehs_sword/utils/morphology.dart' show describeMorphology;
+import 'package:yahwehs_sword/utils/short_book_name.dart' show shortBookName;
+import 'package:yahwehs_sword/utils/word_forms.dart';
 
 class WordFormsSection extends StatefulWidget {
   const WordFormsSection({

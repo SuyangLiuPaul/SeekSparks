@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/models/app_settings.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
 
 /// 2026-09-13: 「好像这里面有原文（）这个复制粘贴要不要包含应该在setting
 /// 有一个option toggle」.

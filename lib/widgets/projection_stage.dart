@@ -75,16 +75,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show shortBibleVersionLabel;
-import 'package:seeksparks/constants/projection_setup.dart';
-import 'package:seeksparks/constants/projection_strings.dart';
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/projection_setup.dart';
+import 'package:yahwehs_sword/constants/projection_strings.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForProjection;
-import 'package:seeksparks/constants/workbench_theme.dart'
+import 'package:yahwehs_sword/constants/workbench_theme.dart'
     show WbColors, WbMetrics;
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// The second edition's size, as a fraction of the first's.
 const double kProjectionSecondScale = 0.82;

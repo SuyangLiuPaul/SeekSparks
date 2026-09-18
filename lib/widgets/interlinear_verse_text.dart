@@ -56,12 +56,12 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/word_study_style.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/scripture_markup.dart';
-import 'package:seeksparks/utils/strongs_inline.dart';
+import 'package:yahwehs_sword/constants/word_study_style.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/utils/strongs_inline.dart';
 
 class InterlinearVerseText extends StatelessWidget {
   const InterlinearVerseText({

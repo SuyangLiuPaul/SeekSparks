@@ -14,15 +14,15 @@ library;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/services/morph_search_service.dart';
-import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart';
-import 'package:seeksparks/utils/morph_query.dart';
-import 'package:seeksparks/utils/morphology.dart';
-import 'package:seeksparks/utils/strongs_boolean_search.dart';
-import 'package:seeksparks/utils/strongs_proximity.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/services/morph_search_service.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart';
+import 'package:yahwehs_sword/utils/morph_query.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart';
+import 'package:yahwehs_sword/utils/strongs_proximity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/pages/projection_page.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/pages/projection_page.dart';
 
 /// 2026-09-13: 「按了verse之后有一个按键for projector 可以按一个或者多个
 /// 然后就project」, and the Settings pairing 「如果中文…英文翻译用哪个版本

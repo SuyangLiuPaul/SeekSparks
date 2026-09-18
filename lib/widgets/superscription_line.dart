@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/build_verse_content_spans.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/responsive.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/build_verse_content_spans.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/responsive.dart';
 
 /// 2026-08-12 (docs/DATA-INTEGRITY.md check 31): the psalm title an
 /// edition prints above verse 1 — *"A Psalm of David, when Nathan the

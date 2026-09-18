@@ -2,24 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/era_palette.dart';
+import 'package:yahwehs_sword/constants/era_palette.dart';
 import 'package:flutter/rendering.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/services/family_tree_service.dart';
-import 'package:seeksparks/utils/biblical_role.dart' show localizedRole;
-import 'package:seeksparks/utils/floating_toast.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/person_detail_sheet.dart';
-import 'package:seeksparks/widgets/wb_surfaces.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart' show sanitizeForSearch;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
+import 'package:yahwehs_sword/services/family_tree_service.dart';
+import 'package:yahwehs_sword/utils/biblical_role.dart' show localizedRole;
+import 'package:yahwehs_sword/utils/floating_toast.dart';
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/person_detail_sheet.dart';
+import 'package:yahwehs_sword/widgets/wb_surfaces.dart';
 
 /// Browseable Bible family tree, modelled on the structure of the
 /// Wikipedia article *"Genealogies in the Bible"*:

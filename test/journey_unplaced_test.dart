@@ -6,9 +6,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/bible_journey.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/journey_route.dart';
+import 'package:yahwehs_sword/models/bible_journey.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/journey_route.dart';
 
 BiblePlace _place(String id, double? lat, double? lon) => BiblePlace(
       id: id,

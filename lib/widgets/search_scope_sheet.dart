@@ -18,13 +18,13 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/search_scope.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart' show LimitSpec;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/search_scope.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Opens the picker over [context]. Returns the chosen book set, or
 /// null if the reader dismissed it. An EMPTY set is a real answer — it

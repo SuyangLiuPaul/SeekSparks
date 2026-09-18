@@ -13,8 +13,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/atlas_index.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/atlas_index.dart';
 
 BiblePlace _p(
   String id, {

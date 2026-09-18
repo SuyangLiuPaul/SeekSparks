@@ -58,9 +58,9 @@
 /// fake. The dialog is `widgets/copy_center_sheet.dart`.
 library;
 
-import 'package:seeksparks/utils/scripture_markup.dart';
-import 'package:seeksparks/utils/verse_text_absence.dart';
-import 'package:seeksparks/utils/verse_list.dart'
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart'
     show VerseRef, canonicalBookIndex;
 
 // ── Injected naming ─────────────────────────────────────────────────

@@ -17,13 +17,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/journey_style.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/pages/atlas_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/journeys_service.dart';
-import 'package:seeksparks/services/places_service.dart';
+import 'package:yahwehs_sword/constants/journey_style.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/pages/atlas_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/journeys_service.dart';
+import 'package:yahwehs_sword/services/places_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

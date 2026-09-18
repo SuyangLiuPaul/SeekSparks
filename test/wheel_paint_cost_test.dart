@@ -20,7 +20,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/wheel_text_metrics.dart';
+import 'package:yahwehs_sword/utils/wheel_text_metrics.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

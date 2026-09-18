@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/utils/diacritics.dart' show foldDiacritics;
 
 /// Lazy loader for Strong's Greek + Hebrew lexicons. The two files are
 /// loaded independently the first time a number from that language is

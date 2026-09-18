@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/phrase_match_pane.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/phrase_match_pane.dart';
 
 /// Isaiah 7:14 and the verse that quotes it, plus a verse that shares
 /// vocabulary but no phrase, plus filler.

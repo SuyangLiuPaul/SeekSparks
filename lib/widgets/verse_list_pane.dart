@@ -20,15 +20,15 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/verse_list_store.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/scripture_markup.dart';
-import 'package:seeksparks/utils/verse_list.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/widgets/wb_pane_bits.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/verse_list_store.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart';
 
 /// Which VLM menu an item belongs to — one enum per popup so the
 /// callbacks stay flat.

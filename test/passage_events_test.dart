@@ -7,8 +7,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/utils/passage_events.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/utils/passage_events.dart';
 
 /// Book names are the trivial half of a ref (everything before the first
 /// whitespace-then-digit); extracting them is not the algorithm under

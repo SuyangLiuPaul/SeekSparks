@@ -12,9 +12,9 @@ import 'dart:convert';
 import 'dart:ui' show Size;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/place_geo.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart' show BookScript;
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/place_geo.dart';
 
 void main() {
   group('book codes', () {

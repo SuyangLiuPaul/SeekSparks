@@ -28,13 +28,13 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/strip_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/hebrew_king.dart' show Kingdom;
-import 'package:seeksparks/models/strip_lanes.dart';
-import 'package:seeksparks/utils/chronology_symbols.dart';
-import 'package:seeksparks/models/wheel_history.dart' show WheelHistoryEvent;
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/constants/strip_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart' show Kingdom;
+import 'package:yahwehs_sword/models/strip_lanes.dart';
+import 'package:yahwehs_sword/utils/chronology_symbols.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart' show WheelHistoryEvent;
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show
         centuryTickLabel,
         kingdomArcColor,
@@ -42,14 +42,14 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
         lineColor,
         ministryArcColor,
         yearLabel;
-import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
-import 'package:seeksparks/utils/radial_chronology_layout.dart'
+import 'package:yahwehs_sword/utils/font_catalog.dart' show canvasTextStyle;
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart'
     show selectionCovers;
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
-import 'package:seeksparks/utils/strip_paint_text.dart';
-import 'package:seeksparks/utils/strip_event_cards.dart';
-import 'package:seeksparks/utils/strip_depth_layout.dart';
-import 'package:seeksparks/utils/strip_paint_visibility.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/strip_paint_text.dart';
+import 'package:yahwehs_sword/utils/strip_event_cards.dart';
+import 'package:yahwehs_sword/utils/strip_depth_layout.dart';
+import 'package:yahwehs_sword/utils/strip_paint_visibility.dart';
 
 /// Retained as the old tick-cluster threshold for regression measurements.
 /// Event navigation now uses dated cards shared by painting and hit-testing.

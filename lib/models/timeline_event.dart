@@ -2,7 +2,7 @@
 /// `assets/bible_timeline.json`.
 library;
 
-import 'package:seeksparks/utils/date_hedge.dart';
+import 'package:yahwehs_sword/utils/date_hedge.dart';
 
 class TimelineEvent {
   /// Stable id (kebab/snake-case).

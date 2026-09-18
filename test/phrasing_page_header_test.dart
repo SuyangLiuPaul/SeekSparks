@@ -16,8 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/phrasing_page.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/phrasing_page.dart';
 
 Future<void> _pump(WidgetTester tester, Size size, {double font = 16}) async {
   tester.view.physicalSize = size;

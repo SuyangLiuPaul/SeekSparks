@@ -11,7 +11,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/family_tree_service.dart';
+import 'package:yahwehs_sword/services/family_tree_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

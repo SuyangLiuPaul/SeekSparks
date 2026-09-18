@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/era_palette.dart';
+import 'package:yahwehs_sword/constants/era_palette.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/widgets/left_accent_card.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/pages/chronology_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/family_tree_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
-import 'package:seeksparks/widgets/person_detail_sheet.dart';
-import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/timeline_basis.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/utils/navigate_to_reader.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart' show sanitizeForSearch;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/widgets/left_accent_card.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/pages/chronology_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/family_tree_service.dart';
+import 'package:yahwehs_sword/services/timeline_service.dart';
+import 'package:yahwehs_sword/widgets/person_detail_sheet.dart';
+import 'package:yahwehs_sword/utils/jump_to_reference.dart' as jumper;
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/timeline_basis.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/utils/navigate_to_reader.dart';
 
 /// Bible timeline — chronological view of 98 key biblical events
 /// from Creation (c. 4000 BC) to John on Patmos (AD 95), modelled

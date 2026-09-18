@@ -15,10 +15,10 @@
 // somewhere to live and the callers do not all churn.
 
 import 'package:flutter/widgets.dart';
-import 'package:seeksparks/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
 
-import 'package:seeksparks/pages/workbench_page.dart';
-import 'package:seeksparks/utils/navigate_to_reader.dart'
+import 'package:yahwehs_sword/pages/workbench_page.dart';
+import 'package:yahwehs_sword/utils/navigate_to_reader.dart'
     show kWorkbenchRouteName;
 
 /// Push the Bible reader: the Workbench, at every width.

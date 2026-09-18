@@ -25,8 +25,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
 
 /// The page's own fractions, restated because they are private to it —
 /// `wheel_lifespans_test.dart` and `wheel_arc_label_behaviour_test.dart`

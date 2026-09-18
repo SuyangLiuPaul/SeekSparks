@@ -21,7 +21,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/navigate_to_reader.dart';
+import 'package:yahwehs_sword/utils/navigate_to_reader.dart';
 
 void main() {
   group('routeIsReader', () {

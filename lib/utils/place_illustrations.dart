@@ -75,9 +75,9 @@
 /// by anything this file can see. See `docs/DATA-INTEGRITY.md` check 38.
 library;
 
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/illustration_index.dart'
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/illustration_index.dart'
     show illustrationAnchor;
 
 /// Gazetteer names the join refuses, because a picture caption using the

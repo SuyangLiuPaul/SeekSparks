@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
 
 /// The name that floats beside the pointer on the wheel and the strip.
 ///

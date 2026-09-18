@@ -27,7 +27,7 @@
 /// would be the `navigation parser is not a formatter` defect exactly.
 library;
 
-import 'package:seeksparks/models/timeline_event.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
 
 final RegExp _bookSplit = RegExp(r'\s(?=\d)');
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/phrase_match.dart';
-import 'package:seeksparks/utils/search_highlight.dart' show HighlightSpan;
+import 'package:yahwehs_sword/utils/phrase_match.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart' show HighlightSpan;
 
 /// Build an index over [corpus] with `corpus[0]` as the base verse
 /// unless told otherwise. Keeps the tests about the matching rules.

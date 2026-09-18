@@ -1,4 +1,4 @@
-import 'package:seeksparks/models/book.dart';
+import 'package:yahwehs_sword/models/book.dart';
 
 /// Where "the next chapter" and "the previous chapter" are, given the
 /// canon the CURRENT VERSION actually ships.

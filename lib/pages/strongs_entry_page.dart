@@ -1,31 +1,31 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show versePreviewText;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/pages/modern_concordance_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/concordance_reverse_index.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/jump_to_reference.dart' show prepareJumpToVerse;
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/pages/modern_concordance_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/concordance_reverse_index.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/jump_to_reference.dart' show prepareJumpToVerse;
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show translateBookName, localeAwareBookName, toEnglish;
-import 'package:seeksparks/widgets/collapsible_english_ref.dart';
-import 'package:seeksparks/widgets/concordance_topics_section.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/navigate_to_reader.dart';
+import 'package:yahwehs_sword/widgets/collapsible_english_ref.dart';
+import 'package:yahwehs_sword/widgets/concordance_topics_section.dart';
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/navigate_to_reader.dart';
 
 /// Standalone page for viewing a single Strong's lexicon entry by its
 /// number (e.g. "G25" / "H430"). Reachable from the search bar when

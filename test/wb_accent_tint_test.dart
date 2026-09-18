@@ -25,8 +25,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/app_icon_service.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/app_icon_service.dart';
 
 /// Every swatch the picker in `settings_page.dart` actually offers.
 /// Keep in lock-step with that list — a swatch that is offered and not

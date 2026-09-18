@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/phrasing.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/phrasing.dart';
 
 /// A Greek word. Every morph code in this file was checked against
 /// `assets/originals/*.json` rather than reconstructed from the scheme,

@@ -31,8 +31,8 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/utils/chapter_across_editions.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/utils/chapter_across_editions.dart';
 
 void main() {
   Verse v(String book, int chapter, int verse) =>

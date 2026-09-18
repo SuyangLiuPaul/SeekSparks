@@ -32,7 +32,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/app_scroll_behavior.dart';
+import 'package:yahwehs_sword/utils/app_scroll_behavior.dart';
 
 /// Marker comment that opts a call site out of [kSelectableTextPhysics]
 /// because its inner scrollable is genuinely the scroller.

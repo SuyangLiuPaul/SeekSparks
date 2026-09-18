@@ -12,8 +12,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/thayer_service.dart';
-import 'package:seeksparks/utils/lexicon_browse.dart';
+import 'package:yahwehs_sword/services/thayer_service.dart';
+import 'package:yahwehs_sword/utils/lexicon_browse.dart';
 
 List<LexiconHead> _load(String file) {
   final raw =

@@ -56,10 +56,10 @@
 /// This file is Flutter-free on purpose so the whole model is testable.
 library;
 
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForSearch;
-import 'package:seeksparks/utils/morphology.dart';
-import 'package:seeksparks/utils/related_verses.dart'
+import 'package:yahwehs_sword/utils/morphology.dart';
+import 'package:yahwehs_sword/utils/related_verses.dart'
     show isCjkChar, isWordChar;
 
 /// One word of the passage under study, flattened across verses.

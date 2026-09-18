@@ -53,40 +53,40 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/book_name_mapping.dart'
+import 'package:yahwehs_sword/constants/book_name_mapping.dart'
     show BookScript, bookScriptFor;
-import 'package:seeksparks/constants/journey_style.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/bible_journey.dart' show JourneyLeg;
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/pages/map_viewer_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/journeys_service.dart';
-import 'package:seeksparks/services/map_service.dart';
-import 'package:seeksparks/services/places_service.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/utils/atlas_index.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/journey_route.dart';
-import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
-import 'package:seeksparks/utils/navigate_to_reader.dart';
-import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
-import 'package:seeksparks/utils/place_illustrations.dart';
-import 'package:seeksparks/utils/place_journeys.dart';
-import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
-import 'package:seeksparks/utils/search_scope.dart'
+import 'package:yahwehs_sword/constants/journey_style.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/bible_journey.dart' show JourneyLeg;
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/pages/map_viewer_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/journeys_service.dart';
+import 'package:yahwehs_sword/services/map_service.dart';
+import 'package:yahwehs_sword/services/places_service.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/atlas_index.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/journey_route.dart';
+import 'package:yahwehs_sword/utils/jump_to_reference.dart' as jumper;
+import 'package:yahwehs_sword/utils/navigate_to_reader.dart';
+import 'package:yahwehs_sword/utils/place_geo.dart' show BaseMap;
+import 'package:yahwehs_sword/utils/place_illustrations.dart';
+import 'package:yahwehs_sword/utils/place_journeys.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart' show parseReference;
+import 'package:yahwehs_sword/utils/search_scope.dart'
     show limitSpecForBooks, scopeDisplayName, scopedCountLabel;
-import 'package:seeksparks/utils/travel_time.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/illustration_image.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/place_map.dart';
-import 'package:seeksparks/widgets/search_scope_sheet.dart';
+import 'package:yahwehs_sword/utils/travel_time.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/illustration_image.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/widgets/place_map.dart';
+import 'package:yahwehs_sword/widgets/search_scope_sheet.dart';
 
 /// Below this the map cannot sit beside the index and goes above it.
 ///

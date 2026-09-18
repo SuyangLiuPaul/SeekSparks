@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:seeksparks/utils/radial_chronology_layout.dart'
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart'
     show ringRadii, startRad, sweepRad;
-import 'package:seeksparks/utils/wheel_stack_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_stack_layout.dart';
 
 /// The existing wheel owns ring order and radii. Depth changes only the
 /// height of records on those rings, so switching views cannot move a

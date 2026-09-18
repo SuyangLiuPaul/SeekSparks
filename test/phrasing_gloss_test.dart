@@ -10,7 +10,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/phrasing.dart';
+import 'package:yahwehs_sword/utils/phrasing.dart';
 
 /// 1 Kings 21:1 — fifteen Hebrew words.
 const _hebrew = <String>[

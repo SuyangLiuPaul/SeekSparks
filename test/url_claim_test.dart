@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/url_claim.dart';
+import 'package:yahwehs_sword/utils/url_claim.dart';
 
 /// The two rules pulled out of `url_sync_service_web.dart`, which no
 /// test can import (`dart:js_interop`). Both were written from a defect

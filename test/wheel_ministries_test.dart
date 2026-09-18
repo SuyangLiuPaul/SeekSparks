@@ -28,10 +28,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/chronology.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/chronology.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show
         kMinistryArcPrefix,
         kKingArcPrefix,
@@ -40,10 +40,10 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
         ministryArcColor,
         ministrySpans,
         packWheelBand;
-import 'package:seeksparks/services/hebrew_kings_service.dart'
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart'
     show HebrewKingsData;
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
 
 late final List<WheelMinistry> ministries;
 late final Map<String, HebrewKing> kingsById;

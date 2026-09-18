@@ -23,15 +23,15 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/book_name_mapping.dart';
-import 'package:seeksparks/constants/section_title_map.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/version_attribution.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart';
+import 'package:yahwehs_sword/constants/section_title_map.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/version_attribution.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show translateBookName;
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 /// The exported SQLite these two editions were built from. Absent on a
 /// clean machine, which is why nothing here fails when it is missing —

@@ -41,9 +41,9 @@
 /// `widgets/verse_list_pane.dart`.
 library;
 
-import 'package:seeksparks/constants/book_groups.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart'
     show canonicalNtBooks, canonicalOtBooks;
-import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
 
 // ── Canonical ordering ──────────────────────────────────────────────
 

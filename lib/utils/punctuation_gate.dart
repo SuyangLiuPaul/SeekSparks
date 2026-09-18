@@ -134,8 +134,8 @@
 /// where the breaks are, and nothing else.
 library;
 
-import 'package:seeksparks/utils/phrase_match.dart' show PhraseToken;
-import 'package:seeksparks/utils/related_verses.dart' show isCjkChar, isWordChar;
+import 'package:yahwehs_sword/utils/phrase_match.dart' show PhraseToken;
+import 'package:yahwehs_sword/utils/related_verses.dart' show isCjkChar, isWordChar;
 
 /// bwh21's three settings, under bwh21's names.
 enum PunctuationMode {

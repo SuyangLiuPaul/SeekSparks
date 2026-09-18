@@ -57,8 +57,8 @@
 /// hid.
 library;
 
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
-import 'package:seeksparks/utils/romanised_lemma.dart'
+import 'package:yahwehs_sword/utils/diacritics.dart' show foldDiacritics;
+import 'package:yahwehs_sword/utils/romanised_lemma.dart'
     show collapseGreek, collapseHebrew, romanisedKey;
 
 /// Which lexicon is open. BibleWorks lists "the Hebrew Lexicons first,

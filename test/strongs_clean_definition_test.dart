@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/strongs.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
 
 StrongsEntry _entry({
   String? definitionZh,

@@ -38,9 +38,9 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/strip_lanes.dart' show StripLaneKind;
-import 'package:seeksparks/utils/year_digest.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/strip_lanes.dart' show StripLaneKind;
+import 'package:yahwehs_sword/utils/year_digest.dart';
 
 class YearDigestBar extends StatefulWidget {
   const YearDigestBar({

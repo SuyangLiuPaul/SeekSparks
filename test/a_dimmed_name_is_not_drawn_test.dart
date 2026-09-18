@@ -18,11 +18,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show lineageRailColor;
-import 'package:seeksparks/utils/chronology_palette.dart';
-import 'package:seeksparks/utils/wheel_view_layout.dart';
+import 'package:yahwehs_sword/utils/chronology_palette.dart';
+import 'package:yahwehs_sword/utils/wheel_view_layout.dart';
 
 /// WCAG relative luminance.
 double _luminance(Color c) {

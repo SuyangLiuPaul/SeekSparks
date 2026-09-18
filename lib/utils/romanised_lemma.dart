@@ -90,8 +90,8 @@
 /// assets without a widget tree.
 library;
 
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
-import 'package:seeksparks/utils/vocabulary.dart' show VocabWord;
+import 'package:yahwehs_sword/utils/diacritics.dart' show foldDiacritics;
+import 'package:yahwehs_sword/utils/vocabulary.dart' show VocabWord;
 
 /// One entry the reader's spelling reached.
 class LemmaCandidate {

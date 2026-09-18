@@ -21,12 +21,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/bible_evidence.dart';
-import 'package:seeksparks/pages/evidence_detail_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/bible_evidence.dart';
+import 'package:yahwehs_sword/pages/evidence_detail_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localeAwareBookName, localizedReferenceLabel;
 
 /// No images, so the widget tree never reaches `Image.network` and the

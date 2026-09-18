@@ -43,8 +43,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
-import 'package:seeksparks/models/app_settings.dart'
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbMetrics;
+import 'package:yahwehs_sword/models/app_settings.dart'
     show kFontSizeDefault, kFontSizeMax;
 
 void main() {

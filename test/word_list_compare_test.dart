@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/utils/word_list.dart';
-import 'package:seeksparks/utils/word_list_compare.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/utils/word_list.dart';
+import 'package:yahwehs_sword/utils/word_list_compare.dart';
 
 WordListEntry e(String strongs, int count, {String? form, String? lemma}) =>
     WordListEntry(

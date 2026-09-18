@@ -1,6 +1,6 @@
-import 'package:seeksparks/constants/book_name_mapping.dart'
+import 'package:yahwehs_sword/constants/book_name_mapping.dart'
     show zhToEn, toLocale, bookNameInScript, bookScriptFor;
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference, parseReference;
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference, parseReference;
 
 String translateBookName(String? book, String version) {
   if (book == null) return '';

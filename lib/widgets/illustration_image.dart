@@ -12,7 +12,7 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/models/bible_map.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
 
 class IllustrationImage extends StatelessWidget {
   final BibleMap map;

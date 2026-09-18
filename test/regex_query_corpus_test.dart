@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
 
 /// bwh16's `~` search, over the shipped editions, in absolute counts.
 ///

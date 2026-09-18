@@ -42,22 +42,22 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:seeksparks/models/book.dart';
-import 'package:seeksparks/models/chapter.dart';
-import 'package:seeksparks/providers/main_provider.dart';
+import 'package:yahwehs_sword/models/book.dart';
+import 'package:yahwehs_sword/models/chapter.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
-import 'package:seeksparks/constants/book_groups.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart'
     show oldTestamentBooks, newTestamentBooks, kBibleDivisions;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/responsive.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
-import 'package:seeksparks/utils/fitted_label_metrics.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/responsive.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show toEnglish;
+import 'package:yahwehs_sword/utils/fitted_label_metrics.dart'
     show columnsThatFit, widestLabelEmWidth;
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/widgets/wb_surfaces.dart' show WbTag;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/widgets/wb_surfaces.dart' show WbTag;
 
 /// The book tile's label size, relative to the reader's Font Size.
 ///

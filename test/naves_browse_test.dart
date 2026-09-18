@@ -7,7 +7,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/naves_browse.dart';
+import 'package:yahwehs_sword/utils/naves_browse.dart';
 
 void main() {
   group('matchHeadwords', () {

@@ -35,7 +35,7 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
 
 /// A toggle in an Analysis pane's filter row — a sort order, a
 /// morphology slot value, a search term, a phrase.

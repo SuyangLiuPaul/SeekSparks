@@ -22,8 +22,8 @@
 // it carries the simplified and traditional forms as well as the
 // English identity.
 
-import 'package:seeksparks/constants/book_names.dart';
-import 'package:seeksparks/models/verse.dart';
+import 'package:yahwehs_sword/constants/book_names.dart';
+import 'package:yahwehs_sword/models/verse.dart';
 
 /// The first verse of ([book], [chapter]) inside [verses], or null when
 /// that edition does not carry it.

@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/wheel_history.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
 
 /// Guards `assets/wheel_history.json` — the chronology wheel's dataset.
 ///

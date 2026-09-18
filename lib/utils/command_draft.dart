@@ -21,7 +21,7 @@
 // where a `NEARn` token sits so its distance can be edited in place, and
 // what the line still needs. No Flutter, no assets.
 
-import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
 
 import 'command_query.dart' show kCommandControls, kMaxWordGap;
 import 'strongs_boolean_search.dart' show parseStrongsBoolean;

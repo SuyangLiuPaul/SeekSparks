@@ -1,4 +1,4 @@
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show shortBibleVersionLabel;
 
 /// How wide the parallel view's two fixed columns have to be — the

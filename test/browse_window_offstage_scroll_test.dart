@@ -47,18 +47,18 @@ import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/main.dart' show appGenerateRoute, appUnknownRoute;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/main.dart' show appGenerateRoute, appUnknownRoute;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kWheelUrlPath;
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/services/versification.dart';
-import 'package:seeksparks/widgets/browse_window.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/services/versification.dart';
+import 'package:yahwehs_sword/widgets/browse_window.dart';
 
 /// The edition the pane prints. `bsb` rather than the app's default
 /// Chinese one because the pane's load reaches for a tagged text and the

@@ -41,9 +41,9 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/greek_stats_service.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/greek_stats_service.dart';
 
 /// "1 Corinthians" -> "1Co". The pane is 320–560 px wide and these sit
 /// four to a row, so the full name is not an option.

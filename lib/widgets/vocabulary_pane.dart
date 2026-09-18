@@ -32,14 +32,14 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/vocabulary_service.dart';
-import 'package:seeksparks/services/vocabulary_store.dart';
-import 'package:seeksparks/utils/vocabulary.dart';
-import 'package:seeksparks/widgets/wb_pane_bits.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/vocabulary_service.dart';
+import 'package:yahwehs_sword/services/vocabulary_store.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart';
 
 enum VocabMode { list, drill, read }
 

@@ -4,38 +4,38 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show fullBibleVersionLabel;
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForSearch, versePreviewText;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/word_study_style.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/widgets/collapsible_english_ref.dart';
-import 'package:seeksparks/widgets/workbench_chrome.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/word_study_style.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/widgets/collapsible_english_ref.dart';
+import 'package:yahwehs_sword/widgets/workbench_chrome.dart'
     show WbToolButton, WbToolIcon;
-import 'package:seeksparks/widgets/left_accent_card.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/lxx_service.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/interlinear_editions.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart';
-import 'package:seeksparks/utils/morphology.dart';
-import 'package:seeksparks/widgets/interlinear_verse_text.dart';
-import 'package:seeksparks/utils/search_stats.dart' show HitUnit;
-import 'package:seeksparks/utils/theme_color_helpers.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/widgets/left_accent_card.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/lxx_service.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/interlinear_editions.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
+import 'package:yahwehs_sword/widgets/interlinear_verse_text.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart' show HitUnit;
+import 'package:yahwehs_sword/utils/theme_color_helpers.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
-import 'package:seeksparks/widgets/word_distribution.dart';
-import 'package:seeksparks/widgets/word_distribution_table.dart';
-import 'package:seeksparks/constants/motion.dart';
+import 'package:yahwehs_sword/widgets/word_distribution.dart';
+import 'package:yahwehs_sword/widgets/word_distribution_table.dart';
+import 'package:yahwehs_sword/constants/motion.dart';
 
 /// Bottom sheet that shows the original Hebrew/Greek text for one or
 /// more selected verses, with each word as a tappable chip linked to

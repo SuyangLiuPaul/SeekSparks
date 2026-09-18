@@ -12,7 +12,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/book_intro_service.dart';
+import 'package:yahwehs_sword/services/book_intro_service.dart';
 
 void main() {
   final raw =

@@ -25,11 +25,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/concordance_reverse_index.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/concordance_reverse_index.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 
 class ConcordanceTopicsSection extends StatelessWidget {
   const ConcordanceTopicsSection({

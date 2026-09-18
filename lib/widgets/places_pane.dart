@@ -17,16 +17,16 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
-import 'package:seeksparks/constants/journey_style.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/services/journeys_service.dart';
-import 'package:seeksparks/services/places_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/journey_route.dart';
-import 'package:seeksparks/utils/passage_journeys.dart';
+import 'package:yahwehs_sword/constants/book_name_mapping.dart' show BookScript;
+import 'package:yahwehs_sword/constants/journey_style.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/services/journeys_service.dart';
+import 'package:yahwehs_sword/services/places_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/journey_route.dart';
+import 'package:yahwehs_sword/utils/passage_journeys.dart';
 
 class PlacesPane extends StatefulWidget {
   const PlacesPane({

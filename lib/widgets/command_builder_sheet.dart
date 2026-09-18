@@ -16,10 +16,10 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/command_builder.dart';
-import 'package:seeksparks/widgets/wb_pane_bits.dart' show WbPaneChip;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/command_builder.dart';
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart' show WbPaneChip;
 
 /// Returns the line the reader built, or null if they closed the sheet.
 Future<String?> showCommandBuilder(BuildContext context, String locale) {

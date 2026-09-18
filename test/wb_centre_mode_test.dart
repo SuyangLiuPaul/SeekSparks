@@ -10,8 +10,8 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/wb_centre_mode.dart';
-import 'package:seeksparks/utils/responsive.dart';
+import 'package:yahwehs_sword/models/wb_centre_mode.dart';
+import 'package:yahwehs_sword/utils/responsive.dart';
 
 void main() {
   group('resolveCentreMode', () {

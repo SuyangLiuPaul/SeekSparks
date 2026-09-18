@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/romanised_lemma.dart';
-import 'package:seeksparks/utils/vocabulary.dart';
+import 'package:yahwehs_sword/utils/romanised_lemma.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
 
 /// The mechanics of the romanised fold, on input small enough to read.
 /// `romanised_lemma_corpus_test.dart` runs the same core against the

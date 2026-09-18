@@ -35,11 +35,11 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kMaxYear, yearLabel;
-import 'package:seeksparks/utils/date_hedge.dart';
-import 'package:seeksparks/utils/wheel_search.dart';
+import 'package:yahwehs_sword/utils/date_hedge.dart';
+import 'package:yahwehs_sword/utils/wheel_search.dart';
 
 const _locales = ['en', 'zh-Hans', 'zh-Hant'];
 

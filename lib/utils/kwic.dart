@@ -18,7 +18,7 @@
 /// does the thinking, and the thinking is what is worth testing.
 library;
 
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 /// How the hit list is ordered.
 enum KwicSort {

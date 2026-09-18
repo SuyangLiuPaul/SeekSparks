@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/morph_search_service.dart';
-import 'package:seeksparks/utils/morph_query.dart';
-import 'package:seeksparks/utils/morphology.dart';
+import 'package:yahwehs_sword/services/morph_search_service.dart';
+import 'package:yahwehs_sword/utils/morph_query.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
 
 const _gk = MorphScheme.greek;
 const _sem = MorphScheme.semitic;

@@ -5,134 +5,134 @@ import 'package:flutter/services.dart'
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show kSecondaryVersionKey, resolveSecondaryVersion, shortBibleVersionLabel;
-import 'package:seeksparks/constants/app_version.dart'
+import 'package:yahwehs_sword/constants/app_version.dart'
     show kAppVersion, formatReleaseTimeLocal;
-import 'package:seeksparks/constants/book_name_mapping.dart'
+import 'package:yahwehs_sword/constants/book_name_mapping.dart'
     show bookScriptFor, bookNameInScript;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/reader_analysis_request.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/models/wb_centre_mode.dart';
-import 'package:seeksparks/pages/about_page.dart';
-import 'package:seeksparks/pages/atlas_page.dart';
-import 'package:seeksparks/pages/bible_timeline_page.dart';
-import 'package:seeksparks/pages/bible_trivia_page.dart';
-import 'package:seeksparks/pages/books_page.dart';
-import 'package:seeksparks/pages/chronology_page.dart';
-import 'package:seeksparks/pages/command_search_page.dart';
-import 'package:seeksparks/pages/evidence_page.dart';
-import 'package:seeksparks/pages/family_tree_page.dart';
-import 'package:seeksparks/pages/hebrew_kings_page.dart';
-import 'package:seeksparks/pages/illustrations_page.dart';
-import 'package:seeksparks/pages/lexicon_page.dart';
-import 'package:seeksparks/pages/modern_concordance_page.dart';
-import 'package:seeksparks/pages/projection_page.dart';
-import 'package:seeksparks/constants/projection_strings.dart';
-import 'package:seeksparks/pages/library_page.dart';
-import 'package:seeksparks/pages/naves_page.dart';
-import 'package:seeksparks/pages/phrasing_page.dart';
-import 'package:seeksparks/pages/sermon_detail_page.dart';
-import 'package:seeksparks/pages/sermons_page.dart';
-import 'package:seeksparks/pages/settings_page.dart';
-import 'package:seeksparks/pages/word_list_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/update_check_scheduler.dart';
-import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/fetch_books.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/workbench_warmup.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/reader_analysis_request.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/models/wb_centre_mode.dart';
+import 'package:yahwehs_sword/pages/about_page.dart';
+import 'package:yahwehs_sword/pages/atlas_page.dart';
+import 'package:yahwehs_sword/pages/bible_timeline_page.dart';
+import 'package:yahwehs_sword/pages/bible_trivia_page.dart';
+import 'package:yahwehs_sword/pages/books_page.dart';
+import 'package:yahwehs_sword/pages/chronology_page.dart';
+import 'package:yahwehs_sword/pages/command_search_page.dart';
+import 'package:yahwehs_sword/pages/evidence_page.dart';
+import 'package:yahwehs_sword/pages/family_tree_page.dart';
+import 'package:yahwehs_sword/pages/hebrew_kings_page.dart';
+import 'package:yahwehs_sword/pages/illustrations_page.dart';
+import 'package:yahwehs_sword/pages/lexicon_page.dart';
+import 'package:yahwehs_sword/pages/modern_concordance_page.dart';
+import 'package:yahwehs_sword/pages/projection_page.dart';
+import 'package:yahwehs_sword/constants/projection_strings.dart';
+import 'package:yahwehs_sword/pages/library_page.dart';
+import 'package:yahwehs_sword/pages/naves_page.dart';
+import 'package:yahwehs_sword/pages/phrasing_page.dart';
+import 'package:yahwehs_sword/pages/sermon_detail_page.dart';
+import 'package:yahwehs_sword/pages/sermons_page.dart';
+import 'package:yahwehs_sword/pages/settings_page.dart';
+import 'package:yahwehs_sword/pages/word_list_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/update_check_scheduler.dart';
+import 'package:yahwehs_sword/providers/workbench_provider.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/workbench_warmup.dart'
     show
         defaultParallelVersions,
         kWorkbenchParallelModeKey,
         kWorkbenchParallelVersionsKey;
-import 'package:seeksparks/pages/jesus_teachings_page.dart'
+import 'package:yahwehs_sword/pages/jesus_teachings_page.dart'
     show JesusTeachingsPage, kJesusTeachingsTitle;
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show RadialChronologyPage;
-import 'package:seeksparks/pages/strip_chronology_page.dart'
+import 'package:yahwehs_sword/pages/strip_chronology_page.dart'
     show StripChronologyPage, kStripPageTitle;
-import 'package:seeksparks/utils/chapter_navigation.dart'
+import 'package:yahwehs_sword/utils/chapter_navigation.dart'
     show adjacentChapter, nextChapter, previousChapter;
-import 'package:seeksparks/utils/chapter_across_editions.dart'
+import 'package:yahwehs_sword/utils/chapter_across_editions.dart'
     show
         firstVerseOfChapterAcrossEditions,
         sameChapterAcrossEditions,
         seedChapterForNewColumn;
-import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
-import 'package:seeksparks/utils/workbench_fit.dart';
-import 'package:seeksparks/constants/version_attribution.dart'
+import 'package:yahwehs_sword/utils/jump_to_reference.dart' as jumper;
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference;
+import 'package:yahwehs_sword/utils/morphology.dart' show describeMorphology;
+import 'package:yahwehs_sword/utils/workbench_fit.dart';
+import 'package:yahwehs_sword/constants/version_attribution.dart'
     show versionAttributionKeys;
-import 'package:seeksparks/services/modern_concordance_service.dart';
-import 'package:seeksparks/services/naves_service.dart';
-import 'package:seeksparks/services/places_service.dart';
-import 'package:seeksparks/widgets/resource_summary_pane.dart';
-import 'package:seeksparks/widgets/update_available_banner.dart';
-import 'package:seeksparks/services/update_service.dart'
+import 'package:yahwehs_sword/services/modern_concordance_service.dart';
+import 'package:yahwehs_sword/services/naves_service.dart';
+import 'package:yahwehs_sword/services/places_service.dart';
+import 'package:yahwehs_sword/widgets/resource_summary_pane.dart';
+import 'package:yahwehs_sword/widgets/update_available_banner.dart';
+import 'package:yahwehs_sword/services/update_service.dart'
     show UpdateInfo, UpdateService;
-import 'package:seeksparks/widgets/synopsis_columns_pane.dart';
-import 'package:seeksparks/services/cross_reference_service.dart';
-import 'package:seeksparks/services/sermon_service.dart';
-import 'package:seeksparks/services/synopsis_service.dart';
-import 'package:seeksparks/utils/keyboard_shortcuts.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/bible_reading_pane.dart';
-import 'package:seeksparks/widgets/command_pane.dart';
-import 'package:seeksparks/widgets/passage_report_sheet.dart'
+import 'package:yahwehs_sword/widgets/synopsis_columns_pane.dart';
+import 'package:yahwehs_sword/services/cross_reference_service.dart';
+import 'package:yahwehs_sword/services/sermon_service.dart';
+import 'package:yahwehs_sword/services/synopsis_service.dart';
+import 'package:yahwehs_sword/utils/keyboard_shortcuts.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/bible_reading_pane.dart';
+import 'package:yahwehs_sword/widgets/command_pane.dart';
+import 'package:yahwehs_sword/widgets/passage_report_sheet.dart'
     show showPassageReport;
-import 'package:seeksparks/widgets/shortcut_sheet.dart' show showShortcutSheet;
-import 'package:seeksparks/widgets/copy_center_sheet.dart'
+import 'package:yahwehs_sword/widgets/shortcut_sheet.dart' show showShortcutSheet;
+import 'package:yahwehs_sword/widgets/copy_center_sheet.dart'
     show CopyScope, showCopyCenter;
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/pages/strongs_entry_page.dart';
-import 'package:seeksparks/utils/analysis_focus.dart';
-import 'package:seeksparks/utils/version_diff.dart'
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/pages/strongs_entry_page.dart';
+import 'package:yahwehs_sword/utils/analysis_focus.dart';
+import 'package:yahwehs_sword/utils/version_diff.dart'
     show comparableVersionGroups;
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/utils/strongs_inline.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
-import 'package:seeksparks/widgets/analysis_pin_bar.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/verse_list_pane.dart';
-import 'package:seeksparks/utils/verse_list.dart' show VerseRef, verseListKeys;
-import 'package:seeksparks/widgets/kwic_pane.dart';
-import 'package:seeksparks/widgets/related_verses_pane.dart';
-import 'package:seeksparks/widgets/phrase_match_pane.dart';
-import 'package:seeksparks/widgets/vocabulary_pane.dart';
-import 'package:seeksparks/widgets/morph_search_pane.dart';
-import 'package:seeksparks/widgets/context_pane.dart';
-import 'package:seeksparks/widgets/places_pane.dart';
-import 'package:seeksparks/widgets/sermons_pane.dart';
-import 'package:seeksparks/widgets/verse_notes_pane.dart';
-import 'package:seeksparks/utils/verse_notes.dart' show parseVerseId;
-import 'package:seeksparks/widgets/word_chart_view.dart';
-import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
-import 'package:seeksparks/services/greek_stats_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/utils/search_scope.dart' show kScopeAllBooks;
-import 'package:seeksparks/utils/search_stats.dart'
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/strongs_inline.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
+import 'package:yahwehs_sword/widgets/analysis_pin_bar.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/verse_list_pane.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart' show VerseRef, verseListKeys;
+import 'package:yahwehs_sword/widgets/kwic_pane.dart';
+import 'package:yahwehs_sword/widgets/related_verses_pane.dart';
+import 'package:yahwehs_sword/widgets/phrase_match_pane.dart';
+import 'package:yahwehs_sword/widgets/vocabulary_pane.dart';
+import 'package:yahwehs_sword/widgets/morph_search_pane.dart';
+import 'package:yahwehs_sword/widgets/context_pane.dart';
+import 'package:yahwehs_sword/widgets/places_pane.dart';
+import 'package:yahwehs_sword/widgets/sermons_pane.dart';
+import 'package:yahwehs_sword/widgets/verse_notes_pane.dart';
+import 'package:yahwehs_sword/utils/verse_notes.dart' show parseVerseId;
+import 'package:yahwehs_sword/widgets/word_chart_view.dart';
+import 'package:yahwehs_sword/constants/book_groups.dart' show oldTestamentBooks;
+import 'package:yahwehs_sword/services/greek_stats_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart' show kScopeAllBooks;
+import 'package:yahwehs_sword/utils/search_stats.dart'
     show HitUnit, SearchDistribution, buildDistributionFromCounts;
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/browse_nav_strip.dart';
-import 'package:seeksparks/widgets/browse_window.dart';
-import 'package:seeksparks/widgets/word_analysis_pane.dart';
-import 'package:seeksparks/utils/command_verb.dart'
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/browse_nav_strip.dart';
+import 'package:yahwehs_sword/widgets/browse_window.dart';
+import 'package:yahwehs_sword/widgets/word_analysis_pane.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart'
     show CommandVerbIssue, describeVerbIssue;
-import 'package:seeksparks/utils/search_scope.dart'
+import 'package:yahwehs_sword/utils/search_scope.dart'
     show limitSpecForBooks, scopeDisplayName, wholeBookScope;
-import 'package:seeksparks/widgets/search_scope_sheet.dart';
-import 'package:seeksparks/widgets/version_stack_sheet.dart';
-import 'package:seeksparks/widgets/workbench_chrome.dart';
-import 'package:seeksparks/widgets/originals_sheet.dart';
+import 'package:yahwehs_sword/widgets/search_scope_sheet.dart';
+import 'package:yahwehs_sword/widgets/version_stack_sheet.dart';
+import 'package:yahwehs_sword/widgets/workbench_chrome.dart';
+import 'package:yahwehs_sword/widgets/originals_sheet.dart';
 
 /// SeekSparks' BibleWorks-style pad workspace — three panes on one
 /// screen:

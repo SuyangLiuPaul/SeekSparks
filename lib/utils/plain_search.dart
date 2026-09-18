@@ -100,8 +100,8 @@
 /// Pure string work: no Flutter, no assets, no I/O.
 library;
 
-import 'package:seeksparks/utils/fuzzy_search.dart';
-import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
+import 'package:yahwehs_sword/utils/fuzzy_search.dart';
+import 'package:yahwehs_sword/utils/related_verses.dart' show isCjkChar;
 
 /// Whether [c] separates words rather than belonging to one.
 ///

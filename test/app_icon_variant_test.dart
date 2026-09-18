@@ -9,7 +9,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/app_icon_service.dart';
+import 'package:yahwehs_sword/services/app_icon_service.dart';
 
 void main() {
   group('AppIconService.variantForColor', () {

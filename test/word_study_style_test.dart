@@ -25,8 +25,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/word_study_style.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/constants/word_study_style.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
 
 const _scheme = ColorScheme.light();
 

@@ -25,7 +25,7 @@
 /// three shipped tags are the words for all of that.
 library;
 
-import 'package:seeksparks/utils/journey_route.dart';
+import 'package:yahwehs_sword/utils/journey_route.dart';
 
 /// One journey, and what THIS passage contributes to it.
 class JourneyHere {

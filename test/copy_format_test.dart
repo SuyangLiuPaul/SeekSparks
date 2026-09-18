@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/copy_format.dart';
-import 'package:seeksparks/utils/copy_marking.dart'
+import 'package:yahwehs_sword/utils/copy_format.dart';
+import 'package:yahwehs_sword/utils/copy_marking.dart'
     show hitOpen, hitClose, markVerseHits, stripHitMarks;
-import 'package:seeksparks/utils/search_highlight.dart' show SearchHighlight;
-import 'package:seeksparks/utils/verse_list.dart' show VerseRef;
+import 'package:yahwehs_sword/utils/search_highlight.dart' show SearchHighlight;
+import 'package:yahwehs_sword/utils/verse_list.dart' show VerseRef;
 
 // ── Fakes ───────────────────────────────────────────────────────────
 

@@ -22,11 +22,11 @@ library;
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/utils/word_list.dart';
-import 'package:seeksparks/widgets/word_analysis_pane.dart' show buildLemmaLine;
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/utils/word_list.dart';
+import 'package:yahwehs_sword/widgets/word_analysis_pane.dart' show buildLemmaLine;
 
 import 'dart:convert';
 

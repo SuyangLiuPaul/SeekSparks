@@ -18,7 +18,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/widgets/verse_notes_block.dart' show dedupeNotes;
+import 'package:yahwehs_sword/widgets/verse_notes_block.dart' show dedupeNotes;
 
 final _note = RegExp(r'<note:(.*?)>', dotAll: true);
 String _squash(String s) => s.replaceAll(RegExp(r'\s+'), '');

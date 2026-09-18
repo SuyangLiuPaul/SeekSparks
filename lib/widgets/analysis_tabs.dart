@@ -17,32 +17,32 @@ library;
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/reader_analysis_request.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/greek_stats_service.dart';
-import 'package:seeksparks/services/modern_concordance_service.dart';
-import 'package:seeksparks/services/naves_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/scripture_markup.dart';
-import 'package:seeksparks/services/cross_reference_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/synopsis_service.dart';
-import 'package:seeksparks/widgets/synopsis_parallels.dart';
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
-import 'package:seeksparks/utils/search_scope.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/reader_analysis_request.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/greek_stats_service.dart';
+import 'package:yahwehs_sword/services/modern_concordance_service.dart';
+import 'package:yahwehs_sword/services/naves_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/services/cross_reference_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/synopsis_service.dart';
+import 'package:yahwehs_sword/widgets/synopsis_parallels.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference;
+import 'package:yahwehs_sword/constants/book_groups.dart' show oldTestamentBooks;
+import 'package:yahwehs_sword/utils/search_scope.dart'
     show kScopeAllBooks, scopedCountLabel;
-import 'package:seeksparks/utils/search_stats.dart';
-import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/greek_relative_ranking.dart';
-import 'package:seeksparks/widgets/word_distribution_strip.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/widgets/wb_pane_bits.dart';
-import 'package:seeksparks/widgets/wb_surfaces.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart' show applySearchLimit;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/greek_relative_ranking.dart';
+import 'package:yahwehs_sword/widgets/word_distribution_strip.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart';
+import 'package:yahwehs_sword/widgets/wb_surfaces.dart';
 
 /// Which pane the Analysis window is showing.
 /// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context

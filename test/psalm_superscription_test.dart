@@ -16,7 +16,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/psalm_superscription.dart';
+import 'package:yahwehs_sword/utils/psalm_superscription.dart';
 
 Map<String, dynamic> rec(String book, String ch, String vs, String text) =>
     {'book': book, 'chapter': ch, 'verse': vs, 'text': text};

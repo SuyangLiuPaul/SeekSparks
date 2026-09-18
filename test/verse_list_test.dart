@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/verse_list.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart';
 
 VerseListEntry _e(String book, int c, int v, [String version = '']) =>
     VerseListEntry(VerseRef(book, c, v), version: version);

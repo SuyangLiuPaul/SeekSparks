@@ -12,11 +12,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/utils/fuzzy_result_label.dart';
-import 'package:seeksparks/utils/fuzzy_search.dart';
-import 'package:seeksparks/utils/plain_search.dart';
-import 'package:seeksparks/utils/search_folding.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/utils/fuzzy_result_label.dart';
+import 'package:yahwehs_sword/utils/fuzzy_search.dart';
+import 'package:yahwehs_sword/utils/plain_search.dart';
+import 'package:yahwehs_sword/utils/search_folding.dart';
 
 void main() {
   late List<String> kjv;
@@ -263,10 +263,10 @@ void main() {
         'lib/constants/fuzzy_search_strings.dart',
       ];
       const allowed = {
-        'package:seeksparks/constants/search_synonyms.dart',
-        'package:seeksparks/utils/chinese_segmentation.dart',
-        'package:seeksparks/utils/porter_stemmer.dart',
-        'package:seeksparks/utils/fuzzy_search.dart',
+        'package:yahwehs_sword/constants/search_synonyms.dart',
+        'package:yahwehs_sword/utils/chinese_segmentation.dart',
+        'package:yahwehs_sword/utils/porter_stemmer.dart',
+        'package:yahwehs_sword/utils/fuzzy_search.dart',
       };
       final importLine = RegExp(r"^import '([^']+)'", multiLine: true);
       for (final path in portable) {

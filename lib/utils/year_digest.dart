@@ -54,7 +54,7 @@
 /// caller needs to look up its own label in the map it already built.
 library;
 
-import 'package:seeksparks/models/strip_lanes.dart'
+import 'package:yahwehs_sword/models/strip_lanes.dart'
     show StripLane, StripLaneKind, StripSpan;
 
 /// What the cursor's year is to one record.

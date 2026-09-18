@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/search_stats.dart' show HitUnit;
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart' show HitUnit;
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localeAwareBookName;
-import 'package:seeksparks/widgets/wb_pane_bits.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbType;
 
 /// EaglesView-style "Word Study" distribution panel. Given a per-book
 /// count map for a single Strong's number, renders horizontal bar groups

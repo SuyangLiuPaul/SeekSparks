@@ -14,9 +14,9 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show translateBookName;
 
 void main() {
   // setVersion persists through saveCurrentState(), which needs a binding

@@ -5,8 +5,8 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/search_service.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/services/search_service.dart';
 
 void main() {
   const verses = [

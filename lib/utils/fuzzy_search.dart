@@ -102,9 +102,9 @@
 /// asset, or anything SeekSparks-shaped.
 library;
 
-import 'package:seeksparks/constants/search_synonyms.dart';
-import 'package:seeksparks/utils/chinese_segmentation.dart';
-import 'package:seeksparks/utils/porter_stemmer.dart';
+import 'package:yahwehs_sword/constants/search_synonyms.dart';
+import 'package:yahwehs_sword/utils/chinese_segmentation.dart';
+import 'package:yahwehs_sword/utils/porter_stemmer.dart';
 
 // ── The switch ──────────────────────────────────────────────────────
 

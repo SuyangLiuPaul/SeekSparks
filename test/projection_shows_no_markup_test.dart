@@ -24,10 +24,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/projection_setup.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbColors;
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/widgets/projection_stage.dart';
+import 'package:yahwehs_sword/constants/projection_setup.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbColors;
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/widgets/projection_stage.dart';
 
 /// One verse of each shape the assets contain.
 const _dirty = <Verse>[

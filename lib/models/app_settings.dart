@@ -5,24 +5,24 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/projection_agenda.dart';
+import 'package:yahwehs_sword/models/projection_agenda.dart';
 
-import 'package:seeksparks/constants/update_check_frequency.dart';
-import 'package:seeksparks/constants/projection_setup.dart';
-import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
-import 'package:seeksparks/utils/cross_version_search.dart'
+import 'package:yahwehs_sword/constants/update_check_frequency.dart';
+import 'package:yahwehs_sword/constants/projection_setup.dart';
+import 'package:yahwehs_sword/models/app_style_preset.dart' show CardMaterial;
+import 'package:yahwehs_sword/utils/cross_version_search.dart'
     show CrossVersionSearchMode, crossVersionModeFromName;
 // Prefixed: this class has a setter of the same name, and an
 // unqualified call inside it would recurse into itself rather than
 // reach the switch.
-import 'package:seeksparks/utils/fuzzy_search.dart' as fuzzy;
-import 'package:seeksparks/utils/search_folding.dart' as folding;
-import 'package:seeksparks/models/notification_category.dart';
-import 'package:seeksparks/services/app_icon_service.dart';
-import 'package:seeksparks/services/notification_scheduler.dart' as scheduler;
-import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart' show KetivQereSearchScope;
+import 'package:yahwehs_sword/utils/fuzzy_search.dart' as fuzzy;
+import 'package:yahwehs_sword/utils/search_folding.dart' as folding;
+import 'package:yahwehs_sword/models/notification_category.dart';
+import 'package:yahwehs_sword/services/app_icon_service.dart';
+import 'package:yahwehs_sword/services/notification_scheduler.dart' as scheduler;
+import 'package:yahwehs_sword/services/profile_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart' show KetivQereSearchScope;
 
 /// The range the Font Size slider offers, in points, and the value that
 /// counts as "unscaled".

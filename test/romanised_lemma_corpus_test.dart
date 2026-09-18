@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/romanised_lemma.dart';
-import 'package:seeksparks/utils/vocabulary.dart';
+import 'package:yahwehs_sword/utils/romanised_lemma.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
 
 /// The romanised-input core against the real bundled lexicons.
 ///

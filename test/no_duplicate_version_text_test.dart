@@ -39,8 +39,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 /// Strip what varies between *editions* of one text — punctuation style,
 /// quote marks, and the two note conventions in use (`<note: 原文作：质>`

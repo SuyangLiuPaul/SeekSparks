@@ -42,8 +42,8 @@ import 'package:flutter/material.dart' show Color, HSLColor;
 import 'package:flutter/services.dart'
     show MethodChannel, PlatformException, rootBundle;
 
-import 'package:seeksparks/services/app_icon_service_web.dart'
-    if (dart.library.io) 'package:seeksparks/services/app_icon_service_web_stub.dart'
+import 'package:yahwehs_sword/services/app_icon_service_web.dart'
+    if (dart.library.io) 'package:yahwehs_sword/services/app_icon_service_web_stub.dart'
     as web_impl;
 
 class AppIconService {

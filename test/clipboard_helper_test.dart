@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
 
 /// Regression tests for the 2026-07-10 prod crash
 /// `PlatformException(copy_fail, Clipboard.setData failed.)` (iOS

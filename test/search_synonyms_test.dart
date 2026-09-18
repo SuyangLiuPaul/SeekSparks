@@ -18,9 +18,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/search_synonyms.dart';
-import 'package:seeksparks/constants/text_patterns.dart' show searchCorpusKey;
-import 'package:seeksparks/utils/chinese_segmentation.dart' show isHanChar;
+import 'package:yahwehs_sword/constants/search_synonyms.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart' show searchCorpusKey;
+import 'package:yahwehs_sword/utils/chinese_segmentation.dart' show isHanChar;
 
 void main() {
   late List<String> simplified;

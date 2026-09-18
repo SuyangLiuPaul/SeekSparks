@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/share_service.dart';
-import 'package:seeksparks/utils/copy_marking.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/share_service.dart';
+import 'package:yahwehs_sword/utils/copy_marking.dart'
     show hasHitMarks, hitMarkedHtml, plainHitMarks;
-import 'package:seeksparks/utils/clipboard_fallback_stub.dart'
-    if (dart.library.js_interop) 'package:seeksparks/utils/clipboard_fallback_web.dart';
+import 'package:yahwehs_sword/utils/clipboard_fallback_stub.dart'
+    if (dart.library.js_interop) 'package:yahwehs_sword/utils/clipboard_fallback_web.dart';
 
 abstract class ClipboardHelper {
   /// Copy [text] to the system clipboard. Returns whether the copy

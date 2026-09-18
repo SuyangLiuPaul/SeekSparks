@@ -16,10 +16,10 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/chronology_filter_strings.dart';
-import 'package:seeksparks/constants/strip_strings.dart';
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/constants/chronology_filter_strings.dart';
+import 'package:yahwehs_sword/constants/strip_strings.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
 
 const _hub = 0.115;
 

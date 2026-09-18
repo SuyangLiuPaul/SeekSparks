@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/services/error_reporter.dart';
-import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/utils/phrasing.dart';
+import 'package:yahwehs_sword/services/error_reporter.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
+import 'package:yahwehs_sword/utils/phrasing.dart';
 
 /// Persistence for Phrasing (`utils/phrasing.dart`).
 ///

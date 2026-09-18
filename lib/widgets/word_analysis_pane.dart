@@ -28,20 +28,20 @@ library;
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/services/bible_names_service.dart';
-import 'package:seeksparks/services/chinese_lexicon_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/thayer_service.dart';
-import 'package:seeksparks/utils/cbol_references.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/services/bible_names_service.dart';
+import 'package:yahwehs_sword/services/chinese_lexicon_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/thayer_service.dart';
+import 'package:yahwehs_sword/utils/cbol_references.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart'
     show ketivQereLabel, ketivQereNote;
-import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
-import 'package:seeksparks/utils/thayer_parse.dart';
-import 'package:seeksparks/widgets/word_forms_section.dart';
+import 'package:yahwehs_sword/utils/morphology.dart' show describeMorphology;
+import 'package:yahwehs_sword/utils/thayer_parse.dart';
+import 'package:yahwehs_sword/widgets/word_forms_section.dart';
 
 class WordAnalysisPane extends StatefulWidget {
   const WordAnalysisPane({

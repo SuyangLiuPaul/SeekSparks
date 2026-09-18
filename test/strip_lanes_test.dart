@@ -10,13 +10,13 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/models/chronology.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/models/strip_lanes.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
+import 'package:yahwehs_sword/models/chronology.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/models/strip_lanes.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
 
 Map<String, dynamic> _json(String path) =>
     json.decode(File(path).readAsStringSync()) as Map<String, dynamic>;

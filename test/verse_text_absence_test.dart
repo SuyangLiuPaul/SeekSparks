@@ -14,7 +14,7 @@
 // This file is the pure unit level and needs no assets.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
 
 void main() {
   group('verseAbsenceOf', () {

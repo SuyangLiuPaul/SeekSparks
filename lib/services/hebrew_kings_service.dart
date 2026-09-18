@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/utils/kings_contemporaries.dart'
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/utils/kings_contemporaries.dart'
     as kings_query;
-import 'package:seeksparks/utils/kings_contemporaries.dart'
+import 'package:yahwehs_sword/utils/kings_contemporaries.dart'
     show ContemporaryTally;
 
 /// The chart's own header, as opposed to its records.

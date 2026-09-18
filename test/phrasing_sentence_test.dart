@@ -12,8 +12,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/phrasing.dart';
-import 'package:seeksparks/utils/scripture_markup.dart'
+import 'package:yahwehs_sword/utils/phrasing.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart'
     show scriptureReadingText;
 
 List<({int verse, String text})> _chapter(String version, String book, int ch) {

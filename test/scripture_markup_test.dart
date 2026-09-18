@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
 
 ScriptureSpan plain(String s) => ScriptureSpan(s, ScriptureSpanKind.plain);
 ScriptureSpan supplied(String s) =>

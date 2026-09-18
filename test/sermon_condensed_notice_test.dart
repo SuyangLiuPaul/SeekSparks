@@ -11,8 +11,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/pages/sermon_detail_page.dart'
+import 'package:yahwehs_sword/models/sermon.dart';
+import 'package:yahwehs_sword/pages/sermon_detail_page.dart'
     show sermonCondensedNotice, sermonLanguageName;
 
 Sermon _sermon({Set<String> condensed = const {}}) => Sermon(

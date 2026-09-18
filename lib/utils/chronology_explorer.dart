@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui' show Size;
 
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/date_hedge.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/date_hedge.dart';
 
 /// These are navigation windows on the existing axis, not claims about
 /// where a historical era began. Endpoints are inclusive so a reader

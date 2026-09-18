@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/utils/phrasing.dart' show scriptIsRtl;
+import 'package:yahwehs_sword/utils/phrasing.dart' show scriptIsRtl;
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/build_verse_content_spans.dart';
-import 'package:seeksparks/utils/haptics.dart';
-import 'package:seeksparks/utils/responsive.dart';
-import 'package:seeksparks/widgets/bible_reading_pane.dart' show showNoteEditor;
-import 'package:seeksparks/widgets/verse_notes_block.dart';
-import 'package:seeksparks/widgets/superscription_line.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/build_verse_content_spans.dart';
+import 'package:yahwehs_sword/utils/haptics.dart';
+import 'package:yahwehs_sword/utils/responsive.dart';
+import 'package:yahwehs_sword/widgets/bible_reading_pane.dart' show showNoteEditor;
+import 'package:yahwehs_sword/widgets/verse_notes_block.dart';
+import 'package:yahwehs_sword/widgets/superscription_line.dart';
 
 /// Renders a single verse. Used by:
 ///   - Verse-by-verse mode for every verse

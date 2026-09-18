@@ -14,7 +14,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
 
 /// The page's own radii, restated so a drift between the two shows up
 /// here rather than as a chart nobody can tap.

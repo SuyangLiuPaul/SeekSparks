@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/version_gutter.dart';
-import 'package:seeksparks/widgets/browse_window.dart' show BrowseVerseRow;
+import 'package:yahwehs_sword/utils/version_gutter.dart';
+import 'package:yahwehs_sword/widgets/browse_window.dart' show BrowseVerseRow;
 
 /// Share of a tagged edition's runs that carry a leading or trailing
 /// space, and the token count it was measured over.

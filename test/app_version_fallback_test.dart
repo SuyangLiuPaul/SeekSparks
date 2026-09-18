@@ -35,7 +35,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/app_version.dart';
+import 'package:yahwehs_sword/constants/app_version.dart';
 
 void main() {
   test('the fallback in app_version.dart matches pubspec.yaml', () {

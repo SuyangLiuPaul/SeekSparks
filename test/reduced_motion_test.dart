@@ -23,7 +23,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/motion.dart';
+import 'package:yahwehs_sword/constants/motion.dart';
 
 /// The widgets whose whole job is to MOVE something.
 const List<String> _movers = <String>[

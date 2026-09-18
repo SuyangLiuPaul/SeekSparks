@@ -2,13 +2,13 @@ import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import 'package:seeksparks/constants/chronology_explorer_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart' show yearLabel;
-import 'package:seeksparks/utils/chronology_explorer.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/constants/chronology_explorer_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart' show yearLabel;
+import 'package:yahwehs_sword/utils/chronology_explorer.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localizedReferenceLabel;
 
 /// The page's fit/reset button and the explorer's range menu describe

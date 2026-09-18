@@ -13,7 +13,7 @@
 /// a line rather than by asserting a licence it does not have.
 library;
 
-import 'package:seeksparks/utils/imported_version.dart'
+import 'package:yahwehs_sword/utils/imported_version.dart'
     show isImportedVersion, kImportedAttributionKey;
 
 const versionAttributionKeys = <String, String>{

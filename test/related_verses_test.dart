@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/related_verses.dart';
-import 'package:seeksparks/utils/search_highlight.dart' show HighlightSpan;
+import 'package:yahwehs_sword/utils/related_verses.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart' show HighlightSpan;
 
 void main() {
   group('tokenizeForRelatedVerses — alphabetic', () {

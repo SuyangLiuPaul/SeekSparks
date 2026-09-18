@@ -18,10 +18,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
-import 'package:seeksparks/utils/punctuation_gate.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/phrase_match.dart' show phraseTokens;
+import 'package:yahwehs_sword/utils/punctuation_gate.dart';
 
 void main() {
   late List<String> texts;

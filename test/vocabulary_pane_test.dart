@@ -21,11 +21,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/vocabulary_service.dart';
-import 'package:seeksparks/services/vocabulary_store.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/vocabulary_pane.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/vocabulary_service.dart';
+import 'package:yahwehs_sword/services/vocabulary_store.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/vocabulary_pane.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

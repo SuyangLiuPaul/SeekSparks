@@ -20,9 +20,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/pages/phrasing_page.dart'
+import 'package:yahwehs_sword/pages/phrasing_page.dart'
     show phrasingLevelChips, phrasingLevelName, phrasingLevelNote;
-import 'package:seeksparks/utils/phrasing.dart';
+import 'package:yahwehs_sword/utils/phrasing.dart';
 
 PhrasingWord w(String text,
         {String morph = '', String strongs = '', int verse = 1}) =>

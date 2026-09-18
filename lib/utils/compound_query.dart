@@ -72,8 +72,8 @@
 /// Flutter-free on purpose, like the grammar it extends.
 library;
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/command_query.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
 
 /// How a group combines with everything to its left.
 enum CompoundJoin {

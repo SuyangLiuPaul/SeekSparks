@@ -5,10 +5,10 @@
 // of a distance, and the two must never share one string.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/services/places_service.dart';
-import 'package:seeksparks/utils/place_ruler.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/services/places_service.dart';
+import 'package:yahwehs_sword/utils/place_ruler.dart';
 
 BiblePlace _place(String id, double? lat, double? lon) => BiblePlace(
       id: id,

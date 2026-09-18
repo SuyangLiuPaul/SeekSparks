@@ -8,12 +8,12 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/chronology_depth_view.dart';
-import 'package:seeksparks/utils/chronology_explorer.dart'
+import 'package:yahwehs_sword/utils/chronology_depth_view.dart';
+import 'package:yahwehs_sword/utils/chronology_explorer.dart'
     show chronologyPeriods;
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
-import 'package:seeksparks/utils/wheel_stack_layout.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/utils/wheel_stack_layout.dart';
 
 void expectOffset(Offset actual, Offset expected, {String? reason}) {
   expect(actual.dx, closeTo(expected.dx, 1e-8), reason: reason);

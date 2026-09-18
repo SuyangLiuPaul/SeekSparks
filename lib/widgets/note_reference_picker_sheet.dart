@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/book_names.dart';
-import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/note_reference_parser.dart'
+import 'package:yahwehs_sword/constants/book_names.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart' show sanitizeForSearch;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/note_reference_parser.dart'
     show formatCompactReference;
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// 2026-05-19 (v1.2.59): book → chapter → verse picker for the
 /// note editor's "+ Reference" button.

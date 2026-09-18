@@ -1,7 +1,7 @@
-import 'package:seeksparks/constants/book_names.dart';
-import 'package:seeksparks/models/book.dart';
-import 'package:seeksparks/models/chapter.dart';
-import 'package:seeksparks/models/verse.dart';
+import 'package:yahwehs_sword/constants/book_names.dart';
+import 'package:yahwehs_sword/models/book.dart';
+import 'package:yahwehs_sword/models/chapter.dart';
+import 'package:yahwehs_sword/models/verse.dart';
 
 /// Derives the book/chapter tree from a flat verse list.
 ///

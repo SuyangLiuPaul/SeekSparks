@@ -40,13 +40,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/book.dart';
-import 'package:seeksparks/models/chapter.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/fitted_label_metrics.dart';
-import 'package:seeksparks/widgets/book_chapter_picker.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/book.dart';
+import 'package:yahwehs_sword/models/chapter.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/fitted_label_metrics.dart';
+import 'package:yahwehs_sword/widgets/book_chapter_picker.dart';
 
 /// The faces the app actually ships. `flutter test` otherwise lays text
 /// out in a fixed-width stand-in where every glyph is 1.0 em, which

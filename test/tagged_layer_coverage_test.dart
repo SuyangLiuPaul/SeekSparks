@@ -35,7 +35,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
 
 const _books = <String>[
   'genesis', 'exodus', 'leviticus', 'numbers', 'deuteronomy', 'joshua',

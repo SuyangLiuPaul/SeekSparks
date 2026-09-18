@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/link_opener.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbType;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/link_opener.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Single source of truth for the "Made by Paul Liu · contact" line
 /// shown across YsWords, SeekSparks, DailyNews, bible-evidence redirect stub,

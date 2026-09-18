@@ -58,7 +58,7 @@
 /// Running it is `WorkbenchProvider`'s job.
 library;
 
-import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
 
 /// How wide the command line casts, from bwh16's menu of the same name.
 enum CrossVersionSearchMode {

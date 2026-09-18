@@ -10,7 +10,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/chinese_lexicon_service.dart';
+import 'package:yahwehs_sword/services/chinese_lexicon_service.dart';
 
 Map<String, dynamic> _raw(String file) =>
     json.decode(File('assets/strongs/$file.json').readAsStringSync())

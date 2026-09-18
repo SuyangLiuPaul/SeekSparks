@@ -36,8 +36,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:just_audio/just_audio.dart' show ProcessingState;
 
-import 'package:seeksparks/services/sermon_audio_service.dart';
-import 'package:seeksparks/widgets/sermon_audio_player.dart'
+import 'package:yahwehs_sword/services/sermon_audio_service.dart';
+import 'package:yahwehs_sword/widgets/sermon_audio_player.dart'
     show sermonAudioControl;
 
 late final Map<String, dynamic> manifest;

@@ -16,9 +16,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show normalizeDivineNamesInQuery, searchCorpusKey;
-import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
 
 List<String> _keys(String path) {
   final raw = json.decode(File(path).readAsStringSync());

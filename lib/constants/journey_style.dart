@@ -50,8 +50,8 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/bible_journey.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/bible_journey.dart';
 
 /// The ink and the marker for one route.
 class JourneyStyle {

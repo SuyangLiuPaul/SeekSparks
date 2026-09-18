@@ -2,9 +2,9 @@
 // Used across loading_page, home_page, search_page, verse_widget, and
 // fetch_verses to ensure consistent text processing.
 
-import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
-import 'package:seeksparks/utils/plain_search.dart' show collapseSearchSpaces;
-import 'package:seeksparks/utils/scripture_markup.dart' show isReferentGloss;
+import 'package:yahwehs_sword/utils/search_folding.dart' show foldSearchMarks;
+import 'package:yahwehs_sword/utils/plain_search.dart' show collapseSearchSpaces;
+import 'package:yahwehs_sword/utils/scripture_markup.dart' show isReferentGloss;
 
 /// Matches `<note:...>` tags embedded in verse text.
 final notePattern = RegExp(r'<note:([^>]+)>');

@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/originals_stats_service.dart'
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/originals_stats_service.dart'
     show kStopwordStrongs;
-import 'package:seeksparks/utils/vocabulary.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
 
 /// Asset loading for the Vocabulary tab (bwh40). All the decisions live
 /// in `utils/vocabulary.dart`; this only fetches and caches.

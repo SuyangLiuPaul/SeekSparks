@@ -21,10 +21,10 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/search_stats.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 class SearchStatsStrip extends StatelessWidget {
   const SearchStatsStrip({

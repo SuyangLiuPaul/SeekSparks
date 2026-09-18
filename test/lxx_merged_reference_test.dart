@@ -29,7 +29,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
 
 final _marker = RegExp(r'<vs:(\d+):(\d+)([a-z]?)>');
 

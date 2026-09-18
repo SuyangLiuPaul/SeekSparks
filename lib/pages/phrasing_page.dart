@@ -12,23 +12,23 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show shortBibleVersionLabel;
-import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/phrasing_store.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/morphology.dart';
-import 'package:seeksparks/utils/phrasing.dart';
-import 'package:seeksparks/utils/scripture_markup.dart'
+import 'package:yahwehs_sword/constants/book_names.dart' show bookNameToEnglish;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbMetrics;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/phrasing_store.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
+import 'package:yahwehs_sword/utils/phrasing.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart'
     show scriptureReadingText;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Reader-facing label for a relation, in [locale].
 String phrasingRelationLabel(PhrasingRelation r, String locale) {

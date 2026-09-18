@@ -22,8 +22,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/font_catalog.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
 
 void main() {
   /// Every style `TextTheme` carries, by name, so the test fails when

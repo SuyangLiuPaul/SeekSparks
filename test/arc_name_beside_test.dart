@@ -15,7 +15,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
 
 void main() {
   // Roughly a CJK glyph per `size`, which is what the page's own

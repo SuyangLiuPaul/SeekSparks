@@ -16,7 +16,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/utils/chronology_symbols.dart';
+import 'package:yahwehs_sword/utils/chronology_symbols.dart';
 
 class ChartSymbolService {
   ChartSymbolService._();

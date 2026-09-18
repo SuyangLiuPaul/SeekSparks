@@ -21,18 +21,18 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/utils/command_draft.dart';
-import 'package:seeksparks/utils/command_examples.dart';
-import 'package:seeksparks/utils/command_query.dart' show parseCommandQuery;
-import 'package:seeksparks/utils/compound_query.dart' show parseCompoundQuery;
-import 'package:seeksparks/utils/strongs_boolean_search.dart';
-import 'package:seeksparks/widgets/command_pane.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/providers/workbench_provider.dart';
+import 'package:yahwehs_sword/utils/command_draft.dart';
+import 'package:yahwehs_sword/utils/command_examples.dart';
+import 'package:yahwehs_sword/utils/command_query.dart' show parseCommandQuery;
+import 'package:yahwehs_sword/utils/compound_query.dart' show parseCompoundQuery;
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart';
+import 'package:yahwehs_sword/widgets/command_pane.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _seed = [

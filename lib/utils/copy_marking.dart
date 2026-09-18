@@ -1,6 +1,6 @@
 import 'package:flutter/painting.dart' show TextSpan, TextStyle;
 
-import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
 
 /// 2026-08-31 (owner-reported): the search results mark the hit on
 /// screen, and then the copy of those same results arrives in the

@@ -9,7 +9,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
 
 void main() {
   group('analysisStripLayout', () {

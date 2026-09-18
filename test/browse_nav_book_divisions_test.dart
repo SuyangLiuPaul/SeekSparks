@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/widgets/browse_nav_strip.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/widgets/browse_nav_strip.dart';
 
 /// The Browse window's book menu has a table of contents.
 ///

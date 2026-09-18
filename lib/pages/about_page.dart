@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/app_version.dart';
-import 'package:seeksparks/constants/sermon_credit.dart';
-import 'package:seeksparks/widgets/update_check_tile.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/pages/changelog_page.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/map_provenance.dart';
-import 'package:seeksparks/services/link_opener.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/responsive.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/constants/app_version.dart';
+import 'package:yahwehs_sword/constants/sermon_credit.dart';
+import 'package:yahwehs_sword/widgets/update_check_tile.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/pages/changelog_page.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/map_provenance.dart';
+import 'package:yahwehs_sword/services/link_opener.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/responsive.dart';
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
 
 /// Settings → About → "About / 关于" — full attributions + licensing
 /// + takedown contact page.

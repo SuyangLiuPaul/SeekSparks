@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/kwic.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/kwic.dart';
 
 TaggedRun r(String text, String strongs, {List<String> implied = const []}) =>
     TaggedRun(text: text, strongs: strongs, implied: implied);

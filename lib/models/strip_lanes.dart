@@ -127,14 +127,14 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:seeksparks/models/biblical_person.dart' show BiblicalPerson;
-import 'package:seeksparks/models/chronology.dart' show Patriarch;
-import 'package:seeksparks/models/hebrew_king.dart' show HebrewKing, Kingdom;
-import 'package:seeksparks/models/wheel_history.dart'
+import 'package:yahwehs_sword/models/biblical_person.dart' show BiblicalPerson;
+import 'package:yahwehs_sword/models/chronology.dart' show Patriarch;
+import 'package:yahwehs_sword/models/hebrew_king.dart' show HebrewKing, Kingdom;
+import 'package:yahwehs_sword/models/wheel_history.dart'
     show WheelHistoryData, WheelMinistry, WheelPower;
-import 'package:seeksparks/utils/radial_chronology_layout.dart'
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart'
     show patriarchsAsSpans;
-import 'package:seeksparks/utils/strip_chronology_layout.dart'
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart'
     show kStripMaxYear, kStripMinYear, packIntoLanes, xForYear;
 
 /// The kind of content one row of the strip carries.

@@ -33,13 +33,13 @@
 /// Pure matching. The widget decides what a highlight looks like.
 library;
 
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show normalizeDivineNamesInQuery;
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/compound_query.dart';
-import 'package:seeksparks/utils/search_folding.dart'
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/compound_query.dart';
+import 'package:yahwehs_sword/utils/search_folding.dart'
     show foldSearchMarks, foldSearchMarksAligned;
-import 'package:seeksparks/utils/strongs_boolean_search.dart';
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart';
 
 /// What an active query marks.
 class SearchHighlight {

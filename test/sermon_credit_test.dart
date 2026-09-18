@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/sermon_credit.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/sermon_credit.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
 
 const _locales = ['en', 'zh-Hans', 'zh-Hant'];
 

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/widgets/retired_version_notice.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/widgets/retired_version_notice.dart';
 
 /// `RetiredVersionNotice` must return its child UNWRAPPED.
 ///

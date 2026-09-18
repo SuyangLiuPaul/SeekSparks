@@ -29,9 +29,9 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/notification_category.dart';
-import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/notification_category.dart';
+import 'package:yahwehs_sword/utils/passage_localizer.dart' show localizePassage;
 
 final FlutterLocalNotificationsPlugin _plugin =
     FlutterLocalNotificationsPlugin();

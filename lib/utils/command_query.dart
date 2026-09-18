@@ -255,30 +255,30 @@
 /// Flutter-free on purpose: this parses and matches, nothing else.
 library;
 
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show normalizeDivineNamesInQuery;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
-import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
-import 'package:seeksparks/utils/punctuation_gate.dart';
-import 'package:seeksparks/utils/regex_program.dart';
-import 'package:seeksparks/utils/related_verses.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/search_folding.dart' show foldSearchMarks;
+import 'package:yahwehs_sword/utils/phrase_match.dart' show phraseTokens;
+import 'package:yahwehs_sword/utils/punctuation_gate.dart';
+import 'package:yahwehs_sword/utils/regex_program.dart';
+import 'package:yahwehs_sword/utils/related_verses.dart'
     show isCjkChar, isWordChar;
-import 'package:seeksparks/utils/strongs_boolean_search.dart'
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart'
     show kMaxNearDistance, kMaxGreekStrongs, kMaxHebrewStrongs;
-import 'package:seeksparks/utils/strongs_tag_binding.dart';
+import 'package:yahwehs_sword/utils/strongs_tag_binding.dart';
 
-export 'package:seeksparks/utils/regex_program.dart'
+export 'package:yahwehs_sword/utils/regex_program.dart'
     show RegexProgram, RegexProblem, kMaxRegexProgram;
 
-export 'package:seeksparks/utils/punctuation_gate.dart'
+export 'package:yahwehs_sword/utils/punctuation_gate.dart'
     show
         PunctuationGate,
         PunctuationMode,
         kHebrewPunctuation,
         kSentenceEndPunctuation;
 
-export 'package:seeksparks/utils/strongs_tag_binding.dart'
+export 'package:yahwehs_sword/utils/strongs_tag_binding.dart'
     show
         StrongsTagBinding,
         StrongsTagForm,

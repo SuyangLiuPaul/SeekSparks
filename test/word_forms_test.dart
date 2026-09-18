@@ -12,8 +12,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/word_forms.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/word_forms.dart';
 
 WordForm f(String form, String morph, int count) =>
     WordForm(form: form, morph: morph, count: count);

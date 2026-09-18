@@ -1,6 +1,6 @@
 
-import 'package:seeksparks/utils/cbol_references.dart';
-import 'package:seeksparks/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/utils/cbol_references.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
 /// A Strong's Concordance dictionary entry.
 ///
 /// `number` is the Strong's identifier prefixed by language: "G####" for

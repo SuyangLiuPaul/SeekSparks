@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/timeline_event.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
 
 /// The `_meta` block of `assets/bible_timeline.json`, written by
 /// `tools/audit_dates.py`.

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/utils/search_stats.dart';
-import 'package:seeksparks/utils/word_list.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart';
+import 'package:yahwehs_sword/utils/word_list.dart';
 
 OriginalWord w(String text, String strongs, {String? translit}) =>
     OriginalWord(text: text, strongs: strongs, translit: translit);

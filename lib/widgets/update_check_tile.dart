@@ -26,11 +26,11 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/app_update_installer.dart';
-import 'package:seeksparks/services/link_opener.dart';
-import 'package:seeksparks/services/update_service.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/app_update_installer.dart';
+import 'package:yahwehs_sword/services/link_opener.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
 
 String _s(String locale, String key, String fallback) =>
     uiStrings[key]?[locale] ?? fallback;

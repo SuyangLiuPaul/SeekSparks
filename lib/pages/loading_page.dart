@@ -2,15 +2,15 @@ import 'dart:async';
 // 2026-05-20 (v1.2.67): `dart:js_interop` was here, blocking
 // native compile. Replaced with a conditional-export helper —
 // see lib/utils/clear_cache_helper.dart.
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/app_scroll_behavior.dart'
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/app_scroll_behavior.dart'
     show kSelectableTextPhysics;
-import 'package:seeksparks/utils/clear_cache_helper.dart';
+import 'package:yahwehs_sword/utils/clear_cache_helper.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 import '../constants/app_version.dart' show kAppVersion;
 import '../models/app_settings.dart';
 import '../models/verse.dart';
@@ -24,7 +24,7 @@ import '../constants/ui_strings.dart';
 import '../utils/reference_parser.dart';
 import '../utils/responsive.dart';
 import '../utils/version_mapper.dart' show translateBookName;
-import 'package:seeksparks/services/app_icon_service.dart';
+import 'package:yahwehs_sword/services/app_icon_service.dart';
 import 'workbench_page.dart';
 
 class LoadingPage extends StatefulWidget {

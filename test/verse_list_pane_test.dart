@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/utils/verse_list.dart';
-import 'package:seeksparks/widgets/verse_list_pane.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart';
+import 'package:yahwehs_sword/widgets/verse_list_pane.dart';
 
 const _john316 = VerseRef('John', 3, 16);
 const _rom828 = VerseRef('Romans', 8, 28);

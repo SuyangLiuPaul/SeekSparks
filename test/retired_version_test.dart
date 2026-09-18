@@ -18,15 +18,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/services/fetch_verses.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/providers/workbench_provider.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart'
     show VerseAssetNotJsonException, assertJsonPayload;
-import 'package:seeksparks/services/workbench_warmup.dart'
+import 'package:yahwehs_sword/services/workbench_warmup.dart'
     show defaultParallelVersions, sanitiseParallelVersions;
-import 'package:seeksparks/widgets/retired_version_notice.dart';
+import 'package:yahwehs_sword/widgets/retired_version_notice.dart';
 
 Widget _harness(MainProvider mp, AppSettings settings) => MultiProvider(
       providers: [

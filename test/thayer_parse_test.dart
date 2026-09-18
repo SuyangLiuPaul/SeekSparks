@@ -12,7 +12,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/thayer_parse.dart';
+import 'package:yahwehs_sword/utils/thayer_parse.dart';
 
 const _g26 = '''agape
 

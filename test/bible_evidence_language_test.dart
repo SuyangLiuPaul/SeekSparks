@@ -13,7 +13,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/bible_evidence.dart';
+import 'package:yahwehs_sword/models/bible_evidence.dart';
 
 void main() {
   late Map<String, dynamic> raw;

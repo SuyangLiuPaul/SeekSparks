@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/models/map_provenance.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/models/map_provenance.dart';
 
 class MapService {
   static List<BibleMap>? _cache;

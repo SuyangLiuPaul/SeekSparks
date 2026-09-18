@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kMaxYear, kMinYear;
 
 /// ONE CREATION YEAR, AND EVERYTHING ANNO MUNDI ADDED TO IT.

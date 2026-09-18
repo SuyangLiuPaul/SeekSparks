@@ -16,7 +16,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/version_stack.dart';
+import 'package:yahwehs_sword/utils/version_stack.dart';
 
 void main() {
   group('normaliseComparisons', () {

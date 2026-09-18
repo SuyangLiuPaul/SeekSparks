@@ -62,9 +62,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/analysis_focus.dart';
-import 'package:seeksparks/utils/scripture_markup.dart' show ScriptureSpan;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/analysis_focus.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart' show ScriptureSpan;
 
 /// Metrics shared by every Workbench surface. Numbers, not opinions —
 /// they exist so panes stay on the same rhythm instead of each picking

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
-import 'package:seeksparks/utils/strip_viewport.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/strip_viewport.dart';
 
 void main() {
   test('fit contains both ends even in a phone time viewport', () {

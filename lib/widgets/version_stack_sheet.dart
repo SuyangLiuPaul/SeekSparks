@@ -38,12 +38,12 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/version_stack.dart';
-import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/version_stack.dart';
+import 'package:yahwehs_sword/widgets/workbench_chrome.dart' show WbVersionTag;
 
 /// Opens the picker. Returns the new COMPARISON list — the display stack
 /// without the reading version, which is what

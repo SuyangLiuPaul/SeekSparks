@@ -15,14 +15,14 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show availableVersions;
-import 'package:seeksparks/constants/book_groups.dart' show kBibleDivisions;
-import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
+import 'package:yahwehs_sword/constants/book_groups.dart' show kBibleDivisions;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show toEnglish;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/widgets/overflow_hint_scroll.dart';
 
 class BrowseNavStrip extends StatelessWidget {
   const BrowseNavStrip({

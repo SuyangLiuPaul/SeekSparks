@@ -25,8 +25,8 @@
 // and unsubscribes are not needed (singleton lifetime = app
 // lifetime).
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/providers/main_provider.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
 
 import 'url_sync_service_stub.dart'
     if (dart.library.js_interop) 'url_sync_service_web.dart' as impl;

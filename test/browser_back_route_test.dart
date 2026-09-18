@@ -30,20 +30,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/main.dart'
+import 'package:yahwehs_sword/main.dart'
     show
         BrowserRouteAction,
         BrowserRouteObserver,
         appGenerateRoute,
         appUnknownRoute,
         browserRouteAction;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kWheelUrlPath;
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/page_links.dart' show samePageUrlPath;
-import 'package:seeksparks/widgets/chart_help_sheet.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/page_links.dart' show samePageUrlPath;
+import 'package:yahwehs_sword/widgets/chart_help_sheet.dart';
 
 /// Counts what the Navigator was actually asked to do. The bug was a
 /// PUSH, so this is the assertion that matters most: browser Back must

@@ -40,7 +40,7 @@
 /// here, where a test can reach it.
 library;
 
-import 'package:seeksparks/utils/search_highlight.dart' show HighlightSpan;
+import 'package:yahwehs_sword/utils/search_highlight.dart' show HighlightSpan;
 
 // ── Tokenizing ──────────────────────────────────────────────────────
 

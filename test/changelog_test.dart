@@ -23,11 +23,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/app_version.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/changelog_page.dart';
-import 'package:seeksparks/services/changelog_service.dart';
+import 'package:yahwehs_sword/constants/app_version.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/changelog_page.dart';
+import 'package:yahwehs_sword/services/changelog_service.dart';
 
 Map<String, dynamic> _asset() => jsonDecode(
       File('assets/changelog.json').readAsStringSync(),

@@ -10,7 +10,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/cross_version_query.dart';
+import 'package:yahwehs_sword/utils/cross_version_query.dart';
 
 void main() {
   group('what counts as a cross-version query', () {

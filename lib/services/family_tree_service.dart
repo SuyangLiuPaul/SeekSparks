@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/biblical_person.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
 
 /// The `_meta` block of `assets/family_tree.json`, written by
 /// `tools/audit_dates.py`.

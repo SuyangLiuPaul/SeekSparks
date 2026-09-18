@@ -42,14 +42,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/pages/workbench_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/widgets/confidence_badge.dart';
-import 'package:seeksparks/widgets/contact_line.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/pages/workbench_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/widgets/confidence_badge.dart';
+import 'package:yahwehs_sword/widgets/contact_line.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

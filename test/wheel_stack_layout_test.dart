@@ -9,12 +9,12 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/pages/radial_chronology_page.dart' show kMaxYear;
-import 'package:seeksparks/utils/chronology_explorer.dart'
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart' show kMaxYear;
+import 'package:yahwehs_sword/utils/chronology_explorer.dart'
     show chronologyPeriods;
-import 'package:seeksparks/utils/radial_chronology_layout.dart'
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart'
     show angleForSpan;
-import 'package:seeksparks/utils/wheel_stack_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_stack_layout.dart';
 
 WheelStackInterval interval(String id, int start, int end,
         {String stream = 'test'}) =>

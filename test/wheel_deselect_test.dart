@@ -32,15 +32,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/chronology_service.dart';
-import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
-import 'package:seeksparks/widgets/chart_help_sheet.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/chronology_service.dart';
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/widgets/chart_help_sheet.dart';
 
 // The page's own fractions, restated because they are private to it —
 // the same thing wheel_band_target_test.dart and wheel_lifespans_test

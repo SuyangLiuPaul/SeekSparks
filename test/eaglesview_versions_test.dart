@@ -10,8 +10,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
 
 void main() {
   const imported = ['kjvs', 'lxxwh', 'cuvs-plus'];

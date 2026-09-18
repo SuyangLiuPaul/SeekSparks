@@ -12,9 +12,9 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
 
 List<HebrewKing> _kings() =>
     ((jsonDecode(File('assets/hebrew_kings.json').readAsStringSync())

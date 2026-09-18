@@ -25,11 +25,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/bible_trivia_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/version_mapper.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/bible_trivia_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

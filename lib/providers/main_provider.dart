@@ -2,21 +2,21 @@ import 'dart:async';
 import 'dart:collection' show LinkedHashMap;
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show localeDefaultVersion, resolveReadingVersion;
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForSearchKey, searchCorpusKey;
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/models/book.dart';
-import 'package:seeksparks/services/error_reporter.dart';
-import 'package:seeksparks/services/fetch_books.dart' show bookNameToEnglish;
-import 'package:seeksparks/utils/build_books_from_verses.dart'
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/models/book.dart';
+import 'package:yahwehs_sword/services/error_reporter.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart' show bookNameToEnglish;
+import 'package:yahwehs_sword/utils/build_books_from_verses.dart'
     show booksMatchVerses, buildBooksFromVerses;
-import 'package:seeksparks/utils/search_folding.dart'
+import 'package:yahwehs_sword/utils/search_folding.dart'
     show searchFoldingGeneration;
-import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
-import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
-import 'package:seeksparks/services/profile_service.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show translateBookName;
+import 'package:yahwehs_sword/services/fetch_verses.dart' show FetchVerses;
+import 'package:yahwehs_sword/services/profile_service.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

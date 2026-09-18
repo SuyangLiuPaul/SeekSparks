@@ -24,22 +24,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/chronology.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/chronology.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kMinYear, kMaxYear, packWheelBand;
-import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/chronology_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/chronology_service.dart';
+import 'package:yahwehs_sword/services/timeline_service.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localizedReferenceLabel;
-import 'package:seeksparks/utils/wheel_search.dart';
-import 'package:seeksparks/utils/wheel_default_streams.dart';
-import 'package:seeksparks/widgets/chart_help_sheet.dart';
+import 'package:yahwehs_sword/utils/wheel_search.dart';
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/widgets/chart_help_sheet.dart';
 
 // The page's own geometry, restated because the fractions are private
 // to it. `wheel_arc_label_behaviour_test.dart` does the same.

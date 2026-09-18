@@ -15,13 +15,13 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show searchCorpusKey;
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
-import 'package:seeksparks/utils/plain_search.dart';
-import 'package:seeksparks/constants/ui_strings.dart'
+import 'package:yahwehs_sword/utils/diacritics.dart' show foldDiacritics;
+import 'package:yahwehs_sword/utils/plain_search.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart'
     show uiStrings;
-import 'package:seeksparks/utils/search_folding.dart';
+import 'package:yahwehs_sword/utils/search_folding.dart';
 
 void main() {
   // Genesis 1:1, pointed, as `assets/originals/genesis.json` holds it.

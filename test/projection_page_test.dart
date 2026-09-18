@@ -21,20 +21,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show
         isKnownVersion,
         kSecondaryVersionKey,
         menuBibleVersionLabel,
         resolveSecondaryVersion;
-import 'package:seeksparks/constants/projection_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/pages/projection_page.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/constants/projection_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/pages/projection_page.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kWheelUrlPath;
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/page_links.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/page_links.dart';
 
 Verse _v(String book, int chapter, int verse) => Verse(
       book: book,

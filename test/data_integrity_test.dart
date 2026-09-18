@@ -14,12 +14,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/book_names.dart';
-import 'package:seeksparks/services/versification.dart';
-import 'package:seeksparks/utils/morphology.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
-import 'package:seeksparks/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/constants/book_names.dart';
+import 'package:yahwehs_sword/services/versification.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/verse_list.dart' show applySearchLimit;
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
 
 /// Editions bundled in `pubspec.yaml` as flat verse lists. The two
 /// Eagle's View NASB derivatives are deliberately absent: they are

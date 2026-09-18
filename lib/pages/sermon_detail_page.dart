@@ -2,30 +2,30 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_scroll_behavior.dart'
+import 'package:yahwehs_sword/utils/app_scroll_behavior.dart'
     show kSelectableTextPhysics;
-import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/sermon_credit.dart';
-import 'package:seeksparks/constants/sermon_topics.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
-import 'package:seeksparks/utils/passage_localizer.dart'
+import 'package:yahwehs_sword/constants/sermon_credit.dart';
+import 'package:yahwehs_sword/constants/sermon_topics.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/sermon.dart';
+import 'package:yahwehs_sword/utils/floating_toast.dart' show showFloatingToast;
+import 'package:yahwehs_sword/utils/passage_localizer.dart'
     show localizePassage, passageRefPattern;
-import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
-import 'package:seeksparks/services/sermon_service.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/services/sermon_audio_service.dart';
-import 'package:seeksparks/widgets/sermon_audio_player.dart';
+import 'package:yahwehs_sword/widgets/verse_popup_sheet.dart' show showVersePopup;
+import 'package:yahwehs_sword/services/sermon_service.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/home_icon_button.dart';
+import 'package:yahwehs_sword/widgets/language_switcher_button.dart';
+import 'package:yahwehs_sword/widgets/localized_back_button.dart';
+import 'package:yahwehs_sword/services/sermon_audio_service.dart';
+import 'package:yahwehs_sword/widgets/sermon_audio_player.dart';
 
 /// The warning to print above a body that is a condensed summary rather
 /// than a transcript of the preaching — null when the body on screen is

@@ -38,13 +38,13 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/services/chronology_service.dart';
-import 'package:seeksparks/services/family_tree_service.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
+import 'package:yahwehs_sword/models/biblical_person.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/services/chronology_service.dart';
+import 'package:yahwehs_sword/services/family_tree_service.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart';
+import 'package:yahwehs_sword/services/timeline_service.dart';
 
 
 /// One concentric band of the wheel.

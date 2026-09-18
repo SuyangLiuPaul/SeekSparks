@@ -34,11 +34,11 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/search_scope.dart' show kScopeAllBooks;
-import 'package:seeksparks/utils/search_stats.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart' show kScopeAllBooks;
+import 'package:yahwehs_sword/utils/search_stats.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 /// How the rows are ordered. bwh23's "Sort Books", minus the ascending
 /// and custom orders: ascending is descending read from the bottom, and

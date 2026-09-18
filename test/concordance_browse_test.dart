@@ -15,7 +15,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/concordance_browse.dart';
+import 'package:yahwehs_sword/utils/concordance_browse.dart';
 
 /// The shipped topic names, `(english, chinese)`, in index order.
 List<(String, String)> _shippedNames() {

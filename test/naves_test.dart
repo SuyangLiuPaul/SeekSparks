@@ -21,8 +21,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/book_names.dart';
-import 'package:seeksparks/services/naves_service.dart';
+import 'package:yahwehs_sword/constants/book_names.dart';
+import 'package:yahwehs_sword/services/naves_service.dart';
 
 /// Books with no chapter number to print, and their verse counts.
 const _singleChapter = {

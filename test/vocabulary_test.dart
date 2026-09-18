@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/vocabulary.dart';
+import 'package:yahwehs_sword/utils/vocabulary.dart';
 
 /// Mechanics of the Vocabulary Flashcard core (bwh40). Behaviour against
 /// the real tagged corpus lives in `vocabulary_corpus_test.dart`.

@@ -12,11 +12,11 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/command_draft.dart'
+import 'package:yahwehs_sword/utils/command_draft.dart'
     hide kMaxNearDistance, kMinNearDistance;
-import 'package:seeksparks/utils/command_query.dart' show CommandIssue;
-import 'package:seeksparks/utils/strongs_boolean_search.dart';
-import 'package:seeksparks/utils/strongs_proximity.dart';
+import 'package:yahwehs_sword/utils/command_query.dart' show CommandIssue;
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart';
+import 'package:yahwehs_sword/utils/strongs_proximity.dart';
 
 void main() {
   const g25 = StrongsTerm(prefix: 'G', digits: '25', wildcard: false);

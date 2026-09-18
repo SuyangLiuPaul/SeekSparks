@@ -22,14 +22,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/chart_symbol_service.dart';
-import 'package:seeksparks/utils/chronology_palette.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart' show wheelStrings;
-import 'package:seeksparks/utils/wheel_default_streams.dart';
-import 'package:seeksparks/utils/wheel_search.dart' show kLifespanLayerId;
-import 'package:seeksparks/widgets/chronology_filter_sheet.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/chart_symbol_service.dart';
+import 'package:yahwehs_sword/utils/chronology_palette.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart' show wheelStrings;
+import 'package:yahwehs_sword/utils/wheel_default_streams.dart';
+import 'package:yahwehs_sword/utils/wheel_search.dart' show kLifespanLayerId;
+import 'package:yahwehs_sword/widgets/chronology_filter_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/constants/book_names.dart' show standardBookOrder;
-import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/constants/book_names.dart' show standardBookOrder;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
 
 /// 2026-09-13: 「sword显示book没有分开旧约和新约」.
 ///

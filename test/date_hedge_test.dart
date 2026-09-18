@@ -44,7 +44,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/date_hedge.dart';
+import 'package:yahwehs_sword/utils/date_hedge.dart';
 
 /// Characters that differ between the scripts AND appear in a date this
 /// app prints. Deliberately short: a general Simplified detector over a

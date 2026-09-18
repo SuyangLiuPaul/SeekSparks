@@ -13,10 +13,10 @@ library;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
-import 'package:seeksparks/models/app_settings.dart'
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbMetrics;
+import 'package:yahwehs_sword/models/app_settings.dart'
     show kFontSizeDefault, kFontSizeMax;
-import 'package:seeksparks/pages/projection_page.dart';
+import 'package:yahwehs_sword/pages/projection_page.dart';
 
 /// Three chapters of 3, 2 and 4 verses. Uneven on purpose: equal-length
 /// chapters make an off-by-one in the roll-over invisible.

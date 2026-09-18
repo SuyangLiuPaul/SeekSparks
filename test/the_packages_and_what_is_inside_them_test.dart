@@ -26,7 +26,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/update_service.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
 
 /// What the app's packages are called. One place, so a future rename
 /// fails here loudly rather than in a reader's download folder.

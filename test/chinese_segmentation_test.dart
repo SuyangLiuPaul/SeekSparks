@@ -10,9 +10,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/chinese_segmentation.dart';
-import 'package:seeksparks/utils/fuzzy_search.dart' show synonymVocabulary;
-import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
+import 'package:yahwehs_sword/utils/chinese_segmentation.dart';
+import 'package:yahwehs_sword/utils/fuzzy_search.dart' show synonymVocabulary;
+import 'package:yahwehs_sword/utils/related_verses.dart' show isCjkChar;
 
 void main() {
   late Map<String, String> verses;

@@ -24,10 +24,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/utils/diacritics.dart';
-import 'package:seeksparks/utils/plain_search.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/utils/diacritics.dart';
+import 'package:yahwehs_sword/utils/plain_search.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
 
 /// `ὁ θεός` — the query as she typed it.
 const kHoTheos = 'ὁ θεός';

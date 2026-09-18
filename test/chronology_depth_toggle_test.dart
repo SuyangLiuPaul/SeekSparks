@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/font_catalog.dart';
-import 'package:seeksparks/widgets/chronology_depth_toggle.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
+import 'package:yahwehs_sword/widgets/chronology_depth_toggle.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

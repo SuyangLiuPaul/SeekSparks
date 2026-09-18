@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/scripture_markup.dart'
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbMetrics;
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/scripture_markup.dart'
     show ScriptureSpanKind, parseScripture;
 
 /// Every note a verse carries, set as one numbered block under it.

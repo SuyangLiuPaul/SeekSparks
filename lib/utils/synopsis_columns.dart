@@ -28,7 +28,7 @@
 /// fetching each passage's verses, is the pane's job.
 library;
 
-import 'package:seeksparks/services/synopsis_service.dart'
+import 'package:yahwehs_sword/services/synopsis_service.dart'
     show SynopsisEvent, SynopsisPassage;
 
 /// One column of a synopsis: a passage, and whether it has any text.

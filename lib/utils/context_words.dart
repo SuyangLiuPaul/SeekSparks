@@ -38,8 +38,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/utils/word_pos.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/utils/word_pos.dart';
 
 /// Which nested scope the list covers. BibleWorks' three sub-windows,
 /// as one list with a chooser — three scrolling lists do not fit a

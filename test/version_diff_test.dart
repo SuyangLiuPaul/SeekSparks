@@ -7,7 +7,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/version_diff.dart';
+import 'package:yahwehs_sword/utils/version_diff.dart';
 
 List<String> norms(String s) =>
     [for (final t in versionDiffTokens([s])) t.norm];

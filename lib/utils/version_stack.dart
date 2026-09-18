@@ -29,7 +29,7 @@
 ///     for an asset the host answers with `<!DOCTYPE`.
 library;
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show loadableVersions;
 
 /// The comparison list, cleaned: loadable codes only, retired codes

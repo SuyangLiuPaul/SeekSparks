@@ -15,8 +15,8 @@
 /// Pure list work: the service loads, this counts, the widget draws.
 library;
 
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/strongs.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
 
 /// How a word list is ordered.
 enum WordListSort {

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/utils/short_book_name.dart' show shortBookName;
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/utils/short_book_name.dart' show shortBookName;
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Result of a concordance lookup for one Strong's number.
 ///

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/book.dart';
-import 'package:seeksparks/models/chapter.dart';
-import 'package:seeksparks/utils/chapter_navigation.dart';
+import 'package:yahwehs_sword/models/book.dart';
+import 'package:yahwehs_sword/models/chapter.dart';
+import 'package:yahwehs_sword/utils/chapter_navigation.dart';
 
 /// The chapter traversal behind the workspace toolbar's arrows, the
 /// reader's `[` / `]` keys and its swipe (#313).

@@ -24,9 +24,9 @@
 /// apart.
 library;
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/journey_route.dart' show markerKeyFor;
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/journey_route.dart' show markerKeyFor;
 
 /// One measured neighbour.
 class RulerLeg {

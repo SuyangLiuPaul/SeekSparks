@@ -9,9 +9,9 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/command_builder.dart';
-import 'package:seeksparks/utils/command_query.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/utils/command_builder.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
 
 /// Every shape the builder can produce must parse.
 void expectParses(BuiltQuery q) {

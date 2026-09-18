@@ -13,14 +13,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/chronology_explorer_strings.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/chronology_explorer.dart';
-import 'package:seeksparks/utils/date_hedge.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/constants/chronology_explorer_strings.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/chronology_explorer.dart';
+import 'package:yahwehs_sword/utils/date_hedge.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localizedReferenceLabel;
-import 'package:seeksparks/widgets/chronology_explorer.dart';
+import 'package:yahwehs_sword/widgets/chronology_explorer.dart';
 
 class _CountedEvents extends ListBase<WheelHistoryEvent> {
   _CountedEvents(this.source);

@@ -33,13 +33,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/models/chronology.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/services/hebrew_kings_service.dart'
+import 'package:yahwehs_sword/models/chronology.dart';
+import 'package:yahwehs_sword/models/hebrew_king.dart';
+import 'package:yahwehs_sword/services/hebrew_kings_service.dart'
     show HebrewKingsData;
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kKingArcPrefix, kingReignSpans, kingdomArcColor, kMinYear, kMaxYear;
-import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/radial_chronology_layout.dart';
 
 const String _kDrawnTradition = 'mt';
 

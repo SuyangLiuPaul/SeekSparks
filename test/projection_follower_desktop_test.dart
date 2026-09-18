@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/services/projection_broadcast.dart';
-import 'package:seeksparks/services/projection_broadcast_io.dart';
+import 'package:yahwehs_sword/services/projection_broadcast.dart';
+import 'package:yahwehs_sword/services/projection_broadcast_io.dart';
 
 /// The desktop follower — `projection_broadcast_io.dart`.
 ///

@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/utils/passage_sermons.dart';
+import 'package:yahwehs_sword/models/sermon.dart';
+import 'package:yahwehs_sword/utils/passage_sermons.dart';
 
 /// One sermon that treats the focused passage, with the citation that
 /// puts it there — so the surface can say *why* the row is in the list.

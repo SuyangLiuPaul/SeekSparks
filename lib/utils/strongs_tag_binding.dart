@@ -137,11 +137,11 @@
 /// a number and compares strings.
 library;
 
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForSearchKey;
-import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
-import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
-import 'package:seeksparks/utils/strongs_boolean_search.dart'
+import 'package:yahwehs_sword/utils/phrase_match.dart' show phraseTokens;
+import 'package:yahwehs_sword/utils/search_folding.dart' show foldSearchMarks;
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart'
     show kMaxGreekStrongs, kMaxHebrewStrongs;
 
 /// One token of a verse, and the Strong's number of the run it came from.

@@ -34,8 +34,8 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/search_stats.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/search_stats.dart';
 
 /// Height of the drawn strip. Tall enough that a ratio between two bars
 /// is readable, short enough to sit under a word row without turning the

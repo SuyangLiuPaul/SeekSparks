@@ -1,6 +1,6 @@
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show importedVersionScripts;
-import 'package:seeksparks/utils/imported_version.dart'
+import 'package:yahwehs_sword/utils/imported_version.dart'
     show isImportedVersion;
 
 const englishToChinese = {

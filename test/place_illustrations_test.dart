@@ -10,9 +10,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/place_illustrations.dart';
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/place_illustrations.dart';
 
 BibleMap _m(
   String id, {

@@ -18,9 +18,9 @@
 
 import 'package:flutter/widgets.dart';
 
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart';
-import 'package:seeksparks/pages/strip_chronology_page.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart';
+import 'package:yahwehs_sword/pages/strip_chronology_page.dart';
 
 /// The page an "open the chronology chart" entry point should push.
 Widget chronologyChartEntryPage(AppSettings settings) =>

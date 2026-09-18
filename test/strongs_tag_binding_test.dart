@@ -11,15 +11,15 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
-import 'package:seeksparks/constants/text_patterns.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart' show bibleVersions;
+import 'package:yahwehs_sword/constants/text_patterns.dart'
     show sanitizeForSearchKey, searchCorpusKey;
-import 'package:seeksparks/services/tagged_text_service.dart'
+import 'package:yahwehs_sword/services/tagged_text_service.dart'
     show TaggedTextService;
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/strongs_boolean_search.dart'
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/strongs_boolean_search.dart'
     show StrongsOp, parseStrongsBoolean;
-import 'package:seeksparks/utils/strongs_tag_binding.dart';
+import 'package:yahwehs_sword/utils/strongs_tag_binding.dart';
 
 /// Six verses, each as its tagged runs. The verse text is the runs
 /// joined, exactly as `assets/tagged/<version>/<book>.json` and

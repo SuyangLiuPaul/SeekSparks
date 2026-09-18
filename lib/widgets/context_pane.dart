@@ -23,21 +23,21 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/pages/strongs_entry_page.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/section_title_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
-import 'package:seeksparks/utils/context_words.dart';
-import 'package:seeksparks/utils/passage_events.dart';
-import 'package:seeksparks/utils/pericope.dart';
-import 'package:seeksparks/utils/timeline_basis.dart';
-import 'package:seeksparks/utils/word_pos.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/pages/strongs_entry_page.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/section_title_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/timeline_service.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart' show WbType;
+import 'package:yahwehs_sword/utils/context_words.dart';
+import 'package:yahwehs_sword/utils/passage_events.dart';
+import 'package:yahwehs_sword/utils/pericope.dart';
+import 'package:yahwehs_sword/utils/timeline_basis.dart';
+import 'package:yahwehs_sword/utils/word_pos.dart';
 
 class ContextPane extends StatefulWidget {
   const ContextPane({

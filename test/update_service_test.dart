@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/services/update_service.dart';
+import 'package:yahwehs_sword/services/update_service.dart';
 
 void main() {
   group('UpdateService.stripV', () {

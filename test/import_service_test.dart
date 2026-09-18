@@ -5,10 +5,10 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/export_service.dart';
-import 'package:seeksparks/services/import_service.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/services/export_service.dart';
+import 'package:yahwehs_sword/services/import_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

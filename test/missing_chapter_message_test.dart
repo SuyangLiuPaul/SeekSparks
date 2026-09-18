@@ -10,8 +10,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart';
-import 'package:seeksparks/utils/missing_chapter_message.dart';
+import 'package:yahwehs_sword/constants/bible_versions.dart';
+import 'package:yahwehs_sword/utils/missing_chapter_message.dart';
 
 void main() {
   // The case that actually produces this screen: 梁家铿译本 ships the NT

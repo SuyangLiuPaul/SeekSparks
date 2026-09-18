@@ -68,7 +68,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/services/modern_concordance_service.dart';
+import 'package:yahwehs_sword/services/modern_concordance_service.dart';
 
 /// How a neighbour sits beside the word being looked up.
 ///

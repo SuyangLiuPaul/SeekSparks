@@ -41,11 +41,11 @@
 
 import 'package:flutter/widgets.dart';
 
-import 'package:seeksparks/pages/projection_page.dart'
+import 'package:yahwehs_sword/pages/projection_page.dart'
     show ProjectionPage, kProjectionUrlPath;
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kWheelUrlPath;
-import 'package:seeksparks/pages/strip_chronology_page.dart'
+import 'package:yahwehs_sword/pages/strip_chronology_page.dart'
     show StripChronologyPage, kStripUrlPath;
 
 /// The page [path] names, or null when it names no page.

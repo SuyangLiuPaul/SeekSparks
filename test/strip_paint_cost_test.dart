@@ -12,22 +12,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show centuryTickLabel, yearLabel;
-import 'package:seeksparks/pages/strip_chronology_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/timeline_event.dart';
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/utils/font_catalog.dart';
-import 'package:seeksparks/utils/strip_chronology_layout.dart';
-import 'package:seeksparks/utils/strip_event_cards.dart';
-import 'package:seeksparks/models/strip_lanes.dart';
-import 'package:seeksparks/utils/strip_paint_text.dart';
-import 'package:seeksparks/utils/strip_paint_visibility.dart';
-import 'package:seeksparks/widgets/strip_chronology_painter.dart';
-import 'package:seeksparks/widgets/chart_help_sheet.dart';
+import 'package:yahwehs_sword/pages/strip_chronology_page.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/timeline_event.dart';
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart';
+import 'package:yahwehs_sword/utils/strip_chronology_layout.dart';
+import 'package:yahwehs_sword/utils/strip_event_cards.dart';
+import 'package:yahwehs_sword/models/strip_lanes.dart';
+import 'package:yahwehs_sword/utils/strip_paint_text.dart';
+import 'package:yahwehs_sword/utils/strip_paint_visibility.dart';
+import 'package:yahwehs_sword/widgets/strip_chronology_painter.dart';
+import 'package:yahwehs_sword/widgets/chart_help_sheet.dart';
 
 void _paint(CustomPainter painter, Size size) {
   final recorder = ui.PictureRecorder();

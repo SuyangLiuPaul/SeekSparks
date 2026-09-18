@@ -27,7 +27,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/utils/history_state_repair.dart';
+import 'package:yahwehs_sword/utils/history_state_repair.dart';
 
 void main() {
   group('repairedBootHistoryState leaves alone what it should', () {

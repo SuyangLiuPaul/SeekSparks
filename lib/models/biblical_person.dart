@@ -5,7 +5,7 @@
 /// don't need to change to absorb new entries.
 library;
 
-import 'package:seeksparks/utils/date_hedge.dart';
+import 'package:yahwehs_sword/utils/date_hedge.dart';
 
 class BiblicalPerson {
   /// Stable kebab/snake-case id used by parent / spouse / child

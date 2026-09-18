@@ -28,7 +28,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seeksparks/utils/phrasing.dart' show scriptIsRtl, isRtlText;
+import 'package:yahwehs_sword/utils/phrasing.dart' show scriptIsRtl, isRtlText;
 
 List<Map<String, dynamic>> _load(String code) =>
     (jsonDecode(File('assets/$code.json').readAsStringSync()) as List)

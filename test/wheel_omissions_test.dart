@@ -35,13 +35,13 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:seeksparks/constants/book_name_mapping.dart'
+import 'package:yahwehs_sword/constants/book_name_mapping.dart'
     show englishToChinese, englishToChineseTraditional;
-import 'package:seeksparks/models/wheel_history.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart'
+import 'package:yahwehs_sword/models/wheel_history.dart';
+import 'package:yahwehs_sword/pages/radial_chronology_page.dart'
     show kMaxYear, wheelStrings;
-import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/wheel_search.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/wheel_search.dart';
 
 const _locales = ['en', 'zh-Hans', 'zh-Hant'];
 

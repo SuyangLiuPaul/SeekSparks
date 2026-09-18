@@ -2,44 +2,44 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/utils/page_links.dart'
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/app_nav.dart';
+import 'package:yahwehs_sword/utils/page_links.dart'
     show pageForUrlPath, samePageUrlPath;
-import 'package:seeksparks/utils/app_scroll_behavior.dart';
-import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/pages/workbench_page.dart';
-import 'package:seeksparks/pages/loading_page.dart';
-import 'package:seeksparks/pages/sermon_detail_page.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/services/sermon_service.dart';
-import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
-import 'package:seeksparks/utils/open_reader.dart';
-import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/services/daily_verse_service.dart';
-import 'package:seeksparks/services/error_reporter.dart';
-import 'package:seeksparks/utils/breadcrumb_observer.dart';
-import 'package:seeksparks/services/notification_scheduler.dart'
+import 'package:yahwehs_sword/utils/app_scroll_behavior.dart';
+import 'package:yahwehs_sword/models/sermon.dart';
+import 'package:yahwehs_sword/pages/workbench_page.dart';
+import 'package:yahwehs_sword/pages/loading_page.dart';
+import 'package:yahwehs_sword/pages/sermon_detail_page.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/services/sermon_service.dart';
+import 'package:yahwehs_sword/utils/jump_to_reference.dart' as jumper;
+import 'package:yahwehs_sword/utils/open_reader.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart' show BibleReference;
+import 'package:yahwehs_sword/services/daily_verse_service.dart';
+import 'package:yahwehs_sword/services/error_reporter.dart';
+import 'package:yahwehs_sword/utils/breadcrumb_observer.dart';
+import 'package:yahwehs_sword/services/notification_scheduler.dart'
     as notif_scheduler;
-import 'package:seeksparks/services/offline_pack_service.dart';
-import 'package:seeksparks/services/fetch_books.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
-import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/services/book_intro_service.dart';
-import 'package:seeksparks/services/section_title_service.dart';
-import 'package:seeksparks/services/url_sync_service.dart';
-import 'package:seeksparks/services/workbench_warmup.dart'
+import 'package:yahwehs_sword/services/offline_pack_service.dart';
+import 'package:yahwehs_sword/services/fetch_books.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart';
+import 'package:yahwehs_sword/services/profile_service.dart';
+import 'package:yahwehs_sword/services/book_intro_service.dart';
+import 'package:yahwehs_sword/services/section_title_service.dart';
+import 'package:yahwehs_sword/services/url_sync_service.dart';
+import 'package:yahwehs_sword/services/workbench_warmup.dart'
     show warmWorkbenchFirstPaint;
 import 'package:provider/provider.dart';
-import 'package:seeksparks/services/version_import_service.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/widgets/retired_version_notice.dart'
+import 'package:yahwehs_sword/services/version_import_service.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/widgets/retired_version_notice.dart'
     show RetiredVersionNotice;
-import 'package:seeksparks/models/wheel_history.dart'
+import 'package:yahwehs_sword/models/wheel_history.dart'
     show WheelHistoryService;
-import 'package:seeksparks/utils/theme_accent.dart'
+import 'package:yahwehs_sword/utils/theme_accent.dart'
     show darkReadingAccent, onAccentColor;
 
 void main() {

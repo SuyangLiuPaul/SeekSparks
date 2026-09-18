@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/widgets/analysis_tabs.dart';
-import 'package:seeksparks/widgets/related_verses_pane.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/widgets/analysis_tabs.dart';
+import 'package:yahwehs_sword/widgets/related_verses_pane.dart';
 
 /// The four verses that carry the assertions, plus enough filler to keep
 /// the corpus realistic. `defaultEnabledTerms` unchecks any word found in

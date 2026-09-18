@@ -2,48 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show availableVersions, bibleVersions, shortBibleVersionLabel;
-import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/models/wb_centre_mode.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
-import 'package:seeksparks/services/recent_searches_service.dart';
-import 'package:seeksparks/utils/fuzzy_result_label.dart';
-import 'package:seeksparks/utils/atomic_text_edit.dart';
-import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/copy_marking.dart'
+import 'package:yahwehs_sword/constants/text_patterns.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/models/wb_centre_mode.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/workbench_provider.dart';
+import 'package:yahwehs_sword/services/concordance_service.dart';
+import 'package:yahwehs_sword/services/fetch_verses.dart';
+import 'package:yahwehs_sword/services/recent_searches_service.dart';
+import 'package:yahwehs_sword/utils/fuzzy_result_label.dart';
+import 'package:yahwehs_sword/utils/atomic_text_edit.dart';
+import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/copy_marking.dart'
     show markHits, markVerseHits;
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
-import 'package:seeksparks/utils/command_draft.dart';
-import 'package:seeksparks/utils/command_examples.dart';
-import 'package:seeksparks/utils/command_query.dart';
-import 'package:seeksparks/utils/compound_query.dart';
-import 'package:seeksparks/utils/command_verb.dart';
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
-import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
-import 'package:seeksparks/utils/relative_time.dart' show relativeTime;
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/version_mapper.dart'
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
+import 'package:yahwehs_sword/utils/command_draft.dart';
+import 'package:yahwehs_sword/utils/command_examples.dart';
+import 'package:yahwehs_sword/utils/command_query.dart';
+import 'package:yahwehs_sword/utils/compound_query.dart';
+import 'package:yahwehs_sword/utils/command_verb.dart';
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/jump_to_reference.dart' as jumper;
+import 'package:yahwehs_sword/utils/reference_parser.dart' show parseReference;
+import 'package:yahwehs_sword/utils/relative_time.dart' show relativeTime;
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
-import 'package:seeksparks/constants/book_groups.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart'
     show oldTestamentBooks, canonicalOtBooks, canonicalNtBooks;
-import 'package:seeksparks/utils/search_scope.dart' show scopeDisplayName;
-import 'package:seeksparks/utils/search_stats.dart';
-import 'package:seeksparks/utils/strongs_absence.dart';
-import 'package:seeksparks/utils/strongs_result_counts.dart';
-import 'package:seeksparks/utils/version_abbreviation.dart';
-import 'package:seeksparks/widgets/command_builder_sheet.dart'
+import 'package:yahwehs_sword/utils/search_scope.dart' show scopeDisplayName;
+import 'package:yahwehs_sword/utils/search_stats.dart';
+import 'package:yahwehs_sword/utils/strongs_absence.dart';
+import 'package:yahwehs_sword/utils/strongs_result_counts.dart';
+import 'package:yahwehs_sword/utils/version_abbreviation.dart';
+import 'package:yahwehs_sword/widgets/command_builder_sheet.dart'
     show showCommandBuilder;
-import 'package:seeksparks/widgets/cross_version_strip.dart';
-import 'package:seeksparks/widgets/search_stats_strip.dart';
+import 'package:yahwehs_sword/widgets/cross_version_strip.dart';
+import 'package:yahwehs_sword/widgets/search_stats_strip.dart';
 
 /// The Workbench's left pane: a BibleWorks-style command line (text, a
 /// bare Strong's number, or a structured `G25 AND G26` / `NEAR5` query)

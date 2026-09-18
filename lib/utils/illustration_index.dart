@@ -32,8 +32,8 @@
 /// without a widget; `pages/illustrations_page.dart` is layout.
 library;
 
-import 'package:seeksparks/models/bible_map.dart';
-import 'package:seeksparks/utils/search_scope.dart' show kScopeAllBooks;
+import 'package:yahwehs_sword/models/bible_map.dart';
+import 'package:yahwehs_sword/utils/search_scope.dart' show kScopeAllBooks;
 
 /// Canonical position of each of the 66 books.
 final Map<String, int> _bookOrder = <String, int>{

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
-import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:yahwehs_sword/utils/reference_parser.dart';
 
 /// One passage of a synopsis entry: a book, the string a reader sees,
 /// and where tapping it goes.

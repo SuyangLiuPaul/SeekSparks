@@ -24,35 +24,35 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
+import 'package:yahwehs_sword/constants/bible_versions.dart'
     show shortBibleVersionLabel;
-import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
-import 'package:seeksparks/constants/ui_strings.dart' show uiStrings;
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/utils/analysis_focus.dart';
-import 'package:seeksparks/utils/scripture_markup.dart';
-import 'package:seeksparks/utils/search_highlight.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/original_word.dart';
-import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/services/tagged_text_service.dart';
-import 'package:seeksparks/services/versification.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart'
+import 'package:yahwehs_sword/constants/book_names.dart' show bookNameToEnglish;
+import 'package:yahwehs_sword/constants/ui_strings.dart' show uiStrings;
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/utils/analysis_focus.dart';
+import 'package:yahwehs_sword/utils/scripture_markup.dart';
+import 'package:yahwehs_sword/utils/search_highlight.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/models/original_word.dart';
+import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/providers/main_provider.dart';
+import 'package:yahwehs_sword/models/strongs.dart';
+import 'package:yahwehs_sword/services/originals_service.dart';
+import 'package:yahwehs_sword/services/strongs_service.dart';
+import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/services/versification.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart'
     show ketivQereLabel, ketivQereMark, ketivQereNote;
-import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
-import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:seeksparks/utils/strongs_inline.dart';
-import 'package:seeksparks/utils/verse_text_absence.dart';
-import 'package:seeksparks/utils/version_gutter.dart'
+import 'package:yahwehs_sword/utils/morphology.dart' show describeMorphology;
+import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/strongs_inline.dart';
+import 'package:yahwehs_sword/utils/verse_text_absence.dart';
+import 'package:yahwehs_sword/utils/version_gutter.dart'
     show referenceGutterWidth, versionGutterWidth;
-import 'package:seeksparks/utils/version_diff.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
-import 'package:seeksparks/widgets/verse_notes_block.dart'
+import 'package:yahwehs_sword/utils/version_diff.dart';
+import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:yahwehs_sword/widgets/workbench_chrome.dart' show WbVersionTag;
+import 'package:yahwehs_sword/widgets/verse_notes_block.dart'
     show superscriptNumber, VerseNotesBlock, notesInReadingOrder;
 
 /// The one word gap in the Browse pane.

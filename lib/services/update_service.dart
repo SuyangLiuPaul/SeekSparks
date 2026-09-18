@@ -20,8 +20,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
-import 'package:seeksparks/constants/app_version.dart';
-import 'package:seeksparks/services/app_update_installer.dart';
+import 'package:yahwehs_sword/constants/app_version.dart';
+import 'package:yahwehs_sword/services/app_update_installer.dart';
 
 /// Result of an update check. [updateAvailable] is the only thing the UI
 /// branches on; the URLs are pre-resolved for the current platform.

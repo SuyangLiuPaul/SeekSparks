@@ -47,9 +47,9 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:seeksparks/models/bible_journey.dart';
-import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/place_geo.dart' show haversineKm;
+import 'package:yahwehs_sword/models/bible_journey.dart';
+import 'package:yahwehs_sword/models/bible_place.dart';
+import 'package:yahwehs_sword/utils/place_geo.dart' show haversineKm;
 
 /// A stop that found its place.
 class ResolvedStop {

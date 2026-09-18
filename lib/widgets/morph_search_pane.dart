@@ -20,18 +20,18 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/book_groups.dart';
-import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart';
-import 'package:seeksparks/services/morph_search_service.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart'
+import 'package:yahwehs_sword/constants/book_groups.dart';
+import 'package:yahwehs_sword/models/app_settings.dart';
+import 'package:yahwehs_sword/constants/ui_strings.dart';
+import 'package:yahwehs_sword/constants/workbench_theme.dart';
+import 'package:yahwehs_sword/services/morph_search_service.dart';
+import 'package:yahwehs_sword/utils/ketiv_qere.dart'
     show ketivQereLabel;
-import 'package:seeksparks/utils/morph_construction.dart';
-import 'package:seeksparks/utils/morph_query.dart';
-import 'package:seeksparks/utils/morphology.dart';
-import 'package:seeksparks/utils/short_book_name.dart';
-import 'package:seeksparks/widgets/wb_pane_bits.dart';
+import 'package:yahwehs_sword/utils/morph_construction.dart';
+import 'package:yahwehs_sword/utils/morph_query.dart';
+import 'package:yahwehs_sword/utils/morphology.dart';
+import 'package:yahwehs_sword/utils/short_book_name.dart';
+import 'package:yahwehs_sword/widgets/wb_pane_bits.dart';
 
 class MorphSearchPane extends StatefulWidget {
   const MorphSearchPane({

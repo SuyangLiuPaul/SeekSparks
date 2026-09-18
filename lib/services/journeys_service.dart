@@ -16,9 +16,9 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:seeksparks/models/bible_journey.dart';
-import 'package:seeksparks/services/places_service.dart';
-import 'package:seeksparks/utils/journey_route.dart';
+import 'package:yahwehs_sword/models/bible_journey.dart';
+import 'package:yahwehs_sword/services/places_service.dart';
+import 'package:yahwehs_sword/utils/journey_route.dart';
 
 abstract final class JourneysService {
   static const String _asset = 'assets/bible_journeys.json';

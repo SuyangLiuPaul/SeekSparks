@@ -1,5 +1,5 @@
-import 'package:seeksparks/models/bible_evidence.dart';
-import 'package:seeksparks/services/remote_data_service.dart';
+import 'package:yahwehs_sword/models/bible_evidence.dart';
+import 'package:yahwehs_sword/services/remote_data_service.dart';
 
 /// Bundle wrapper so we can fit `BibleEvidence` data into the
 /// [RemoteDataService] base class (which expects a generic `T`).
