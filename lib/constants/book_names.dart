@@ -145,6 +145,7 @@ const Map<String, String> bookNameToEnglish = {
   'Jude': 'Jude', '犹大书': 'Jude', '猶大書': 'Jude',
   // Revelation
   'Revelation': 'Revelation', '启示录': 'Revelation', '啟示錄': 'Revelation',
+  '啓示錄': 'Revelation',
 };
 
 // 2026-08-09 (#298): `standardBookOrder` moved here from

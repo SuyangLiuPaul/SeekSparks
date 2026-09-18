@@ -218,7 +218,7 @@ const _zhAliasToEn = {
   '约翰二书': '2 John', '約翰二書': '2 John',
   '约翰三书': '3 John', '約翰三書': '3 John',
   '犹大书': 'Jude', '猶大書': 'Jude',
-  '启示录': 'Revelation', '啟示錄': 'Revelation',
+  '启示录': 'Revelation', '啟示錄': 'Revelation', '啓示錄': 'Revelation',
 };
 
 /// 把中文书名（简体或繁体）转换为英文键；若找不到则返回 null

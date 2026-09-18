@@ -108,7 +108,10 @@ void main() {
       // OpenCC's base STCharacters maps 么 → 麼 outright and neither
       // HKVariants nor TWVariants introduces 麽. The 和合本 writes 甚麼.
       expect(all, isNot(contains('麽')));
-      expect(all, contains('什麼'));
+      // 2026-09-18, Raymond 牧師's review: 什麼 → 甚麼 throughout, as
+      // the printed 和合本 has it.
+      expect(all, contains('甚麼'));
+      expect(all, isNot(contains('什麼')));
     });
 
     test('耶利米書 4:22 says who the people do not know', () {
@@ -145,12 +148,24 @@ void main() {
     test('the Hong Kong glyph ruling is untouched by any of this', () {
       // 「按照香港和合本的繁体字吧」. None of the 128 classes was a glyph
       // pair, and none of the 1,111 moved characters may become one.
-      for (final hk in ['説', '着', '衞', '羣', '牀', '户', '悦', '卧']) {
+      //
+      // 2026-09-18, Raymond 牧師's review overruled it for two pairs and
+      // one word: 戶 and 臥 throughout (his remarks at 以斯帖記 1:10,
+      // 以西結書 4:4), and 著 kept only in 傳道書 12:12 「著書多」.
+      for (final hk in ['説', '着', '衞', '羣', '牀', '悦']) {
         expect(all, contains(hk), reason: '$hk is the Hong Kong form');
       }
-      for (final tw in ['說', '著', '衛', '群', '床', '戶', '悅', '臥']) {
+      for (final tw in ['說', '衛', '群', '床', '悅']) {
         expect(all, isNot(contains(tw)), reason: '$tw is the Taiwan form');
       }
+      for (final ruled in ['戶', '臥']) {
+        expect(all, contains(ruled), reason: '$ruled by the review');
+      }
+      for (final gone in ['户', '卧']) {
+        expect(all, isNot(contains(gone)), reason: '$gone ruled out');
+      }
+      expect('著'.allMatches(all).length, 1);
+      expect(tr['021012012'], contains('著書多'));
     });
   });
 }

@@ -1429,6 +1429,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       '猶大書': '猶',
       '启示录': '启',
       '啟示錄': '啟',
+      '啓示錄': '啓',
     };
     return abbr[title] ?? title;
   }

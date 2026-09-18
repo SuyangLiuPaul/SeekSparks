@@ -65,9 +65,13 @@ void main() {
       for (final r in s.cast<Map<String, dynamic>>())
         r['id'] as String: r['text'] as String,
     };
+    // 2026-09-18, Raymond 牧師's review: the 繁體 reads 甚麼 where the
+    // 简体 reads 什么, as the printed 和合本 does. 甚 also stands opposite
+    // 甚 (甚大, 甚多), so no per-character vote can send it back both
+    // ways; the word is read back as the word, before any voting.
     traditional = {
       for (final r in t.cast<Map<String, dynamic>>())
-        r['id'] as String: r['text'] as String,
+        r['id'] as String: (r['text'] as String).replaceAll('甚麼', '什麼'),
     };
   });
 

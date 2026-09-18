@@ -160,6 +160,12 @@ void main() {
       // 對, 152 錯, and 151 of the 152 were 借 for 藉. The 152nd was the
       // edition's single 沈 (馬太福音 14:30), and with it gone 沉 has no
       // second Traditional form left to record. 借 → 藉 went 133 → 284.
+      //
+      // 2026-09-18, Raymond 牧師's review of the 繁體 list: 什麼 → 甚麼
+      // gives 什 a correspondence (什/甚), and 户 卧 着 have one again
+      // (戶 臥, and 着 opposite the single 著 of 傳道書 12:12), while 樑
+      // 鑑 燬 鏽 are gone, so 梁 leaves the table and 鉴 毁 锈 lose
+      // their second forms. The count happens to come out where it was.
       expect(kCuvSimplifiedChars.length, 1144);
     });
 
@@ -188,15 +194,17 @@ void main() {
       final many = forms.entries.where((e) => e.value.length > 1);
       // 20 until 2026-09-14, when following the published 和合本 per
       // occurrence gave 迹, 系 and 锈 a second form they had not had.
-      expect(many.length, 23);
+      // 19 on 2026-09-18: Raymond 牧師's review ruled 銹 and 鑒
+      // throughout, so 锈 and 鉴 are single-form now.
+      expect(many.length, 19);
 
       // The close calls, where the majority is not obvious and a
       // re-derivation could flip it: 锈 is 鏽 5 against 銹 4, 系 is 繫 12
       // against 係 5, 饥 is 饑 99 against 飢 58, 鉴 is 鑒 23 against 鑑 5.
-      expect(forms['锈']!.first, '鏽');
+      expect(forms['锈'], ['銹']);
       expect(forms['系']!.first, '繫');
       expect(forms['饥']!.first, '饑');
-      expect(forms['鉴']!.first, '鑒');
+      expect(forms['鉴'], ['鑒']);
       // 签 flipped on 2026-09-14: 籤 25 against 簽 2, where it had been
       // 簽 first. The 和合本 prints 拈籤/掣籤 for the casting of lots.
       expect(forms['签']!.first, '籤');
