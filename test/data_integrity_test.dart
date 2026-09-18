@@ -780,7 +780,10 @@ void main() {
       // by leaving them out, not by writing a placeholder into them.
       // +4 on 2026-09-16: 马可福音 6:8-11 restored to 梁简 from the
       // official build, closing the last gap between the two scripts.
-      expect(records, 357708);
+      // +2 on 2026-09-18: 約翰福音 5:4 in both 梁 scripts — the translator
+      // ruled it is printed as bracketed body text (ruling 五), where it
+      // had been only a note on 5:3. See tools/apply_ljk_2026_09_17.py.
+      expect(records, 357710);
       expect(census, {
         // 70, not 71, since the publisher's 2026-08-29 revision: 約伯記
         // 10:21 was a 见上节 placeholder in every edition we had, and that
@@ -921,8 +924,9 @@ void main() {
         'lxxwh': 302,
         // 34, not 38, since 马可福音 6:8-11 were restored — the two
         // scripts are level again.
-        'biblexg-v3': 34,
-        'biblexg-v3-tr': 34,
+        // 33 since 2026-09-18: 約翰福音 5:4 is present (ruling 五).
+        'biblexg-v3': 33,
+        'biblexg-v3-tr': 33,
         // 2026-09-08: the same sixteen as `bsb`, and the same sixteen in
         // each. Both sources store the Received-Text verses empty and
         // `import_yahwehdehua_texts.py` omits them, which is what
@@ -935,8 +939,9 @@ void main() {
       });
       // Unused otherwise, but it is the count the docs quote. 424 + 32
       // on 2026-09-08, the two new editions' sixteen apiece; -4 on
-      // 2026-09-16, 马可福音 6:8-11 restored to 梁简.
-      expect(absentByEdition.values.reduce((a, b) => a + b), 452);
+      // 2026-09-16, 马可福音 6:8-11 restored to 梁简; -2 on 2026-09-18,
+      // 約翰福音 5:4 in both 梁 scripts.
+      expect(absentByEdition.values.reduce((a, b) => a + b), 450);
     });
 
     test('the two transposed Septuagint passages stay repaired', () {
@@ -1109,13 +1114,13 @@ void main() {
         // scripts lack.
         'biblexg-v3': {
           'range': 21,
-          'notInOriginal': 11,
+          'notInOriginal': 10, // 約翰福音 5:4 present since 2026-09-18
           'sharedOriginal': 1,
           'unexplained': 1,
         },
         'biblexg-v3-tr': {
           'range': 21,
-          'notInOriginal': 11,
+          'notInOriginal': 10, // 約翰福音 5:4 present since 2026-09-18
           'sharedOriginal': 1,
           'unexplained': 1,
         },
