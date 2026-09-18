@@ -9,6 +9,7 @@
 /// row's own condition and the reason the feature is defensible at all.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:yahwehs_sword/constants/bible_versions.dart'
     show importedVersionLabels, importedVersionScripts;
 import 'package:yahwehs_sword/services/local_version_store.dart';
@@ -46,6 +47,12 @@ class VersionImportResult {
 class VersionImportService {
   VersionImportService._();
 
+  /// Bumped whenever the catalog changes, so a screen that lists the
+  /// imported editions can rebuild. `importedVersionLabels` is a plain
+  /// map; without this, a new import did not appear in Settings until
+  /// the page was reopened.
+  static final ValueNotifier<int> changes = ValueNotifier<int>(0);
+
   /// Put every already-imported edition back in the catalog.
   ///
   /// Called once at boot. Failure is silent BY DESIGN: a reader whose
@@ -62,6 +69,7 @@ class VersionImportService {
       ..addAll({
         for (final e in records.entries) e.key: e.value['script'] ?? 'en'
       });
+    changes.value++;
   }
 
   /// Validate [raw], store it, and register it.
@@ -93,6 +101,7 @@ class VersionImportService {
     }
     importedVersionLabels[v.code] = v.label;
     importedVersionScripts[v.code] = v.script;
+    changes.value++;
     return VersionImportResult(ImportOutcome.imported,
         code: v.code, verseCount: v.verseCount);
   }
@@ -106,6 +115,7 @@ class VersionImportService {
     await LocalVersionStore.delete(code);
     importedVersionLabels.remove(code);
     importedVersionScripts.remove(code);
+    changes.value++;
   }
 
   static String _encode(ImportedVersion v) {

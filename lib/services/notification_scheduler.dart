@@ -86,6 +86,12 @@ bool _isSupported() {
   }
 }
 
+/// Whether daily reminders are scheduled on this platform at all. On
+/// the web, Windows and Linux the switch and the test notification work,
+/// but nothing is scheduled — Settings says so rather than let the
+/// times read as a promise.
+bool notificationSchedulingSupported() => _isSupported();
+
 /// Cancel every scheduled SeekSparks notification and re-create the
 /// enabled categories with fresh content.
 Future<void> rescheduleAll(AppSettings settings) async {

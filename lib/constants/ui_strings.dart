@@ -1713,16 +1713,16 @@ const uiStrings = {
     'en': 'Reset settings',
   },
   'resetSettingsConfirm': {
-    'zh-Hans': '将恢复字体、主题、颜色、主页布局等所有偏好设置。您的书签、笔记、高亮、账号和语言不会改变。是否继续？',
-    'zh-Hant': '將恢復字體、主題、顏色、主頁佈局等所有偏好設定。您的書籤、筆記、高亮、帳號和語言不會改變。是否繼續？',
+    'zh-Hans': '将恢复字体、主题、颜色、投影与搜索等所有偏好设置。您的书签、笔记、高亮、账号和语言不会改变。是否继续？',
+    'zh-Hant': '將恢復字體、主題、顏色、投影與搜尋等所有偏好設定。您的書籤、筆記、高亮、帳號和語言不會改變。是否繼續？',
     'en':
-        'This restores fonts, theme, color, dashboard layout, and other preferences. Your bookmarks, notes, highlights, profile, and language stay the same. Continue?',
+        'This restores fonts, theme, color, projection, search and other preferences. Your bookmarks, notes, highlights, profile, and language stay the same. Continue?',
   },
   'resetSettingsNote': {
-    'zh-Hans': '恢复字体、主题、颜色、主页布局等偏好设置。您的书签、笔记、高亮、账号和语言不会改变。',
-    'zh-Hant': '恢復字體、主題、顏色、主頁佈局等偏好設定。您的書籤、筆記、高亮、帳號和語言不會改變。',
+    'zh-Hans': '恢复字体、主题、颜色、投影与搜索等偏好设置。您的书签、笔记、高亮、账号和语言不会改变。',
+    'zh-Hant': '恢復字體、主題、顏色、投影與搜尋等偏好設定。您的書籤、筆記、高亮、帳號和語言不會改變。',
     'en':
-        'Restores fonts, theme, color, dashboard layout, and other preferences. Your bookmarks, notes, highlights, profile, and language are kept.',
+        'Restores fonts, theme, color, projection, search, and other preferences. Your bookmarks, notes, highlights, profile, and language are kept.',
   },
   'resetSettingsDone': {
     'zh-Hans': '设置已恢复默认。',
@@ -1873,12 +1873,9 @@ const uiStrings = {
   // snapshot and works offline, so naming it would make the note
   // over-warn, which is the same defect pointing the other way.
   'offlinePackNetworkNote': {
-    'zh-Hans': '以下功能仍需要网络：新闻摘要的实时更新。'
-        '其余内容（含字体）已随应用打包，离线可用。',
-    'zh-Hant': '以下功能仍需要網路：新聞摘要的即時更新。'
-        '其餘內容（含字體）已隨應用打包，離線可用。',
-    'en': 'Network is still required for: '
-        'refreshing the news digest. Everything else, fonts '
+    'zh-Hans': '只有检查更新需要网络。其余内容（含字体）已随应用打包，离线可用。',
+    'zh-Hant': '只有檢查更新需要網路。其餘內容（含字體）已隨應用打包，離線可用。',
+    'en': 'Only the update check needs the network. Everything else, fonts '
         'included, is bundled with the app and works offline.',
   },
   'offlinePackDownload': {
@@ -2348,10 +2345,32 @@ const uiStrings = {
     'zh-Hant': '啟用通知',
     'en': 'Enable notifications',
   },
+  'copyStripNotesNothingHere': {
+    'zh-Hans': '这一章没有这类括号说明，所以开不开都一样。',
+    'zh-Hant': '這一章沒有這類括號說明，所以開不開都一樣。',
+    'en': 'This chapter has none, so the switch changes nothing here.',
+  },
+  'copyStripNotesElsewhere': {
+    'zh-Hans': '这一章有（第 {verse} 节），但上面预览的几节里没有，所以看不出分别。',
+    'zh-Hant': '這一章有（第 {verse} 節），但上面預覽的幾節裡沒有，所以看不出分別。',
+    'en': 'This chapter has one (verse {verse}), but not in the verses '
+        'previewed above, so you cannot see the difference here.',
+  },
+  'notificationsNotScheduledHere': {
+    'zh-Hans': '每日提醒只在 macOS、iOS 和 Android 应用里按时送达；在这里只能发送测试通知。',
+    'zh-Hant': '每日提醒只在 macOS、iOS 和 Android 應用裡按時送達；在這裡只能發送測試通知。',
+    'en': 'Daily reminders arrive only in the macOS, iOS and Android apps. '
+        'Here, only the test notification is sent.',
+  },
+  'notificationsTestFailed': {
+    'zh-Hans': '测试通知发送失败',
+    'zh-Hant': '測試通知發送失敗',
+    'en': 'Test notification failed',
+  },
   'notificationsHint': {
-    'zh-Hans': '每日经文、读经与新闻的轻提醒。',
-    'zh-Hant': '每日經文、讀經與新聞的輕提醒。',
-    'en': 'Gentle daily reminders for verse, reading, and news.',
+    'zh-Hans': '每日经文、圣经考证与今日讲道的轻提醒。',
+    'zh-Hant': '每日經文、聖經考證與今日講道的輕提醒。',
+    'en': 'Gentle daily reminders: a verse, a piece of Bible evidence, a sermon.',
   },
   'notificationsUnsupported': {
     'zh-Hans': '此浏览器不支持通知。',
@@ -4009,13 +4028,10 @@ const uiStrings = {
     'en': 'Not now',
   },
   'settingsAutoCheckUpdatesHint': {
-    'zh-Hans': '每天一次向 GitHub 询问是否有新版本。只在确实有新版时提示，'
-        '没有就完全安静。关掉后仍可在「关于」页手动检查。',
-    'zh-Hant': '每天一次向 GitHub 詢問是否有新版本。只在確實有新版時提示，'
-        '沒有就完全安靜。關掉後仍可在「關於」頁手動檢查。',
-    'en': 'Asks GitHub once a day whether a newer release exists. Says '
-        'nothing unless one does. You can still check by hand on the '
-        'About page with this off.',
+    'zh-Hans': '按下面的频率向 GitHub 查询是否有新版本；有新版才会提示。',
+    'zh-Hant': '按下面的頻率向 GitHub 查詢是否有新版本；有新版才會提示。',
+    'en': 'Asks GitHub at the interval below whether a newer release '
+        'exists. You only hear about it when there is one.',
   },
   // 2026-06-18 (v1.3.89): test-notification confirmation. {platform} is
   // filled in with the actual device (iOS/Android/macOS/Windows/Linux/
@@ -5211,6 +5227,16 @@ const uiStrings = {
     'zh-Hans': '本地账号',
     'zh-Hant': '本地帳號',
     'en': 'Local profile',
+  },
+  'importVersionForget': {
+    'zh-Hans': '从本设备移除',
+    'zh-Hant': '從本裝置移除',
+    'en': 'Remove from this device',
+  },
+  'importVersionForgetConfirm': {
+    'zh-Hans': '移除「{name}」？要再用须重新导入文件。',
+    'zh-Hant': '移除「{name}」？要再用須重新匯入檔案。',
+    'en': 'Remove {name}? You would need the file to import it again.',
   },
   'cancel': {
     'zh-Hans': '取消',

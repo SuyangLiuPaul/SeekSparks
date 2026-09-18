@@ -1097,6 +1097,12 @@ class AppSettings extends ChangeNotifier {
     _projectionSecondOn = false;
     _projectionSecondVersion = '';
     _projectionGround = kProjectionGroundDefault;
+    // Their stored keys were already purged below; without these three
+    // the Projector card went on showing the old values until restart.
+    _projectionLayout = ProjectionLayout.standard;
+    _projectionCompanions.clear();
+    _projectionAgenda = const [];
+    _notificationCategories = {};
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     // Wipe every preference key we've ever written. Loop is the
@@ -1134,6 +1140,15 @@ class AppSettings extends ChangeNotifier {
       _kProjectionAgenda,
       _kProjectionGround,
       _kProjectionLayout,
+      // 2026-09-18: these were reset in memory above but never purged,
+      // so the old values came back on the next launch.
+      _kReadingPaperTheme,
+      _kCrossVersionSearchMode,
+      _kSearchIgnoresPointing,
+      _kFuzzySearch,
+      _kExcludeKetivFromSearch,
+      _kExcludeQereFromSearch,
+      _kNotificationCategories,
       // The dashboard was deleted when the Workbench became the app
       // (no home screen), but installs from before then still carry
       // its keys. Same treatment as 'offlineMode' above: the constants

@@ -10,7 +10,8 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard;
 import 'package:yahwehs_sword/constants/app_version.dart';
-import 'package:yahwehs_sword/constants/text_patterns.dart' show sanitizeForCopy;
+import 'package:yahwehs_sword/constants/text_patterns.dart'
+    show parentheticalNotePattern, sanitizeForCopy;
 import 'package:yahwehs_sword/constants/sermon_credit.dart';
 import 'package:yahwehs_sword/constants/bible_versions.dart';
 import 'package:yahwehs_sword/services/local_version_store.dart';
@@ -31,6 +32,9 @@ import 'package:yahwehs_sword/models/app_style_preset.dart';
 import 'package:yahwehs_sword/providers/main_provider.dart';
 import 'package:yahwehs_sword/widgets/projection_stage.dart';
 import 'package:yahwehs_sword/models/verse.dart';
+import 'package:yahwehs_sword/pages/help_page.dart' show openHelp;
+import 'package:yahwehs_sword/services/notification_scheduler.dart'
+    show notificationSchedulingSupported;
 import 'package:yahwehs_sword/constants/projection_strings.dart';
 import 'package:yahwehs_sword/constants/projection_setup.dart';
 import 'package:yahwehs_sword/services/app_icon_service.dart';
@@ -254,6 +258,22 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
             child: ListView(
               padding: EdgeInsets.all(16 * s),
               children: [
+                // 2026-09-18, as in YsWords: above everything, because this
+                // is where a reader looking for a feature arrives when they
+                // cannot find it.
+                Card(
+                  elevation: 0,
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  child: ListTile(
+                    key: const Key('settings.help'),
+                    leading: const Icon(Icons.help_outline_rounded),
+                    title: Text(uiStrings['helpTitle']?[settings.locale] ??
+                        'Help & shortcuts'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => openHelp(context),
+                  ),
+                ),
+                SizedBox(height: 12 * s),
                 // Account section now FIRST — see comment below at the
                 // old _accountKey location for the rationale.
                 KeyedSubtree(
@@ -457,6 +477,52 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
+                                  // Ported from YsWords (2026-09-15): with
+                                  // the switch on and nothing in the preview
+                                  // to strip, say whether the CHAPTER has a
+                                  // note out of shot, or none at all.
+                                  if (settings.copyStripParentheticals &&
+                                      !verseSamples.any((v) =>
+                                          parentheticalNotePattern
+                                              .hasMatch(v['text'] as String)))
+                                    Builder(builder: (context) {
+                                      Verse? elsewhere;
+                                      for (final v in versesInChapter) {
+                                        if (parentheticalNotePattern
+                                            .hasMatch(v.text)) {
+                                          elsewhere = v;
+                                          break;
+                                        }
+                                      }
+                                      final text = elsewhere == null
+                                          ? (uiStrings[
+                                                      'copyStripNotesNothingHere']
+                                                  ?[settings.locale] ??
+                                              'This chapter has none, so the '
+                                                  'switch changes nothing here.')
+                                          : (uiStrings['copyStripNotesElsewhere']
+                                                      ?[settings.locale] ??
+                                                  'This chapter has one (verse '
+                                                      '{verse}), but not in the '
+                                                      'verses previewed above.')
+                                              .replaceAll('{verse}',
+                                                  elsewhere.verseLabel);
+                                      return Padding(
+                                        padding: EdgeInsets.only(top: 4 * s),
+                                        child: Text(
+                                          text,
+                                          style: TextStyle(
+                                            fontFamily: settings.fontFamily,
+                                            fontFamilyFallback: kCjkFontFallback,
+                                            fontSize: settings.fontSize * 0.85,
+                                            fontStyle: FontStyle.italic,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                        ),
+                                      );
+                                    }),
                                 ],
                               ),
                             ),
@@ -1055,37 +1121,43 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                           trailing: const Icon(Icons.file_open_outlined),
                           onTap: () => _importVersion(context, settings),
                         ),
-                        for (final e in importedVersionLabels.entries)
-                          ListTile(
-                            dense: true,
-                            title: Text(
-                              e.value,
-                              style: TextStyle(
-                                fontSize: settings.fontSize,
-                                fontFamily: settings.fontFamily,
-                                fontFamilyFallback: kCjkFontFallback,
-                              ),
-                            ),
-                            subtitle: Text(
-                              uiStrings['aboutLicenseUserSupplied']
-                                      ?[settings.locale] ??
-                                  'Supplied by you',
-                              style: TextStyle(
-                                fontSize: settings.fontSize - 1,
-                                fontFamily: settings.fontFamily,
-                                fontFamilyFallback: kCjkFontFallback,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () async {
-                                await VersionImportService.forget(e.key);
-                                if (context.mounted) {
-                                  (context as Element).markNeedsBuild();
-                                }
-                              },
-                            ),
+                        ValueListenableBuilder<int>(
+                          valueListenable: VersionImportService.changes,
+                          builder: (context, _, __) => Column(
+                            children: [
+                              for (final e in importedVersionLabels.entries)
+                                ListTile(
+                                  dense: true,
+                                  title: Text(
+                                    e.value,
+                                    style: TextStyle(
+                                      fontSize: settings.fontSize,
+                                      fontFamily: settings.fontFamily,
+                                      fontFamilyFallback: kCjkFontFallback,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    uiStrings['aboutLicenseUserSupplied']
+                                            ?[settings.locale] ??
+                                        'Supplied by you',
+                                    style: TextStyle(
+                                      fontSize: settings.fontSize - 1,
+                                      fontFamily: settings.fontFamily,
+                                      fontFamilyFallback: kCjkFontFallback,
+                                    ),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete_outline),
+                                    tooltip: uiStrings['importVersionForget']
+                                            ?[settings.locale] ??
+                                        'Remove from this device',
+                                    onPressed: () => _forgetImportedVersion(
+                                        context, settings, e.key, e.value),
+                                  ),
+                                ),
+                            ],
                           ),
+                        ),
                       ],
                       // bwh16's Cross Versions Search Mode. A dropdown
                       // and not three switches: the modes are exclusive
@@ -1441,7 +1513,7 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                             icon: Icons.system_update_alt_rounded,
                             label: uiStrings['settingsAutoCheckUpdates']
                                     ?[settings.locale] ??
-                                'Check for updates daily',
+                                'Check for updates automatically',
                             subtitle: uiStrings[
                                     'settingsAutoCheckUpdatesHint']
                                 ?[settings.locale],
@@ -1829,7 +1901,7 @@ class _ProjectorCard extends StatelessWidget {
     Widget picker<T>(
       T? value,
       List<(T, String)> options,
-      ValueChanged<T?> onChanged, {
+      ValueChanged<T?>? onChanged, {
       Widget? hint,
     }) =>
         DropdownButton<T>(
@@ -2049,7 +2121,9 @@ class _ProjectorCard extends StatelessWidget {
               picker<String>(
                 inList(settings.projectionCompanionFor('zh-Hans'), english),
                 versionOptions(english),
-                (code) {
+                // Greyed while the companion is off, as the update
+                // frequency is while its switch is off.
+                !settings.projectionSecondOn ? null : (code) {
                   if (code == null) return;
                   // One choice covers both Chinese scripts: the wall does
                   // not care whether the passage was Simplified.
@@ -2065,7 +2139,7 @@ class _ProjectorCard extends StatelessWidget {
               picker<String>(
                 inList(settings.projectionCompanionFor('en'), chinese),
                 versionOptions(chinese),
-                (code) {
+                !settings.projectionSecondOn ? null : (code) {
                   if (code != null) settings.setProjectionCompanion('en', code);
                 },
                 hint: Text('—', style: label()),
@@ -2150,7 +2224,10 @@ class _SettingsSwitch extends StatelessWidget {
   final String label;
   final String? subtitle;
   final bool value;
-  final ValueChanged<bool> onChanged;
+
+  /// Null draws the switch disabled — for a platform or permission
+  /// state where flipping it could not do anything.
+  final ValueChanged<bool>? onChanged;
   final AppSettings settings;
 
   const _SettingsSwitch({
@@ -2295,7 +2372,7 @@ class _NotificationsCardState extends State<_NotificationsCard> {
               onChanged:
                   (supported && perm != NotificationPermission.denied && !_busy)
                       ? _toggle
-                      : (_) {}, // ignore on unsupported / denied
+                      : null, // disabled: unsupported / denied
               settings: settings,
             ),
             if (settings.notificationsEnabled &&
@@ -2372,7 +2449,7 @@ class _NotificationsCardState extends State<_NotificationsCard> {
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Test notification failed: $e',
+                              '${uiStrings['notificationsTestFailed']?[locale] ?? 'Test notification failed'}: $e',
                             ),
                             duration: const Duration(seconds: 5),
                           ),
@@ -2391,6 +2468,38 @@ class _NotificationsCardState extends State<_NotificationsCard> {
                       ),
                     ),
                   ),
+                ),
+              ),
+            // 2026-09-18: YsWords says what the web can do here; this app
+            // must say less, because it has no catch-up delivery — on the
+            // web, Windows and Linux nothing is scheduled at all. Shown
+            // before the reader opts in, so it informs the decision.
+            if (supported &&
+                perm != NotificationPermission.denied &&
+                !notificationSchedulingSupported())
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline,
+                        size: 16, color: scheme.onSurfaceVariant),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        uiStrings['notificationsNotScheduledHere']?[locale] ??
+                            'Daily reminders arrive only in the macOS, iOS '
+                                'and Android apps. Here, only the test '
+                                'notification is sent.',
+                        style: TextStyle(
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                          fontSize: settings.smallPrint(13),
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             // 2026-05-24 (v1.3.0): per-category notification rows.
@@ -2423,15 +2532,15 @@ class _NotificationCategoriesSection extends StatelessWidget {
   String _categoryLabel(String id, String locale) {
     switch (id) {
       case NotificationCategoryIds.dailyVerse:
-        return locale.startsWith('zh') ? '每日经文' : 'Daily verse';
+        return locale.startsWith('zh') ? _zhScript(locale, '每日经文', '每日經文') : 'Daily verse';
       case NotificationCategoryIds.bibleEvidence:
-        return locale.startsWith('zh') ? '圣经考证' : 'Bible evidence';
+        return locale.startsWith('zh') ? _zhScript(locale, '圣经考证', '聖經考證') : 'Bible evidence';
       case NotificationCategoryIds.sermonOfDay:
-        return locale.startsWith('zh') ? '今日讲道' : 'Sermon of the day';
+        return locale.startsWith('zh') ? _zhScript(locale, '今日讲道', '今日講道') : 'Sermon of the day';
       case NotificationCategoryIds.newsDigest:
-        return locale.startsWith('zh') ? '新闻摘要' : 'News digest';
+        return locale.startsWith('zh') ? _zhScript(locale, '新闻摘要', '新聞摘要') : 'News digest';
       case NotificationCategoryIds.memoryVerse:
-        return locale.startsWith('zh') ? '晚安经文' : 'Bedtime verse';
+        return locale.startsWith('zh') ? _zhScript(locale, '晚安经文', '晚安經文') : 'Bedtime verse';
       default:
         return id;
     }
@@ -2462,7 +2571,7 @@ class _NotificationCategoriesSection extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: current.hour, minute: current.minute),
-      helpText: settings.locale.startsWith('zh') ? '选择推送时间' : 'Pick time',
+      helpText: settings.locale.startsWith('zh') ? _zhScript(settings.locale, '选择推送时间', '選擇推送時間') : 'Pick time',
     );
     if (picked == null) return;
     await settings.setNotificationCategory(
@@ -2482,7 +2591,7 @@ class _NotificationCategoriesSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
           child: Text(
             locale.startsWith('zh')
-                ? '推送品类（点击编辑时间）'
+                ? _zhScript(locale, '推送品类（点击编辑时间）', '推送類別（點擊編輯時間）')
                 : 'Categories (tap a row to set the time)',
             style: TextStyle(
               fontSize: settings.smallPrint(13),
@@ -2532,7 +2641,7 @@ class _NotificationCategoriesSection extends StatelessWidget {
                   ),
                   onPressed: () => _pickTime(context, id),
                   tooltip: locale.startsWith('zh')
-                      ? '点击修改本地时间'
+                      ? _zhScript(locale, '点击修改本地时间', '點擊修改本地時間')
                       : 'Tap to edit (local time)',
                 ),
                 const SizedBox(width: 8),
@@ -2554,7 +2663,7 @@ class _NotificationCategoriesSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
           child: Text(
             locale.startsWith('zh')
-                ? '所有时间为本地时间。设置改动后立即重排，每天到点自动推送。'
+                ? _zhScript(locale, '所有时间为本地时间。设置改动后立即重排，每天到点自动推送。', '所有時間為本地時間。設定改動後立即重排，每天到點自動推送。')
                 : 'Times are local. Changes apply immediately; '
                     'fires daily at the chosen time.',
             style: TextStyle(
@@ -2659,27 +2768,33 @@ class _AboutCard extends StatelessWidget {
             // touched. Useful when the app is stuck on a stale
             // build and the automatic kill-switch reload didn't
             // catch it.
-            OutlinedButton.icon(
-              icon: const Icon(Icons.cleaning_services_outlined, size: 18),
-              label: Text(
-                uiStrings['clearCache']?[locale] ?? 'Clear cache & reload',
+            //
+            // Web only: on the native builds there is no service worker
+            // or Cache Storage, and the button did nothing after its
+            // confirm dialog.
+            if (kIsWeb) ...[
+              OutlinedButton.icon(
+                icon: const Icon(Icons.cleaning_services_outlined, size: 18),
+                label: Text(
+                  uiStrings['clearCache']?[locale] ?? 'Clear cache & reload',
+                ),
+                onPressed: () => _confirmClearCache(context, locale),
               ),
-              onPressed: () => _confirmClearCache(context, locale),
-            ),
-            SizedBox(height: 4 * s),
-            Text(
-              uiStrings['clearCacheNote']?[locale] ??
-                  'Wipes browser cache + service workers. Your profile '
-                      'data (highlights, notes, bookmarks) stays put.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: settings.fontFamily,
-                fontFamilyFallback: kCjkFontFallback,
-                fontSize: settings.smallPrint(13),
-                color: scheme.onSurfaceVariant,
-                fontStyle: FontStyle.italic,
+              SizedBox(height: 4 * s),
+              Text(
+                uiStrings['clearCacheNote']?[locale] ??
+                    'Wipes browser cache + service workers. Your profile '
+                        'data (highlights, notes, bookmarks) stays put.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: settings.fontFamily,
+                  fontFamilyFallback: kCjkFontFallback,
+                  fontSize: settings.smallPrint(13),
+                  color: scheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
-            ),
+            ],
             SizedBox(height: 16 * s),
             // ── Offline Pack (Round 56) ─────────────────────────
             // Bulk pre-fetch every Bible / sermon / tool the user
@@ -2884,7 +2999,15 @@ class _StylePresetCard extends StatelessWidget {
                 ),
               ),
             ),
-            ...AppStylePreset.values.map((preset) {
+            // Only presets this app can draw. Liquid glass, Paper and
+            // Carbon differ from the others by a card material, and this
+            // app has no card-material renderer (YsWords draws it in
+            // liquid_glass.dart), so they looked like System default /
+            // Modern under another name. Kept in the enum so a reader
+            // who picked one keeps their settings.
+            ...AppStylePreset.values
+                .where((p) => !_presetsWithoutAVisibleDifference.contains(p))
+                .map((preset) {
               final selected = preset == active;
               final label = uiStrings['stylePreset_${preset.name}_label']
                       ?[locale] ??
@@ -3123,19 +3246,19 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
   String _formatEta(int sec, String locale) {
     final isZh = locale.startsWith('zh');
     if (sec < 10) {
-      return isZh ? '不到 10 秒' : 'less than 10 sec';
+      return isZh ? _zhScript(locale, '不到 10 秒', '不到 10 秒') : 'less than 10 sec';
     }
     if (sec < 60) {
       // round to nearest 10 seconds for stability
       final rounded = ((sec + 5) ~/ 10) * 10;
-      return isZh ? '$rounded 秒' : '$rounded sec';
+      return isZh ? _zhScript(locale, '$rounded 秒', '$rounded 秒') : '$rounded sec';
     }
     if (sec < 3600) {
       final mins = (sec / 60).round();
-      return isZh ? '$mins 分钟' : '$mins min';
+      return isZh ? _zhScript(locale, '$mins 分钟', '$mins 分鐘') : '$mins min';
     }
     final hrs = (sec / 3600).round();
-    return isZh ? '$hrs 小时' : '$hrs hr';
+    return isZh ? _zhScript(locale, '$hrs 小时', '$hrs 小時') : '$hrs hr';
   }
 
   int _selectedTotalMb() {
@@ -3457,6 +3580,7 @@ class _InstallAppCardState extends State<_InstallAppCard> {
     if (_busy) return;
     setState(() => _busy = true);
     final messenger = ScaffoldMessenger.of(context);
+    final locale = context.read<AppSettings>().locale;
     final outcome = await InstallPromptService.show();
     if (!mounted) return;
     setState(() {
@@ -3464,9 +3588,11 @@ class _InstallAppCardState extends State<_InstallAppCard> {
       _flow = InstallPromptService.detect();
     });
     if (outcome == 'accepted') {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Installing SeekSparks…'),
-        duration: Duration(seconds: 2),
+      messenger.showSnackBar(SnackBar(
+        content: Text(locale.startsWith('zh')
+            ? _zhScript(locale, '正在安装 SeekSparks…', '正在安裝 SeekSparks…')
+            : 'Installing SeekSparks…'),
+        duration: const Duration(seconds: 2),
       ));
     }
   }
@@ -3488,27 +3614,27 @@ class _InstallAppCardState extends State<_InstallAppCard> {
 
     switch (_flow) {
       case InstallFlowKind.nativePrompt:
-        title = isZh ? '安装 SeekSparks' : 'Install SeekSparks';
+        title = isZh ? _zhScript(locale, '安装 SeekSparks', '安裝 SeekSparks') : 'Install SeekSparks';
         body = isZh
-            ? '把 SeekSparks 安装到主屏幕,获得更快的启动速度和离线访问。'
+            ? _zhScript(locale, '把 SeekSparks 安装到主屏幕，获得更快的启动速度和离线访问。', '把 SeekSparks 安裝到主畫面，獲得更快的啟動速度和離線存取。')
             : 'Install SeekSparks to your home screen for faster launch + offline access.';
         action = FilledButton.icon(
           onPressed: _busy ? null : _onInstallPressed,
           icon: const Icon(Icons.install_mobile_outlined, size: 18),
-          label: Text(isZh ? '安装' : 'Install'),
+          label: Text(isZh ? _zhScript(locale, '安装', '安裝') : 'Install'),
         );
         break;
       case InstallFlowKind.iosManual:
-        title = isZh ? '添加到主屏幕' : 'Add to Home Screen';
+        title = isZh ? _zhScript(locale, '添加到主屏幕', '加入主畫面') : 'Add to Home Screen';
         body = isZh
-            ? '1. 点击 Safari 底部的「分享」按钮（⬆️）\n2. 选择「添加到主屏幕」\n3. 点击「添加」 — SeekSparks 就会像原生 App 一样运行。'
+            ? _zhScript(locale, '1. 点击 Safari 底部的「分享」按钮（⬆️）\n2. 选择「添加到主屏幕」\n3. 点击「添加」 — SeekSparks 就会像原生 App 一样运行。', '1. 點擊 Safari 底部的「分享」按鈕（⬆️）\n2. 選擇「加入主畫面」\n3. 點擊「加入」—— SeekSparks 就會像原生 App 一樣運行。')
             : '1. Tap the Safari Share button at the bottom (⬆️)\n2. Choose "Add to Home Screen"\n3. Tap "Add" — SeekSparks runs like a native app.';
         break;
       case InstallFlowKind.desktopManual:
         title =
-            isZh ? '安装 SeekSparks 桌面版' : 'Install SeekSparks as a desktop app';
+            isZh ? _zhScript(locale, '安装 SeekSparks 桌面版', '安裝 SeekSparks 桌面版') : 'Install SeekSparks as a desktop app';
         body = isZh
-            ? '在地址栏右侧找到「安装」图标（⊕）, 或者打开浏览器菜单 → 「安装 SeekSparks」。安装后 SeekSparks 会有自己的窗口和 Dock / 开始菜单图标。'
+            ? _zhScript(locale, '在地址栏右侧找到「安装」图标（⊕），或者打开浏览器菜单 →「安装 SeekSparks」。安装后 SeekSparks 会有自己的窗口和 Dock / 开始菜单图标。', '在網址列右側找到「安裝」圖示（⊕），或者打開瀏覽器選單 →「安裝 SeekSparks」。安裝後 SeekSparks 會有自己的視窗和 Dock / 開始選單圖示。')
             : 'Look for the install icon (⊕) on the right side of the address bar, or open the browser menu → "Install SeekSparks". Once installed SeekSparks gets its own window + Dock / Start Menu icon.';
         break;
       case InstallFlowKind.alreadyInstalled:
@@ -3585,7 +3711,7 @@ class _ExportDataCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    isZh ? '导出我的数据' : 'Export my data',
+                    isZh ? _zhScript(locale, '导出我的数据', '匯出我的資料') : 'Export my data',
                     style: TextStyle(
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
@@ -3600,7 +3726,7 @@ class _ExportDataCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               isZh
-                  ? '导出全部标记、书签和笔记。 Markdown 格式可粘贴到 Notion / Obsidian / Apple Notes 等; JSON 格式是结构化备份。'
+                  ? _zhScript(locale, '导出全部标记、书签和笔记。Markdown 格式可粘贴到 Notion / Obsidian / Apple Notes 等；JSON 格式是结构化备份。', '匯出全部標記、書籤和筆記。Markdown 格式可貼到 Notion / Obsidian / Apple Notes 等；JSON 格式是結構化備份。')
                   : 'Export all highlights, bookmarks, and notes. Markdown pastes cleanly into Notion / Obsidian / Apple Notes / Google Docs. JSON is a structured backup.',
               style: TextStyle(
                 fontFamily: settings.fontFamily,
@@ -3616,7 +3742,7 @@ class _ExportDataCard extends StatelessWidget {
               child: FilledButton.tonalIcon(
                 onPressed: () => _showExportDialog(context),
                 icon: const Icon(Icons.ios_share_outlined, size: 18),
-                label: Text(isZh ? '导出…' : 'Export…'),
+                label: Text(isZh ? _zhScript(locale, '导出…', '匯出…') : 'Export…'),
               ),
             ),
           ],
@@ -3673,7 +3799,7 @@ class _ExportDialogState extends State<_ExportDialog> {
             ? '${(bytes / 1024).toStringAsFixed(1)} KB'
             : '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
     return AlertDialog(
-      title: Text(isZh ? '导出我的数据' : 'Export my data'),
+      title: Text(isZh ? _zhScript(locale, '导出我的数据', '匯出我的資料') : 'Export my data'),
       content: SizedBox(
         // v1.3.x responsive fix: a fixed 560 overflowed the dialog on
         // phones (≈390 dp). On narrow screens fill the dialog's own
@@ -3735,7 +3861,7 @@ class _ExportDialogState extends State<_ExportDialog> {
             ),
             const SizedBox(height: 6),
             Text(
-              isZh ? '大小: $sizeLabel' : 'Size: $sizeLabel',
+              isZh ? _zhScript(locale, '大小：$sizeLabel', '大小：$sizeLabel') : 'Size: $sizeLabel',
               style: TextStyle(
                 fontSize: widget.settings.smallPrint(11),
                 color: scheme.onSurface.withValues(alpha: 0.6),
@@ -3747,18 +3873,18 @@ class _ExportDialogState extends State<_ExportDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(isZh ? '关闭' : 'Close'),
+          child: Text(isZh ? _zhScript(locale, '关闭', '關閉') : 'Close'),
         ),
         FilledButton.icon(
           onPressed: () async {
             await ClipboardHelper.copyWithFeedback(
               context,
               _content,
-              messageOverride: isZh ? '已复制到剪贴板' : 'Copied to clipboard',
+              messageOverride: isZh ? _zhScript(locale, '已复制到剪贴板', '已複製到剪貼簿') : 'Copied to clipboard',
             );
           },
           icon: const Icon(Icons.content_copy_outlined, size: 16),
-          label: Text(isZh ? '复制' : 'Copy'),
+          label: Text(isZh ? _zhScript(locale, '复制', '複製') : 'Copy'),
         ),
       ],
     );
@@ -3795,7 +3921,7 @@ class _ImportDataCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    isZh ? '导入我的数据' : 'Import my data',
+                    isZh ? _zhScript(locale, '导入我的数据', '匯入我的資料') : 'Import my data',
                     style: TextStyle(
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
@@ -3810,7 +3936,7 @@ class _ImportDataCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               isZh
-                  ? '粘贴之前导出的 JSON 备份，恢复标记、书签和笔记。同一节经文的数据会被导入的内容覆盖，其余数据保持不变。'
+                  ? _zhScript(locale, '粘贴之前导出的 JSON 备份，恢复标记、书签和笔记。同一节经文的数据会被导入的内容覆盖，其余数据保持不变。', '貼上之前匯出的 JSON 備份，恢復標記、書籤和筆記。同一節經文的資料會被匯入的內容覆蓋，其餘資料保持不變。')
                   : 'Paste a previously exported JSON backup to restore highlights, bookmarks, and notes. Imported entries overwrite existing data for the same verse; everything else is left untouched.',
               style: TextStyle(
                 fontFamily: settings.fontFamily,
@@ -3826,7 +3952,7 @@ class _ImportDataCard extends StatelessWidget {
               child: FilledButton.tonalIcon(
                 onPressed: () => _showImportDialog(context),
                 icon: const Icon(Icons.file_open_outlined, size: 18),
-                label: Text(isZh ? '导入…' : 'Import…'),
+                label: Text(isZh ? _zhScript(locale, '导入…', '匯入…') : 'Import…'),
               ),
             ),
           ],
@@ -3921,7 +4047,7 @@ class _ImportDialogState extends State<_ImportDialog> {
     final parsed = _parsed;
 
     return AlertDialog(
-      title: Text(isZh ? '导入我的数据' : 'Import my data'),
+      title: Text(isZh ? _zhScript(locale, '导入我的数据', '匯入我的資料') : 'Import my data'),
       content: SizedBox(
         // Same responsive rule as _ExportDialog.
         width:
@@ -3935,7 +4061,7 @@ class _ImportDialogState extends State<_ImportDialog> {
               child: TextButton.icon(
                 onPressed: _pasteFromClipboard,
                 icon: const Icon(Icons.content_paste_outlined, size: 16),
-                label: Text(isZh ? '从剪贴板粘贴' : 'Paste from clipboard'),
+                label: Text(isZh ? _zhScript(locale, '从剪贴板粘贴', '從剪貼簿貼上') : 'Paste from clipboard'),
               ),
             ),
             Container(
@@ -3959,7 +4085,7 @@ class _ImportDialogState extends State<_ImportDialog> {
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: isZh ? '粘贴 JSON 内容…' : 'Paste exported JSON here…',
+                  hintText: isZh ? _zhScript(locale, '粘贴 JSON 内容…', '貼上 JSON 內容…') : 'Paste exported JSON here…',
                 ),
               ),
             ),
@@ -3974,7 +4100,7 @@ class _ImportDialogState extends State<_ImportDialog> {
             else if (parsed != null)
               Text(
                 isZh
-                    ? '找到 ${parsed.highlights.length} 条高亮、${parsed.bookmarks.length} 条书签、${parsed.notes.length} 条笔记——将覆盖同一节经文的本地数据。'
+                    ? _zhScript(locale, '找到 ${parsed.highlights.length} 条高亮、${parsed.bookmarks.length} 条书签、${parsed.notes.length} 条笔记——将覆盖同一节经文的本地数据。', '找到 ${parsed.highlights.length} 條高亮、${parsed.bookmarks.length} 條書籤、${parsed.notes.length} 條筆記——將覆蓋同一節經文的本機資料。')
                     : 'Found ${parsed.highlights.length} highlights · ${parsed.bookmarks.length} bookmarks · ${parsed.notes.length} notes — will overwrite existing data for the same verse.',
                 style: TextStyle(
                   fontSize: widget.settings.smallPrint(11),
@@ -3987,7 +4113,7 @@ class _ImportDialogState extends State<_ImportDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(isZh ? '取消' : 'Cancel'),
+          child: Text(isZh ? _zhScript(locale, '取消', '取消') : 'Cancel'),
         ),
         FilledButton.icon(
           onPressed: parsed == null || parsed.totalCount == 0
@@ -4002,14 +4128,14 @@ class _ImportDialogState extends State<_ImportDialog> {
                   showFloatingToast(
                     widget.pageContext,
                     message: isZh
-                        ? '已导入 ${result.highlights} 条高亮、${result.bookmarks} 条书签、${result.notes} 条笔记'
+                        ? _zhScript(locale, '已导入 ${result.highlights} 条高亮、${result.bookmarks} 条书签、${result.notes} 条笔记', '已匯入 ${result.highlights} 條高亮、${result.bookmarks} 條書籤、${result.notes} 條筆記')
                         : 'Imported ${result.highlights} highlights, ${result.bookmarks} bookmarks, ${result.notes} notes',
                     icon: Icons.check_circle_rounded,
                     background: scheme.primary,
                   );
                 },
           icon: const Icon(Icons.upload_outlined, size: 16),
-          label: Text(isZh ? '导入' : 'Import'),
+          label: Text(isZh ? _zhScript(locale, '导入', '匯入') : 'Import'),
         ),
       ],
     );
@@ -4089,6 +4215,32 @@ String _crossVersionModeKey(CrossVersionSearchMode m) {
 /// would not keep it" send the reader in completely different
 /// directions, and a single "import failed" would send them the wrong
 /// way half the time.
+/// The reader's own file is not ours to re-supply: once removed it is
+/// gone from this device, so it asks first.
+Future<void> _forgetImportedVersion(BuildContext context, AppSettings settings,
+    String code, String label) async {
+  final locale = settings.locale;
+  String s(String key, String fallback) => uiStrings[key]?[locale] ?? fallback;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(s('importVersionForget', 'Remove from this device')),
+      content: Text(s('importVersionForgetConfirm',
+              'Remove {name}? You would need the file to import it again.')
+          .replaceAll('{name}', label)),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(s('cancel', 'Cancel'))),
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(s('importVersionForget', 'Remove from this device'))),
+      ],
+    ),
+  );
+  if (ok == true) await VersionImportService.forget(code);
+}
+
 Future<void> _importVersion(BuildContext context, AppSettings settings) async {
   final picked = await pickTextFile();
   if (picked == null || !context.mounted) return;
@@ -4110,3 +4262,15 @@ Future<void> _importVersion(BuildContext context, AppSettings settings) async {
   };
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
+
+/// Simplified or Traditional for a Chinese-only literal, by [locale].
+/// These strings were written once, in Simplified, behind `isZh`, so a
+/// 繁體 reader saw Simplified; each now carries its own Traditional.
+String _zhScript(String locale, String hans, String hant) =>
+    locale == 'zh-Hant' ? hant : hans;
+
+const _presetsWithoutAVisibleDifference = {
+  AppStylePreset.liquidGlass,
+  AppStylePreset.paper,
+  AppStylePreset.carbon,
+};
