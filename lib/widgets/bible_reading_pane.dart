@@ -88,6 +88,7 @@ import 'package:yahwehs_sword/widgets/version_picker_sheet.dart'
     show showLanguageGroupedVersionMenu;
 import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:yahwehs_sword/constants/motion.dart';
+import 'package:yahwehs_sword/utils/safe_item_scroll.dart' show scrollToSafely;
 
 /// 2026-08 (ported from YsWords v1.3.156): "护眼" (easy-on-eyes) reading
 /// theme — a warm sepia/paper palette for the Bible reading pane, toggled
@@ -645,7 +646,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
     // `canScrollList`, not `isAttached` — see MainProvider. A pane can
     // be attached and never laid out, and `scrollTo` throws there.
     if (!mp.canScrollList) return;
-    c.scrollTo(
+    scrollToSafely(
+      c,
       index: 0,
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOut,
@@ -2510,8 +2512,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                                     behavior: HitTestBehavior.opaque,
                                     onTap: () {
                                       if (!mainProvider.canScrollList) return;
-                                      mainProvider.itemScrollController
-                                          .scrollTo(
+                                      scrollToSafely(
+                                        mainProvider.itemScrollController,
                                         index: 0,
                                         duration:
                                             const Duration(milliseconds: 350),

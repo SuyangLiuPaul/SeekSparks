@@ -62,8 +62,14 @@ void main() {
     // `_positions` and no-ops on an empty one — which is exactly why
     // only some call sites ever crashed, and why the fix had to be a
     // shared question rather than a try/catch at each one.
-    final calls =
-        RegExp(r'itemScrollController\.scrollTo').allMatches(src).toList();
+    // 2026-09-18: the calls go through `scrollToSafely(itemScrollController`
+    // now (lib/utils/safe_item_scroll.dart) — the crash that guard is for
+    // happens a frame after the call — but the laid-out guard still has
+    // to stand in front of them, so both spellings are held to it.
+    final calls = RegExp(r'itemScrollController\.scrollTo|'
+            r'scrollToSafely\(\s*itemScrollController')
+        .allMatches(src)
+        .toList();
     expect(calls, isNotEmpty, reason: 'the calls this guards are gone; '
         'if that is deliberate, delete this test with them');
     for (final call in calls) {
@@ -82,8 +88,10 @@ void main() {
     // the guard by name.
     final pane =
         File('lib/widgets/bible_reading_pane.dart').readAsStringSync();
-    final direct =
-        RegExp(r'itemScrollController\.scrollTo').allMatches(pane).toList();
+    final direct = RegExp(r'itemScrollController\.scrollTo|'
+            r'scrollToSafely\(\s*mainProvider\.itemScrollController')
+        .allMatches(pane)
+        .toList();
     for (final call in direct) {
       final before = pane.substring(0, call.start);
       expect(before.lastIndexOf('canScrollList'),

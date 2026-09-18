@@ -52,6 +52,7 @@ import 'package:yahwehs_sword/utils/version_gutter.dart'
 import 'package:yahwehs_sword/utils/version_diff.dart';
 import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:yahwehs_sword/widgets/workbench_chrome.dart' show WbVersionTag;
+import 'package:yahwehs_sword/utils/safe_item_scroll.dart' show scrollToSafely;
 import 'package:yahwehs_sword/widgets/verse_notes_block.dart'
     show superscriptNumber, VerseNotesBlock, notesInReadingOrder;
 
@@ -477,7 +478,8 @@ class _BrowseWindowState extends State<BrowseWindow> {
         if (mounted && _scrolledTo == v) _scrolledTo = null;
         return;
       }
-      _scroll.scrollTo(
+      scrollToSafely(
+        _scroll,
         index: index,
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
