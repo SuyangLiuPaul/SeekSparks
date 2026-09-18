@@ -4442,8 +4442,10 @@ const uiStrings = {
   'aboutVerLjk': {
     'zh-Hans': '梁简 / 梁繁 梁家铿译本（2025年 · 第二版，简 / 繁）',
     'zh-Hant': '梁简 / 梁繁 梁家鏗譯本（2025年 · 第二版，簡 / 繁）',
+    // 2026-09-18: the English name is the translator's own choice —
+    // 「LJK Chinese translation」, not a surname-based gloss.
     'en':
-        '梁简 / 梁繁 — Liang Jiakeng translation (2025, 2nd ed., simplified / traditional)',
+        '梁简 / 梁繁 — LJK Chinese translation (2025, 2nd ed., simplified / traditional)',
   },
   'aboutLicenseLjk': {
     'zh-Hans': '© 圣经释经事工 · 经授权使用。',
