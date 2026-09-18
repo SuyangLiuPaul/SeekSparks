@@ -17,7 +17,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:yahwehs_sword/constants/ui_strings.dart';
@@ -27,6 +26,8 @@ import 'package:yahwehs_sword/models/bible_map.dart';
 import 'package:yahwehs_sword/models/map_provenance.dart';
 import 'package:yahwehs_sword/services/map_service.dart';
 import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/keyboard_shortcuts.dart'
+    show PlateViewerKey, kPlateViewerShortcuts;
 import 'package:yahwehs_sword/widgets/illustration_image.dart';
 
 /// Thumbnail geometry in the filmstrip, and the arithmetic that centres
@@ -134,11 +135,14 @@ class _MapViewerPageState extends State<MapViewerPage> {
     final maps = _stripMaps;
 
     return CallbackShortcuts(
+      // From `kPlateViewerShortcuts`, the table the Help page prints.
       bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.escape): () =>
-            Navigator.of(context).maybePop(),
-        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _step(-1),
-        const SingleActivator(LogicalKeyboardKey.arrowRight): () => _step(1),
+        for (final k in kPlateViewerShortcuts)
+          k.chord.activator: switch (k.id) {
+            PlateViewerKey.close => () => Navigator.of(context).maybePop(),
+            PlateViewerKey.previous => () => _step(-1),
+            PlateViewerKey.next => () => _step(1),
+          },
       },
       child: Focus(
         autofocus: true,

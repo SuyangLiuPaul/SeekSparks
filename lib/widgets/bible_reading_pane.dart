@@ -28,6 +28,7 @@ import 'package:yahwehs_sword/pages/illustrations_page.dart';
 import 'package:yahwehs_sword/pages/library_page.dart';
 import 'package:yahwehs_sword/pages/map_viewer_page.dart';
 import 'package:yahwehs_sword/pages/command_search_page.dart';
+import 'package:yahwehs_sword/pages/help_page.dart' show openHelp;
 import 'package:yahwehs_sword/pages/settings_page.dart';
 import 'package:yahwehs_sword/pages/stats_page.dart';
 import 'package:yahwehs_sword/providers/main_provider.dart';
@@ -46,6 +47,9 @@ import 'package:yahwehs_sword/services/section_title_service.dart';
 import 'package:yahwehs_sword/services/sermon_service.dart';
 import 'package:yahwehs_sword/services/synopsis_service.dart';
 import 'package:yahwehs_sword/utils/clipboard_helper.dart';
+import 'package:yahwehs_sword/utils/help_catalog.dart' show HelpSection;
+import 'package:yahwehs_sword/utils/keyboard_shortcuts.dart'
+    show ReaderKey, kReaderShortcuts;
 import 'package:yahwehs_sword/utils/haptics.dart';
 // 2026-05-10 (v1.2.13): the `as jumper` import was only needed by
 // the `_captureChapterRelativeVerseNum` / `_scrollToVerseInChapter`
@@ -392,69 +396,6 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
   // 2026-05-24 (v1.3.19): TTS toggle + polling + locale-mapper +
   // legacy SpeechSynthesis fallback all removed. See header
   // comment for the rationale.
-
-  /// Show a small dialog listing the keyboard shortcuts. Triggered by
-  /// `?` (Shift+/) on web — pure discoverability help; tapping
-  /// outside or hitting Esc dismisses.
-  void _showShortcutsHelp(BuildContext context, String locale) {
-    final scheme = Theme.of(context).colorScheme;
-    final rows = <List<String>>[
-      ['/', uiStrings['search']?[locale] ?? 'Search'],
-      ['[', uiStrings['previousChapter']?[locale] ?? 'Previous chapter'],
-      [']', uiStrings['nextChapter']?[locale] ?? 'Next chapter'],
-      ['?', uiStrings['shortcutsHelp']?[locale] ?? 'Keyboard shortcuts'],
-    ];
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        icon: Icon(Icons.keyboard_outlined, color: scheme.primary),
-        title: Text(
-          uiStrings['shortcutsHelp']?[locale] ?? 'Keyboard shortcuts',
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final row in rows)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
-                        border: Border.all(
-                          color: scheme.outline.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Text(
-                        row[0],
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: ctx.textSize(12),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(row[1]),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(uiStrings['ok']?[locale] ?? 'OK'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -1652,57 +1593,29 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
               child: ScaffoldMessenger(
                 key: _messengerKey,
                 child: CallbackShortcuts(
+                  // Built from `kReaderShortcuts`, which is also what the
+                  // Help page prints (2026-09-18). The bindings used to be
+                  // typed here — `/` search, `[`/`]` chapters, `?` help,
+                  // ⌘ variants for a Mac (v1.3.17), Ctrl variants for
+                  // Windows and Linux — and the help dialog they opened
+                  // listed four of the ten. Not armed while a text
+                  // field has focus, so they never fight typing.
                   bindings: <ShortcutActivator, VoidCallback>{
-                    // Web keyboard shortcuts (Round 27E). These are
-                    // discoverable but unobtrusive — they're standard
-                    // app idioms (`/` for search, `[`/`]` for prev/next
-                    // chapter, `?` for help). Disabled while a text
-                    // field is focused so they don't fight typing.
-                    const SingleActivator(LogicalKeyboardKey.bracketLeft):
-                        _goToPreviousChapter,
-                    const SingleActivator(LogicalKeyboardKey.bracketRight):
-                        _goToNextChapter,
-                    const SingleActivator(LogicalKeyboardKey.slash): () {
-                      if (widget.showSearchAndSettings) _openSearch();
-                    },
-                    // v1.3.19: Shift+T (toggle TTS) removed with the
-                    // rest of the 朗读 feature.
-                    const SingleActivator(LogicalKeyboardKey.question,
-                            shift: true):
-                        () => _showShortcutsHelp(context, settings.locale),
-                    // 2026-05-24 (v1.3.17): macOS-native ⌘ shortcuts.
-                    // Mac users expect Command-prefixed shortcuts for
-                    // app-level actions; the bare `[` / `]` / `/`
-                    // bindings above still work but Cmd variants
-                    // surface in the macOS menu-bar habit. Each uses
-                    // SingleActivator with `meta: true` so it maps to
-                    // ⌘ on Mac and to Win/Super on Windows/Linux
-                    // (where the Cmd convention isn't universal but
-                    // doesn't conflict either).
-                    const SingleActivator(LogicalKeyboardKey.bracketLeft,
-                        meta: true): _goToPreviousChapter,
-                    const SingleActivator(LogicalKeyboardKey.bracketRight,
-                        meta: true): _goToNextChapter,
-                    // ⌘F → search. The universal Mac/web convention.
-                    const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
-                        () {
-                      if (widget.showSearchAndSettings) _openSearch();
-                    },
-                    // ⌘, → settings. Standard Mac "open Preferences"
-                    // gesture for any well-behaved app.
-                    const SingleActivator(LogicalKeyboardKey.comma, meta: true):
-                        () {
-                      if (widget.showSearchAndSettings) {
-                        pushPage(const SettingsPage());
-                      }
-                    },
-                    // Ctrl+ variants for Windows / Linux desktop users
-                    // who don't have a Meta key. No-op on Mac because
-                    // Ctrl+F there is line-start.
-                    const SingleActivator(LogicalKeyboardKey.bracketLeft,
-                        control: true): _goToPreviousChapter,
-                    const SingleActivator(LogicalKeyboardKey.bracketRight,
-                        control: true): _goToNextChapter,
+                    for (final k in kReaderShortcuts)
+                      k.chord.activator: switch (k.id) {
+                        ReaderKey.previousChapter => _goToPreviousChapter,
+                        ReaderKey.nextChapter => _goToNextChapter,
+                        ReaderKey.search => () {
+                            if (widget.showSearchAndSettings) _openSearch();
+                          },
+                        ReaderKey.help => () => openHelp(context,
+                            section: HelpSection.shortcuts),
+                        ReaderKey.settings => () {
+                            if (widget.showSearchAndSettings) {
+                              pushPage(const SettingsPage());
+                            }
+                          },
+                      },
                   },
                   child: Focus(
                     autofocus: true,

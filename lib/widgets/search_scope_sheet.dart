@@ -16,13 +16,14 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:yahwehs_sword/constants/book_groups.dart';
 import 'package:yahwehs_sword/constants/ui_strings.dart';
 import 'package:yahwehs_sword/constants/workbench_theme.dart';
 import 'package:yahwehs_sword/utils/command_verb.dart' show LimitSpec;
 import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/keyboard_shortcuts.dart'
+    show PickerSheetKey, kPickerSheetShortcuts;
 import 'package:yahwehs_sword/utils/search_scope.dart';
 import 'package:yahwehs_sword/utils/version_mapper.dart' show localeAwareBookName;
 
@@ -127,10 +128,13 @@ class _SearchScopeSheetState extends State<SearchScopeSheet> {
     final maxHeight = MediaQuery.sizeOf(context).height * 0.78;
 
     return CallbackShortcuts(
+      // From `kPickerSheetShortcuts`, the table the Help page prints.
       bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.escape): () =>
-            Navigator.of(context).pop(),
-        const SingleActivator(LogicalKeyboardKey.enter): _apply,
+        for (final k in kPickerSheetShortcuts)
+          k.chord.activator: switch (k.id) {
+            PickerSheetKey.close => () => Navigator.of(context).pop(),
+            PickerSheetKey.apply => _apply,
+          },
       },
       child: FocusScope(
         autofocus: true,

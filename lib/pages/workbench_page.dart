@@ -1,4 +1,6 @@
 import 'dart:async' show unawaited;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'
     show HardwareKeyboard, KeyDownEvent, KeyEvent, LogicalKeyboardKey;
@@ -88,7 +90,9 @@ import 'package:yahwehs_sword/widgets/bible_reading_pane.dart';
 import 'package:yahwehs_sword/widgets/command_pane.dart';
 import 'package:yahwehs_sword/widgets/passage_report_sheet.dart'
     show showPassageReport;
-import 'package:yahwehs_sword/widgets/shortcut_sheet.dart' show showShortcutSheet;
+import 'package:yahwehs_sword/pages/help_page.dart'
+    show helpDestinationHandler, openHelp;
+import 'package:yahwehs_sword/utils/help_catalog.dart' show HelpDestination;
 import 'package:yahwehs_sword/widgets/copy_center_sheet.dart'
     show CopyScope, showCopyCenter;
 import 'package:yahwehs_sword/utils/clipboard_helper.dart';
@@ -434,6 +438,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     _wb.onBrowseStateChanged = _persistPrefs;
     _restorePrefs();
     HardwareKeyboard.instance.addHandler(_onGlobalKey);
+    // The Help page's "Take me there" comes back through [_go], the same
+    // switch the menu uses, so the two cannot open different things.
+    helpDestinationHandler = _go;
     // 2026-09-08: the daily update check. After the first frame, never
     // before it — this is a network call about a version number and the
     // reader opened the app to read a verse. `unawaited` is the point:
@@ -571,13 +578,102 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       case WbShortcutId.passageReport:
         _openPassageReport();
       case WbShortcutId.shortcutSheet:
-        showShortcutSheet(context, context.read<AppSettings>().locale);
+        openHelp(context);
+    }
+  }
+
+  /// The accelerator a menu item prints, from the same table the key
+  /// handler dispatches from. The menu used to type these by hand, and
+  /// "Command line" said `Ctrl+L` for a month after the key had moved to
+  /// F2 — Ctrl+L being the browser's address bar.
+  String _accel(WbShortcutId id) => workbenchShortcut(id).label(
+      mac: defaultTargetPlatform == TargetPlatform.macOS ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  /// Open [d]: every door the menu has, in one switch that the Help
+  /// page's "Take me there" also calls. Exhaustive, so a destination the
+  /// help names cannot compile without somewhere to go.
+  void _go(HelpDestination d) {
+    final mp = context.read<MainProvider>();
+    final locale = context.read<AppSettings>().locale;
+    switch (d) {
+      case HelpDestination.settings:
+        pushPage(const SettingsPage());
+      case HelpDestination.about:
+        pushPage(const AboutPage());
+      case HelpDestination.books:
+        pushPage(BooksPage(
+          bookIdx: mp.currentBook ?? '',
+          chapterIdx: mp.currentChapter ?? 1,
+        ));
+      case HelpDestination.library:
+        pushPage(const LibraryPage());
+      case HelpDestination.projection:
+        pushPage(const ProjectionPage());
+      case HelpDestination.wordList:
+        pushPage(WordListPage(
+          book: mp.currentBook ?? '',
+          chapter: mp.currentChapter ?? 1,
+          locale: locale,
+          version: mp.currentVersion,
+        ));
+      case HelpDestination.phrasing:
+        pushPage(PhrasingPage(
+          book: mp.currentBook ?? '',
+          chapter: mp.currentChapter ?? 1,
+          verse: mp.currentVerse?.verse ?? 1,
+          locale: locale,
+          version: mp.currentVersion,
+        ));
+      case HelpDestination.passageReport:
+        if (mp.verses.isNotEmpty) _openPassageReport();
+      case HelpDestination.copyCenter:
+        if (_copyScopes(locale).isNotEmpty) _openCopyCenter();
+      case HelpDestination.evidence:
+        pushPage(const EvidencePage());
+      case HelpDestination.timeline:
+        pushPage(const BibleTimelinePage());
+      case HelpDestination.trivia:
+        pushPage(const BibleTriviaPage());
+      case HelpDestination.sermons:
+        pushPage(const SermonsPage());
+      case HelpDestination.atlas:
+        pushPage(const AtlasPage());
+      case HelpDestination.illustrations:
+        pushPage(const IllustrationsPage());
+      case HelpDestination.naves:
+        pushPage(const NavesPage());
+      case HelpDestination.modernConcordance:
+        pushPage(const ModernConcordancePage());
+      case HelpDestination.lexicon:
+        pushPage(const LexiconPage());
+      case HelpDestination.familyTree:
+        pushPage(const FamilyTreePage());
+      case HelpDestination.jesusTeachings:
+        pushPage(const JesusTeachingsPage());
+      case HelpDestination.hebrewKings:
+        pushPage(const HebrewKingsPage());
+      case HelpDestination.chronology:
+        pushPage(const ChronologyPage());
+      case HelpDestination.wheel:
+        pushPage(const RadialChronologyPage());
+      case HelpDestination.strip:
+        pushPage(const StripChronologyPage());
+      case HelpDestination.commandLine:
+        _focusCommandLine();
+      case HelpDestination.searchScope:
+        _openScopeSheet();
+      case HelpDestination.chooseVersions:
+        _pickParallelVersions(context);
+      case HelpDestination.checkForUpdates:
+        if (UpdateService.isSupported) _checkForUpdatesNow();
     }
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_onGlobalKey);
+    if (helpDestinationHandler == _go) helpDestinationHandler = null;
     _commandFocus.dispose();
     _closeSecondColumn(notify: false);
     _wb.dispose();
@@ -608,11 +704,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         WbMenuItem(
           s('copyCenterMenu', 'Copy…'),
           _copyScopes(locale).isEmpty ? null : _openCopyCenter,
-          shortcut: 'Ctrl+Shift+C',
+          shortcut: _accel(WbShortcutId.copyCenter),
         ),
         const WbMenuItem.separator(),
-        WbMenuItem(
-            s('settings', 'Settings…'), () => pushPage(const SettingsPage())),
+        WbMenuItem(s('settings', 'Settings…'),
+            () => _go(HelpDestination.settings)),
         // "Exit to reader" used to sit here and replace the whole route
         // with HomePage. There is nothing left to exit to: the reader is
         // the centre pane in three arrangements (View menu, below), and
@@ -701,7 +797,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       ]),
       WbMenu(s('search', 'Search'), [
         WbMenuItem(s('menuFocusCommandLine', 'Command line'), _focusCommandLine,
-            shortcut: 'Ctrl+L'),
+            shortcut: _accel(WbShortcutId.focusCommandLine)),
         // bwh29 reaches the limits window from the Search menu, the
         // command line and the status bar. Until now this app had only
         // the command line, so the scope was a documented feature with
@@ -722,42 +818,27 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ),
       ]),
       WbMenu(s('menuTools', 'Tools'), [
-        WbMenuItem(
-          s('wordListTitle', 'Word List'),
-          () => pushPage(WordListPage(
-            book: mp.currentBook ?? '',
-            chapter: mp.currentChapter ?? 1,
-            locale: locale,
-            version: mp.currentVersion,
-          )),
-        ),
-        WbMenuItem(
-          s('phrasingTitle', 'Phrasing'),
-          () => pushPage(PhrasingPage(
-            book: mp.currentBook ?? '',
-            chapter: mp.currentChapter ?? 1,
-            verse: mp.currentVerse?.verse ?? 1,
-            locale: locale,
-            version: mp.currentVersion,
-          )),
-        ),
+        WbMenuItem(s('wordListTitle', 'Word List'),
+            () => _go(HelpDestination.wordList)),
+        WbMenuItem(s('phrasingTitle', 'Phrasing'),
+            () => _go(HelpDestination.phrasing)),
         // bwh28. Tools rather than Resources because it OPERATES on the
         // text in front of the reader — bwh07's own split, and the same
         // reason Word List and Phrasing sit above it.
         WbMenuItem(
           s('reportTitle', 'Passage report'),
           mp.verses.isEmpty ? null : _openPassageReport,
+          shortcut: _accel(WbShortcutId.passageReport),
         ),
         WbMenuItem(s('bibleEvidence', 'Bible Evidence'),
-            () => pushPage(const EvidencePage())),
-        WbMenuItem(s('timeline', 'Timeline'),
-            () => pushPage(const BibleTimelinePage())),
+            () => _go(HelpDestination.evidence)),
         WbMenuItem(
-            s('trivia', 'Trivia'), () => pushPage(const BibleTriviaPage())),
+            s('timeline', 'Timeline'), () => _go(HelpDestination.timeline)),
+        WbMenuItem(s('trivia', 'Trivia'), () => _go(HelpDestination.trivia)),
       ]),
       WbMenu(s('menuResources', 'Resources'), [
         WbMenuItem(
-            s('sermons', 'Sermons'), () => pushPage(const SermonsPage())),
+            s('sermons', 'Sermons'), () => _go(HelpDestination.sermons)),
         // Resources, not Tools: bwh07 splits the two on whether the
         // item OPERATES on the current text (Word List, KWIC, Phrase
         // Matching) or is a reference database you CONSULT (maps,
@@ -766,18 +847,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // the map module here too — which is the whole argument for the
         // Atlas being a window rather than a lens over the reader.
         WbMenuItem(
-            s('atlasTitle', 'Bible Atlas'), () => pushPage(const AtlasPage())),
+            s('atlasTitle', 'Bible Atlas'), () => _go(HelpDestination.atlas)),
         // The "Bible Views picture set" named above is the one entry
         // bwh07 stops to describe, and ours had no door: 1,192 plates
         // reachable only by already reading a chapter that matched one.
         WbMenuItem(s('maps', 'Illustrations'),
-            () => pushPage(const IllustrationsPage())),
+            () => _go(HelpDestination.illustrations)),
         // Same argument one more time. The Topics tab answers "what is
         // THIS verse about"; a reader who wants what Nave filed under
         // REPENTANCE had to guess a verse that might be under it first.
         // A database you CONSULT needs a door of its own.
         WbMenuItem(s('navesTitle', "Nave's Topical Bible"),
-            () => pushPage(const NavesPage())),
+            () => _go(HelpDestination.naves)),
         // 2026-09-05: the same argument a third time, for the OTHER
         // topical index in the same tab. `ModernConcordanceService.topics()`
         // returned all 341 topics and had no caller in `lib/` for a
@@ -790,15 +871,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // three run topics/66 books -> topics/NT Greek -> words, which
         // is a gradient rather than a duplicate.
         WbMenuItem(s('modernConcordanceTitle', 'Modern Concordance (NT)'),
-            () => pushPage(const ModernConcordancePage())),
+            () => _go(HelpDestination.modernConcordance)),
         // bwh35 files the lexicons under Resources for the same reason.
         // Tapping a word has always shown its entry; nothing could show
         // the LIST, so a reader had to already hold the word in order to
         // ask about it, and could never ask what stands beside it.
         WbMenuItem(s('lexiconBrowserTitle', 'Lexicon Browser'),
-            () => pushPage(const LexiconPage())),
+            () => _go(HelpDestination.lexicon)),
         WbMenuItem(s('familyTree', 'Family Tree'),
-            () => pushPage(const FamilyTreePage())),
+            () => _go(HelpDestination.familyTree)),
         // Separate from Family Tree on purpose: the tree is Judah's line
         // of descent, this is both thrones on one time axis.
         // 2026-09-16, and it goes FIRST in this group on purpose: the
@@ -808,15 +889,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // without a question to look up.
         WbMenuItem(
             kJesusTeachingsTitle[locale] ?? kJesusTeachingsTitle['en']!,
-            () => pushPage(const JesusTeachingsPage())),
+            () => _go(HelpDestination.jesusTeachings)),
         WbMenuItem(s('hebrewKings', 'Kings of Judah & Israel'),
-            () => pushPage(const HebrewKingsPage())),
+            () => _go(HelpDestination.hebrewKings)),
         // Earlier than the kings, and resting on a different kind of
         // evidence: the kings chart states Thiele's reconstruction and
         // has to cite him, this one states ages Genesis gives and cites
         // the verses.
         WbMenuItem(s('chronology', 'Bible Chronology'),
-            () => pushPage(const ChronologyPage())),
+            () => _go(HelpDestination.chronology)),
         // 2026-08-24: its own entry. The wheel used to be reachable
         // only through a button on the Bible Chronology page, so a
         // reader who wanted one never discovered the other — and they
@@ -838,9 +919,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // exists for the toolbar icon on the Bible Chronology page,
         // which has no room to name two.
         WbMenuItem(s('wheelTitle', 'World History Wheel'),
-            () => pushPage(const RadialChronologyPage())),
+            () => _go(HelpDestination.wheel)),
         WbMenuItem(kStripPageTitle[locale] ?? kStripPageTitle['en']!,
-            () => pushPage(const StripChronologyPage())),
+            () => _go(HelpDestination.strip)),
         // 2026-09-08: projection had a route and no door. `#/project`
         // is typeable on the web and unreachable on iOS and Android,
         // which have no address bar — so on the two platforms a Sunday
@@ -850,24 +931,21 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         WbMenuItem(
             projectionStrings['projectionTitle']?[locale] ??
                 projectionStrings['projectionTitle']!['en']!,
-            () => pushPage(const ProjectionPage())),
+            () => _go(HelpDestination.projection)),
         WbMenuItem(s('library', 'Notes & highlights'),
-            () => pushPage(const LibraryPage())),
-        WbMenuItem(
-          s('books', 'Go to book…'),
-          () => pushPage(BooksPage(
-            bookIdx: mp.currentBook ?? '',
-            chapterIdx: mp.currentChapter ?? 1,
-          )),
-        ),
+            () => _go(HelpDestination.library)),
+        WbMenuItem(s('books', 'Go to book…'), () => _go(HelpDestination.books)),
       ]),
       WbMenu(s('menuHelp', 'Help'), [
+        // 2026-09-18: one page for every feature and every key, where
+        // this used to open a dialog of five shortcuts. F1 opens it too.
         WbMenuItem(
-          s('shortcutSheetTitle', 'Keyboard shortcuts'),
-          () => showShortcutSheet(context, locale),
+          s('helpTitle', 'Help & shortcuts'),
+          () => openHelp(context),
+          shortcut: _accel(WbShortcutId.shortcutSheet),
         ),
         WbMenuItem(s('about', 'About & data sources'),
-            () => pushPage(const AboutPage())),
+            () => _go(HelpDestination.about)),
         // 2026-09-14: ask now, rather than wait for the interval.
         //
         // The sibling Words app answers this by pulling the home screen

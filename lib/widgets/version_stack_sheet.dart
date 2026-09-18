@@ -36,12 +36,13 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:yahwehs_sword/constants/bible_versions.dart';
 import 'package:yahwehs_sword/constants/ui_strings.dart';
 import 'package:yahwehs_sword/constants/workbench_theme.dart';
 import 'package:yahwehs_sword/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:yahwehs_sword/utils/keyboard_shortcuts.dart'
+    show PickerSheetKey, kPickerSheetShortcuts;
 import 'package:yahwehs_sword/utils/version_stack.dart';
 import 'package:yahwehs_sword/widgets/workbench_chrome.dart' show WbVersionTag;
 
@@ -137,10 +138,13 @@ class _VersionStackSheetState extends State<VersionStackSheet> {
     ].where((g) => g.$2.isNotEmpty).toList();
 
     return CallbackShortcuts(
+      // From `kPickerSheetShortcuts`, the table the Help page prints.
       bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.escape): () =>
-            Navigator.of(context).pop(),
-        const SingleActivator(LogicalKeyboardKey.enter): _apply,
+        for (final k in kPickerSheetShortcuts)
+          k.chord.activator: switch (k.id) {
+            PickerSheetKey.close => () => Navigator.of(context).pop(),
+            PickerSheetKey.apply => _apply,
+          },
       },
       child: FocusScope(
         autofocus: true,

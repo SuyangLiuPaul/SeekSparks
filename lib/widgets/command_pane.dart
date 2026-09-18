@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:yahwehs_sword/constants/bible_versions.dart'
@@ -20,6 +19,8 @@ import 'package:yahwehs_sword/utils/clipboard_helper.dart';
 import 'package:yahwehs_sword/utils/copy_marking.dart'
     show markHits, markVerseHits;
 import 'package:yahwehs_sword/services/tagged_text_service.dart';
+import 'package:yahwehs_sword/utils/keyboard_shortcuts.dart'
+    show CommandLineKey, kCommandLineShortcuts;
 import 'package:yahwehs_sword/utils/search_highlight.dart';
 import 'package:yahwehs_sword/utils/command_draft.dart';
 import 'package:yahwehs_sword/utils/command_examples.dart';
@@ -44,6 +45,47 @@ import 'package:yahwehs_sword/widgets/command_builder_sheet.dart'
     show showCommandBuilder;
 import 'package:yahwehs_sword/widgets/cross_version_strip.dart';
 import 'package:yahwehs_sword/widgets/search_stats_strip.dart';
+
+/// The command line's grammar, as the `?` card prints it — a heading
+/// key, then the example keys under it. Public since 2026-09-18 so the
+/// Help page teaches the same lines rather than a copy of them.
+///
+/// Grouped, because the strip's own grammar split is the fact the card
+/// was missing. Before task #294 it listed only the TEXT rules, so
+/// pressing `?` to ask what the NEAR5 button was returned ten lines about
+/// `.love god` and no mention of NEAR at all.
+const List<(String, List<String>)> kCommandSyntaxSections = [
+  (
+    'cmdSyntaxSectionText',
+    [
+      'cmdSyntaxAnd',
+      'cmdSyntaxOr',
+      'cmdSyntaxPhrase',
+      'cmdSyntaxNot',
+      'cmdSyntaxWild',
+      'cmdSyntaxGap',
+      'cmdSyntaxContext',
+      'cmdSyntaxCompound',
+      'cmdSyntaxCrossVersion',
+      // Last in the text section on purpose. bwh16 calls `~` a search
+      // "for those hardy souls", and it is: everything above it is a
+      // token operator with a plain-language echo, and this one asks the
+      // reader to know a second notation. A reader who never scrolls to
+      // it has lost nothing.
+      'cmdSyntaxRegex',
+    ]
+  ),
+  (
+    'cmdSyntaxSectionStrongs',
+    [
+      'cmdSyntaxStrongsBool',
+      'cmdSyntaxStrongsNear',
+      'cmdSyntaxStrongsBefore',
+      'cmdSyntaxStrongsWild',
+    ]
+  ),
+  ('cmdSyntaxSectionCommands', ['cmdSyntaxVerbs', 'cmdSyntaxHistory']),
+];
 
 /// The Workbench's left pane: a BibleWorks-style command line (text, a
 /// bare Strong's number, or a structured `G25 AND G26` / `NEAR5` query)
@@ -743,12 +785,15 @@ class _CommandPaneState extends State<CommandPane> {
           // focused field than Flutter's own editing shortcuts and
           // therefore win the lookup.
           child: CallbackShortcuts(
+            // From `kCommandLineShortcuts`, the table the Help page
+            // prints.
             bindings: <ShortcutActivator, VoidCallback>{
-              const SingleActivator(LogicalKeyboardKey.escape): _clear,
-              const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
-                  _recall(-1),
-              const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
-                  _recall(1),
+              for (final k in kCommandLineShortcuts)
+                k.chord.activator: switch (k.id) {
+                  CommandLineKey.clear => _clear,
+                  CommandLineKey.older => () => _recall(-1),
+                  CommandLineKey.newer => () => _recall(1),
+                },
             },
             child: TextField(
               controller: _controller,
@@ -1052,42 +1097,7 @@ class _CommandPaneState extends State<CommandPane> {
         versionLanguage: _searchVersionLanguage(),
         uiLocale: locale,
       );
-      // Grouped, because the strip's own grammar split is the fact the
-      // card was missing. Before task #294 it listed only the TEXT rules,
-      // so pressing `?` to ask what the NEAR5 button was returned ten
-      // lines about `.love god` and no mention of NEAR at all.
-      const sections = <(String, List<String>)>[
-        (
-          'cmdSyntaxSectionText',
-          [
-            'cmdSyntaxAnd',
-            'cmdSyntaxOr',
-            'cmdSyntaxPhrase',
-            'cmdSyntaxNot',
-            'cmdSyntaxWild',
-            'cmdSyntaxGap',
-            'cmdSyntaxContext',
-            'cmdSyntaxCompound',
-            'cmdSyntaxCrossVersion',
-            // Last in the text section on purpose. bwh16 calls `~` a
-            // search "for those hardy souls", and it is: everything
-            // above it is a token operator with a plain-language echo,
-            // and this one asks the reader to know a second notation.
-            // A reader who never scrolls to it has lost nothing.
-            'cmdSyntaxRegex',
-          ]
-        ),
-        (
-          'cmdSyntaxSectionStrongs',
-          [
-            'cmdSyntaxStrongsBool',
-            'cmdSyntaxStrongsNear',
-            'cmdSyntaxStrongsBefore',
-            'cmdSyntaxStrongsWild',
-          ]
-        ),
-        ('cmdSyntaxSectionCommands', ['cmdSyntaxVerbs', 'cmdSyntaxHistory']),
-      ];
+      const sections = kCommandSyntaxSections;
       return Container(
         width: double.infinity,
         color: wbc.chromeBg,

@@ -41,12 +41,29 @@
 /// fullscreen and F12 the developer tools. Using function keys here is
 /// also the one place bwh44's own idiom survives the move to a browser.
 ///
-/// Flutter-free apart from the key constants, so the table can be
-/// asserted against the handler in a plain test.
+/// Flutter-free apart from the key constants and `SingleActivator`, so
+/// every table can be asserted against its handler in a plain test.
+///
+/// ## The other tables (2026-09-18)
+///
+/// The workbench table below was always one list read twice. The keys
+/// bound anywhere else — the reading column's `[` `]` `/` `?`, the
+/// command line's ↑ ↓ Esc, the plate viewer's arrows, a sheet's Enter —
+/// were typed straight into each widget's `CallbackShortcuts`, and the
+/// reading column kept a second shortcut dialog of its own that listed
+/// four of its ten bindings. Two shortcut lists, neither complete,
+/// and the menu printed `Ctrl+L` beside "Command line" a month after
+/// the key had moved to F2 because Ctrl+L is the browser's.
+///
+/// 「sword所有的shortcut……是不是应该有一个page教我们怎么用」. The Help
+/// page prints every key in the app, so every key in the app now lives
+/// in a table here, and each widget builds its bindings FROM the table:
+/// the rule the workbench table already followed, applied to the rest.
 library;
 
 import 'package:flutter/services.dart'
     show HardwareKeyboard, KeyEvent, LogicalKeyboardKey;
+import 'package:flutter/widgets.dart' show SingleActivator;
 
 enum WbShortcutId {
   /// Put the caret on the command line, wherever the reader is.
@@ -142,6 +159,10 @@ const List<WbShortcut> kWorkbenchShortcuts = [
   ),
 ];
 
+/// The row for [id]. Every id has exactly one — the test pins it.
+WbShortcut workbenchShortcut(WbShortcutId id) =>
+    kWorkbenchShortcuts.singleWhere((s) => s.id == id);
+
 /// Esc is documented but NOT in the table, and the distinction is real.
 ///
 /// Everything above is a shortcut that DOES something; Esc unpins the
@@ -181,4 +202,165 @@ const List<(LogicalKeyboardKey, bool)> kBrowserOwnedChords = [
   (LogicalKeyboardKey.keyK, false), // address-bar search
   (LogicalKeyboardKey.keyR, false), // reload
   (LogicalKeyboardKey.keyR, true), // hard reload
+];
+
+// ── Keys bound inside one surface ──────────────────────────────────
+
+/// A key and the modifiers it needs, spelled the way `SingleActivator`
+/// takes them — [meta] is ⌘ on a Mac and the Windows key elsewhere,
+/// [control] is Ctrl everywhere. Unlike [WbShortcut.ctrlOrMeta] the two
+/// are kept apart, because the reading column binds BOTH `⌘[` and
+/// `Ctrl+[` and a reader should be shown the one their keyboard means.
+class KeyChord {
+  const KeyChord(
+    this.key, {
+    this.meta = false,
+    this.control = false,
+    this.shift = false,
+  });
+
+  final LogicalKeyboardKey key;
+  final bool meta;
+  final bool control;
+  final bool shift;
+
+  SingleActivator get activator =>
+      SingleActivator(key, meta: meta, control: control, shift: shift);
+
+  /// Whether a reader on [apple] hardware should be SHOWN this chord.
+  ///
+  /// Every chord is bound on every platform; this only decides what the
+  /// Help page prints. A ⌘ chord is the Windows key on a PC — it works,
+  /// and nobody reaches for it — and a Ctrl chord on a Mac is the one
+  /// the ⌘ row beside it already covers.
+  bool shownOn({required bool apple}) {
+    if (meta) return apple;
+    if (control) return !apple;
+    return true;
+  }
+
+  String label({required bool mac}) {
+    // `?` is Shift+/ on every layout this app is read on; printing
+    // "Shift+?" would describe a key nobody can find.
+    final showShift = shift && key != LogicalKeyboardKey.question;
+    final parts = <String>[
+      if (meta) mac ? '⌘' : 'Win',
+      if (control) mac ? '⌃' : 'Ctrl',
+      if (showShift) mac ? '⇧' : 'Shift',
+      keyCapLabel(key),
+    ];
+    return parts.join(mac ? '' : '+');
+  }
+}
+
+/// How one key is printed on the Help page — a key cap, not a debug
+/// name. Public because the projection's keymap, which lives with the
+/// projection, prints through it too.
+String keyCapLabel(LogicalKeyboardKey key) {
+  final fixed = <LogicalKeyboardKey, String>{
+    LogicalKeyboardKey.escape: 'Esc',
+    LogicalKeyboardKey.enter: 'Enter',
+    LogicalKeyboardKey.numpadEnter: 'Enter',
+    LogicalKeyboardKey.space: 'Space',
+    LogicalKeyboardKey.backspace: '⌫',
+    LogicalKeyboardKey.pageUp: 'PgUp',
+    LogicalKeyboardKey.pageDown: 'PgDn',
+    LogicalKeyboardKey.arrowUp: '↑',
+    LogicalKeyboardKey.arrowDown: '↓',
+    LogicalKeyboardKey.arrowLeft: '←',
+    LogicalKeyboardKey.arrowRight: '→',
+    LogicalKeyboardKey.bracketLeft: '[',
+    LogicalKeyboardKey.bracketRight: ']',
+    LogicalKeyboardKey.slash: '/',
+    LogicalKeyboardKey.question: '?',
+    LogicalKeyboardKey.comma: ',',
+    LogicalKeyboardKey.period: '.',
+    // `=` is the key that prints `+`; see the projection's keymap.
+    LogicalKeyboardKey.equal: '+',
+    LogicalKeyboardKey.add: '+',
+    LogicalKeyboardKey.numpadAdd: '+',
+    LogicalKeyboardKey.minus: '−',
+    LogicalKeyboardKey.numpadSubtract: '−',
+  };
+  return fixed[key] ?? _keyName(key);
+}
+
+/// One row of a surface's key table: what it does, which key does it.
+///
+/// Generic over the surface's own action enum so each widget can switch
+/// over its ids exhaustively — adding a row does not compile until the
+/// widget answers it, the rule [WbShortcutId] set for the workbench.
+class BoundKey<T extends Enum> {
+  const BoundKey(this.id, this.chord, this.labelKey);
+
+  final T id;
+  final KeyChord chord;
+
+  /// The `ui_strings` key naming what it does.
+  final String labelKey;
+}
+
+/// The reading column. Active while it has focus and no text field
+/// does — the column is wrapped in a `Focus`, so clicking a verse is
+/// what arms these.
+enum ReaderKey { previousChapter, nextChapter, search, help, settings }
+
+const List<BoundKey<ReaderKey>> kReaderShortcuts = [
+  BoundKey(ReaderKey.previousChapter,
+      KeyChord(LogicalKeyboardKey.bracketLeft), 'previousChapter'),
+  BoundKey(ReaderKey.nextChapter, KeyChord(LogicalKeyboardKey.bracketRight),
+      'nextChapter'),
+  BoundKey(ReaderKey.search, KeyChord(LogicalKeyboardKey.slash),
+      'keySearchFromReader'),
+  BoundKey(ReaderKey.help,
+      KeyChord(LogicalKeyboardKey.question, shift: true), 'keyOpenHelp'),
+  // ⌘ for a Mac and an iPad with a keyboard (2026-05-24, v1.3.17)…
+  BoundKey(ReaderKey.previousChapter,
+      KeyChord(LogicalKeyboardKey.bracketLeft, meta: true), 'previousChapter'),
+  BoundKey(ReaderKey.nextChapter,
+      KeyChord(LogicalKeyboardKey.bracketRight, meta: true), 'nextChapter'),
+  BoundKey(ReaderKey.search, KeyChord(LogicalKeyboardKey.keyF, meta: true),
+      'keySearchFromReader'),
+  BoundKey(ReaderKey.settings, KeyChord(LogicalKeyboardKey.comma, meta: true),
+      'settings'),
+  // …and Ctrl for Windows and Linux, which have no ⌘. Deliberately no
+  // Ctrl+F: that is the browser's find, and on a Mac it is line-start.
+  BoundKey(ReaderKey.previousChapter,
+      KeyChord(LogicalKeyboardKey.bracketLeft, control: true),
+      'previousChapter'),
+  BoundKey(ReaderKey.nextChapter,
+      KeyChord(LogicalKeyboardKey.bracketRight, control: true), 'nextChapter'),
+];
+
+/// The command line, while the caret is in it.
+enum CommandLineKey { clear, older, newer }
+
+const List<BoundKey<CommandLineKey>> kCommandLineShortcuts = [
+  BoundKey(CommandLineKey.older, KeyChord(LogicalKeyboardKey.arrowUp),
+      'keyRecallOlder'),
+  BoundKey(CommandLineKey.newer, KeyChord(LogicalKeyboardKey.arrowDown),
+      'keyRecallNewer'),
+  BoundKey(CommandLineKey.clear, KeyChord(LogicalKeyboardKey.escape),
+      'keyClearLine'),
+];
+
+/// The full-screen illustration viewer.
+enum PlateViewerKey { close, previous, next }
+
+const List<BoundKey<PlateViewerKey>> kPlateViewerShortcuts = [
+  BoundKey(PlateViewerKey.previous, KeyChord(LogicalKeyboardKey.arrowLeft),
+      'keyPreviousPlate'),
+  BoundKey(PlateViewerKey.next, KeyChord(LogicalKeyboardKey.arrowRight),
+      'keyNextPlate'),
+  BoundKey(PlateViewerKey.close, KeyChord(LogicalKeyboardKey.escape), 'close'),
+];
+
+/// The two pickers that edit a setting and then apply it — Search
+/// scope and the version stack.
+enum PickerSheetKey { apply, close }
+
+const List<BoundKey<PickerSheetKey>> kPickerSheetShortcuts = [
+  BoundKey(PickerSheetKey.apply, KeyChord(LogicalKeyboardKey.enter),
+      'keyApplyPicker'),
+  BoundKey(PickerSheetKey.close, KeyChord(LogicalKeyboardKey.escape), 'close'),
 ];

@@ -5618,10 +5618,11 @@ const uiStrings = {
     'zh-Hant': '生成本章研讀報告',
     'en': 'Build a report for this chapter',
   },
+  // 2026-09-18: F1 opens the Help page, of which this list is one part.
   'shortcutSheet': {
-    'zh-Hans': '显示这份快捷键表',
-    'zh-Hant': '顯示這份快捷鍵表',
-    'en': 'Show this list',
+    'zh-Hans': '打开使用说明',
+    'zh-Hant': '開啟使用說明',
+    'en': 'Open Help',
   },
   'shortcutEscape': {
     'zh-Hans': '取消分析栏的锁定',
@@ -10394,5 +10395,183 @@ const uiStrings = {
         'Hebrew Bible，採用 CC BY 4.0 授權。',
     'en': 'Public-domain Hebrew text. Lemma and morphology from the '
         'Open Scriptures Hebrew Bible, CC BY 4.0.',
+  },
+  // ── Help page (2026-09-18) ─────────────────────────────────────
+  // The page, and the labels the key tables in keyboard_shortcuts.dart
+  // and projection_page.dart print. See lib/utils/help_catalog.dart.
+  'helpTitle': {
+    'zh-Hans': '使用说明与快捷键',
+    'zh-Hant': '使用說明與快捷鍵',
+    'en': 'Help & shortcuts',
+  },
+  'keyOpenHelp': {
+    'zh-Hans': '打开使用说明（快捷键一节）',
+    'zh-Hant': '開啟使用說明（快捷鍵一節）',
+    'en': 'Open Help at the shortcuts',
+  },
+  'keySearchFromReader': {
+    'zh-Hans': '跳到命令行搜索',
+    'zh-Hant': '跳到命令列搜尋',
+    'en': 'Search from the command line',
+  },
+  'keyRecallOlder': {
+    'zh-Hans': '上一条输入过的内容',
+    'zh-Hant': '上一條輸入過的內容',
+    'en': 'Previous line from history',
+  },
+  'keyRecallNewer': {
+    'zh-Hans': '下一条输入过的内容',
+    'zh-Hant': '下一條輸入過的內容',
+    'en': 'Next line from history',
+  },
+  'keyClearLine': {
+    'zh-Hans': '清空命令行',
+    'zh-Hant': '清空命令列',
+    'en': 'Clear the command line',
+  },
+  'keyPreviousPlate': {
+    'zh-Hans': '上一张',
+    'zh-Hant': '上一張',
+    'en': 'Previous plate',
+  },
+  'keyNextPlate': {
+    'zh-Hans': '下一张',
+    'zh-Hant': '下一張',
+    'en': 'Next plate',
+  },
+  'keyApplyPicker': {
+    'zh-Hans': '确定并关闭',
+    'zh-Hant': '確定並關閉',
+    'en': 'Apply and close',
+  },
+  'projKeyNextVerse': {
+    'zh-Hans': '下一节',
+    'zh-Hant': '下一節',
+    'en': 'Next verse',
+  },
+  'projKeyPreviousVerse': {
+    'zh-Hans': '上一节',
+    'zh-Hant': '上一節',
+    'en': 'Previous verse',
+  },
+  'projKeyNextChapter': {
+    'zh-Hans': '下一章（翻页笔的下一页键）',
+    'zh-Hant': '下一章（翻頁筆的下一頁鍵）',
+    'en': 'Next chapter (a clicker\'s forward button)',
+  },
+  'projKeyPreviousChapter': {
+    'zh-Hans': '上一章（翻页笔的上一页键）',
+    'zh-Hant': '上一章（翻頁筆的上一頁鍵）',
+    'en': 'Previous chapter (a clicker\'s back button)',
+  },
+  'projKeyBlank': {
+    'zh-Hans': '黑屏 / 恢复',
+    'zh-Hant': '黑屏 / 恢復',
+    'en': 'Blank the screen / bring it back',
+  },
+  'projKeyBigger': {
+    'zh-Hans': '字大一号',
+    'zh-Hant': '字大一號',
+    'en': 'Larger type',
+  },
+  'projKeySmaller': {
+    'zh-Hans': '字小一号',
+    'zh-Hant': '字小一號',
+    'en': 'Smaller type',
+  },
+  'projKeySecondVersion': {
+    'zh-Hans': '加上或去掉第二个译本',
+    'zh-Hant': '加上或去掉第二個譯本',
+    'en': 'Add or drop the second version',
+  },
+  'projKeyBackground': {
+    'zh-Hans': '换下一种深色背景',
+    'zh-Hant': '換下一種深色背景',
+    'en': 'Next dark background',
+  },
+  'projKeyPickVersion': {
+    'zh-Hans': '选第二个译本',
+    'zh-Hant': '選第二個譯本',
+    'en': 'Choose the second version',
+  },
+  'projKeyAgenda': {
+    'zh-Hans': '打开聚会流程',
+    'zh-Hant': '開啟聚會流程',
+    'en': 'Open the order of service',
+  },
+  'projKeyAgendaNext': {
+    'zh-Hans': '流程的下一项',
+    'zh-Hant': '流程的下一項',
+    'en': 'Next item in the order of service',
+  },
+  'projKeyAgendaPrevious': {
+    'zh-Hans': '流程的上一项',
+    'zh-Hant': '流程的上一項',
+    'en': 'Previous item in the order of service',
+  },
+  'projKeyCountdown': {
+    'zh-Hans': '倒计时（再按一次收起）',
+    'zh-Hant': '倒計時（再按一次收起）',
+    'en': 'Countdown (press again to take it down)',
+  },
+  'projKeyStage': {
+    'zh-Hans': '在第二个屏幕上打开投影窗口',
+    'zh-Hant': '在第二個螢幕上開啟投影視窗',
+    'en': 'Open the projection window for a second screen',
+  },
+  'projKeyPresets': {
+    'zh-Hans': '调出存好的设置',
+    'zh-Hant': '調出存好的設定',
+    'en': 'Recall a saved setup',
+  },
+  'projKeyLeave': {
+    'zh-Hans': '离开投影',
+    'zh-Hant': '離開投影',
+    'en': 'Leave projection',
+  },
+  'helpSearchHint': {
+    'zh-Hans': '搜索功能和按键，例如：投影、复制、F4',
+    'zh-Hant': '搜尋功能和按鍵，例如：投影、複製、F4',
+    'en': 'Search features and keys — e.g. projection, copy, F4',
+  },
+  'helpThisDevice': {
+    'zh-Hans': '（本机）',
+    'zh-Hant': '（本機）',
+    'en': '(this device)',
+  },
+  'helpPlatformLabel': {
+    'zh-Hans': '按此平台说明：',
+    'zh-Hant': '按此平臺說明：',
+    'en': 'Describe for:',
+  },
+  'helpWhere': {
+    'zh-Hans': '在哪里',
+    'zh-Hant': '在哪裡',
+    'en': 'Where',
+  },
+  'helpTakeMeThere': {
+    'zh-Hans': '带我去',
+    'zh-Hant': '帶我去',
+    'en': 'Take me there',
+  },
+  'helpExampleTapHint': {
+    'zh-Hans': '点一行即可复制它的查询。',
+    'zh-Hant': '點一行即可複製它的查詢。',
+    'en': 'Tap a line to copy its query.',
+  },
+  'helpTouchKeyboardNote': {
+    'zh-Hans': '接上键盘后，下面这些按键也能用。',
+    'zh-Hant': '接上鍵盤後，下面這些按鍵也能用。',
+    'en': 'With a keyboard attached, the keys below work too.',
+  },
+  'helpNoResults': {
+    'zh-Hans': '没有找到。换个说法试试，或者在上面换一个平台。',
+    'zh-Hant': '沒有找到。換個說法試試，或者在上面換一個平臺。',
+    'en': 'Nothing found. Try other words, or switch the platform above.',
+  },
+  'helpResultCount': {
+    'zh-Hans': '找到 {n} 项',
+    'zh-Hant': '找到 {n} 項',
+    'en': '{n} found',
   },
 };

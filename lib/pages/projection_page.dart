@@ -292,42 +292,76 @@ enum ProjectionCommand {
 /// arrows are what a hand finds without looking: all four should move
 /// the same unit, in the direction they point.
 ProjectionCommand? projectionCommandFor(LogicalKeyboardKey key) {
-  if (key == LogicalKeyboardKey.arrowRight ||
-      key == LogicalKeyboardKey.arrowDown ||
-      key == LogicalKeyboardKey.space ||
-      key == LogicalKeyboardKey.enter ||
-      key == LogicalKeyboardKey.numpadEnter) {
-    return ProjectionCommand.nextVerse;
+  for (final (command, keys, _) in kProjectionKeymap) {
+    if (keys.contains(key)) return command;
   }
-  if (key == LogicalKeyboardKey.arrowLeft ||
-      key == LogicalKeyboardKey.arrowUp ||
-      key == LogicalKeyboardKey.backspace) {
-    return ProjectionCommand.previousVerse;
-  }
-  if (key == LogicalKeyboardKey.pageDown) {
-    return ProjectionCommand.nextChapter;
-  }
-  if (key == LogicalKeyboardKey.pageUp) {
-    return ProjectionCommand.previousChapter;
-  }
-  if (key == LogicalKeyboardKey.keyB || key == LogicalKeyboardKey.period) {
-    return ProjectionCommand.blank;
-  }
+  return null;
+}
+
+/// Every key [projectionCommandFor] answers, with the `ui_strings` key
+/// that names it — the table the handler reads AND the table the Help
+/// page prints, so the operator's cheatsheet is the dispatch itself.
+///
+/// The reasons for each choice stay beside the row they justify.
+const List<(ProjectionCommand, List<LogicalKeyboardKey>, String)>
+    kProjectionKeymap = [
+  (
+    ProjectionCommand.nextVerse,
+    [
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.space,
+      LogicalKeyboardKey.enter,
+      LogicalKeyboardKey.numpadEnter,
+    ],
+    'projKeyNextVerse',
+  ),
+  (
+    ProjectionCommand.previousVerse,
+    [
+      LogicalKeyboardKey.arrowLeft,
+      LogicalKeyboardKey.arrowUp,
+      LogicalKeyboardKey.backspace,
+    ],
+    'projKeyPreviousVerse',
+  ),
+  (
+    ProjectionCommand.nextChapter,
+    [LogicalKeyboardKey.pageDown],
+    'projKeyNextChapter',
+  ),
+  (
+    ProjectionCommand.previousChapter,
+    [LogicalKeyboardKey.pageUp],
+    'projKeyPreviousChapter',
+  ),
+  (
+    ProjectionCommand.blank,
+    [LogicalKeyboardKey.keyB, LogicalKeyboardKey.period],
+    'projKeyBlank',
+  ),
   // Both faces of the two keys, because a keyboard prints `+` on the key
   // the operator presses and reports `=` unless they are holding Shift,
   // and a numeric keypad reports neither.
-  if (key == LogicalKeyboardKey.equal ||
-      key == LogicalKeyboardKey.add ||
-      key == LogicalKeyboardKey.numpadAdd) {
-    return ProjectionCommand.biggerType;
-  }
-  if (key == LogicalKeyboardKey.minus ||
-      key == LogicalKeyboardKey.numpadSubtract) {
-    return ProjectionCommand.smallerType;
-  }
-  if (key == LogicalKeyboardKey.keyP) {
-    return ProjectionCommand.toggleSecondVersion;
-  }
+  (
+    ProjectionCommand.biggerType,
+    [
+      LogicalKeyboardKey.equal,
+      LogicalKeyboardKey.add,
+      LogicalKeyboardKey.numpadAdd,
+    ],
+    'projKeyBigger',
+  ),
+  (
+    ProjectionCommand.smallerType,
+    [LogicalKeyboardKey.minus, LogicalKeyboardKey.numpadSubtract],
+    'projKeySmaller',
+  ),
+  (
+    ProjectionCommand.toggleSecondVersion,
+    [LogicalKeyboardKey.keyP],
+    'projKeySecondVersion',
+  ),
   // 2026-09-09, the setup keys. Mnemonic rather than positional — G for
   // ground, V for version, R for recall — because the whole argument
   // above is that an operator should not have to learn this page's own
@@ -338,43 +372,40 @@ ProjectionCommand? projectionCommandFor(LogicalKeyboardKey key) {
   // records: it is the one setup change worth making without looking.
   // V and R open a strip, because picking an edition out of fifteen or
   // a preset out of six is a thing you do by reading.
-  if (key == LogicalKeyboardKey.keyG) {
-    return ProjectionCommand.cycleBackground;
-  }
-  if (key == LogicalKeyboardKey.keyV) {
-    return ProjectionCommand.openSecondVersionPicker;
-  }
+  (
+    ProjectionCommand.cycleBackground,
+    [LogicalKeyboardKey.keyG],
+    'projKeyBackground',
+  ),
+  (
+    ProjectionCommand.openSecondVersionPicker,
+    [LogicalKeyboardKey.keyV],
+    'projKeyPickVersion',
+  ),
   // The order of service: A opens it, and the two brackets step it —
   // the pair a presentation tool uses for previous / next slide, and
   // neither of them a browser chord. C is the countdown; bare, so it
   // never fights Cmd+C, which kBrowserOwnedChords names and the
   // modifier guard in _onKey already lets through.
-  if (key == LogicalKeyboardKey.keyA) {
-    return ProjectionCommand.openAgenda;
-  }
-  if (key == LogicalKeyboardKey.bracketRight) {
-    return ProjectionCommand.agendaNext;
-  }
-  if (key == LogicalKeyboardKey.bracketLeft) {
-    return ProjectionCommand.agendaPrevious;
-  }
-  if (key == LogicalKeyboardKey.keyC) {
-    return ProjectionCommand.countdown;
-  }
+  (ProjectionCommand.openAgenda, [LogicalKeyboardKey.keyA], 'projKeyAgenda'),
+  (
+    ProjectionCommand.agendaNext,
+    [LogicalKeyboardKey.bracketRight],
+    'projKeyAgendaNext',
+  ),
+  (
+    ProjectionCommand.agendaPrevious,
+    [LogicalKeyboardKey.bracketLeft],
+    'projKeyAgendaPrevious',
+  ),
+  (ProjectionCommand.countdown, [LogicalKeyboardKey.keyC], 'projKeyCountdown'),
   // D for display. Not a browser chord (kBrowserOwnedChords names C V X
   // F P S T W N L K R); a bare letter the operator hits once, at the
   // start, to put the wall up on the second screen.
-  if (key == LogicalKeyboardKey.keyD) {
-    return ProjectionCommand.openStage;
-  }
-  if (key == LogicalKeyboardKey.keyR) {
-    return ProjectionCommand.openPresets;
-  }
-  if (key == LogicalKeyboardKey.escape) {
-    return ProjectionCommand.leave;
-  }
-  return null;
-}
+  (ProjectionCommand.openStage, [LogicalKeyboardKey.keyD], 'projKeyStage'),
+  (ProjectionCommand.openPresets, [LogicalKeyboardKey.keyR], 'projKeyPresets'),
+  (ProjectionCommand.leave, [LogicalKeyboardKey.escape], 'projKeyLeave'),
+];
 
 /// Where the projection is pointing: a chapter, by its index in
 /// `MainProvider.chapterList`, and a verse by its index within that
